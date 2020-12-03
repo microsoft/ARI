@@ -116,6 +116,6 @@ The main authors of this project are:
 
 Please read our [CONTRIBUTING.md](CONTRIBUTING.md) which outlines all of our policies, procedures, and requirements for contributing to this project.
 
-
-
+## Contributing
+Special Thanks for Doug Finke, the Author of Powershell [ImportExcel](https://github.com/dfinke/ImportExcel) Module.
 
