@@ -538,8 +538,6 @@ $Runtime = Measure-Command -Expression {
                 }).AddArgument($($args[0])).AddArgument($($args[5]))
 
 
-
-
             $SQLVM = ([PowerShell]::Create()).AddScript( { param($Sub, $SQLVM)
                     $tmp = @()
 
