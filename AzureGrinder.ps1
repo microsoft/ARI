@@ -2,11 +2,11 @@
 #                                                                                        #
 #                        * Azure Grinder Report Generator *                              #
 #                                                                                        #
-#       Version: 1.0.0                                                                   #
+#       Version: 1.0.2                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 12/03/2020                                                                 #
+#       Date: 12/04/2020                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -22,10 +22,7 @@
 ##########################################################################################
 
 
-
-
-
-param ($TenantID, $SkipSecurityCenter = $false) 
+param ($TenantID, $SkipSecurityCenter = $false,$SubscriptionID) 
 
 $Runtime = Measure-Command -Expression {
 
@@ -83,15 +80,16 @@ $Runtime = Measure-Command -Expression {
                 write-host "Tenant ID not specified. Use -TenantID parameter if you want to specify directly. "        
                 write-host "Authenticating Azure"
                 write-host ""
+                az account clear | Out-Null
                 az login | Out-Null
                 write-host ""
                 write-host ""
-                $Tenants = az account list --all --query [].homeTenantId -o tsv | Get-Unique
+                $Tenants = az account list --query [].homeTenantId -o tsv --only-show-errors | Get-Unique
                     
-                if ($Tenants.Length -eq 1) {
+                if ($Tenants.Count -eq 1) {
                     write-host "You have privileges only in One Tenant "
                     write-host ""
-                    $TenantID = $Tenants[0]
+                    $TenantID = $Tenants
                 }
                 else { 
                     write-host "Select the the Azure Tenant ID that you want to connect : "
@@ -110,12 +108,21 @@ $Runtime = Measure-Command -Expression {
                 write-host "Extracting from Tenant $TenantID"
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
+                if($SubscriptionID)
+                    {
+                        $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID}
+                    }
             }
         
             else {
+                az account clear | Out-Null
                 az login -t $TenantID | Out-Null
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
+                if($SubscriptionID)
+                {
+                    $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID}
+                }
             }
         }
 
@@ -2587,7 +2594,8 @@ $Runtime = Measure-Command -Expression {
             <############################################################################## 22 - Virtual Network Peering  ###################################################################>
 
 
-            if ($Type -eq 'microsoft.network/virtualnetworks') {
+            if ($Type -eq 'microsoft.network/virtualnetworks' -and $null -ne $AzNetwork.Peering -and $AzNetwork.Peering -ne '') {
+
 
                 Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
