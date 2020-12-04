@@ -1,5 +1,15 @@
 # Version Control
 
+
+---
+## Version 1.0.2 - 12/04/2020
+
+### **AzureGrinder:**
+        1. Fix issue on single tenant usage
+        2. Added SubscriptionID option
+
+---
+
 ## Version 1.0 - 12/03/2020
 1.0 - Offical release 
 
