@@ -2,11 +2,11 @@
 #                                                                                        #
 #                        * Azure Grinder Report Generator *                              #
 #                                                                                        #
-#       Version: 1.0.2                                                                   #
+#       Version: 1.0.4                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 12/04/2020                                                                 #
+#       Date: 12/05/2020                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -45,12 +45,10 @@ $Runtime = Measure-Command -Expression {
         Write-Output "" 
         Write-Output "Usage: "
         Write-Output "For CloudShell:"
-        Write-Output "./AzGrinderExtractor.ps1"
-        Write-Output ""
-        Write-Output "      Change StorageAccount info inside the script"        
+        Write-Output "./AzGrinder.ps1"      
         Write-Output ""
         Write-Output "For PowerShell Desktop:"      
-        Write-Output "./AzGrinderExtractor.ps1 -TenantID <Azure Tenant ID> "
+        Write-Output "./AzGrinder.ps1 -TenantID <Azure Tenant ID> "
         Write-Output "" 
         Write-Output "" 
     }
@@ -71,6 +69,14 @@ $Runtime = Measure-Command -Expression {
             if ($null -eq (Get-InstalledModule -Name ImportExcel | Out-Null)) {
                 Write-Debug ('ImportExcel Module is not installed, installing..')
                 Install-Module -Name ImportExcel -Force
+            }
+            if ($null -eq (Get-InstalledModule -Name ImportExcel | Out-Null)) {
+                Write-Debug ('ImportExcel Module is not installed, installing..')
+                Install-Module -Name ImportExcel -Force -AllowClobber
+            }
+            if ($null -eq (Get-InstalledModule -Name ImportExcel | Out-Null)) {
+                Write-Debug ('ImportExcel Module is not installed, installing..')
+                Install-Module -Name ImportExcel -Scope CurrentUser
             }
         }
 
@@ -154,6 +160,7 @@ $Runtime = Measure-Command -Expression {
 
         $SubCount = $Subscriptions.count
 
+        Write-Debug ('Number of Subscriptions Found: '+$SubCount)
         Write-Progress -activity 'Azure Inventory' -Status "3% Complete." -PercentComplete 3 -CurrentOperation "$SubCount Subscriptions found.."
 
         if ((Test-Path -Path $DefaultPath -PathType Container) -eq $false) {
@@ -171,33 +178,44 @@ $Runtime = Measure-Command -Expression {
             $Prog = ($Counter / $SubCount) * 100
             $Prog = [math]::Round($Prog)
             $SubName = $Subscription.Name
-                
+                       
             $SUBID = $Subscription.id
             az account set --subscription $SUBID
+            Write-Debug ('Extracting total number of Resources from Subscription: '+$SUBID)
             $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
             $EnvSizeNum = $EnvSize.'count_'
                 
+            Write-Debug ('Starting Resource Loop Extraction.')
+            if ($EnvSizeNum -ge 1) 
+                {
+                    $Loop = $EnvSizeNum / 1000
+                    $Loop = [math]::ceiling($Loop)
+                    $Looper = 0
+                    $Limit = 0
 
-            if ($EnvSizeNum -ge 1) {
-                $Loop = $EnvSizeNum / 1000
-                $Loop = [math]::ceiling($Loop)
-                $Looper = 0
-                $Limit = 0
-
-                while ($Looper -lt $Loop) {
-                    $Resource = az graph query -q  "resources | where subscriptionId == '$SUBID' | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                    $Global:Resources += $Resource 
-                    Start-Sleep 1
-                    $Looper ++
-                    $Limit = $Limit + 1000
-                    Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete $Prog -CurrentOperation "Inventoring $EnvSizeNum Resources in Subscription: $SubName"
+                    while ($Looper -lt $Loop) 
+                        {
+                            $Resource = az graph query -q  "resources | where subscriptionId == '$SUBID' | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                            $Global:Resources += $Resource 
+                            if ($EnvSizeNum -ge 500000) 
+                                {
+                                    Start-Sleep 3
+                                }
+                            else 
+                                {
+                                    Start-Sleep 1
+                                }        
+                            $Looper ++
+                            $Limit = $Limit + 1000
+                            Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete $Prog -CurrentOperation "Inventoring $EnvSizeNum Resources in Subscription: $SubName"
+                        }
                 }
-            }
             $Counter ++
         }   
 
         <######################################################### ADVISOR ######################################################################>
 
+        Write-Debug ('Extracting total number of Advisories from Tenant')
         $AdvSize = az graph query -q  "advisorresources | summarize count()" --output json --only-show-errors | ConvertFrom-Json
         $AdvSizeNum = $AdvSize.'count_'
 
@@ -208,16 +226,24 @@ $Runtime = Measure-Command -Expression {
             $Looper = 0
             $Limit = 0
         
-            while ($Looper -lt $Loop) {
-                $Looper ++
-                Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete 0 -CurrentOperation "Inventoring $AdvSizeNum Advisories"
-                $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                $Global:Advisories += $Advisor
-                Start-Sleep 1
-                $Limit = $Limit + 1000
-                        
-                Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete 100 -Completed
-            }
+            while ($Looper -lt $Loop) 
+                {
+                    $Looper ++
+                    Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete 0 -CurrentOperation "Inventoring $AdvSizeNum Advisories"
+                    $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                    $Global:Advisories += $Advisor
+                    if ($AdvSizeNum -ge 500000) 
+                        {
+                            Start-Sleep 3
+                        }
+                    else 
+                        {
+                            Start-Sleep 1
+                        }
+                    $Limit = $Limit + 1000
+                            
+                    Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete 100 -Completed
+                }
         }
 
         <######################################################### Security Center ######################################################################>
@@ -238,6 +264,7 @@ $Runtime = Measure-Command -Expression {
             Write-Host " If you want to skip Security Center report use <-SkipSecurityCenter> parameter. "
             Write-Host " "
 
+            Write-Debug ('Extracting total number of Security Advisories from Tenant')
             $SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
             $SecSizeNum = $SecSize.'count_'
 
@@ -253,7 +280,14 @@ $Runtime = Measure-Command -Expression {
                     Write-Progress -activity 'Azure Security Center' -Status "$Looper / $Loop" -PercentComplete 0 -CurrentOperation "Inventoring $SecSizeNum Security Center Advisories"
                     $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
                     $Global:Security += $SecCenter
-                    Start-Sleep 1
+                    if ($SecSizeNum -ge 500000) 
+                        {
+                            Start-Sleep 3
+                        }
+                    else 
+                        {
+                            Start-Sleep 1
+                        }
                     $Limit = $Limit + 1000
                             
                     Write-Progress -activity 'Azure Security Center' -Status "$Looper / $Loop" -PercentComplete 100 -Completed
