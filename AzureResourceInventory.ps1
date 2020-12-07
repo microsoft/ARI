@@ -2,11 +2,11 @@
 #                                                                                        #
 #                  * Azure Resource Inventory ( ARI ) Report Generator *                 #
 #                                                                                        #
-#       Version: 1.0.6                                                                   #
+#       Version: 1.0.7                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 12/06/2020                                                                 #
+#       Date: 12/07/2020                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -22,7 +22,7 @@
 ##########################################################################################
 
 
-param ($TenantID, $SkipSecurityCenter = $false, $SubscriptionID) 
+param ($TenantID, [switch]$SkipSecurityCenter, $SubscriptionID) 
 
 $Runtime = Measure-Command -Expression {
 
@@ -79,6 +79,7 @@ $Runtime = Measure-Command -Expression {
                     Write-Host 'Exiting now.'
                     $host.Exit()
                 }
+            }
         }
 
         function LoginSession() {
@@ -240,7 +241,7 @@ $Runtime = Measure-Command -Expression {
 
         <######################################################### Security Center ######################################################################>
 
-        if ($SkipSecurityCenter) {
+        if ($SkipSecurityCenter.IsPresent) {
             Write-Host " Skiping Secuity Center Extraction"
             Write-Host " You set Azure Resource Inventory to not collect Security Center Advisories."
             Write-Host " "
@@ -249,42 +250,47 @@ $Runtime = Measure-Command -Expression {
             Write-Host " To skip Security Center report use <-SkipSecurityCenter> parameter. " 
             Write-Host " "
         }
-        else {
-            Write-Host " Azure Resource Inventory are collecting Security Center Advisories."
-            Write-Host " Collecting Security Center Can increase considerably the execution time of Azure Resource Inventory and the size of final report "
-            Write-Host " "
-            Write-Host " If you want to skip Security Center report use <-SkipSecurityCenter> parameter. "
-            Write-Host " "
+        else 
+            {
+                Write-Host " Azure Resource Inventory are collecting Security Center Advisories."
+                Write-Host " Collecting Security Center Can increase considerably the execution time of Azure Resource Inventory and the size of final report "
+                Write-Host " "
+                Write-Host " If you want to skip Security Center report use <-SkipSecurityCenter> parameter. "
+                Write-Host " "
 
-            Write-Debug ('Extracting total number of Security Advisories from Tenant')
-            $SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-            $SecSizeNum = $SecSize.'count_'
+                Write-Debug ('Extracting total number of Security Advisories from Tenant')
+                $SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+                $SecSizeNum = $SecSize.'count_'
 
 
-            if ($SecSizeNum -ge 1) {
-                $Loop = $SecSizeNum / 1000
-                $Loop = [math]::ceiling($Loop)
-                $Looper = 0
-                $Limit = 0
-            
-                while ($Looper -lt $Loop) {
-                    $Looper ++
-                    Write-Progress -activity 'Azure Security Center' -Status "$Looper / $Loop" -PercentComplete 0 -CurrentOperation "Inventoring $SecSizeNum Security Center Advisories"
-                    $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                    $Global:Security += $SecCenter
-                    if ($SecSizeNum -ge 500000) {
-                        Start-Sleep 3
+                if ($SecSizeNum -ge 1) 
+                    {
+                        $Loop = $SecSizeNum / 1000
+                        $Loop = [math]::ceiling($Loop)
+                        $Looper = 0
+                        $Limit = 0
+                    
+                        while ($Looper -lt $Loop) 
+                            {
+                                $Looper ++
+                                Write-Progress -activity 'Azure Security Center' -Status "$Looper / $Loop" -PercentComplete 0 -CurrentOperation "Inventoring $SecSizeNum Security Center Advisories"
+                                $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                                $Global:Security += $SecCenter
+                                if ($SecSizeNum -ge 500000) {
+                                    Start-Sleep 3
+                                }
+                                else 
+                                    {
+                                        Start-Sleep 1
+                                    }
+                                $Limit = $Limit + 1000
+                                            
+                                Write-Progress -activity 'Azure Security Center' -Status "$Looper / $Loop" -PercentComplete 100 -Completed
+                            }
                     }
-                    else {
-                        Start-Sleep 1
-                    }
-                    $Limit = $Limit + 1000
-                            
-                    Write-Progress -activity 'Azure Security Center' -Status "$Looper / $Loop" -PercentComplete 100 -Completed
-                }
-            }
-        } 
+            } 
     }
+
     <######################################################### END Extractor Function ######################################################################>
 
 

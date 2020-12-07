@@ -92,8 +92,6 @@ Special Thanks for Doug Finke, the Author of Powershell [ImportExcel](https://gi
 * Azure ResourceInventory uses "*C:\AzureResourceInventory*" as default folder for PowerShell Desktop in Windows and "*$HOME/AzureResourceInventory*" for Azure CloudShell to save the final Excel file. 
 * This file will have the name  "*AzureResourceInventory_Report_yyyy-MM-dd_HH_mm.xlsx*"  where "*yyyy-MM-dd_HH_mm*" are the date and time that this inventory was created. 
 
-![ARI Final File CloudShell](images/ARIFinalFileDesktopCloudShell.png)
-
 
 ![ARI Final File Desktop](images/ARIFinalFileDesktop.png)
 
