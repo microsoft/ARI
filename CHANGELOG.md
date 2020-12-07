@@ -1,5 +1,9 @@
 # Version Control
 
+## Version 1.0.5 - 12/06/2020
+
+### **Azure Resource Inventory:**
+Grinder will no longer be used in the name. It will only be Azure Resource Inventory.During the development phase in private repository Grinder was used at name with reference to "Meat Grinder" but this name is now retired.
 
 ---
 ## Version 1.0.2 - 12/04/2020

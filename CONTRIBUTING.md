@@ -5,7 +5,7 @@
 # Contributing
 
 *Welcome and thank you for your interest
-in contributing to **Azure Grinder**! 
+in contributing to **Azure Resource Inventory**! 
 
 Before contributing to this project, please review this document for policies and procedures which
 will ease the contribution and review process for everyone. 

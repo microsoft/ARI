@@ -1,28 +1,28 @@
 ##########################################################################################
 #                                                                                        #
-#                        * Azure Grinder Report Generator *                              #
+#                        * Azure Resource Inventory ( ARI ) Report Generator *           #
 #                                                                                        #
-#       Version: 1.0.4                                                                   #
+#       Version: 1.0.5                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 12/05/2020                                                                 #
+#       Date: 12/06/2020                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
 #                                                                                        #
 #        DISCLAIMER:                                                                     #
 #        Please note that while being developed by Microsoft employees,                  #
-#        Azure Grinder Inventory is not a Microsoft service or product.                  #
+#        Azure Resource Inventory is not a Microsoft service or product.                 #
 #                                                                                        #         
-#        Azure Grinder Inventory is a personal driven project, there are none implicit   # 
+#        Azure Resource Inventory is a personal driven project, there are none implicit  # 
 #        or explicit obligations related to this project, it is provided 'as is' with    #
 #        no warranties and confer no rights.                                             #
 #                                                                                        #
 ##########################################################################################
 
 
-param ($TenantID, $SkipSecurityCenter = $false,$SubscriptionID) 
+param ($TenantID, $SkipSecurityCenter = $false, $SubscriptionID) 
 
 $Runtime = Measure-Command -Expression {
 
@@ -31,8 +31,8 @@ $Runtime = Measure-Command -Expression {
     }
 
     $ErrorActionPreference = "silentlycontinue"
-    $DesktopPath = "C:\AzureGrinder"
-    $CSPath = "$HOME/AzureGrinder"
+    $DesktopPath = "C:\AzureResourceInventory"
+    $CSPath = "$HOME/AzureResourceInventory"
     $Global:Resources = @()
     $Global:Advisories = @()
     $Global:Security = @()
@@ -45,10 +45,10 @@ $Runtime = Measure-Command -Expression {
         Write-Output "" 
         Write-Output "Usage: "
         Write-Output "For CloudShell:"
-        Write-Output "./AzGrinder.ps1"      
+        Write-Output "./AzureResourceInventory.ps1"      
         Write-Output ""
         Write-Output "For PowerShell Desktop:"      
-        Write-Output "./AzGrinder.ps1 -TenantID <Azure Tenant ID> "
+        Write-Output "./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID>"
         Write-Output "" 
         Write-Output "" 
     }
@@ -114,10 +114,9 @@ $Runtime = Measure-Command -Expression {
                 write-host "Extracting from Tenant $TenantID"
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
-                if($SubscriptionID)
-                    {
-                        $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID}
-                    }
+                if ($SubscriptionID) {
+                    $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
+                }
             }
         
             else {
@@ -125,9 +124,8 @@ $Runtime = Measure-Command -Expression {
                 az login -t $TenantID | Out-Null
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
-                if($SubscriptionID)
-                {
-                    $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID}
+                if ($SubscriptionID) {
+                    $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
                 }
             }
         }
@@ -160,7 +158,7 @@ $Runtime = Measure-Command -Expression {
 
         $SubCount = $Subscriptions.count
 
-        Write-Debug ('Number of Subscriptions Found: '+$SubCount)
+        Write-Debug ('Number of Subscriptions Found: ' + $SubCount)
         Write-Progress -activity 'Azure Inventory' -Status "3% Complete." -PercentComplete 3 -CurrentOperation "$SubCount Subscriptions found.."
 
         if ((Test-Path -Path $DefaultPath -PathType Container) -eq $false) {
@@ -181,35 +179,31 @@ $Runtime = Measure-Command -Expression {
                        
             $SUBID = $Subscription.id
             az account set --subscription $SUBID
-            Write-Debug ('Extracting total number of Resources from Subscription: '+$SUBID)
+            Write-Debug ('Extracting total number of Resources from Subscription: ' + $SUBID)
             $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
             $EnvSizeNum = $EnvSize.'count_'
                 
             Write-Debug ('Starting Resource Loop Extraction.')
-            if ($EnvSizeNum -ge 1) 
-                {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
+            if ($EnvSizeNum -ge 1) {
+                $Loop = $EnvSizeNum / 1000
+                $Loop = [math]::ceiling($Loop)
+                $Looper = 0
+                $Limit = 0
 
-                    while ($Looper -lt $Loop) 
-                        {
-                            $Resource = az graph query -q  "resources | where subscriptionId == '$SUBID' | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                            $Global:Resources += $Resource 
-                            if ($EnvSizeNum -ge 500000) 
-                                {
-                                    Start-Sleep 3
-                                }
-                            else 
-                                {
-                                    Start-Sleep 1
-                                }        
-                            $Looper ++
-                            $Limit = $Limit + 1000
-                            Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete $Prog -CurrentOperation "Inventoring $EnvSizeNum Resources in Subscription: $SubName"
-                        }
+                while ($Looper -lt $Loop) {
+                    $Resource = az graph query -q  "resources | where subscriptionId == '$SUBID' | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                    $Global:Resources += $Resource 
+                    if ($EnvSizeNum -ge 500000) {
+                        Start-Sleep 3
+                    }
+                    else {
+                        Start-Sleep 1
+                    }        
+                    $Looper ++
+                    $Limit = $Limit + 1000
+                    Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete $Prog -CurrentOperation "Inventoring $EnvSizeNum Resources in Subscription: $SubName"
                 }
+            }
             $Counter ++
         }   
 
@@ -226,40 +220,37 @@ $Runtime = Measure-Command -Expression {
             $Looper = 0
             $Limit = 0
         
-            while ($Looper -lt $Loop) 
-                {
-                    $Looper ++
-                    Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete 0 -CurrentOperation "Inventoring $AdvSizeNum Advisories"
-                    $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                    $Global:Advisories += $Advisor
-                    if ($AdvSizeNum -ge 500000) 
-                        {
-                            Start-Sleep 3
-                        }
-                    else 
-                        {
-                            Start-Sleep 1
-                        }
-                    $Limit = $Limit + 1000
-                            
-                    Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete 100 -Completed
+            while ($Looper -lt $Loop) {
+                $Looper ++
+                Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete 0 -CurrentOperation "Inventoring $AdvSizeNum Advisories"
+                $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                $Global:Advisories += $Advisor
+                if ($AdvSizeNum -ge 500000) {
+                    Start-Sleep 3
                 }
+                else {
+                    Start-Sleep 1
+                }
+                $Limit = $Limit + 1000
+                            
+                Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete 100 -Completed
+            }
         }
 
         <######################################################### Security Center ######################################################################>
 
         if ($SkipSecurityCenter) {
             Write-Host " Skiping Secuity Center Extraction"
-            Write-Host " You set Azure Grinder Inventory to not collect Security Center Advisories."
+            Write-Host " You set Azure Resource Inventory to not collect Security Center Advisories."
             Write-Host " "
-            Write-Host " Collecting Security Center Can increase considerably the execution time of Azure Grinder Inventory and the size of final report "
+            Write-Host " Collecting Security Center Can increase considerably the execution time of Azure Resource Inventory and the size of final report "
             Write-Host " "
             Write-Host " To skip Security Center report use <-SkipSecurityCenter> parameter. " 
             Write-Host " "
         }
         else {
-            Write-Host " Azure Grinder Inventory are collecting Security Center Advisories."
-            Write-Host " Collecting Security Center Can increase considerably the execution time of Azure Grinder Inventory and the size of final report "
+            Write-Host " Azure Resource Inventory are collecting Security Center Advisories."
+            Write-Host " Collecting Security Center Can increase considerably the execution time of Azure Resource Inventory and the size of final report "
             Write-Host " "
             Write-Host " If you want to skip Security Center report use <-SkipSecurityCenter> parameter. "
             Write-Host " "
@@ -280,14 +271,12 @@ $Runtime = Measure-Command -Expression {
                     Write-Progress -activity 'Azure Security Center' -Status "$Looper / $Loop" -PercentComplete 0 -CurrentOperation "Inventoring $SecSizeNum Security Center Advisories"
                     $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
                     $Global:Security += $SecCenter
-                    if ($SecSizeNum -ge 500000) 
-                        {
-                            Start-Sleep 3
-                        }
-                    else 
-                        {
-                            Start-Sleep 1
-                        }
+                    if ($SecSizeNum -ge 500000) {
+                        Start-Sleep 3
+                    }
+                    else {
+                        Start-Sleep 1
+                    }
                     $Limit = $Limit + 1000
                             
                     Write-Progress -activity 'Azure Security Center' -Status "$Looper / $Loop" -PercentComplete 100 -Completed
@@ -299,9 +288,9 @@ $Runtime = Measure-Command -Expression {
 
 
 
-    <################################################################################################ GRINDER  #############################################################################################>
+    <####################################################### Importing Data to Excel  #####################################################################>
 
-    function Grinder {
+    function ImportDataExcel {
         $SUBs = $Subscriptions
 
         Get-Job | Remove-Job
@@ -1742,7 +1731,7 @@ $Runtime = Measure-Command -Expression {
         <########################################## INITIAL VALIDATIONS ######################################################>
 
         #### Creating Excel file variable:
-        $Global:File = ($DefaultPath + "AzureGrinder_Report_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xlsx")
+        $Global:File = ($DefaultPath + "AzureResourceInventory_Report_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xlsx")
         Write-Debug ('Excel file:' + $File)
 
         #### Generic Conditional Text rules, Excel style specifications for the spreadsheets and tables:
@@ -1765,9 +1754,9 @@ $Runtime = Measure-Command -Expression {
 
             $Global:advco = $Advisories.count
 
-            $GrinderActive = ('Azure Grinder Reporting (' + ($resources.count - $advco) + ') Resources')
+            $DataActive = ('Azure Resource Inventory Reporting (' + ($resources.count - $advco) + ') Resources')
 
-            Write-Progress -activity $GrinderActive -Status "Building Advisories Report" -PercentComplete 0 -CurrentOperation "Considering $advco Advisories"
+            Write-Progress -activity $DataActive -Status "Building Advisories Report" -PercentComplete 0 -CurrentOperation "Considering $advco Advisories"
         
             while (get-job -Name 'Advisory' | Where-Object { $_.State -eq 'Running' }) {
                 Write-Progress -Id 1 -activity 'Processing Advisories' -Status "50% Complete." -PercentComplete 50
@@ -1800,7 +1789,7 @@ $Runtime = Measure-Command -Expression {
 
             $Global:Secadvco = $Security.Count
 
-            Write-Progress -activity $GrinderActive -Status "Building Security Center Report" -PercentComplete 0 -CurrentOperation "Considering $Secadvco Security Advisories"
+            Write-Progress -activity $DataActive -Status "Building Security Center Report" -PercentComplete 0 -CurrentOperation "Considering $Secadvco Security Advisories"
 
             while (get-job -Name 'Security' | Where-Object { $_.State -eq 'Running' }) {
                 Write-Progress -Id 1 -activity 'Processing Security Center Advisories' -Status "50% Complete." -PercentComplete 50
@@ -1880,7 +1869,7 @@ $Runtime = Measure-Command -Expression {
         #### 22 - VNET Peering
 
 
-        Write-Progress -activity $GrinderActive -Status "Processing Resources Inventory" -PercentComplete 0
+        Write-Progress -activity $DataActive -Status "Processing Resources Inventory" -PercentComplete 0
         $c = 0
         while (get-job -Name 'Compute', 'Network', 'Infra', 'Database' | Where-Object { $_.State -eq 'Running' }) {
             $jb = get-job -Name 'Compute', 'Network', 'Infra', 'Database'
@@ -1911,7 +1900,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.compute/virtualmachines') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog 
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
                 $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AD:AD -Width 60 -WrapText 
                 $condtxtvm = $(New-ConditionalText None -Range W:W
@@ -1967,7 +1956,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.compute/disks') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog 
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog 
                 $condtxtdsk = New-ConditionalText Unattached -Range J:J
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
          
@@ -1999,7 +1988,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.storage/storageaccounts') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog 
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
                 $condtxtStorage = $(New-ConditionalText false -Range F:F
@@ -2037,7 +2026,7 @@ $Runtime = Measure-Command -Expression {
             <############################################################################## 4 - Virtual Network  ###################################################################>
 
             if ($Type -eq 'microsoft.network/virtualnetworks') {
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog 
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog 
                 $txtvnet = $(New-ConditionalText false -Range G:H
                     New-ConditionalText falso -Range G:H)
 
@@ -2069,7 +2058,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.network/virtualnetworkgateways') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
     
                 $ExcelVNETGTW = $AzNetwork.VNETGTW
@@ -2102,7 +2091,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.sqlvirtualmachine/sqlvirtualmachines') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog 
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog 
                 Write-Debug ('Generating SQL Virtual Machines sheet for: ' + $sqlvm.count + ' VMs.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2130,7 +2119,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.sql/servers/databases') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating SQL Database sheet for: ' + $db.count + ' DBs.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2161,7 +2150,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.automation/automationaccounts/runbooks') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating Runbook sheet for: ' + $runbook.count + ' Runbooks.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2191,7 +2180,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.network/publicipaddresses') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating Public IP sheet for: ' + $pubip.count + ' Public IPs.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2218,7 +2207,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.eventhub/namespaces') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating Event Hub sheet for: ' + $evthub.count + ' Event Hubs.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2250,7 +2239,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.dbformysql/servers') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating MySQL Database sheet for: ' + $mysql.count + ' DBs.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2289,7 +2278,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.dbforpostgresql/servers') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating PostgreSQL sheet for: ' + $postgre.count + ' DBs.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2328,7 +2317,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.web/serverfarms') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating Web Server Farm sheet for: ' + $webfarm.count + ' Web Servers.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2361,7 +2350,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.operationalinsights/workspaces') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating Log Analytics Workspaces sheet for: ' + $wrkspace.count + ' Workspaces.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0.0'
@@ -2386,7 +2375,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.containerservice/managedclusters') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating AKS sheet for: ' + $AKS.count + ' Kubernetes Clusters.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2434,7 +2423,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.containerinstance/containergroups') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating Containers sheet for: ' + $con.count + ' Containers.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2467,7 +2456,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.compute/availabilitysets') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating Availability Set sheet for: ' + $AvSet.count + ' AV Sets.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2491,7 +2480,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.web/sites') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating Web Site sheet for: ' + $db.count + ' Web Sites.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2529,7 +2518,7 @@ $Runtime = Measure-Command -Expression {
             <############################################################################## 19 - VM Scale Sets ###################################################################>
 
             if ($Type -eq 'microsoft.compute/virtualmachinescalesets') {
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog 
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog 
                 Write-Debug ('Generating Virtual Machine Scale Set sheet for: ' + $vmscs.count + ' VMSS.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2562,7 +2551,7 @@ $Runtime = Measure-Command -Expression {
 
 
             if ($Type -eq 'microsoft.network/loadbalancers') {
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating Load Balancer sheet for: ' + $lbs.count + ' LBs.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2599,7 +2588,7 @@ $Runtime = Measure-Command -Expression {
 
             if ($Type -eq 'microsoft.sql/servers') {
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 Write-Debug ('Generating SQL Server sheet for: ' + $SQLServer.count + ' Servers.')
                     
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -2631,7 +2620,7 @@ $Runtime = Measure-Command -Expression {
             if ($Type -eq 'microsoft.network/virtualnetworks' -and $null -ne $AzNetwork.Peering -and $AzNetwork.Peering -ne '') {
 
 
-                Write-Progress -activity $GrinderActive -Status "$Prog% Complete." -PercentComplete $Prog
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
                 $ExcelPeering = $AzNetwork.Peering
@@ -2704,7 +2693,7 @@ $Runtime = Measure-Command -Expression {
         Write-Debug ('Generating Overview sheet (Charts).')
         "" | Export-Excel -Path $File -WorksheetName 'Overview' -MoveToStart 
 
-        Write-Progress -activity 'Azure Grinder Reporting Charts' -Status "1% Complete." -PercentComplete 10 -CurrentOperation "Building Excel Charts"
+        Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "1% Complete." -PercentComplete 10 -CurrentOperation "Building Excel Charts"
         $excel = Open-ExcelPackage -Path $file -KillExcel
 
         $PTParams = @{
@@ -2775,11 +2764,11 @@ $Runtime = Measure-Command -Expression {
         Add-PivotTable @PTParams
 
         $PTParams = @{
-            PivotTableName    = "P3"
-            Address           = $excel.Overview.cells["M25"] # top-left corner of the table
-            SourceWorkSheet   = $excel.VMs
-            PivotRows         = @("VM Size")
-            PivotData         = @{"VM Size" = "Count" }
+            PivotTableName  = "P3"
+            Address         = $excel.Overview.cells["M25"] # top-left corner of the table
+            SourceWorkSheet = $excel.VMs
+            PivotRows       = @("VM Size")
+            PivotData       = @{"VM Size" = "Count" }
             PivotTableStyle   = $tableStyle
             IncludePivotChart = $true
             ChartType         = "BarClustered"
@@ -2798,14 +2787,14 @@ $Runtime = Measure-Command -Expression {
 
         Close-ExcelPackage $excel 
 
-        Write-Progress -activity 'Azure Grinder Reporting Charts' -Status "100% Complete." -Completed
+        Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "100% Complete." -Completed
 
         Get-Job | Remove-Job
     }
 
 
     Extractor
-    Grinder
+    ImportDataExcel
 
 }
 $Measure = $Runtime.Totalminutes.ToString('#######.##')

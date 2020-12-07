@@ -5,9 +5,9 @@ Platform: Windows
 Tags: Powershell, Azure, Inventory, Excel Report, Customer Engineer
 ---
 
-# Azure Grinder
+# Azure Resource Inventory
 
-Azure Grinder inventory is a powerful script writen in powershell to generate an Excel report of any Azure Environment you have read access (Virtual Machines, AKS Clusters, SQL DBs, Event Hubs, etc.).
+Azure Resource inventory is a powerful script writen in powershell to generate an Excel report of any Azure Environment you have read access (Virtual Machines, AKS Clusters, SQL DBs, Event Hubs, etc.).
 
 This project is intend to help Cloud Admins and anyone that might need an easy and fast way to build a full Excel Report of an Azure Environment.
 
@@ -15,7 +15,7 @@ This project is intend to help Cloud Admins and anyone that might need an easy a
 
 
 ### Resources and Resource Providers
-Until this documentation Azure Grinder inventory was able to collect Azure Security Center (Unhealth only), Azure Advisor, 22 Azure resource types from 15 different Azure resource providers and this list are increasing fast.
+Until this documentation Azure Resource inventory was able to collect Azure Security Center (Unhealth only), Azure Advisor, 22 Azure resource types from 15 different Azure resource providers and this list are increasing fast.
 
 |Resource Provider|Resource Type|
 |-----------------|-------------|
@@ -52,7 +52,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-You can use Azure Grinder in both in Cloudshell and Powershell Desktop. 
+You can use Azure Resource Inventory in both in Cloudshell and Powershell Desktop. 
 
 What things you need to run the script 
 
@@ -63,12 +63,12 @@ What things you need to run the script
 ```
 To install Azure CLI go to [Microsoft Docs](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) and follow the instructions to install.   
 
-By default Azure Grinder will call to install both ImportExcel module and resource-graph extension but you need to have the right privileges during the script execution.
+By default Azure Resource Inventory will call to install both ImportExcel module and resource-graph extension but you need to have the right privileges during the script execution.
 
 Special Thanks for Doug Finke, the Author of Powershell [ImportExcel](https://github.com/dfinke/ImportExcel) Module.
 
 
-**Important:** Azure Grinder Inventory has not been tested in a Mac OS yet. If you have a Mac please share the results with Us.
+**Important:** Azure Resource Inventory has not been tested in a Mac OS yet. If you have a Mac please share the results with Us.
 
 <span style="color:red">**Important 2:**</span> If you're running the script inside Azure CloudShell the final Excel will not have Auto-fit columns and you will see warnings during the script execution but your inventory will be the same.
            It occurs because ImportExcel needs libgdiplus and libc6-dev libraries but it's not possible to install in Azure CloudShell (If you know how to do that please tell us ;) ).
@@ -78,24 +78,24 @@ Special Thanks for Doug Finke, the Author of Powershell [ImportExcel](https://gi
 
 ## Running the script<BR/>
 
-* Its really simple to use Azure Grinder Inventory. It's all writen in one script and all that you need to do is to call this script in PowerShell.
+* Its really simple to use Azure Resource Inventory. It's all writen in one script and all that you need to do is to call this script in PowerShell.
 
-* Run "AzureGrinder.ps1". In Azure CloudShell you're already authenticated. In PowerShell Desktop you will be redirected to  Azure sign-in page. 
+* Run "AzureResourceInventory.ps1". In Azure CloudShell you're already authenticated. In PowerShell Desktop you will be redirected to  Azure sign-in page. 
 
-* If you have privileges in multiple tenants you can specify the desired one by using "-TenantID" parameter or Azure Grinder will scan all your tenants ID and ask you to choose one. 
+* If you have privileges in multiple tenants you can specify the desired one by using "-TenantID" parameter or Azure Resource will scan all your tenants ID and ask you to choose one. 
           
 ![Tenants Menu](images/TenantsMenu.png)
 
-* After properly authenticated and with the TENANT selected, the Azure Grinder Inventory will perform all the work of extracting and creating the inventory.
+* After properly authenticated and with the TENANT selected, the Azure Resource Inventory will perform all the work of extracting and creating the inventory.
 * The duration will vary according to the number of subscriptions and resources. In our tests we managed to generate in 5 minutes the inventory of a Tenant with 15 subscriptions and about 12000 resources.
 
-* Azure Grinder uses "*C:\AzureGrinder*" as default folder for PowerShell Desktop in Windows and "*$HOME/AzureGrinder*" for Azure CloudShell to save the final Excel file. 
-* This file will have the name  "*AzureGrinder_Report_yyyy-MM-dd_HH_mm.xlsx*"  where "*yyyy-MM-dd_HH_mm*" are the date and time that this inventory was created. 
+* Azure ResourceInventory uses "*C:\AzureResourceInventory*" as default folder for PowerShell Desktop in Windows and "*$HOME/AzureResourceInventory*" for Azure CloudShell to save the final Excel file. 
+* This file will have the name  "*AzureResourceInventory_Report_yyyy-MM-dd_HH_mm.xlsx*"  where "*yyyy-MM-dd_HH_mm*" are the date and time that this inventory was created. 
 
-![Grinder Final File CloudShell](images/GrinderFinalFileDesktopCloudShell.png)
+![ARI Final File CloudShell](images/ARIFinalFileDesktopCloudShell.png)
 
 
-![Grinder Final File Desktop](images/GrinderFinalFileDesktop.png)
+![ARI Final File Desktop](images/ARIFinalFileDesktop.png)
 
 ## Versioning and changelog
 
