@@ -1,5 +1,11 @@
 # Version Control
 
+## Version 1.0.6 - 12/07/2020
+
+### **Azure Resource Inventory:**
+        1. Added "Running as Admin" validation when installing ImportExcel module.
+
+---
 ## Version 1.0.5 - 12/06/2020
 
 ### **Azure Resource Inventory:**

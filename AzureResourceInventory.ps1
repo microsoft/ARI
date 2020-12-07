@@ -1,8 +1,8 @@
 ##########################################################################################
 #                                                                                        #
-#                        * Azure Resource Inventory ( ARI ) Report Generator *           #
+#                  * Azure Resource Inventory ( ARI ) Report Generator *                 #
 #                                                                                        #
-#       Version: 1.0.5                                                                   #
+#       Version: 1.0.6                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
@@ -66,18 +66,19 @@ $Runtime = Measure-Command -Expression {
             if ($azcliExt.name -notin 'resource-graph') {
                 az extension add --name resource-graph 
             }
+            $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
             if ($null -eq (Get-InstalledModule -Name ImportExcel | Out-Null)) {
-                Write-Debug ('ImportExcel Module is not installed, installing..')
-                Install-Module -Name ImportExcel -Force
-            }
-            if ($null -eq (Get-InstalledModule -Name ImportExcel | Out-Null)) {
-                Write-Debug ('ImportExcel Module is not installed, installing..')
-                Install-Module -Name ImportExcel -Force -AllowClobber
-            }
-            if ($null -eq (Get-InstalledModule -Name ImportExcel | Out-Null)) {
-                Write-Debug ('ImportExcel Module is not installed, installing..')
-                Install-Module -Name ImportExcel -Scope CurrentUser
-            }
+                if($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+                {
+                    Install-Module -Name ImportExcel -Force
+                }
+                else 
+                {
+                    Write-Host 'Impossible to install ImportExcel Module if not running as Admin'
+                    Write-Host ''
+                    Write-Host 'Exiting now.'
+                    $host.Exit()
+                }
         }
 
         function LoginSession() {
