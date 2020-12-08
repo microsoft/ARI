@@ -2,11 +2,11 @@
 #                                                                                        #
 #                  * Azure Resource Inventory ( ARI ) Report Generator *                 #
 #                                                                                        #
-#       Version: 1.0.7                                                                   #
+#       Version: 1.1.0                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 12/07/2020                                                                 #
+#       Date: 12/08/2020                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -34,8 +34,8 @@ $Runtime = Measure-Command -Expression {
     $DesktopPath = "C:\AzureResourceInventory"
     $CSPath = "$HOME/AzureResourceInventory"
     $Global:Resources = @()
-    $Global:Advisories = @()
-    $Global:Security = @()
+    $Global:Advisories = ''
+    $Global:Security = ''
     $Global:Subscriptions = ''
 
     <######################################### Help ################################################>
@@ -74,10 +74,13 @@ $Runtime = Measure-Command -Expression {
                 }
                 else 
                 {
+                    Install-Module -Name ImportExcel -Scope CurrentUser
+                    if ($null -eq (Get-InstalledModule -Name ImportExcel | Out-Null)) {
                     Write-Host 'Impossible to install ImportExcel Module if not running as Admin'
                     Write-Host ''
                     Write-Host 'Exiting now.'
                     $host.Exit()
+                    }
                 }
             }
         }
@@ -169,44 +172,35 @@ $Runtime = Measure-Command -Expression {
 
         <######################################################## RESOURCES #######################################################################>
 
-        Write-Progress -activity 'Azure Inventory' -Status "4% Complete." -PercentComplete 4 -CurrentOperation "Starting Resources extraction.."
- 
-        $Counter = 0
+        Write-Progress -activity 'Azure Inventory' -Status "4% Complete." -PercentComplete 4 -CurrentOperation "Starting Resources extraction jobs.."
 
         Foreach ($Subscription in $Subscriptions) {
 
-            $Prog = ($Counter / $SubCount) * 100
-            $Prog = [math]::Round($Prog)
-            $SubName = $Subscription.Name
-                       
-            $SUBID = $Subscription.id
-            az account set --subscription $SUBID
-            Write-Debug ('Extracting total number of Resources from Subscription: ' + $SUBID)
-            $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-            $EnvSizeNum = $EnvSize.'count_'
+            Write-Debug ('Extracting total number of Resources from Subscription: ' + $Subscription.Name)
+            Start-Job -Name ('Resources_'+$Subscription.id) -ScriptBlock {
+                      
+                $SUBID = $args.id
+                az account set --subscription $SUBID
                 
-            Write-Debug ('Starting Resource Loop Extraction.')
-            if ($EnvSizeNum -ge 1) {
-                $Loop = $EnvSizeNum / 1000
-                $Loop = [math]::ceiling($Loop)
-                $Looper = 0
-                $Limit = 0
+                $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+                $EnvSizeNum = $EnvSize.'count_'
+                    
+                if ($EnvSizeNum -ge 1) {
+                    $Loop = $EnvSizeNum / 1000
+                    $Loop = [math]::ceiling($Loop)
+                    $Looper = 0
+                    $Limit = 0
 
-                while ($Looper -lt $Loop) {
-                    $Resource = az graph query -q  "resources | where subscriptionId == '$SUBID' | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                    $Global:Resources += $Resource 
-                    if ($EnvSizeNum -ge 500000) {
-                        Start-Sleep 3
+                    while ($Looper -lt $Loop) {
+                        $Resource = az graph query -q  "resources | where subscriptionId == '$SUBID' | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                        $Resources += $Resource 
+                        Start-Sleep 3      
+                        $Looper ++
+                        $Limit = $Limit + 1000
                     }
-                    else {
-                        Start-Sleep 1
-                    }        
-                    $Looper ++
-                    $Limit = $Limit + 1000
-                    Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete $Prog -CurrentOperation "Inventoring $EnvSizeNum Resources in Subscription: $SubName"
                 }
-            }
-            $Counter ++
+                $Resources
+            } -ArgumentList $Subscription
         }   
 
         <######################################################### ADVISOR ######################################################################>
@@ -215,28 +209,26 @@ $Runtime = Measure-Command -Expression {
         $AdvSize = az graph query -q  "advisorresources | summarize count()" --output json --only-show-errors | ConvertFrom-Json
         $AdvSizeNum = $AdvSize.'count_'
 
+        Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Advisories extraction jobs.."
 
         if ($AdvSizeNum -ge 1) {
-            $Loop = $AdvSizeNum / 1000
+            Start-Job -name 'Advisories' -ScriptBlock {
+            $Loop = $($args[0]) / 1000
             $Loop = [math]::ceiling($Loop)
             $Looper = 0
             $Limit = 0
-        
-            while ($Looper -lt $Loop) {
-                $Looper ++
-                Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete 0 -CurrentOperation "Inventoring $AdvSizeNum Advisories"
-                $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                $Global:Advisories += $Advisor
-                if ($AdvSizeNum -ge 500000) {
+            $Adv = @()
+
+            while ($Looper -lt $Loop) 
+                {
+                    $Looper ++
+                    $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                    $Adv += $Advisor
                     Start-Sleep 3
+                    $Limit = $Limit + 1000
                 }
-                else {
-                    Start-Sleep 1
-                }
-                $Limit = $Limit + 1000
-                            
-                Write-Progress -activity 'Azure Inventory' -Status "$Looper / $Loop" -PercentComplete 100 -Completed
-            }
+                $Adv
+            } -ArgumentList $AdvSizeNum
         }
 
         <######################################################### Security Center ######################################################################>
@@ -252,6 +244,7 @@ $Runtime = Measure-Command -Expression {
         }
         else 
             {
+                Write-Progress -activity 'Azure Inventory' -Status "6% Complete." -PercentComplete 6 -CurrentOperation "Starting Security Advisories extraction jobs.."
                 Write-Host " Azure Resource Inventory are collecting Security Center Advisories."
                 Write-Host " Collecting Security Center Can increase considerably the execution time of Azure Resource Inventory and the size of final report "
                 Write-Host " "
@@ -265,44 +258,75 @@ $Runtime = Measure-Command -Expression {
 
                 if ($SecSizeNum -ge 1) 
                     {
-                        $Loop = $SecSizeNum / 1000
+                        Start-Job -name 'SecAdvisories' -ScriptBlock {
+                        $Loop = $($args[0]) / 1000
                         $Loop = [math]::ceiling($Loop)
                         $Looper = 0
                         $Limit = 0
-                    
+                        $Sec = @()
                         while ($Looper -lt $Loop) 
                             {
                                 $Looper ++
-                                Write-Progress -activity 'Azure Security Center' -Status "$Looper / $Loop" -PercentComplete 0 -CurrentOperation "Inventoring $SecSizeNum Security Center Advisories"
                                 $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                                $Global:Security += $SecCenter
-                                if ($SecSizeNum -ge 500000) {
-                                    Start-Sleep 3
-                                }
-                                else 
-                                    {
-                                        Start-Sleep 1
-                                    }
+                                $Sec += $SecCenter
+                                Start-Sleep 3
                                 $Limit = $Limit + 1000
-                                            
-                                Write-Progress -activity 'Azure Security Center' -Status "$Looper / $Loop" -PercentComplete 100 -Completed
                             }
+                        $Sec    
+                        } -ArgumentList $SecSizeNum
                     }
-            } 
+            }
+            
+            Write-Progress -activity 'Azure Inventory' -PercentComplete 20
+            while (get-job | Where-Object { $_.State -eq 'Running' }) {
+                $jb = get-job
+                $c = (((($jb.count - ($jb | Where-Object { $_.State -eq 'Running' }).Count)) / $jb.Count) * 100)
+                $c = [math]::Round($c)
+                Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "$c% Complete." -PercentComplete $c
+                Start-Sleep -Seconds 2
+            }
+            Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "100% Complete." -Completed
+ 
     }
 
     <######################################################### END Extractor Function ######################################################################>
 
 
 
+
+
+
+
+
+
+
+    
+
     <####################################################### Importing Data to Excel  #####################################################################>
 
     function ImportDataExcel {
         $SUBs = $Subscriptions
+        
+        Write-Progress -activity 'Azure Inventory' -Status "21% Complete." -PercentComplete 21 -CurrentOperation "Starting to process extraction data.."
 
-        Get-Job | Remove-Job
+        Foreach ($Subscription in $Subscriptions)
+            {
+                $Resource = Receive-Job -Name ('Resources_'+$Subscription.id)
+                $Global:Resources += $Resource
+            }
+         
+        $Global:Advisories = Receive-Job -name 'Advisories'
+
+        if (!($SkipSecurityCenter.IsPresent))
+            {
+                $Global:Security = Receive-Job -Name 'SecAdvisories'
+
+            }
+        get-job | Remove-Job
 
         <######################################################### RESOURCES JOB ######################################################################>
+
+        Write-Progress -activity 'Azure Inventory' -Status "22% Complete." -PercentComplete 22 -CurrentOperation "Starting to process extraction data.."
 
         $VM = @()
         $VMDisk = @()
@@ -1761,7 +1785,7 @@ $Runtime = Measure-Command -Expression {
 
             $Global:advco = $Advisories.count
 
-            $DataActive = ('Azure Resource Inventory Reporting (' + ($resources.count - $advco) + ') Resources')
+            $DataActive = ('Azure Resource Inventory Reporting (' + ($resources.count) + ') Resources')
 
             Write-Progress -activity $DataActive -Status "Building Advisories Report" -PercentComplete 0 -CurrentOperation "Considering $advco Advisories"
         

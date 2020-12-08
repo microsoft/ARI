@@ -1,5 +1,12 @@
 # Version Control
 
+## Version 1.1.0 - 12/08/2020
+
+### **Azure Resource Inventory:**
+        1. Implemented Jobs during Azure extraction (Jobs were used only in the reporting phase)
+        2. Fixed an issue with ImportExcel Module
+
+---
 ## Version 1.0.7 - 12/07/2020
 
 ### **Azure Resource Inventory:**
