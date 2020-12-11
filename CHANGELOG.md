@@ -1,5 +1,13 @@
 # Version Control
 
+## Version 1.2.0 - 12/11/2020
+
+### **Azure Resource Inventory:**
+        1. Added extra data for Azure VM
+        2. Added extra data for Disks
+        2. Added notes to relevant issues with official Microsoft link
+
+---
 ## Version 1.1.0 - 12/08/2020
 
 ### **Azure Resource Inventory:**
