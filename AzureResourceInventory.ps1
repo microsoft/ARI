@@ -2,11 +2,11 @@
 #                                                                                        #
 #                  * Azure Resource Inventory ( ARI ) Report Generator *                 #
 #                                                                                        #
-#       Version: 1.1.0                                                                   #
+#       Version: 1.2.0                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 12/08/2020                                                                 #
+#       Date: 12/11/2020                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -464,6 +464,7 @@ $Runtime = Measure-Command -Expression {
                         $AVSET = ''
                         $dataSize = ''
                         $StorAcc = ''
+                        $UpdateMgmt = if ($null -eq $data.osProfile.LinuxConfiguration.patchSettings.patchMode) {$data.osProfile.WindowsConfiguration.patchSettings.patchMode} else {$data.osProfile.LinuxConfiguration.patchSettings.patchMode}
 
                         $ext = @()
                         $AzDiag = ''
@@ -504,6 +505,7 @@ $Runtime = Measure-Command -Expression {
                                         'SKU'                           = $data.storageProfile.imageReference.sku;
                                         'Admin Username'                = $data.osProfile.adminUsername;
                                         'OS Type'                       = $os;
+                                        'Update Management'             = $UpdateMgmt;
                                         'Boot Diagnostics'              = $bootdg;
                                         'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
                                         'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
@@ -541,6 +543,7 @@ $Runtime = Measure-Command -Expression {
                                 'SKU'                           = $data.storageProfile.imageReference.sku;
                                 'Admin Username'                = $data.osProfile.adminUsername;
                                 'OS Type'                       = $os;
+                                'Update Management'             = $UpdateMgmt;
                                 'Boot Diagnostics'              = $bootdg;
                                 'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
                                 'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
@@ -587,6 +590,7 @@ $Runtime = Measure-Command -Expression {
                             'Zone'                   = [string]$1.ZONES;
                             'SKU'                    = $SKU.Name;
                             'Disk Size'              = $data.diskSizeGB;
+                            'Encryption'             = $data.encryption.type;
                             'OS Type'                = $data.osType;
                             'Disk IOPS Read / Write' = $data.diskIOPSReadWrite;
                             'Disk MBps Read / Write' = $data.diskMBpsReadWrite;
@@ -1933,16 +1937,16 @@ $Runtime = Measure-Command -Expression {
 
                 Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
-                $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AD:AD -Width 60 -WrapText 
-                $condtxtvm = $(New-ConditionalText None -Range W:W
-                    New-ConditionalText false -Range K:K
-                    New-ConditionalText falso -Range K:K
+                $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AE:AE -Width 60 -WrapText 
+                $condtxtvm = $(New-ConditionalText None -Range X:X
                     New-ConditionalText false -Range L:L
                     New-ConditionalText falso -Range L:L
                     New-ConditionalText false -Range M:M
                     New-ConditionalText falso -Range M:M
-                    New-ConditionalText false -Range X:X
-                    New-ConditionalText falso -Range X:X)
+                    New-ConditionalText false -Range N:N
+                    New-ConditionalText falso -Range N:N
+                    New-ConditionalText false -Range Y:Y
+                    New-ConditionalText falso -Range Y:Y)
 
 
                 $ExcelVMs = $AzCompute.VM
@@ -1959,6 +1963,7 @@ $Runtime = Measure-Command -Expression {
                 'Image Version',
                 'SKU',
                 'Admin Username',
+                'Update Management',
                 'Boot Diagnostics',
                 'Performance Diagnostic Agent',
                 'Azure Monitor',
@@ -1988,7 +1993,7 @@ $Runtime = Measure-Command -Expression {
             if ($Type -eq 'microsoft.compute/disks') {
 
                 Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog 
-                $condtxtdsk = New-ConditionalText Unattached -Range J:J
+                $condtxtdsk = New-ConditionalText Unattached -Range K:K
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
          
 
@@ -2004,6 +2009,7 @@ $Runtime = Measure-Command -Expression {
                 'SKU',
                 'Disk Size',
                 'Location',
+                'Encryption',
                 'OS Type',
                 'Disk State',
                 'Disk IOPS Read / Write',
@@ -2726,6 +2732,50 @@ $Runtime = Measure-Command -Expression {
 
         Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "1% Complete." -PercentComplete 10 -CurrentOperation "Building Excel Charts"
         $excel = Open-ExcelPackage -Path $file -KillExcel
+
+        if($ExcelVMs)
+            {
+                $null=$excel.VMs.Cells["L1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
+                $excel.VMs.Cells["L1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
+                $null=$excel.VMs.Cells["M1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
+                $excel.VMs.Cells["M1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
+                $null=$excel.VMs.Cells["N1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource’s health.", "Azure Resource Inventory")
+                $excel.VMs.Cells["N1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
+                $null=$excel.VMs.Cells["X1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
+                $excel.VMs.Cells["X1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
+                $null=$excel.VMs.Cells["Y1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
+                $excel.VMs.Cells["Y1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
+            }
+        if($ExcelVMDisks)
+            {
+                $null=$excel.Disks.Cells["K1"].AddComment("When you delete a virtual machine (VM) in Azure, by default, any disks that are attached to the VM aren't deleted. After a VM is deleted, you will continue to pay for unattached disks.", "Azure Resource Inventory")
+                $excel.Disks.Cells["K1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/windows/find-unattached-disks'
+            }
+        if($ExcelStorageAcc)
+            {
+                $null=$excel.StorageAcc.Cells["F1"].AddComment("Is recommended that you configure your storage account to accept requests from secure connections only by setting the Secure transfer required property for the storage account.", "Azure Resource Inventory")
+                $excel.StorageAcc.Cells["F1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer'
+                $null=$excel.StorageAcc.Cells["G1"].AddComment("When a container is configured for public access, any client can read data in that container. Public access presents a potential security risk, so if your scenario does not require it, Microsoft recommends that you disallow it for the storage account.", "Azure Resource Inventory")
+                $excel.StorageAcc.Cells["G1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-configure?tabs=portal'
+                $null=$excel.StorageAcc.Cells["H1"].AddComment("By default, Azure Storage accounts permit clients to send and receive data with the oldest version of TLS, TLS 1.0, and above. To enforce stricter security measures, you can configure your storage account to require that clients send and receive data with a newer version of TLS", "Azure Resource Inventory")
+                $excel.StorageAcc.Cells["H1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version?tabs=portal'
+            }
+        if($ExcelVNET)
+            {
+                $null=$excel.VNET.Cells["G1"].AddComment("Azure DDoS Protection Standard, combined with application design best practices, provides enhanced DDoS mitigation features to defend against DDoS attacks.", "Azure Resource Inventory")
+                $excel.VNET.Cells["G1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/ddos-protection/ddos-protection-overview'
+            }
+        if($ExcelEvtHub)
+            {
+                $null=$excel.'Event Hubs'.Cells["I1"].AddComment("The Auto-inflate feature of Event Hubs automatically scales up by increasing the number of throughput units, to meet usage needs. Increasing throughput units prevents throttling scenarios.", "Azure Resource Inventory")
+                $excel.'Event Hubs'.Cells["I1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-auto-inflate'
+            }
+        if($ExcelLB)
+            {
+                $null=$excel.'Load Balancers'.Cells["E1"].AddComment("No SLA is provided for Basic Load Balancer!", "Azure Resource Inventory")
+                $excel.'Load Balancers'.Cells["E1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/load-balancer/skus'
+            }
+
 
         $PTParams = @{
             PivotTableName    = "P0"
