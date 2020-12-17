@@ -2,7 +2,7 @@
 #                                                                                        #
 #                  * Azure Resource Inventory ( ARI ) Report Generator *                 #
 #                                                                                        #
-#       Version: 1.2.1                                                                   #
+#       Version: 1.2.2                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
@@ -59,20 +59,22 @@ $Runtime = Measure-Command -Expression {
         function checkAzCli() {
             $azcli = az --version
             if ($null -eq $azcli) {
-                Read-Host "Azure CLI Not Found. Press <Enter>to terminate script"
+                Read-Host "Azure CLI Not Found. Press <Enter> to finish script"
                 Exit
             }
             $azcliExt = az extension list --output json | ConvertFrom-Json
             if ($azcliExt.name -notin 'resource-graph') {
                 az extension add --name resource-graph 
             }
-            if ($null -eq (Get-InstalledModule -Name ImportExcel | Out-Null)) 
+            $VarExcel = Get-InstalledModule -Name ImportExcel | Out-Null
+            if ($null -eq $VarExcel) 
                 {
                     Install-Module -Name ImportExcel -Force
                 }
-            if ($null -eq (Get-InstalledModule -Name ImportExcel | Out-Null))
+            $VarExcel = Get-InstalledModule -Name ImportExcel | Out-Null
+            if ($null -eq $VarExcel) 
                 {
-                    Read-Host 'Impossible to install ImportExcel Module if not running as Admin'
+                    Read-Host 'Admininstrator rights required to install ImportExcel Module. Press <Enter> to finish script'
                     Exit
                 }
         }
@@ -147,6 +149,7 @@ $Runtime = Measure-Command -Expression {
         <###################################################### Checking PowerShell ######################################################################>
 
         Write-Progress -activity 'Azure Inventory' -Status "0% Complete." -PercentComplete 0 -CurrentOperation 'Checking Powershell..'
+        checkAzCli
         checkPS
 
         <###################################################### Subscriptions ######################################################################>
