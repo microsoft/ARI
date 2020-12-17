@@ -155,11 +155,10 @@ $Runtime = Measure-Command -Expression {
 
         checkAzCli
         checkPS
-        Write-Progress -activity 'Azure Inventory' -Status "0% Complete." -PercentComplete 0 -CurrentOperation 'Checking Powershell..'
 
         <###################################################### Subscriptions ######################################################################>
 
-        Write-Progress -activity 'Azure Inventory' -Status "2% Complete." -PercentComplete 2 -CurrentOperation 'Discovering Subscriptions..'
+        Write-Progress -activity 'Azure Inventory' -Status "1% Complete." -PercentComplete 2 -CurrentOperation 'Discovering Subscriptions..'
 
         $SubCount = $Subscriptions.count
 
