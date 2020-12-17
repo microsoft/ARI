@@ -57,21 +57,26 @@ $Runtime = Measure-Command -Expression {
 
     function Extractor {
         function checkAzCli() {
+            Write-Host "Validating Az Cli.."
             $azcli = az --version
             if ($null -eq $azcli) {
                 Read-Host "Azure CLI Not Found. Press <Enter> to finish script"
                 Exit
             }
+            Write-Host "Validating Az Cli Extension.."
             $azcliExt = az extension list --output json | ConvertFrom-Json
             if ($azcliExt.name -notin 'resource-graph') {
+                Write-Host "Adding Az Cli Extension"
                 az extension add --name resource-graph 
             }
-            $VarExcel = Get-InstalledModule -Name ImportExcel | Out-Null
+            Write-Host "Validating ImportExcel Module.."
+            $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
             if ($null -eq $VarExcel) 
                 {
+                    Write-Host "Trying to install ImportExcel Module.."
                     Install-Module -Name ImportExcel -Force
                 }
-            $VarExcel = Get-InstalledModule -Name ImportExcel | Out-Null
+            $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
             if ($null -eq $VarExcel) 
                 {
                     Read-Host 'Admininstrator rights required to install ImportExcel Module. Press <Enter> to finish script'
@@ -148,9 +153,9 @@ $Runtime = Measure-Command -Expression {
 
         <###################################################### Checking PowerShell ######################################################################>
 
-        Write-Progress -activity 'Azure Inventory' -Status "0% Complete." -PercentComplete 0 -CurrentOperation 'Checking Powershell..'
         checkAzCli
         checkPS
+        Write-Progress -activity 'Azure Inventory' -Status "0% Complete." -PercentComplete 0 -CurrentOperation 'Checking Powershell..'
 
         <###################################################### Subscriptions ######################################################################>
 
