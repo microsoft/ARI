@@ -2,11 +2,11 @@
 #                                                                                        #
 #                  * Azure Resource Inventory ( ARI ) Report Generator *                 #
 #                                                                                        #
-#       Version: 1.2.0                                                                   #
+#       Version: 1.2.1                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 12/11/2020                                                                 #
+#       Date: 12/17/2020                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -59,30 +59,22 @@ $Runtime = Measure-Command -Expression {
         function checkAzCli() {
             $azcli = az --version
             if ($null -eq $azcli) {
-                throw "Azure Cli not found!"
-                $host.Exit()
+                Read-Host "Azure CLI Not Found. Press <Enter>to terminate script"
+                Exit
             }
             $azcliExt = az extension list --output json | ConvertFrom-Json
             if ($azcliExt.name -notin 'resource-graph') {
                 az extension add --name resource-graph 
             }
-            $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-            if ($null -eq (Get-InstalledModule -Name ImportExcel | Out-Null)) {
-                if($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+            if ($null -eq (Get-InstalledModule -Name ImportExcel | Out-Null)) 
                 {
                     Install-Module -Name ImportExcel -Force
                 }
-                else 
+            if ($null -eq (Get-InstalledModule -Name ImportExcel | Out-Null))
                 {
-                    Install-Module -Name ImportExcel -Scope CurrentUser
-                    if ($null -eq (Get-InstalledModule -Name ImportExcel | Out-Null)) {
-                    Write-Host 'Impossible to install ImportExcel Module if not running as Admin'
-                    Write-Host ''
-                    Write-Host 'Exiting now.'
-                    $host.Exit()
-                    }
+                    Read-Host 'Impossible to install ImportExcel Module if not running as Admin'
+                    Exit
                 }
-            }
         }
 
         function LoginSession() {
