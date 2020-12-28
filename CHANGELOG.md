@@ -1,5 +1,14 @@
 # Version Control
 
+
+## Version 1.2.2 - 12/28/2020
+
+### **Azure Resource Inventory:**
+        1. Added SkipAdvisory parameter
+        2. Fixed some performance issues
+
+---
+
 ## Version 1.2.0 - 12/11/2020
 
 ### **Azure Resource Inventory:**

@@ -1,12 +1,12 @@
 ##########################################################################################
 #                                                                                        #
-#                  * Azure Resource Inventory ( ARI ) Report Generator *                 #
+#                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.2.2                                                                   #
+#       Version: 1.2.3                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 12/17/2020                                                                 #
+#       Date: 12/28/2020                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -22,7 +22,7 @@
 ##########################################################################################
 
 
-param ($TenantID, [switch]$SkipSecurityCenter, $SubscriptionID) 
+param ($TenantID, [switch]$SkipSecurityCenter, $SubscriptionID,[switch]$SkipAdvisory) 
 
 $Runtime = Measure-Command -Expression {
 
@@ -204,31 +204,33 @@ $Runtime = Measure-Command -Expression {
 
         <######################################################### ADVISOR ######################################################################>
 
-        Write-Debug ('Extracting total number of Advisories from Tenant')
-        $AdvSize = az graph query -q  "advisorresources | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-        $AdvSizeNum = $AdvSize.'count_'
+        if (!($SkipAdvisory.IsPresent)) {
+            Write-Debug ('Extracting total number of Advisories from Tenant')
+            $AdvSize = az graph query -q  "advisorresources | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+            $AdvSizeNum = $AdvSize.'count_'
 
-        Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Advisories extraction jobs.."
+            Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Advisories extraction jobs.."
 
-        if ($AdvSizeNum -ge 1) {
-            Start-Job -name 'Advisories' -ScriptBlock {
-            $Loop = $($args[0]) / 1000
-            $Loop = [math]::ceiling($Loop)
-            $Looper = 0
-            $Limit = 0
-            $Adv = @()
+            if ($AdvSizeNum -ge 1) {
+                Start-Job -name 'Advisories' -ScriptBlock {
+                $Loop = $($args[0]) / 1000
+                $Loop = [math]::ceiling($Loop)
+                $Looper = 0
+                $Limit = 0
+                $Adv = @()
 
-            while ($Looper -lt $Loop) 
-                {
-                    $Looper ++
-                    $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                    $Adv += $Advisor
-                    Start-Sleep 3
-                    $Limit = $Limit + 1000
-                }
-                $Adv
-            } -ArgumentList $AdvSizeNum
-        }
+                while ($Looper -lt $Loop) 
+                    {
+                        $Looper ++
+                        $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                        $Adv += $Advisor
+                        Start-Sleep 3
+                        $Limit = $Limit + 1000
+                    }
+                    $Adv
+                } -ArgumentList $AdvSizeNum
+            }
+        }   
 
         <######################################################### Security Center ######################################################################>
 
@@ -314,12 +316,14 @@ $Runtime = Measure-Command -Expression {
                 $Global:Resources += $Resource
             }
          
-        $Global:Advisories = Receive-Job -name 'Advisories'
+        if (!($SkipAdvisory.IsPresent)) 
+            {    
+                $Global:Advisories = Receive-Job -name 'Advisories'
+            }
 
         if (!($SkipSecurityCenter.IsPresent))
             {
                 $Global:Security = Receive-Job -Name 'SecAdvisories'
-
             }
         get-job | Remove-Job
 
