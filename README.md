@@ -31,6 +31,10 @@ Until this documentation Azure Resource inventory was able to collect Azure Secu
 |microsoft.network|virtualnetworkgateways|
 |microsoft.network|publicipaddresses|
 |microsoft.network|loadbalancers|
+|microsoft.network|frontdoors|
+|microsoft.network|applicationgateways|
+|microsoft.network|routetables|
+|microsoft.network|dnszones|
 |microsoft.sqlvirtualmachine|sqlvirtualmachines|
 |microsoft.sql|servers/databases|
 |microsoft.dbformysql|servers|
@@ -43,6 +47,9 @@ Until this documentation Azure Resource inventory was able to collect Azure Secu
 |microsoft.containerinstance|containergroups| 
 |microsoft.web|sites|
 |microsoft.sql|servers|
+|microsoft.keyvault|vaults|
+|microsoft.recoveryservices|vaults|
+|microsoft.devices|iothubs|
 
 
 
