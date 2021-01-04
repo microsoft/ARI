@@ -2,11 +2,11 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.2.3                                                                   #
+#       Version: 1.3.0                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 12/28/2020                                                                 #
+#       Date: 01/04/2021                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -22,7 +22,7 @@
 ##########################################################################################
 
 
-param ($TenantID, [switch]$SkipSecurityCenter, $SubscriptionID,[switch]$SkipAdvisory) 
+param ($TenantID, [switch]$SkipSecurityCenter, $SubscriptionID, [switch]$SkipAdvisory) 
 
 $Runtime = Measure-Command -Expression {
 
@@ -356,6 +356,14 @@ $Runtime = Measure-Command -Expression {
         $VMSCS = @()
         $LB = @()
         $SQLSERVER = @()
+        $FRONTDOOR = @()
+        $APPGTW = @()
+        $ROUTETABLE = @()
+        $VAULT = @()
+        $RECOVERYVAULT = @()
+        $DNSZONE = @()
+        $IOT = @()
+
 
         ForEach ($Resource in $Resources) {
             if ($Resource.TYPE -eq 'microsoft.compute/virtualmachines') { $VM += $Resource }
@@ -383,6 +391,14 @@ $Runtime = Measure-Command -Expression {
             if ($Resource.TYPE -eq 'microsoft.compute/virtualmachinescalesets' ) { $VMSCS += $Resource }
             if ($Resource.TYPE -eq 'microsoft.network/loadbalancers' ) { $LB += $Resource }
             if ($Resource.TYPE -eq 'microsoft.sql/servers' ) { $SQLSERVER += $Resource }
+
+            if ($Resource.TYPE -eq 'microsoft.network/frontdoors' ) { $FRONTDOOR += $Resource }
+            if ($Resource.TYPE -eq 'microsoft.network/applicationgateways' ) { $APPGTW += $Resource }
+            if ($Resource.TYPE -eq 'microsoft.network/routetables' ) { $ROUTETABLE += $Resource }
+            if ($Resource.TYPE -eq 'microsoft.keyvault/vaults' ) { $VAULT += $Resource }
+            if ($Resource.TYPE -eq 'microsoft.recoveryservices/vaults' ) { $RECOVERYVAULT += $Resource }
+            if ($Resource.TYPE -eq 'microsoft.network/dnszones' ) { $DNSZONE += $Resource }
+            if ($Resource.TYPE -eq 'microsoft.devices/iothubs' ) { $IOT += $Resource }
         }
 
 
@@ -811,10 +827,6 @@ $Runtime = Measure-Command -Expression {
                     $Subs = $Sub
     
                     foreach ($1 in $SQLServer) {
-                        $Progress = ($Counter / $SQLServer.count) * 100
-                        $Progress = [math]::Round($Progress)
-                        Write-Progress -id 1 -activity "Building SQL Servers Report" -Status "$Progress% Complete." -PercentComplete $Progress 
-                        $Counter ++
     
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
@@ -836,6 +848,41 @@ $Runtime = Measure-Command -Expression {
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[11]))
 
+            $IOT = ([PowerShell]::Create()).AddScript( { param($Sub, $IOT)
+                    $tmp = @()
+
+                    $Subs = $Sub
+    
+                    foreach ($1 in $IOT) {
+    
+                        $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
+                        $data = $1.PROPERTIES
+    
+                        $obj = @{
+                            'Subscription'          = $sub1.name;
+                            'Resource Group'        = $1.RESOURCEGROUP;
+                            'Name'                  = $1.NAME;
+                            'HostName'              = $data.hostname;
+                            'State'                 = $data.state;
+                            'SKU'                   = $1.sku.name;
+                            'SKU Tier'              = $1.sku.tier;
+                            'SKU Capacity'          = $1.sku.capacity;
+                            'Features'              = $data.features;
+                            'Enable File Upload Notifications' = $data.enableFileUploadNotifications;
+                            'Default TTL As ISO8601' = $data.cloudToDevice.defaultTtlAsIso8601;
+                            'Max Delivery Count'    = $data.cloudToDevice.maxDeliveryCount;
+                            'EventHubs Endpoint'    = $data.eventHubEndpoints.events.endpoint;
+                            'EventHubs Partition Count' = $data.eventHubEndpoints.events.partitionCount;
+                            'EventHubs Path'        = $data.eventHubEndpoints.events.path;
+                            'EventHubs Retention Days' = $data.eventHubEndpoints.events.retentionTimeInDays;
+                            'Locations'             = [string]$data.locations.location
+                        }
+                        $tmp += $obj
+                    }
+                    $tmp
+                }).AddArgument($($args[0])).AddArgument($($args[12]))
+
+
             $jobVM = $VM.BeginInvoke()
             $jobVMDisk = $VMDisk.BeginInvoke()
             $jobSQLVM = $SQLVM.BeginInvoke()
@@ -844,6 +891,7 @@ $Runtime = Measure-Command -Expression {
             $jobVMSCS = $VMSCS.BeginInvoke()
             $jobCON = $CON.BeginInvoke()
             $jobSQLSRV = $SQLSRV.BeginInvoke()
+            $jobIOT = $IOT.BeginInvoke()
     
             $job += $jobVM
             $job += $jobVMDisk
@@ -853,6 +901,7 @@ $Runtime = Measure-Command -Expression {
             $job += $jobVMSCS
             $job += $jobCON
             $job += $jobSQLSRV
+            $job += $jobIOT
 
             while ($Job.Runspace.IsCompleted -contains $false) {}
 
@@ -864,6 +913,7 @@ $Runtime = Measure-Command -Expression {
             $VMSCSS = $VMSCS.EndInvoke($jobVMSCS)
             $CONS = $CON.EndInvoke($jobCON)
             $SQLSRVS = $SQLSRV.EndInvoke($jobSQLSRV)
+            $IOTS = $IOT.EndInvoke($jobIOT)
     
             $VM.Dispose()
             $VMDisk.Dispose()
@@ -873,6 +923,7 @@ $Runtime = Measure-Command -Expression {
             $VMSCS.Dispose()
             $CON.Dispose()
             $SQLSRV.Dispose()
+            $IOT.Dispose()
 
             $AzCompute = @{
                 'VM'         = $VMS;
@@ -882,12 +933,13 @@ $Runtime = Measure-Command -Expression {
                 'AKS'        = $AKSS;
                 'VMSCS'      = $VMSCSS;
                 'CON'        = $CONS;
-                'SQLSERVER'  = $SQLSRVS
+                'SQLSERVER'  = $SQLSRVS;
+                'IOT'        = $IOTS
             }
 
             $AzCompute
 
-        } -ArgumentList $SUBs, $VM, $VMNIC, $NSG, $VMExp, $VMDisk, $SQLVM, $SERVERFARM, $AKS, $VMSCS, $CON, $SQLSERVER   | Out-Null
+        } -ArgumentList $SUBs, $VM, $VMNIC, $NSG, $VMExp, $VMDisk, $SQLVM, $SERVERFARM, $AKS, $VMSCS, $CON, $SQLSERVER, $IOT   | Out-Null
 
 
         <######################################################### NETWORK RESOURCE GROUP JOB ######################################################################>
@@ -1294,17 +1346,137 @@ $Runtime = Measure-Command -Expression {
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1]))
 
+            $FrontDoor = ([PowerShell]::Create()).AddScript( { param($Sub, $FRONTDOOR)
+                    $tmp = @()
+
+                    $Subs = $Sub
+
+                    foreach ($1 in $FRONTDOOR) {
+
+                        $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
+                        $data = $1.PROPERTIES
+                                                    
+                        $obj = @{
+                            'Subscription'           = $sub1.name;
+                            'Resource Group'         = $1.RESOURCEGROUP;
+                            'Name'                   = $1.NAME;
+                            'Location'               = $1.LOCATION;
+                            'Friendly Name'          = $data.friendlyName;
+                            'cName'                  = $data.cName;
+                            'State'                  = $data.enabledState;
+                            'Frontend'               = [string]$data.frontendEndpoints.name;
+                            'Backend'                = [string]$data.backendPools.name;
+                            'Health Probe'           = [string]$data.healthProbeSettings.name;
+                            'Load Balancing'         = [string]$data.loadBalancingSettings.name;
+                            'Routing Rules'          = [string]$data.routingRules.name
+                        }
+                        $tmp += $obj
+                    }
+                    $tmp
+                }).AddArgument($($args[0])).AddArgument($($args[5]))
+
+            $AppGateway = ([PowerShell]::Create()).AddScript( { param($Sub, $APPGTW)
+                    $tmp = @()
+
+                    $Subs = $Sub
+
+                    foreach ($1 in $APPGTW) {
+
+                        $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
+                        $data = $1.PROPERTIES
+                                                    
+                        $obj = @{
+                            'Subscription'           = $sub1.name;
+                            'Resource Group'         = $1.RESOURCEGROUP;
+                            'Name'                   = $1.NAME;
+                            'Location'               = $1.LOCATION;
+                            'State'                  = $data.OperationalState;
+                            'SKU Name'               = $data.sku.tier;
+                            'SKU Capacity'           = $data.sku.capacity;
+                            'Backend'                = [string]$data.backendAddressPools.name;
+                            'Frontend'               = [string]$data.frontendIPConfigurations.name;
+                            'Frontend Ports'         = [string]$data.frontendports.properties.port;
+                            'Gateways'               = [string]$data.gatewayIPConfigurations.name;
+                            'HTTP Listeners'         = [string]$data.httpListeners.name;
+                            'Request Routing Rules'  = [string]$data.RequestRoutingRules.Name;
+                        }
+                        $tmp += $obj
+                    }
+                    $tmp
+                }).AddArgument($($args[0])).AddArgument($($args[6]))
+
+            $RouteTable = ([PowerShell]::Create()).AddScript( { param($Sub, $ROUTETABLE)
+                    $tmp = @()
+
+                    $Subs = $Sub
+
+                    foreach ($1 in $ROUTETABLE) {
+
+                        $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
+                        $data = $1.PROPERTIES
+                                                    
+                        $obj = @{
+                            'Subscription'           = $sub1.name;
+                            'Resource Group'         = $1.RESOURCEGROUP;
+                            'Name'                   = $1.NAME;
+                            'Location'               = $1.LOCATION;
+                            'Disable BGP Route Propagation' = $data.disableBgpRoutePropagation;
+                            'Routes'                 = [string]$data.routes.name;
+                            'Routes Prefixes'        = [string]$data.routes.properties.addressPrefix;
+                            'Routes BGP Override'    = [string]$data.routes.properties.hasBgpOverride;
+                            'Routes Next Hop IP'     = [string]$data.routes.properties.nextHopIpAddress;
+                            'Routes Next Hop Type'   = [string]$data.routes.properties.nextHopType
+                        }
+                        $tmp += $obj
+                    }
+                    $tmp
+                }).AddArgument($($args[0])).AddArgument($($args[7]))                
+
+            $DNSZone = ([PowerShell]::Create()).AddScript( { param($Sub, $DNSZONE)
+                    $tmp = @()
+
+                    $Subs = $Sub
+
+                    foreach ($1 in $DNSZONE) {
+
+                        $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
+                        $data = $1.PROPERTIES
+                                                    
+                        $obj = @{
+                            'Subscription'           = $sub1.name;
+                            'Resource Group'         = $1.RESOURCEGROUP;
+                            'Name'                   = $1.NAME;
+                            'Location'               = $1.LOCATION;
+                            'Zone Type'              = $data.zoneType;
+                            'Number of Record Sets'  = $data.numberOfRecordSets;
+                            'Max Number of Record Sets' = $data.maxNumberofRecordSets;
+                            'Name Servers'           = [string]$data.nameServers
+                        }
+                        $tmp += $obj
+                    }
+                    $tmp
+                }).AddArgument($($args[0])).AddArgument($($args[8]))  
+
+
             $jobVNET = $VNET.BeginInvoke()
             $jobVNETGTW = $VNETGTW.BeginInvoke()
             $jobPIP = $PIP.BeginInvoke()
             $jobLB = $LB.BeginInvoke()
             $jobPeering = $Peering.BeginInvoke()
+            $jobFrontDoor = $FrontDoor.BeginInvoke()
+            $jobAppGateway = $AppGateway.BeginInvoke()
+            $jobRouteTable = $RouteTable.BeginInvoke()
+            $jobDNSZone = $DNSZone.BeginInvoke()
 
             $job += $jobVNET
             $job += $jobVNETGTW
             $job += $jobPIP
             $job += $jobLB
             $job += $jobPeering
+            $job += $jobFrontDoor
+            $job += $jobAppGateway
+            $job += $jobRouteTable
+            $job += $jobDNSZone
 
             while ($Job.Runspace.IsCompleted -contains $false) {}
 
@@ -1313,24 +1485,36 @@ $Runtime = Measure-Command -Expression {
             $PIPS = $PIP.EndInvoke($jobPIP)
             $LBS = $LB.EndInvoke($jobLB)
             $PeeringS = $Peering.EndInvoke($jobPeering)
+            $FrontDoorS = $FrontDoor.EndInvoke($jobFrontDoor)
+            $AppGatewayS = $AppGateway.EndInvoke($jobAppGateway)
+            $RouteTableS = $RouteTable.EndInvoke($jobRouteTable)
+            $DNSZoneS = $DNSZone.EndInvoke($jobDNSZone)
 
             $VNET.Dispose()
             $VNETGTW.Dispose()
             $PIP.Dispose()
             $LB.Dispose()
             $Peering.Dispose()
+            $FrontDoor.Dispose()
+            $AppGateway.Dispose()
+            $RouteTable.Dispose()
+            $DNSZone.Dispose()
 
             $AzNetwork = @{
                 'VNET'    = $VNETS;
                 'VNETGTW' = $VNETGTWS;
                 'PIP'     = $PIPS;
                 'LB'      = $LBS;
-                'Peering' = $PeeringS
+                'Peering' = $PeeringS;
+                'FrontDoor' = $FrontDoorS;
+                'AppGateway' = $AppGatewayS;
+                'RouteTable' = $RouteTableS;
+                'DNSZone' = $DNSZoneS
             }
 
             $AzNetwork
 
-        } -ArgumentList $Subs, $VNET, $VNETGTW, $PIP, $LB | Out-Null
+        } -ArgumentList $Subs, $VNET, $VNETGTW, $PIP, $LB, $FRONTDOOR, $APPGTW, $ROUTETABLE, $DNSZONE | Out-Null
 
 
         <######################################################### INFRASTRUCTURE RESOURCE GROUP JOB ######################################################################>
@@ -1568,14 +1752,74 @@ $Runtime = Measure-Command -Expression {
                 }).AddArgument($($args[0])).AddArgument($($args[7]))
 
 
+            $Vault = ([PowerShell]::Create()).AddScript( { param($Sub, $VAULT)
+                    $tmp = @()
+
+                    $Subs = $Sub
+
+                    foreach ($1 in $VAULT) {
+
+                        $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
+                        $data = $1.PROPERTIES
+
+                        $obj = @{
+                            'Subscription'                  = $sub1.name;
+                            'Resource Group'                = $1.RESOURCEGROUP;
+                            'Name'                          = $1.NAME;
+                            'Location'                      = $1.LOCATION;
+                            'SKU Family'                    = $data.sku.family;
+                            'SKU'                           = $data.sku.name;
+                            'Vault Uri'                     = $data.vaultUri;
+                            'Enable RBAC'                   = $data.enableRbacAuthorization;
+                            'Enable Soft Delete'            = $data.enableSoftDelete;
+                            'Enable for Disk Encryption'    = $data.enabledForDiskEncryption;
+                            'Enable for Template Deploy'    = $data.enabledForTemplateDeployment;
+                            'Soft Delete Retention Days'    = $data.softDeleteRetentionInDays;
+                            'Certificate Permissions'       = [string]$data.accessPolicies.permissions.certificates;
+                            'Key Permissions'               = [string]$data.accessPolicies.permissions.keys;
+                            'Secret Permissions'            = [string]$data.accessPolicies.permissions.secrets;
+                        }
+                        $tmp += $obj
+                    }
+                    $tmp
+                }).AddArgument($($args[0])).AddArgument($($args[8]))
 
 
+            $RecoveryVault = ([PowerShell]::Create()).AddScript( { param($Sub, $RECOVAULT)
+                    $tmp = @()
+
+                    $Subs = $Sub
+
+                    foreach ($1 in $RECOVAULT) {
+
+                        $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
+                        $data = $1.PROPERTIES
+
+                        $obj = @{
+                            'Subscription'                  = $sub1.name;
+                            'Resource Group'                = $1.RESOURCEGROUP;
+                            'Name'                          = $1.NAME;
+                            'Location'                      = $1.LOCATION;
+                            'SKU Name'                      = $1.sku.name;
+                            'SKU Tier'                      = $1.sku.tier;
+                            'Private Endpoint State for Backup' = $data.privateEndpointStateForBackup;
+                            'Private Endpoint State for Site Recovery' = $data.privateEndpointStateForSiteRecovery
+                        }
+                        $tmp += $obj
+                    }
+                    $tmp
+                }).AddArgument($($args[0])).AddArgument($($args[9]))                
+
+
+                
             $jobStorageAcc = $StorageAcc.BeginInvoke()
             $jobAutAcc = $AutAcc.BeginInvoke()
             $jobEvtHub = $EvtHub.BeginInvoke()
             $jobWrkSpace = $WrkSpace.BeginInvoke()
             $jobAvSet = $AvSet.BeginInvoke()
             $jobWebSite = $WebSite.BeginInvoke()
+            $jobVault = $Vault.BeginInvoke()
+            $jobRecoveryVault = $RecoveryVault.BeginInvoke()
 
             $job += $jobStorageAcc
             $job += $jobAutAcc
@@ -1583,6 +1827,8 @@ $Runtime = Measure-Command -Expression {
             $job += $jobWrkSpace
             $job += $jobAvSet
             $job += $jobWebSite
+            $job += $jobVault
+            $job += $jobRecoveryVault
 
             while ($Job.Runspace.IsCompleted -contains $false) {}
 
@@ -1592,6 +1838,8 @@ $Runtime = Measure-Command -Expression {
             $WrkSpaceS = $WrkSpace.EndInvoke($jobWrkSpace)
             $AvSetS = $AvSet.EndInvoke($jobAvSet)
             $WebSiteS = $WebSite.EndInvoke($jobWebSite)
+            $VaultS = $Vault.EndInvoke($jobVault)
+            $RecoveryVaultS = $RecoveryVault.EndInvoke($jobRecoveryVault)
 
             $StorageAcc.Dispose()
             $AutAcc.Dispose()
@@ -1599,6 +1847,8 @@ $Runtime = Measure-Command -Expression {
             $WrkSpace.Dispose()
             $AvSet.Dispose()
             $WebSite.Dispose()
+            $Vault.Dispose()
+            $RecoveryVault.Dispose()
 
             $AzInfra = @{
                 'StorageAcc'    = $StorageAccS;
@@ -1606,12 +1856,14 @@ $Runtime = Measure-Command -Expression {
                 'EvtHub'        = $EvtHubS;
                 'WrkSpace'      = $WrkSpaceS;
                 'AvSet'         = $AvSetS;
-                'WebSite'       = $WebSiteS
+                'WebSite'       = $WebSiteS;
+                'Vault'         = $VaultS;
+                'RecoveryVault' = $RecoveryVaultS
             }
 
             $AzInfra
 
-        } -ArgumentList $Subs, $StorageAcc, $RB, $AUT, $EVTHUB, $WRKSPACE, $AVSET, $SITES | Out-Null
+        } -ArgumentList $Subs, $StorageAcc, $RB, $AUT, $EVTHUB, $WRKSPACE, $AVSET, $SITES, $VAULT, $RECOVERYVAULT | Out-Null
 
 
 
@@ -1905,6 +2157,13 @@ $Runtime = Measure-Command -Expression {
         #### 20 - Load Balancers
         #### 21 - SQL Servers
         #### 22 - VNET Peering
+        #### 23 - FrontDoor
+        #### 24 - Application Gateway
+        #### 25 - Route Table
+        #### 26 - Key Vault
+        #### 27 - Recovery Vault
+        #### 28 - DNS Zone
+        #### 29 - IOT
 
 
         Write-Progress -activity $DataActive -Status "Processing Resources Inventory" -PercentComplete 0
@@ -2684,7 +2943,207 @@ $Runtime = Measure-Command -Expression {
                 'Peering Allow Virtual NetworkAccess' | 
                 Export-Excel -Path $File -WorksheetName 'Peering' -AutoSize -TableName 'AzureVNETPeerings' -TableStyle $tableStyle -Style $Style
 
+            }
+            
+
+            <############################################################################## 23 - Front Door  ###################################################################>
+
+
+            if ($Type -eq 'microsoft.network/frontdoors') {
+
+
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
+                $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
+
+                $ExcelFrontDoor = $AzNetwork.FrontDoor
+
+                $ExcelFrontDoor | 
+                ForEach-Object { [PSCustomObject]$_ } | 
+                Select-Object 'Subscription',
+                'Resource Group',
+                'Name',
+                'Location',
+                'Friendly Name',
+                'cName',
+                'State',
+                'Frontend',
+                'Backend',
+                'Health Probe',
+                'Load Balancing',
+                'Routing Rules'| 
+                Export-Excel -Path $File -WorksheetName 'FrontDoor' -AutoSize -TableName 'AzureFrontDoor' -TableStyle $tableStyle -Style $Style
+
             }            
+
+            <############################################################################## 24 - Application Gateway ###################################################################>
+
+
+            if ($Type -eq 'microsoft.network/applicationgateways') {
+
+
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
+                $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
+
+                $ExcelAppGateway = $AzNetwork.AppGateway
+
+                $ExcelAppGateway | 
+                ForEach-Object { [PSCustomObject]$_ } | 
+                Select-Object 'Subscription',
+                'Resource Group',
+                'Name',
+                'Location',
+                'State',
+                'SKU Name',
+                'SKU Capacity',
+                'Backend',
+                'Frontend',
+                'Frontend Ports',
+                'Gateways',
+                'HTTP Listeners',
+                'Request Routing Rules'| 
+                Export-Excel -Path $File -WorksheetName 'App Gateway' -AutoSize -TableName 'AzureAppGateway' -TableStyle $tableStyle -Style $Style
+
+            }  
+
+            <############################################################################## 25 - Route Tables ###################################################################>
+
+
+            if ($Type -eq 'microsoft.network/routetables') {
+
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
+                $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
+
+                $ExcelRouteTable = $AzNetwork.RouteTable
+
+                $ExcelRouteTable | 
+                ForEach-Object { [PSCustomObject]$_ } | 
+                Select-Object 'Subscription',
+                'Resource Group',
+                'Name',
+                'Location',
+                'Disable BGP Route Propagation',
+                'Routes',
+                'Routes Prefixes',
+                'Routes BGP Override',
+                'Routes Next Hop IP',
+                'Routes Next Hop Type'| 
+                Export-Excel -Path $File -WorksheetName 'Route Tables' -AutoSize -TableName 'AzureRouteTables' -TableStyle $tableStyle -Style $Style
+
+            }  
+
+            <############################################################################## 26 - Key Vaults ###################################################################>
+
+
+            if ($Type -eq 'microsoft.keyvault/vaults') {
+
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
+                $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
+
+                $ExcelVault = $AzInfra.Vault
+
+                $ExcelVault | 
+                ForEach-Object { [PSCustomObject]$_ } | 
+                Select-Object 'Subscription',
+                'Resource Group',
+                'Name',
+                'Location',
+                'SKU Family',
+                'SKU',
+                'Vault Uri',
+                'Enable RBAC',
+                'Enable Soft Delete',
+                'Enable for Disk Encryption',
+                'Enable for Template Deploy',
+                'Soft Delete Retention Days',
+                'Certificate Permissions',
+                'Key Permissions',
+                'Secret Permissions'| 
+                Export-Excel -Path $File -WorksheetName 'Key Vaults' -AutoSize -TableName 'AzureKeyVault' -TableStyle $tableStyle -Style $Style
+
+            }  
+
+            <############################################################################## 27 - Recovery Vaults ###################################################################>
+
+
+            if ($Type -eq 'microsoft.recoveryservices/vaults') {
+
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
+                $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
+
+                $ExcelRecVault = $AzInfra.RecoveryVault
+
+                $ExcelRecVault | 
+                ForEach-Object { [PSCustomObject]$_ } | 
+                Select-Object 'Subscription',
+                'Resource Group',
+                'Name',
+                'Location',
+                'SKU Name',
+                'SKU Tier',
+                'Private Endpoint State for Backup',
+                'Private Endpoint State for Site Recovery'| 
+                Export-Excel -Path $File -WorksheetName 'Recovery Vaults' -AutoSize -TableName 'AzureRecVault' -TableStyle $tableStyle -Style $Style
+
+            }             
+
+            <############################################################################## 28 - DNS Zones ###################################################################>
+
+
+            if ($Type -eq 'microsoft.network/dnszones') {
+
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
+                $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
+
+                $ExcelDNSZone = $AzNetwork.DNSZone
+
+                $ExcelDNSZone | 
+                ForEach-Object { [PSCustomObject]$_ } | 
+                Select-Object 'Subscription',
+                'Resource Group',
+                'Name',
+                'Location',
+                'Zone Type',
+                'Number of Record Sets',
+                'Max Number of Record Sets',
+                'Name Servers'| 
+                Export-Excel -Path $File -WorksheetName 'DNS Zones' -AutoSize -TableName 'AzureDNSZones' -TableStyle $tableStyle -Style $Style
+
+            }   
+
+            <############################################################################## 29 - IOT ###################################################################>
+
+
+            if ($Type -eq 'microsoft.devices/iothubs') {
+
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
+                $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
+
+                $ExcelIot = $AzCompute.Iot
+
+                $ExcelIot | 
+                ForEach-Object { [PSCustomObject]$_ } | 
+                Select-Object 'Subscription',
+                'Resource Group',
+                'Name',
+                'HostName',
+                'State',
+                'SKU',
+                'SKU Tier',
+                'SKU Capacity',
+                'Features',
+                'Enable File Upload Notifications',
+                'Default TTL As ISO8601',
+                'Max Delivery Count',
+                'EventHubs Endpoint',
+                'EventHubs Partition Count',
+                'EventHubs Path',
+                'EventHubs Retention Days',
+                'Locations'| 
+                Export-Excel -Path $File -WorksheetName 'IoT Hubs' -AutoSize -TableName 'AzureIOT' -TableStyle $tableStyle -Style $Style
+
+            } 
+
+
             $c++
         }
 

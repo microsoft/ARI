@@ -1,5 +1,17 @@
 # Version Control
 
+## Version 1.3.0 - 01/04/2021
+
+### **Azure Resource Inventory:**
+        1. Added FrontDoor Resource
+        2. Added Application Gateway Resource
+        3. Added Route Tables Resource
+        4. Added Key Vault Resource
+        5. Added Recovery Vault Resource
+        6. Added DNS Zones Resource
+        7. Added Iot Hubs Resource
+
+---
 
 ## Version 1.2.2 - 12/28/2020
 
