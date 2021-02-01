@@ -1,5 +1,12 @@
 # Version Control
 
+## Version 1.3.1 - 02/01/2021
+
+### **Azure Resource Inventory:**
+        1. Fixed Storage Account Public Access bug
+
+---
+
 ## Version 1.3.0 - 01/04/2021
 
 ### **Azure Resource Inventory:**
