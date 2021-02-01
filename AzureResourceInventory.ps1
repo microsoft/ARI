@@ -2,11 +2,11 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.3.0                                                                   #
+#       Version: 1.3.1                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 01/04/2021                                                                 #
+#       Date: 02/01/2021                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -1543,7 +1543,7 @@ $Runtime = Measure-Command -Expression {
                             'Location'                              = $1.LOCATION;
                             'Zone'                                  = $1.ZONES;
                             'Supports HTTPs Traffic Only'           = $data.supportsHttpsTrafficOnly;
-                            'Allow Blob Public Access'              = if ($data.allowBlobPublicAccess -eq 'False') { $false }else { $true };
+                            'Allow Blob Public Access'              = if ($data.allowBlobPublicAccess -eq $false) { $false }else { $true };
                             'TLS Version'                           = $TLSv;
                             'Identity-based access for file shares' = if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None') { $false }elseif ($null -eq $data.azureFilesIdentityBasedAuthentication.directoryServiceOptions) { $false }else { $true };
                             'Access Tier'                           = $data.accessTier;
