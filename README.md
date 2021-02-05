@@ -27,7 +27,6 @@ Until this documentation Azure Resource inventory was able to collect Azure Secu
 |microsoft.compute|disks|
 |microsoft.storage|storageaccounts|
 |microsoft.network|virtualnetworks|
-|microsoft.network|virtualnetworks|
 |microsoft.network|virtualnetworkgateways|
 |microsoft.network|publicipaddresses|
 |microsoft.network|loadbalancers|
