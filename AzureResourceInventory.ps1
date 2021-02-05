@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.3.1                                                                   #
+#       Version: 1.3.2                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
@@ -34,8 +34,8 @@ $Runtime = Measure-Command -Expression {
     $DesktopPath = "C:\AzureResourceInventory"
     $CSPath = "$HOME/AzureResourceInventory"
     $Global:Resources = @()
-    $Global:Advisories = ''
-    $Global:Security = ''
+    $Global:Advisories = @()
+    $Global:Security = @()
     $Global:Subscriptions = ''
 
     <######################################### Help ################################################>
@@ -94,7 +94,7 @@ $Runtime = Measure-Command -Expression {
                 az login | Out-Null
                 write-host ""
                 write-host ""
-                $Tenants = az account list --query [].homeTenantId -o tsv --only-show-errors | Get-Unique
+                $Tenants = az account list --query [].homeTenantId -o tsv --only-show-errors | Sort-Object -Unique
                     
                 if ($Tenants.Count -eq 1) {
                     write-host "You have privileges only in One Tenant "
@@ -169,38 +169,9 @@ $Runtime = Measure-Command -Expression {
             New-Item -Type Directory -Force -Path $DefaultPath | Out-Null
         }
 
-        <######################################################## RESOURCES #######################################################################>
+        <######################################################## INVENTORY LOOPs #######################################################################>
 
         Write-Progress -activity 'Azure Inventory' -Status "4% Complete." -PercentComplete 4 -CurrentOperation "Starting Resources extraction jobs.."
-
-        Foreach ($Subscription in $Subscriptions) {
-
-            Write-Debug ('Extracting total number of Resources from Subscription: ' + $Subscription.Name)
-            Start-Job -Name ('Resources_'+$Subscription.id) -ScriptBlock {
-                      
-                $SUBID = $args.id
-                az account set --subscription $SUBID
-                
-                $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-                $EnvSizeNum = $EnvSize.'count_'
-                    
-                if ($EnvSizeNum -ge 1) {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $Resource = az graph query -q  "resources | where subscriptionId == '$SUBID' | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                        $Resources += $Resource 
-                        Start-Sleep 3      
-                        $Looper ++
-                        $Limit = $Limit + 1000
-                    }
-                }
-                $Resources
-            } -ArgumentList $Subscription
-        }   
 
         <######################################################### ADVISOR ######################################################################>
 
@@ -212,23 +183,21 @@ $Runtime = Measure-Command -Expression {
             Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Advisories extraction jobs.."
 
             if ($AdvSizeNum -ge 1) {
-                Start-Job -name 'Advisories' -ScriptBlock {
-                $Loop = $($args[0]) / 1000
+                $Loop = $AdvSizeNum / 1000
                 $Loop = [math]::ceiling($Loop)
                 $Looper = 0
                 $Limit = 0
-                $Adv = @()
 
                 while ($Looper -lt $Loop) 
                     {
                         $Looper ++
+                        Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                         $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                        $Adv += $Advisor
+                        $Global:Advisories += $Advisor
                         Start-Sleep 3
                         $Limit = $Limit + 1000
                     }
-                    $Adv
-                } -ArgumentList $AdvSizeNum
+                    Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "Completed" -Completed
             }
         }   
 
@@ -259,35 +228,57 @@ $Runtime = Measure-Command -Expression {
 
                 if ($SecSizeNum -ge 1) 
                     {
-                        Start-Job -name 'SecAdvisories' -ScriptBlock {
-                        $Loop = $($args[0]) / 1000
+                        $Loop = $SecSizeNum / 1000
                         $Loop = [math]::ceiling($Loop)
                         $Looper = 0
                         $Limit = 0
-                        $Sec = @()
                         while ($Looper -lt $Loop) 
                             {
                                 $Looper ++
+                                Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                                 $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                                $Sec += $SecCenter
+                                $Global:Security += $SecCenter
                                 Start-Sleep 3
                                 $Limit = $Limit + 1000
                             }
-                        $Sec    
-                        } -ArgumentList $SecSizeNum
+                            Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "Completed" -Completed
                     }
             }
             
             Write-Progress -activity 'Azure Inventory' -PercentComplete 20
-            while (get-job | Where-Object { $_.State -eq 'Running' }) {
-                $jb = get-job
-                $c = (((($jb.count - ($jb | Where-Object { $_.State -eq 'Running' }).Count)) / $jb.Count) * 100)
-                $c = [math]::Round($c)
-                Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "$c% Complete." -PercentComplete $c
-                Start-Sleep -Seconds 2
-            }
+
             Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "100% Complete." -Completed
  
+
+            Foreach ($Subscription in $Subscriptions) {
+
+                Write-Debug ('Extracting total number of Resources from Subscription: ' + $Subscription.Name)
+                          
+                    $SUBID = $Subscription.id
+                    $SubName = $Subscription.name
+                    az account set --subscription $SUBID
+                    
+                    $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+                    $EnvSizeNum = $EnvSize.'count_'
+                        
+                    if ($EnvSizeNum -ge 1) {
+                        $Loop = $EnvSizeNum / 1000
+                        $Loop = [math]::ceiling($Loop)
+                        $Looper = 0
+                        $Limit = 0
+    
+                        while ($Looper -lt $Loop) {
+                            $Resource = az graph query -q  "resources | where subscriptionId == '$SUBID' | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                            $Global:Resources += $Resource 
+                            Start-Sleep 3      
+                            $Looper ++
+                            Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs for: $SubName" -PercentComplete (($Looper / $Loop) * 100)
+                            $Limit = $Limit + 1000
+                        }
+                    }
+                    Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs for: $SubName" -PercentComplete (($Looper / $Loop) * 100)
+            }   
+    
     }
 
     <######################################################### END Extractor Function ######################################################################>
@@ -309,23 +300,6 @@ $Runtime = Measure-Command -Expression {
         $SUBs = $Subscriptions
         
         Write-Progress -activity 'Azure Inventory' -Status "21% Complete." -PercentComplete 21 -CurrentOperation "Starting to process extraction data.."
-
-        Foreach ($Subscription in $Subscriptions)
-            {
-                $Resource = Receive-Job -Name ('Resources_'+$Subscription.id)
-                $Global:Resources += $Resource
-            }
-         
-        if (!($SkipAdvisory.IsPresent)) 
-            {    
-                $Global:Advisories = Receive-Job -name 'Advisories'
-            }
-
-        if (!($SkipSecurityCenter.IsPresent))
-            {
-                $Global:Security = Receive-Job -Name 'SecAdvisories'
-            }
-        get-job | Remove-Job
 
         <######################################################### RESOURCES JOB ######################################################################>
 
