@@ -1,5 +1,12 @@
 # Version Control
 
+## Version 1.3.3 - 02/08/2021
+
+### **Azure Resource Inventory:**
+        1. Fixed Warning when no AKS exists in the environment
+
+---
+
 ## Version 1.3.1 - 02/01/2021
 
 ### **Azure Resource Inventory:**

@@ -2,11 +2,11 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.3.2                                                                   #
+#       Version: 1.3.3                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 02/01/2021                                                                 #
+#       Date: 02/08/2021                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -272,11 +272,11 @@ $Runtime = Measure-Command -Expression {
                             $Global:Resources += $Resource 
                             Start-Sleep 3      
                             $Looper ++
-                            Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs for: $SubName" -PercentComplete (($Looper / $Loop) * 100)
+                            Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs ($SubName)" -PercentComplete (($Looper / $Loop) * 100)
                             $Limit = $Limit + 1000
                         }
                     }
-                    Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs for: $SubName" -PercentComplete (($Looper / $Loop) * 100)
+                    Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs ($SubName)" -PercentComplete (($Looper / $Loop) * 100)
             }   
     
     }
@@ -415,7 +415,7 @@ $Runtime = Measure-Command -Expression {
                 $sub1 = $($args[1]) | Where-Object { $_.id -eq $1.properties.resourceDetails.Id.Split("/")[2] }
 
                 $obj = @{
-                    'Subscription ID'    = $sub1.Name;
+                    'Subscription'       = $sub1.Name;
                     'Resource Group'     = $1.RESOURCEGROUP;
                     'Resource Type'      = $data.resourceDetails.Id.Split("/")[7];
                     'Resource Name'      = $data.resourceDetails.Id.Split("/")[8];
@@ -431,7 +431,7 @@ $Runtime = Measure-Command -Expression {
                 $tmp += $obj
             }
             $tmp
-        } -ArgumentList $Security, $Subs | Out-Null
+        } -ArgumentList $Security, $SUBs | Out-Null
 
 
         <######################################################### COMPUTE RESOURCE GROUP JOB ######################################################################>
@@ -3213,27 +3213,29 @@ $Runtime = Measure-Command -Expression {
             }
 
 
-        $PTParams = @{
-            PivotTableName    = "P0"
-            Address           = $excel.Overview.cells["A3"] # top-left corner of the table
-            SourceWorkSheet   = $excel.Advisor
-            PivotRows         = @("Category")
-            PivotData         = @{"Category" = "Count" }
-            PivotTableStyle   = $tableStyle
-            IncludePivotChart = $true
-            ChartType         = "Pie"
-            ChartRow          = 0 # place the chart below row 22nd
-            ChartColumn       = 3
-            Activate          = $true
-            PivotFilter       = 'Impact'
-            ChartTitle        = 'Advisory'
-            ShowPercent       = $true
-            ChartHeight       = 300
-            ChartWidth        = 500
-        }
+        if ($Adv)            
+            {
+                $PTParams = @{
+                    PivotTableName    = "P0"
+                    Address           = $excel.Overview.cells["A3"] # top-left corner of the table
+                    SourceWorkSheet   = $excel.Advisor
+                    PivotRows         = @("Category")
+                    PivotData         = @{"Category" = "Count" }
+                    PivotTableStyle   = $tableStyle
+                    IncludePivotChart = $true
+                    ChartType         = "Pie"
+                    ChartRow          = 0 # place the chart below row 22nd
+                    ChartColumn       = 3
+                    Activate          = $true
+                    PivotFilter       = 'Impact'
+                    ChartTitle        = 'Advisory'
+                    ShowPercent       = $true
+                    ChartHeight       = 300
+                    ChartWidth        = 500
+                }
 
-        Add-PivotTable @PTParams
-
+                Add-PivotTable @PTParams
+            }
 
 
         $PTParams = @{
@@ -3258,49 +3260,77 @@ $Runtime = Measure-Command -Expression {
 
         Add-PivotTable @PTParams
 
+        if ($AzCompute.AKS)
+            {
+                $PTParams = @{
+                    PivotTableName    = "P2"
+                    Address           = $excel.Overview.cells["M3"] # top-left corner of the table
+                    SourceWorkSheet   = $excel.AKS
+                    PivotRows         = @("Kubernetes Version")
+                    PivotData         = @{"Clusters" = "Count" }
+                    PivotTableStyle   = $tableStyle
+                    IncludePivotChart = $true
+                    ChartType         = "Pie"
+                    ChartRow          = 0 # place the chart below row 22nd
+                    ChartColumn       = 15
+                    Activate          = $true
+                    ChartTitle        = 'Azure Kubernetes Service'
+                    PivotFilter       = 'Node Size', 'Location'
+                    ShowPercent       = $true
+                    ChartHeight       = 300
+                    ChartWidth        = 500
+                }
 
-        $PTParams = @{
-            PivotTableName    = "P2"
-            Address           = $excel.Overview.cells["M3"] # top-left corner of the table
-            SourceWorkSheet   = $excel.AKS
-            PivotRows         = @("Kubernetes Version")
-            PivotData         = @{"Clusters" = "Count" }
-            PivotTableStyle   = $tableStyle
-            IncludePivotChart = $true
-            ChartType         = "Pie"
-            ChartRow          = 0 # place the chart below row 22nd
-            ChartColumn       = 15
-            Activate          = $true
-            ChartTitle        = 'Azure Kubernetes Service'
-            PivotFilter       = 'Node Size', 'Location'
-            ShowPercent       = $true
-            ChartHeight       = 300
-            ChartWidth        = 500
-        }
+                Add-PivotTable @PTParams
+            }
+        elseif ($Security)
+            {
+                $PTParams = @{
+                    PivotTableName    = "P2"
+                    Address           = $excel.Overview.cells["M3"] # top-left corner of the table
+                    SourceWorkSheet   = $excel.SecurityCenter
+                    PivotRows         = @("Severity")
+                    PivotData         = @{"Resource Name" = "Count" }
+                    PivotTableStyle   = $tableStyle
+                    IncludePivotChart = $true
+                    ChartType         = "Pie"
+                    ChartRow          = 0 # place the chart below row 22nd
+                    ChartColumn       = 15
+                    Activate          = $true
+                    ChartTitle        = 'Azure Security Center'
+                    PivotFilter       = 'Categories'
+                    ShowPercent       = $true
+                    ChartHeight       = 300
+                    ChartWidth        = 500
+                }
 
-        Add-PivotTable @PTParams
+                Add-PivotTable @PTParams
+            }
 
-        $PTParams = @{
-            PivotTableName  = "P3"
-            Address         = $excel.Overview.cells["M25"] # top-left corner of the table
-            SourceWorkSheet = $excel.VMs
-            PivotRows       = @("VM Size")
-            PivotData       = @{"VM Size" = "Count" }
-            PivotTableStyle   = $tableStyle
-            IncludePivotChart = $true
-            ChartType         = "BarClustered"
-            ChartRow          = 16 # place the chart below row 22nd
-            ChartColumn       = 15
-            Activate          = $true
-            NoLegend          = $true
-            ChartTitle        = 'Azure Virtual Machine Sizes'
-            PivotFilter       = 'OS Type', 'Location', 'Power State'
-            ShowPercent       = $true
-            ChartHeight       = 500
-            ChartWidth        = 500
-        }
+        if ($AzCompute.VM)
+            {
+                $PTParams = @{
+                    PivotTableName  = "P3"
+                    Address         = $excel.Overview.cells["M25"] # top-left corner of the table
+                    SourceWorkSheet = $excel.VMs
+                    PivotRows       = @("VM Size")
+                    PivotData       = @{"VM Size" = "Count" }
+                    PivotTableStyle   = $tableStyle
+                    IncludePivotChart = $true
+                    ChartType         = "BarClustered"
+                    ChartRow          = 16 # place the chart below row 22nd
+                    ChartColumn       = 15
+                    Activate          = $true
+                    NoLegend          = $true
+                    ChartTitle        = 'Azure Virtual Machine Sizes'
+                    PivotFilter       = 'OS Type', 'Location', 'Power State'
+                    ShowPercent       = $true
+                    ChartHeight       = 500
+                    ChartWidth        = 500
+                }
 
-        Add-PivotTable @PTParams
+                Add-PivotTable @PTParams
+            }
 
         Close-ExcelPackage $excel 
 
