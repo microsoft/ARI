@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.3.4                                                                   #
+#       Version: 1.3.5                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
@@ -22,7 +22,7 @@
 ##########################################################################################
 
 
-param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, [switch]$SkipAdvisory) 
+param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, [switch]$SkipAdvisory, [switch]$IncludeTags) 
 
 $Runtime = Measure-Command -Expression {
 
@@ -513,7 +513,8 @@ $Runtime = Measure-Command -Expression {
                                         'Private IP Version'            = $3.privateIPAddressVersion;
                                         'Private IP Address'            = $3.privateIPAddress;
                                         'Private IP Allocation Method'  = $3.privateIPAllocationMethod;
-                                        'VM Extensions'                 = $ext
+                                        'VM Extensions'                 = $ext;
+                                        'Tags'                          = [string]$1.tags
                                     }
                                     $tmp += $obj
                                 }
@@ -551,7 +552,8 @@ $Runtime = Measure-Command -Expression {
                                 'Private IP Version'            = $null;
                                 'Private IP Address'            = $null;
                                 'Private IP Allocation Method'  = $null;
-                                'VM Extensions'                 = $ext
+                                'VM Extensions'                 = $ext;
+                                'Tags'                          = [string]$1.tags
                             }
                             $tmp += $obj
                         }
@@ -585,7 +587,8 @@ $Runtime = Measure-Command -Expression {
                             'Disk IOPS Read / Write' = $data.diskIOPSReadWrite;
                             'Disk MBps Read / Write' = $data.diskMBpsReadWrite;
                             'Disk State'             = $data.diskState;
-                            'HyperV Generation'      = $data.hyperVGeneration
+                            'HyperV Generation'      = $data.hyperVGeneration;
+                            'Tags'                   = [string]$1.tags
                         }         
                         $tmp += $obj
                     }
@@ -613,7 +616,8 @@ $Runtime = Measure-Command -Expression {
                             'SQL Server License Type' = $data.sqlServerLicenseType;
                             'SQL Image'               = $data.sqlImageOffer;
                             'SQL Management'          = $data.sqlManagement;
-                            'SQL Image Sku'           = $data.sqlImageSku
+                            'SQL Image Sku'           = $data.sqlImageSku;
+                            'Tags'                    = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -649,7 +653,8 @@ $Runtime = Measure-Command -Expression {
                             'Max Workers'         = $data.maximumNumberOfWorkers;
                             'Worker Kind'         = $data.kind;
                             'Number Of Sites'     = $data.numberOfSites;
-                            'Plan Name'           = $data.planName
+                            'Plan Name'           = $data.planName;
+                            'Tags'                = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -706,6 +711,7 @@ $Runtime = Measure-Command -Expression {
                                 'Max Pods Per Node'          = $2.maxPods;
                                 'Orchestrator Version'       = $2.orchestratorVersion;
                                 'Enable Node Public IP'      = $2.enableNodePublicIP;
+                                'Tags'                       = [string]$1.tags
                             }
                             $tmp += $obj
                         }
@@ -742,7 +748,8 @@ $Runtime = Measure-Command -Expression {
                                 'Enable Accelerated Networking' = $2.properties.enableAcceleratedNetworking;
                                 'Enable IP Forwarding'          = $2.properties.enableIPForwarding;
                                 'Admin Username'                = $data.virtualMachineProfile.osProfile.adminUsername;
-                                'VM Name Prefix'                = $data.virtualMachineProfile.osProfile.computerNamePrefix
+                                'VM Name Prefix'                = $data.virtualMachineProfile.osProfile.computerNamePrefix;
+                                'Tags'                          = [string]$1.tags
                             }
                             $tmp += $obj
                         }
@@ -780,7 +787,8 @@ $Runtime = Measure-Command -Expression {
                                 'Request Memory (GB)' = $2.properties.resources.requests.memoryInGB;
                                 'IP'                  = $data.ipAddress.ip;
                                 'Protocol'            = [string]$2.properties.ports.protocol;
-                                'Port'                = [string]$2.properties.ports.port
+                                'Port'                = [string]$2.properties.ports.port;
+                                'Tags'                = [string]$1.tags
                             }
 
                             $tmp += $obj
@@ -812,7 +820,8 @@ $Runtime = Measure-Command -Expression {
                             'FQDN'                  = $data.fullyQualifiedDomainName;
                             'Public Network Access' = $data.publicNetworkAccess;
                             'State'                 = $data.state;
-                            'Version'               = $data.version
+                            'Version'               = $data.version;
+                            'Tags'                  = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -846,7 +855,8 @@ $Runtime = Measure-Command -Expression {
                             'EventHubs Partition Count' = $data.eventHubEndpoints.events.partitionCount;
                             'EventHubs Path'        = $data.eventHubEndpoints.events.path;
                             'EventHubs Retention Days' = $data.eventHubEndpoints.events.retentionTimeInDays;
-                            'Locations'             = [string]$data.locations.location
+                            'Locations'             = [string]$data.locations.location;
+                            'Tags'                  = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -945,7 +955,8 @@ $Runtime = Measure-Command -Expression {
                                     'Subnet Name'                                  = $3.name;
                                     'Subnet Prefix'                                = $3.properties.addressPrefix;
                                     'Subnet Private Link Service Network Policies' = $3.properties.privateLinkServiceNetworkPolicies;
-                                    'Subnet Private Endpoint Network Policies'     = $3.properties.privateEndpointNetworkPolicies
+                                    'Subnet Private Endpoint Network Policies'     = $3.properties.privateEndpointNetworkPolicies;
+                                    'Tags'                                         = [string]$1.tags
                                 }
                                 $tmp += $obj
                             }
@@ -983,6 +994,7 @@ $Runtime = Measure-Command -Expression {
                             'BGP Peer Weight'        = $data.bgpSettings.peerWeight;
                             'Gateway Public IP'      = [string]$data.ipConfigurations.properties.publicIPAddress.id.split("/")[8];
                             'Gateway Subnet Name'    = [string]$data.ipConfigurations.properties.subnet.id.split("/")[8];
+                            'Tags'                   = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -1012,7 +1024,8 @@ $Runtime = Measure-Command -Expression {
                                 'Version'                  = $data.publicIPAddressVersion;
                                 'IP Address'               = $data.ipAddress;
                                 'Associated Resource'      = $data.ipConfiguration.id.split('/')[8];
-                                'Associated Resource Type' = $data.ipConfiguration.id.split('/')[7]
+                                'Associated Resource Type' = $data.ipConfiguration.id.split('/')[7];
+                                'Tags'                     = [string]$1.tags
                             }
                             $tmp += $obj
                         }
@@ -1027,7 +1040,8 @@ $Runtime = Measure-Command -Expression {
                                 'Version'                  = $data.publicIPAddressVersion;
                                 'IP Address'               = $data.ipAddress;
                                 'Associated Resource'      = $null;
-                                'Associated Resource Type' = $null
+                                'Associated Resource Type' = $null;
+                                'Tags'                     = [string]$1.tags
                             }
                             $tmp += $obj
                         }
@@ -1088,6 +1102,7 @@ $Runtime = Measure-Command -Expression {
                                             'Probe Protocol'            = $4.properties.protocol;
                                             'Probe Port'                = $4.properties.port;
                                             'Probe Unhealthy threshold' = $4.properties.numberOfProbes;
+                                            'Tags'                      = [string]$1.tags
                                         }
                                         $tmp += $obj          
                                     }
@@ -1133,6 +1148,7 @@ $Runtime = Measure-Command -Expression {
                                         'Probe Protocol'            = $null;
                                         'Probe Port'                = $null;
                                         'Probe Unhealthy threshold' = $null;
+                                        'Tags'                      = [string]$1.tags
                                     }
                                     $tmp += $obj         
                                 }
@@ -1170,6 +1186,7 @@ $Runtime = Measure-Command -Expression {
                                     'Probe Protocol'            = $null;
                                     'Probe Port'                = $null;
                                     'Probe Unhealthy threshold' = $null;
+                                    'Tags'                      = [string]$1.tags
                                 }
                                 $tmp += $obj             
                             }
@@ -1207,6 +1224,7 @@ $Runtime = Measure-Command -Expression {
                                         'Probe Protocol'            = $3.properties.protocol;
                                         'Probe Port'                = $3.properties.port;
                                         'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
+                                        'Tags'                      = [string]$1.tags
                                     }
                                     $tmp += $obj            
                                 }
@@ -1239,6 +1257,7 @@ $Runtime = Measure-Command -Expression {
                                         'Probe Protocol'            = $3.properties.protocol;
                                         'Probe Port'                = $3.properties.port;
                                         'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
+                                        'Tags'                      = [string]$1.tags
                                     }
                                     $tmp += $obj            
                                 }
@@ -1264,6 +1283,7 @@ $Runtime = Measure-Command -Expression {
                                     'Probe Protocol'            = $2.properties.protocol;
                                     'Probe Port'                = $2.properties.port;
                                     'Probe Unhealthy threshold' = $2.properties.numberOfProbes;
+                                    'Tags'                      = [string]$1.tags
                                 }
                                 $tmp += $obj
                             }            
@@ -1306,7 +1326,8 @@ $Runtime = Measure-Command -Expression {
                                         'Peering Allow Forwarded Traffic'       = $4.properties.allowForwardedTraffic;
                                         'Peering Do Not Verify Remote Gateways' = $4.properties.doNotVerifyRemoteGateways;
                                         'Peering Allow Virtual Network Access'  = $4.properties.allowVirtualNetworkAccess;
-                                        'Peering Address Space'                 = $5
+                                        'Peering Address Space'                 = $5;
+                                        'Tags'                                  = [string]$1.tags
                                     }
                                     $tmp += $obj
                                 }
@@ -1339,7 +1360,8 @@ $Runtime = Measure-Command -Expression {
                             'Backend'                = [string]$data.backendPools.name;
                             'Health Probe'           = [string]$data.healthProbeSettings.name;
                             'Load Balancing'         = [string]$data.loadBalancingSettings.name;
-                            'Routing Rules'          = [string]$data.routingRules.name
+                            'Routing Rules'          = [string]$data.routingRules.name;
+                            'Tags'                   = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -1370,6 +1392,7 @@ $Runtime = Measure-Command -Expression {
                             'Gateways'               = [string]$data.gatewayIPConfigurations.name;
                             'HTTP Listeners'         = [string]$data.httpListeners.name;
                             'Request Routing Rules'  = [string]$data.RequestRoutingRules.Name;
+                            'Tags'                   = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -1396,7 +1419,8 @@ $Runtime = Measure-Command -Expression {
                             'Routes Prefixes'        = [string]$data.routes.properties.addressPrefix;
                             'Routes BGP Override'    = [string]$data.routes.properties.hasBgpOverride;
                             'Routes Next Hop IP'     = [string]$data.routes.properties.nextHopIpAddress;
-                            'Routes Next Hop Type'   = [string]$data.routes.properties.nextHopType
+                            'Routes Next Hop Type'   = [string]$data.routes.properties.nextHopType;
+                            'Tags'                   = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -1421,7 +1445,8 @@ $Runtime = Measure-Command -Expression {
                             'Zone Type'              = $data.zoneType;
                             'Number of Record Sets'  = $data.numberOfRecordSets;
                             'Max Number of Record Sets' = $data.maxNumberofRecordSets;
-                            'Name Servers'           = [string]$data.nameServers
+                            'Name Servers'           = [string]$data.nameServers;
+                            'Tags'                   = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -1525,7 +1550,8 @@ $Runtime = Measure-Command -Expression {
                             'File Address'                          = [string]$data.primaryEndpoints.file;
                             'Table Address'                         = [string]$data.primaryEndpoints.table;
                             'Queue Address'                         = [string]$data.primaryEndpoints.queue;
-                            'Network Acls'                          = $data.networkAcls.defaultAction
+                            'Network Acls'                          = $data.networkAcls.defaultAction;
+                            'Tags'                                  = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -1561,7 +1587,8 @@ $Runtime = Measure-Command -Expression {
                                     'Runbook State'            = $data.state;
                                     'Runbook Type'             = $data.runbookType;
                                     'Runbook Description'      = $data.description;
-                                    'Job Count'                = $data.jobCount
+                                    'Job Count'                = $data.jobCount;
+                                    'Tags'                     = [string]$1.tags
                                 }
                                 $tmp += $obj
                             }
@@ -1579,7 +1606,8 @@ $Runtime = Measure-Command -Expression {
                                 'Runbook State'            = $null;
                                 'Runbook Type'             = $null;
                                 'Runbook Description'      = $null;
-                                'Job Count'                = $null
+                                'Job Count'                = $null;
+                                'Tags'                     = [string]$1.tags
                             }
                             $tmp += $obj
                         }
@@ -1612,7 +1640,8 @@ $Runtime = Measure-Command -Expression {
                             'Auto-Inflate'         = $data.isAutoInflateEnabled;
                             'Max Throughput Units' = $data.maximumThroughputUnits;
                             'Kafka Enabled'        = $data.kafkaEnabled;
-                            'Endpoint'             = $data.serviceBusEndpoint
+                            'Endpoint'             = $data.serviceBusEndpoint;
+                            'Tags'                 = [string]$1.tags
                         }
 
                         $tmp += $obj
@@ -1640,7 +1669,8 @@ $Runtime = Measure-Command -Expression {
                             'Location'         = $1.LOCATION;
                             'SKU'              = $data.sku.name;
                             'Retention Days'   = $data.retentionInDays;
-                            'Daily Quota (GB)' = [decimal]$data.workspaceCapping.dailyQuotaGb
+                            'Daily Quota (GB)' = [decimal]$data.workspaceCapping.dailyQuotaGb;
+                            'Tags'             = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -1670,7 +1700,8 @@ $Runtime = Measure-Command -Expression {
                                 'Location'         = $1.LOCATION;
                                 'Fault Domains'    = $data.platformFaultDomainCount;
                                 'Update Domains'   = $data.platformUpdateDomainCount;
-                                'Virtual Machines' = $vmIds
+                                'Virtual Machines' = $vmIds;
+                                'Tags'             = [string]$1.tags
                             }
 
                             $tmp += $obj
@@ -1714,7 +1745,8 @@ $Runtime = Measure-Command -Expression {
                                 'ContainerSize'                 = $data.containerSize;
                                 'Admin Enabled'                 = $data.adminEnabled;
                                 'FTPs Host Name'                = $data.ftpsHostName;
-                                'HTTPS Only'                    = $data.httpsOnly
+                                'HTTPS Only'                    = $data.httpsOnly;
+                                'Tags'                          = [string]$1.tags
                             }
                             $tmp += $obj
                         }
@@ -1749,6 +1781,7 @@ $Runtime = Measure-Command -Expression {
                             'Certificate Permissions'       = [string]$data.accessPolicies.permissions.certificates;
                             'Key Permissions'               = [string]$data.accessPolicies.permissions.keys;
                             'Secret Permissions'            = [string]$data.accessPolicies.permissions.secrets;
+                            'Tags'                          = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -1774,7 +1807,8 @@ $Runtime = Measure-Command -Expression {
                             'SKU Name'                      = $1.sku.name;
                             'SKU Tier'                      = $1.sku.tier;
                             'Private Endpoint State for Backup' = $data.privateEndpointStateForBackup;
-                            'Private Endpoint State for Site Recovery' = $data.privateEndpointStateForSiteRecovery
+                            'Private Endpoint State for Site Recovery' = $data.privateEndpointStateForSiteRecovery;
+                            'Tags'                          = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -1870,6 +1904,7 @@ $Runtime = Measure-Command -Expression {
                             'Catalog Collation'          = $data.catalogCollation;
                             'Read Replica Count'         = $data.readReplicaCount;
                             'Data Max Size (GB)'         = (($data.maxSizeBytes / 1024) / 1024) / 1024;
+                            'Tags'                       = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -1910,7 +1945,8 @@ $Runtime = Measure-Command -Expression {
                             'Replica Capacity'          = $data.replicaCapacity;
                             'Replication Role'          = $data.replicationRole;
                             'BYOK Enforcement'          = $data.byokEnforcement;
-                            'ssl Enforcement'           = $data.sslEnforcement
+                            'ssl Enforcement'           = $data.sslEnforcement;
+                            'Tags'                      = [string]$1.tags
                         }
 
                         $tmp += $obj
@@ -1952,7 +1988,8 @@ $Runtime = Measure-Command -Expression {
                             'Replica Capacity'          = $data.replicaCapacity;
                             'Replication Role'          = $data.replicationRole;
                             'BYOK Enforcement'          = $data.byokEnforcement;
-                            'ssl Enforcement'           = $data.sslEnforcement
+                            'ssl Enforcement'           = $data.sslEnforcement;
+                            'Tags'                      = [string]$1.tags
                         }
                         $tmp += $obj
                     }
@@ -2184,40 +2221,81 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelVMs = $AzCompute.VM
 
-                $ExcelVMs | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Computer Name',
-                'VM Size',
-                'OS Type',
-                'Location',
-                'Image Reference',
-                'Image Version',
-                'SKU',
-                'Admin Username',
-                'Update Management',
-                'Boot Diagnostics',
-                'Performance Diagnostic Agent',
-                'Azure Monitor',
-                'OS Disk Storage Type',
-                'OS Disk Size (GB)',
-                'Data Disk Storage Type',
-                'Data Disk Size (GB)',
-                'Power State',
-                'Availability Set',
-                'Zone',
-                'NIC Name',
-                'NIC Type',
-                'NSG',
-                'Enable Accelerated Networking',
-                'Enable IP Forwarding',
-                'Primary IP',
-                'Private IP Version',
-                'Private IP Address',
-                'Private IP Allocation Method',
-                'VM Extensions' | 
-                Export-Excel -Path $File -WorksheetName 'VMs' -TableName 'AzureVMs' -TableStyle $tableStyle -ConditionalText $condtxtvm -Style $Style, $StyleExt
+                if ($IncludeTags.IsPresent) 
+                    {
+                        $ExcelVMs | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Computer Name',
+                        'VM Size',
+                        'OS Type',
+                        'Location',
+                        'Image Reference',
+                        'Image Version',
+                        'SKU',
+                        'Admin Username',
+                        'Update Management',
+                        'Boot Diagnostics',
+                        'Performance Diagnostic Agent',
+                        'Azure Monitor',
+                        'OS Disk Storage Type',
+                        'OS Disk Size (GB)',
+                        'Data Disk Storage Type',
+                        'Data Disk Size (GB)',
+                        'Power State',
+                        'Availability Set',
+                        'Zone',
+                        'NIC Name',
+                        'NIC Type',
+                        'NSG',
+                        'Enable Accelerated Networking',
+                        'Enable IP Forwarding',
+                        'Primary IP',
+                        'Private IP Version',
+                        'Private IP Address',
+                        'Private IP Allocation Method',
+                        'VM Extensions',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'VMs' -TableName 'AzureVMs' -TableStyle $tableStyle -ConditionalText $condtxtvm -Style $Style, $StyleExt
+                    }
+                    else 
+                    {
+                        $ExcelVMs | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Computer Name',
+                        'VM Size',
+                        'OS Type',
+                        'Location',
+                        'Image Reference',
+                        'Image Version',
+                        'SKU',
+                        'Admin Username',
+                        'Update Management',
+                        'Boot Diagnostics',
+                        'Performance Diagnostic Agent',
+                        'Azure Monitor',
+                        'OS Disk Storage Type',
+                        'OS Disk Size (GB)',
+                        'Data Disk Storage Type',
+                        'Data Disk Size (GB)',
+                        'Power State',
+                        'Availability Set',
+                        'Zone',
+                        'NIC Name',
+                        'NIC Type',
+                        'NSG',
+                        'Enable Accelerated Networking',
+                        'Enable IP Forwarding',
+                        'Primary IP',
+                        'Private IP Version',
+                        'Private IP Address',
+                        'Private IP Allocation Method',
+                        'VM Extensions' | 
+                        Export-Excel -Path $File -WorksheetName 'VMs' -TableName 'AzureVMs' -TableStyle $tableStyle -ConditionalText $condtxtvm -Style $Style, $StyleExt
+                    }
 
             }
 
@@ -2232,23 +2310,47 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelVMDisks = $AzCompute.VMDisk
                         
-                $ExcelVMDisks | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Virtual Machine',
-                'Disk Name',
-                'Zone',
-                'SKU',
-                'Disk Size',
-                'Location',
-                'Encryption',
-                'OS Type',
-                'Disk State',
-                'Disk IOPS Read / Write',
-                'Disk MBps Read / Write',
-                'HyperV Generation' | 
-                Export-Excel -Path $File -WorksheetName 'Disks' -TableName 'AzureDisks' -TableStyle $tableStyle -ConditionalText $condtxtdsk -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelVMDisks | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Virtual Machine',
+                        'Disk Name',
+                        'Zone',
+                        'SKU',
+                        'Disk Size',
+                        'Location',
+                        'Encryption',
+                        'OS Type',
+                        'Disk State',
+                        'Disk IOPS Read / Write',
+                        'Disk MBps Read / Write',
+                        'HyperV Generation',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'Disks' -TableName 'AzureDisks' -TableStyle $tableStyle -ConditionalText $condtxtdsk -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelVMDisks | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Virtual Machine',
+                        'Disk Name',
+                        'Zone',
+                        'SKU',
+                        'Disk Size',
+                        'Location',
+                        'Encryption',
+                        'OS Type',
+                        'Disk State',
+                        'Disk IOPS Read / Write',
+                        'Disk MBps Read / Write',
+                        'HyperV Generation' | 
+                        Export-Excel -Path $File -WorksheetName 'Disks' -TableName 'AzureDisks' -TableStyle $tableStyle -ConditionalText $condtxtdsk -Style $Style
+                    }
 
             }
 
@@ -2269,27 +2371,55 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelStorageAcc = $AzInfra.StorageAcc
             
-                $ExcelStorageAcc | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'Zone',
-                'Supports HTTPS Traffic Only',
-                'Allow Blob Public Access',
-                'TLS Version',
-                'Identity-based access for file shares',
-                'Access Tier',
-                'Primary Location',
-                'Status Of Primary',
-                'Secondary Location',
-                'Blob Address',
-                'File Address',
-                'Table Address',
-                'Queue Address',
-                'Network Acls' | 
-                Export-Excel -Path $File -WorksheetName 'StorageAcc' -AutoSize -TableName 'AzureStorageAccs' -TableStyle $tableStyle -ConditionalText $condtxtStorage -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelStorageAcc | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Zone',
+                        'Supports HTTPS Traffic Only',
+                        'Allow Blob Public Access',
+                        'TLS Version',
+                        'Identity-based access for file shares',
+                        'Access Tier',
+                        'Primary Location',
+                        'Status Of Primary',
+                        'Secondary Location',
+                        'Blob Address',
+                        'File Address',
+                        'Table Address',
+                        'Queue Address',
+                        'Network Acls',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'StorageAcc' -AutoSize -TableName 'AzureStorageAccs' -TableStyle $tableStyle -ConditionalText $condtxtStorage -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelStorageAcc | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Zone',
+                        'Supports HTTPS Traffic Only',
+                        'Allow Blob Public Access',
+                        'TLS Version',
+                        'Identity-based access for file shares',
+                        'Access Tier',
+                        'Primary Location',
+                        'Status Of Primary',
+                        'Secondary Location',
+                        'Blob Address',
+                        'File Address',
+                        'Table Address',
+                        'Queue Address',
+                        'Network Acls' | 
+                        Export-Excel -Path $File -WorksheetName 'StorageAcc' -AutoSize -TableName 'AzureStorageAccs' -TableStyle $tableStyle -ConditionalText $condtxtStorage -Style $Style
+                    }
             }
 
 
@@ -2304,21 +2434,43 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelVNET = $AzNetwork.VNET          
 
-                $ExcelVNET | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'Zone',
-                'Address Space',
-                'Enable DDOS Protection',
-                'Enable VM Protection',
-                'Subnet Name',
-                'Subnet Prefix',
-                'Subnet Private Link Service Network Policies',
-                'Subnet Private Endpoint Network Policies' | 
-                Export-Excel -Path $File -WorksheetName 'VNET' -AutoSize -TableName 'AzureVNETs' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelVNET | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Zone',
+                        'Address Space',
+                        'Enable DDOS Protection',
+                        'Enable VM Protection',
+                        'Subnet Name',
+                        'Subnet Prefix',
+                        'Subnet Private Link Service Network Policies',
+                        'Subnet Private Endpoint Network Policies',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'VNET' -AutoSize -TableName 'AzureVNETs' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelVNET | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Zone',
+                        'Address Space',
+                        'Enable DDOS Protection',
+                        'Enable VM Protection',
+                        'Subnet Name',
+                        'Subnet Prefix',
+                        'Subnet Private Link Service Network Policies',
+                        'Subnet Private Endpoint Network Policies'| 
+                        Export-Excel -Path $File -WorksheetName 'VNET' -AutoSize -TableName 'AzureVNETs' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+                    }
 
             }
 
@@ -2333,25 +2485,51 @@ $Runtime = Measure-Command -Expression {
     
                 $ExcelVNETGTW = $AzNetwork.VNETGTW
                         
-                $ExcelVNETGTW | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'SKU',
-                'Active-active mode',
-                'Gateway Type',
-                'Gateway Generation',
-                'VPN Type',
-                'Enable Private Address',
-                'Enable BGP',
-                'BGP ASN',
-                'BGP Peering Address',
-                'BGP Peer Weight',
-                'Gateway Public IP',
-                'Gateway Subnet Name' | 
-                Export-Excel -Path $File -WorksheetName 'Gateways' -AutoSize -TableName 'AzureVNETGateways' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelVNETGTW | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'Active-active mode',
+                        'Gateway Type',
+                        'Gateway Generation',
+                        'VPN Type',
+                        'Enable Private Address',
+                        'Enable BGP',
+                        'BGP ASN',
+                        'BGP Peering Address',
+                        'BGP Peer Weight',
+                        'Gateway Public IP',
+                        'Gateway Subnet Name',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'Gateways' -AutoSize -TableName 'AzureVNETGateways' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelVNETGTW | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'Active-active mode',
+                        'Gateway Type',
+                        'Gateway Generation',
+                        'VPN Type',
+                        'Enable Private Address',
+                        'Enable BGP',
+                        'BGP ASN',
+                        'BGP Peering Address',
+                        'BGP Peer Weight',
+                        'Gateway Public IP',
+                        'Gateway Subnet Name'| 
+                        Export-Excel -Path $File -WorksheetName 'Gateways' -AutoSize -TableName 'AzureVNETGateways' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+                    }
     
             }
     
@@ -2368,18 +2546,37 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelSQLVM = $AzCompute.SQLVM
             
-                $ExcelSQLVM | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'ResourceGroup',
-                'Name',
-                'Location',
-                'Zone',
-                'SQL Server License Type',
-                'SQL Image',
-                'SQL Management',
-                'SQL Image Sku' | 
-                Export-Excel -Path $File -WorksheetName 'SQL VMs' -AutoSize -TableName 'AzureSQLVMs' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelSQLVM | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'ResourceGroup',
+                        'Name',
+                        'Location',
+                        'Zone',
+                        'SQL Server License Type',
+                        'SQL Image',
+                        'SQL Management',
+                        'SQL Image Sku',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'SQL VMs' -AutoSize -TableName 'AzureSQLVMs' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelSQLVM | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'ResourceGroup',
+                        'Name',
+                        'Location',
+                        'Zone',
+                        'SQL Server License Type',
+                        'SQL Image',
+                        'SQL Management',
+                        'SQL Image Sku' | 
+                        Export-Excel -Path $File -WorksheetName 'SQL VMs' -AutoSize -TableName 'AzureSQLVMs' -TableStyle $tableStyle -Style $Style
+                    }
 
             }
 
@@ -2396,22 +2593,45 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelDB = $AzDatabase.DB
 
-                $ExcelDB | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'Storage Account Type',
-                'Default Secondary Location',
-                'Status',
-                'DTU Capacity',
-                'DTU Tier',
-                'Data Max Size (GB)',
-                'Zone Redundant',
-                'Catalog Collation',
-                'Read Replica Count' | 
-                Export-Excel -Path $File -WorksheetName 'SQL DBs' -AutoSize -TableName 'AzureSQLDBs' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelDB | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Storage Account Type',
+                        'Default Secondary Location',
+                        'Status',
+                        'DTU Capacity',
+                        'DTU Tier',
+                        'Data Max Size (GB)',
+                        'Zone Redundant',
+                        'Catalog Collation',
+                        'Read Replica Count',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'SQL DBs' -AutoSize -TableName 'AzureSQLDBs' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelDB | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Storage Account Type',
+                        'Default Secondary Location',
+                        'Status',
+                        'DTU Capacity',
+                        'DTU Tier',
+                        'Data Max Size (GB)',
+                        'Zone Redundant',
+                        'Catalog Collation',
+                        'Read Replica Count' | 
+                        Export-Excel -Path $File -WorksheetName 'SQL DBs' -AutoSize -TableName 'AzureSQLDBs' -TableStyle $tableStyle -Style $Style
+                    }
 
             }
 
@@ -2428,21 +2648,43 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelAutAcc = $AzInfra.AutomationAcc
             
-                $ExcelAutAcc | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Automation Account Name',
-                'Automation Account State',
-                'Automation Account SKU',
-                'Location',
-                'Runbook Name',
-                'Last Modified Time',
-                'Runbook State',
-                'Runbook Type',
-                'Runbook Description',
-                'Job Count' |
-                Export-Excel -Path $File -WorksheetName 'Runbooks' -AutoSize -TableName 'AzureRunbooks' -TableStyle $tableStyle -Style $Style, $StyleExt
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelAutAcc | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Automation Account Name',
+                        'Automation Account State',
+                        'Automation Account SKU',
+                        'Location',
+                        'Runbook Name',
+                        'Last Modified Time',
+                        'Runbook State',
+                        'Runbook Type',
+                        'Runbook Description',
+                        'Job Count',
+                        'Tags' |
+                        Export-Excel -Path $File -WorksheetName 'Runbooks' -AutoSize -TableName 'AzureRunbooks' -TableStyle $tableStyle -Style $Style, $StyleExt
+                    }
+                else 
+                    {
+                        $ExcelAutAcc | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Automation Account Name',
+                        'Automation Account State',
+                        'Automation Account SKU',
+                        'Location',
+                        'Runbook Name',
+                        'Last Modified Time',
+                        'Runbook State',
+                        'Runbook Type',
+                        'Runbook Description',
+                        'Job Count' |
+                        Export-Excel -Path $File -WorksheetName 'Runbooks' -AutoSize -TableName 'AzureRunbooks' -TableStyle $tableStyle -Style $Style, $StyleExt
+                    }
 
             }
 
@@ -2457,19 +2699,39 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelPIP = $AzNetwork.PIP
             
-                $ExcelPIP | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'SKU',
-                'Location',
-                'Type',
-                'Version',
-                'IP Address',
-                'Associated Resource',
-                'Associated Resource Type' | 
-                Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -TableName 'AzurePubIPs' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelPIP | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'SKU',
+                        'Location',
+                        'Type',
+                        'Version',
+                        'IP Address',
+                        'Associated Resource',
+                        'Associated Resource Type',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -TableName 'AzurePubIPs' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelPIP | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'SKU',
+                        'Location',
+                        'Type',
+                        'Version',
+                        'IP Address',
+                        'Associated Resource',
+                        'Associated Resource Type' | 
+                        Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -TableName 'AzurePubIPs' -TableStyle $tableStyle -Style $Style
+                    }
 
             }
 
@@ -2487,21 +2749,43 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelEvtHub = $AzInfra.EvtHub
 
-                $ExcelEvtHub | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'SKU',
-                'Status',
-                'Geo-Rep',
-                'Throughput Units',
-                'Auto-Inflate',
-                'Max Throughput Units',
-                'Kafka Enabled',
-                'Endpoint' | 
-                Export-Excel -Path $File -WorksheetName 'Event Hubs' -AutoSize -TableName 'AzureEventHubs' -TableStyle $tableStyle -ConditionalText $txtEvt -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelEvtHub | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'Status',
+                        'Geo-Rep',
+                        'Throughput Units',
+                        'Auto-Inflate',
+                        'Max Throughput Units',
+                        'Kafka Enabled',
+                        'Endpoint',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'Event Hubs' -AutoSize -TableName 'AzureEventHubs' -TableStyle $tableStyle -ConditionalText $txtEvt -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelEvtHub | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'Status',
+                        'Geo-Rep',
+                        'Throughput Units',
+                        'Auto-Inflate',
+                        'Max Throughput Units',
+                        'Kafka Enabled',
+                        'Endpoint' | 
+                        Export-Excel -Path $File -WorksheetName 'Event Hubs' -AutoSize -TableName 'AzureEventHubs' -TableStyle $tableStyle -ConditionalText $txtEvt -Style $Style
+                    }
 
             }
 
@@ -2516,31 +2800,63 @@ $Runtime = Measure-Command -Expression {
           
                 $ExcelMySQL = $AzDatabase.MySQL
 
-                $ExcelMySQL | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'SKU',
-                'SKU Family',
-                'Tier',
-                'Capacity',
-                'MySQL Version',
-                'Backup Retention Days',
-                'Geo-Redundant Backup',
-                'Auto Grow',
-                'Storage MB',
-                'Public Network Access',
-                'Admin Login',
-                'Infrastructure Encryption',
-                'Minimal Tls Version',
-                'State',
-                'Replica Capacity',
-                'Replication Role',
-                'BYOK Enforcement',
-                'ssl Enforcement' | 
-                Export-Excel -Path $File -WorksheetName 'MySQL' -AutoSize -TableName 'AzureMySQL' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelMySQL | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'SKU Family',
+                        'Tier',
+                        'Capacity',
+                        'MySQL Version',
+                        'Backup Retention Days',
+                        'Geo-Redundant Backup',
+                        'Auto Grow',
+                        'Storage MB',
+                        'Public Network Access',
+                        'Admin Login',
+                        'Infrastructure Encryption',
+                        'Minimal Tls Version',
+                        'State',
+                        'Replica Capacity',
+                        'Replication Role',
+                        'BYOK Enforcement',
+                        'ssl Enforcement',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'MySQL' -AutoSize -TableName 'AzureMySQL' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelMySQL | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'SKU Family',
+                        'Tier',
+                        'Capacity',
+                        'MySQL Version',
+                        'Backup Retention Days',
+                        'Geo-Redundant Backup',
+                        'Auto Grow',
+                        'Storage MB',
+                        'Public Network Access',
+                        'Admin Login',
+                        'Infrastructure Encryption',
+                        'Minimal Tls Version',
+                        'State',
+                        'Replica Capacity',
+                        'Replication Role',
+                        'BYOK Enforcement',
+                        'ssl Enforcement'| 
+                        Export-Excel -Path $File -WorksheetName 'MySQL' -AutoSize -TableName 'AzureMySQL' -TableStyle $tableStyle -Style $Style
+                    }
 
             }
 
@@ -2555,31 +2871,63 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelPostGre = $AzDatabase.PostGre
             
-                $ExcelPostGre | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'SKU',
-                'SKU Family',
-                'Tier',
-                'Capacity',
-                'MySQL Version',
-                'Backup Retention Days',
-                'Geo-Redundant Backup',
-                'Auto Grow',
-                'Storage MB',
-                'Public Network Access',
-                'Admin Login',
-                'Infrastructure Encryption',
-                'Minimal Tls Version',
-                'State',
-                'Replica Capacity',
-                'Replication Role',
-                'BYOK Enforcement',
-                'ssl Enforcement' | 
-                Export-Excel -Path $File -WorksheetName 'PostgreSQL' -AutoSize -TableName 'AzurePostgreSQL' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelPostGre | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'SKU Family',
+                        'Tier',
+                        'Capacity',
+                        'MySQL Version',
+                        'Backup Retention Days',
+                        'Geo-Redundant Backup',
+                        'Auto Grow',
+                        'Storage MB',
+                        'Public Network Access',
+                        'Admin Login',
+                        'Infrastructure Encryption',
+                        'Minimal Tls Version',
+                        'State',
+                        'Replica Capacity',
+                        'Replication Role',
+                        'BYOK Enforcement',
+                        'ssl Enforcement',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'PostgreSQL' -AutoSize -TableName 'AzurePostgreSQL' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelPostGre | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'SKU Family',
+                        'Tier',
+                        'Capacity',
+                        'MySQL Version',
+                        'Backup Retention Days',
+                        'Geo-Redundant Backup',
+                        'Auto Grow',
+                        'Storage MB',
+                        'Public Network Access',
+                        'Admin Login',
+                        'Infrastructure Encryption',
+                        'Minimal Tls Version',
+                        'State',
+                        'Replica Capacity',
+                        'Replication Role',
+                        'BYOK Enforcement',
+                        'ssl Enforcement' | 
+                        Export-Excel -Path $File -WorksheetName 'PostgreSQL' -AutoSize -TableName 'AzurePostgreSQL' -TableStyle $tableStyle -Style $Style
+                    }
 
             }
 
@@ -2594,24 +2942,49 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelWebFarm = $AzCompute.SERVERFARM
 
-                $ExcelWebFarm | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'SKU',
-                'SKU Family',
-                'Tier',
-                'Capacity',
-                'Workers',
-                'Compute Mode',
-                'Max Elastic Workers',
-                'Max Workers',
-                'Worker Kind',
-                'Number Of Sites',
-                'Plan Name' | 
-                Export-Excel -Path $File -WorksheetName 'Web Servers' -AutoSize -TableName 'AzureWebServers' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelWebFarm | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'SKU Family',
+                        'Tier',
+                        'Capacity',
+                        'Workers',
+                        'Compute Mode',
+                        'Max Elastic Workers',
+                        'Max Workers',
+                        'Worker Kind',
+                        'Number Of Sites',
+                        'Plan Name',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'Web Servers' -AutoSize -TableName 'AzureWebServers' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelWebFarm | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'SKU Family',
+                        'Tier',
+                        'Capacity',
+                        'Workers',
+                        'Compute Mode',
+                        'Max Elastic Workers',
+                        'Max Workers',
+                        'Worker Kind',
+                        'Number Of Sites',
+                        'Plan Name' | 
+                        Export-Excel -Path $File -WorksheetName 'Web Servers' -AutoSize -TableName 'AzureWebServers' -TableStyle $tableStyle -Style $Style
+                    }
 
             }
 
@@ -2627,16 +3000,33 @@ $Runtime = Measure-Command -Expression {
             
                 $ExcelWrkSpace = $AzInfra.WrkSpace
 
-                $ExcelWrkSpace | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'SKU',
-                'Retention Days',
-                'Daily Quota (GB)' | 
-                Export-Excel -Path $File -WorksheetName 'Workspaces' -AutoSize -TableName 'AzureWorkspace' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelWrkSpace | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'Retention Days',
+                        'Daily Quota (GB)',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'Workspaces' -AutoSize -TableName 'AzureWorkspace' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelWrkSpace | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'Retention Days',
+                        'Daily Quota (GB)' | 
+                        Export-Excel -Path $File -WorksheetName 'Workspaces' -AutoSize -TableName 'AzureWorkspace' -TableStyle $tableStyle -Style $Style
+                    }
 
             }
 
@@ -2654,38 +3044,77 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelAKS = $AzCompute.AKS
 
-                $ExcelAKS | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Clusters',
-                'Location',
-                'Kubernetes Version',
-                'Kubernetes Version Support',
-                'Role-Based Access Control',
-                'AAD Enabled',
-                'Network Type',
-                'Outbound Type',
-                'LoadBalancer Sku',
-                'Docker Pod Cidr',
-                'Service Cidr',
-                'Docker Bridge Cidr',           
-                'Network DNS Service IP',
-                'FQDN',
-                'HTTP Application Routing',
-                'Node Pool Name',
-                'Pool Profile Type',
-                'Pool OS',
-                'Node Size',
-                'OS Disk Size (GB)',
-                'Nodes',
-                'Autoscale',
-                'Autoscale Max',
-                'Autoscale Min',
-                'Max Pods Per Node',
-                'Orchestrator Version',
-                'Enable Node Public IP' | 
-                Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName 'AzureKubernetes' -TableStyle $tableStyle -ConditionalText $txtaksv -Numberformat '0' -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelAKS | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Clusters',
+                        'Location',
+                        'Kubernetes Version',
+                        'Kubernetes Version Support',
+                        'Role-Based Access Control',
+                        'AAD Enabled',
+                        'Network Type',
+                        'Outbound Type',
+                        'LoadBalancer Sku',
+                        'Docker Pod Cidr',
+                        'Service Cidr',
+                        'Docker Bridge Cidr',           
+                        'Network DNS Service IP',
+                        'FQDN',
+                        'HTTP Application Routing',
+                        'Node Pool Name',
+                        'Pool Profile Type',
+                        'Pool OS',
+                        'Node Size',
+                        'OS Disk Size (GB)',
+                        'Nodes',
+                        'Autoscale',
+                        'Autoscale Max',
+                        'Autoscale Min',
+                        'Max Pods Per Node',
+                        'Orchestrator Version',
+                        'Enable Node Public IP',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName 'AzureKubernetes' -TableStyle $tableStyle -ConditionalText $txtaksv -Numberformat '0' -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelAKS | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Clusters',
+                        'Location',
+                        'Kubernetes Version',
+                        'Kubernetes Version Support',
+                        'Role-Based Access Control',
+                        'AAD Enabled',
+                        'Network Type',
+                        'Outbound Type',
+                        'LoadBalancer Sku',
+                        'Docker Pod Cidr',
+                        'Service Cidr',
+                        'Docker Bridge Cidr',           
+                        'Network DNS Service IP',
+                        'FQDN',
+                        'HTTP Application Routing',
+                        'Node Pool Name',
+                        'Pool Profile Type',
+                        'Pool OS',
+                        'Node Size',
+                        'OS Disk Size (GB)',
+                        'Nodes',
+                        'Autoscale',
+                        'Autoscale Max',
+                        'Autoscale Min',
+                        'Max Pods Per Node',
+                        'Orchestrator Version',
+                        'Enable Node Public IP' | 
+                        Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName 'AzureKubernetes' -TableStyle $tableStyle -ConditionalText $txtaksv -Numberformat '0' -Style $Style
+                    }
 
             }
 
@@ -2700,25 +3129,51 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelContainer = $AzCompute.CON
             
-                $ExcelContainer | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Instance Name',
-                'Location',
-                'Instance OS Type',
-                'Container Name',
-                'Container State',
-                'Container Image',
-                'Restart Count',
-                'Start Time',
-                'Command',
-                'Request CPU',
-                'Request Memory (GB)',
-                'IP',
-                'Protocol',
-                'Port' | 
-                Export-Excel -Path $File -WorksheetName 'Containers' -AutoSize -TableName 'AzureContainers' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelContainer | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Instance Name',
+                        'Location',
+                        'Instance OS Type',
+                        'Container Name',
+                        'Container State',
+                        'Container Image',
+                        'Restart Count',
+                        'Start Time',
+                        'Command',
+                        'Request CPU',
+                        'Request Memory (GB)',
+                        'IP',
+                        'Protocol',
+                        'Port',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'Containers' -AutoSize -TableName 'AzureContainers' -TableStyle $tableStyle -Style $Style
+                    }
+                else
+                    {
+                        $ExcelContainer | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Instance Name',
+                        'Location',
+                        'Instance OS Type',
+                        'Container Name',
+                        'Container State',
+                        'Container Image',
+                        'Restart Count',
+                        'Start Time',
+                        'Command',
+                        'Request CPU',
+                        'Request Memory (GB)',
+                        'IP',
+                        'Protocol',
+                        'Port' | 
+                        Export-Excel -Path $File -WorksheetName 'Containers' -AutoSize -TableName 'AzureContainers' -TableStyle $tableStyle -Style $Style
+                    }
 
             }
 
@@ -2733,16 +3188,33 @@ $Runtime = Measure-Command -Expression {
             
                 $ExcelAvSet = $AzInfra.AvSet
 
-                $ExcelAvSet | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'Fault Domains',
-                'Update Domains',
-                'Virtual Machines' | 
-                Export-Excel -Path $File -WorksheetName 'Availability Sets' -AutoSize -TableName 'AvailabilitySets' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelAvSet | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Fault Domains',
+                        'Update Domains',
+                        'Virtual Machines',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'Availability Sets' -AutoSize -TableName 'AvailabilitySets' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelAvSet | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Fault Domains',
+                        'Update Domains',
+                        'Virtual Machines' | 
+                        Export-Excel -Path $File -WorksheetName 'Availability Sets' -AutoSize -TableName 'AvailabilitySets' -TableStyle $tableStyle -Style $Style
+                    }
 
             }
 
@@ -2757,31 +3229,63 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelWebSite = $AzInfra.WebSite
 
-                $ExcelWebSite | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Kind',
-                'Location',
-                'Enabled',
-                'State',
-                'SKU',
-                'Content Availability State',
-                'Runtime Availability State',
-                'Possible Inbound IP Addresses',
-                'Repository Site Name',
-                'AvailabilityState',
-                'HostNames',
-                'HostName Type',
-                'sslState',
-                'Default Hostname',
-                'Client Cert Mode',
-                'ContainerSize',
-                'Admin Enabled',
-                'FTPs Host Name',
-                'HTTPS Only' | 
-                Export-Excel -Path $File -WorksheetName 'Web Sites' -AutoSize -TableName 'WebSites' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelWebSite | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Kind',
+                        'Location',
+                        'Enabled',
+                        'State',
+                        'SKU',
+                        'Content Availability State',
+                        'Runtime Availability State',
+                        'Possible Inbound IP Addresses',
+                        'Repository Site Name',
+                        'AvailabilityState',
+                        'HostNames',
+                        'HostName Type',
+                        'sslState',
+                        'Default Hostname',
+                        'Client Cert Mode',
+                        'ContainerSize',
+                        'Admin Enabled',
+                        'FTPs Host Name',
+                        'HTTPS Only',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'Web Sites' -AutoSize -TableName 'WebSites' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelWebSite | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Kind',
+                        'Location',
+                        'Enabled',
+                        'State',
+                        'SKU',
+                        'Content Availability State',
+                        'Runtime Availability State',
+                        'Possible Inbound IP Addresses',
+                        'Repository Site Name',
+                        'AvailabilityState',
+                        'HostNames',
+                        'HostName Type',
+                        'sslState',
+                        'Default Hostname',
+                        'Client Cert Mode',
+                        'ContainerSize',
+                        'Admin Enabled',
+                        'FTPs Host Name',
+                        'HTTPS Only' | 
+                        Export-Excel -Path $File -WorksheetName 'Web Sites' -AutoSize -TableName 'WebSites' -TableStyle $tableStyle -Style $Style
+                    }
 
             }
 
@@ -2795,24 +3299,49 @@ $Runtime = Measure-Command -Expression {
                         
                 $ExcelVMSCS = $AzCompute.VMSCS
 
-                $ExcelVMSCS | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'SKU Tier',
-                'Fault Domain',
-                'Upgrade Policy',
-                'Capacity',
-                'VM Size',
-                'VM OS',
-                'Network Interface Name',
-                'Enable Accelerated Networking',
-                'Enable IP Forwading',
-                'Admin Username',
-                'VM Name Prefix' | 
-                Export-Excel -Path $File -WorksheetName 'VM Scale Sets' -AutoSize -TableName 'VMScaleSets' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelVMSCS | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU Tier',
+                        'Fault Domain',
+                        'Upgrade Policy',
+                        'Capacity',
+                        'VM Size',
+                        'VM OS',
+                        'Network Interface Name',
+                        'Enable Accelerated Networking',
+                        'Enable IP Forwading',
+                        'Admin Username',
+                        'VM Name Prefix',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'VM Scale Sets' -AutoSize -TableName 'VMScaleSets' -TableStyle $tableStyle -Style $Style
+                    }
+                else    
+                    {
+                        $ExcelVMSCS | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU Tier',
+                        'Fault Domain',
+                        'Upgrade Policy',
+                        'Capacity',
+                        'VM Size',
+                        'VM OS',
+                        'Network Interface Name',
+                        'Enable Accelerated Networking',
+                        'Enable IP Forwading',
+                        'Admin Username',
+                        'VM Name Prefix' | 
+                        Export-Excel -Path $File -WorksheetName 'VM Scale Sets' -AutoSize -TableName 'VMScaleSets' -TableStyle $tableStyle -Style $Style
+                    }
 
             }
 
@@ -2830,26 +3359,53 @@ $Runtime = Measure-Command -Expression {
                         
                 $ExcelLB = $AzNetwork.LB
 
-                $ExcelLB | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'SKU',
-                'Frontend Name',
-                'Frontend Target',
-                'Frontend Type',
-                'Frontend Subnet',
-                'Backend Pool Name',
-                'Backend Target',
-                'Backend Type',
-                'Probe Name',
-                'Probe Interval (sec)',
-                'Probe Protocol',
-                'Probe Port',
-                'Probe Unhealthy threshold' | 
-                Export-Excel -Path $File -WorksheetName 'Load Balancers' -AutoSize -TableName 'LoadBalancers' -TableStyle $tableStyle -ConditionalText $txtLB -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelLB | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'Frontend Name',
+                        'Frontend Target',
+                        'Frontend Type',
+                        'Frontend Subnet',
+                        'Backend Pool Name',
+                        'Backend Target',
+                        'Backend Type',
+                        'Probe Name',
+                        'Probe Interval (sec)',
+                        'Probe Protocol',
+                        'Probe Port',
+                        'Probe Unhealthy threshold',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'Load Balancers' -AutoSize -TableName 'LoadBalancers' -TableStyle $tableStyle -ConditionalText $txtLB -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelLB | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'Frontend Name',
+                        'Frontend Target',
+                        'Frontend Type',
+                        'Frontend Subnet',
+                        'Backend Pool Name',
+                        'Backend Target',
+                        'Backend Type',
+                        'Probe Name',
+                        'Probe Interval (sec)',
+                        'Probe Protocol',
+                        'Probe Port',
+                        'Probe Unhealthy threshold' | 
+                        Export-Excel -Path $File -WorksheetName 'Load Balancers' -AutoSize -TableName 'LoadBalancers' -TableStyle $tableStyle -ConditionalText $txtLB -Style $Style
+                    }
 
             }
 
@@ -2865,19 +3421,39 @@ $Runtime = Measure-Command -Expression {
                     
                 $ExcelSQLServer = $AzCompute.SQLSERVER
     
-                $ExcelSQLServer | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'Kind',
-                'Admin Login',
-                'FQDN',
-                'Public Network Access',
-                'State',
-                'Version' | 
-                Export-Excel -Path $File -WorksheetName 'SQL Servers' -AutoSize -TableName 'AzureSQLServers' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelSQLServer | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Kind',
+                        'Admin Login',
+                        'FQDN',
+                        'Public Network Access',
+                        'State',
+                        'Version',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'SQL Servers' -AutoSize -TableName 'AzureSQLServers' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelSQLServer | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Kind',
+                        'Admin Login',
+                        'FQDN',
+                        'Public Network Access',
+                        'State',
+                        'Version' | 
+                        Export-Excel -Path $File -WorksheetName 'SQL Servers' -AutoSize -TableName 'AzureSQLServers' -TableStyle $tableStyle -Style $Style
+                    }
       
             }
 
@@ -2895,24 +3471,49 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelPeering = $AzNetwork.Peering
 
-                $ExcelPeering | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Location',
-                'Zone',
-                'Peering Name',
-                'VNET Name',
-                'Address Space',
-                'Peering VNet',
-                'Peering Address Space',
-                'Peering State',
-                'Peering Use Remote Gateways',
-                'Peering Allow Gateway Transit',
-                'Peering Allow Forwarded Traffic',
-                'Peering Do Not Verify Remote Gateways',
-                'Peering Allow Virtual NetworkAccess' | 
-                Export-Excel -Path $File -WorksheetName 'Peering' -AutoSize -TableName 'AzureVNETPeerings' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelPeering | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Location',
+                        'Zone',
+                        'Peering Name',
+                        'VNET Name',
+                        'Address Space',
+                        'Peering VNet',
+                        'Peering Address Space',
+                        'Peering State',
+                        'Peering Use Remote Gateways',
+                        'Peering Allow Gateway Transit',
+                        'Peering Allow Forwarded Traffic',
+                        'Peering Do Not Verify Remote Gateways',
+                        'Peering Allow Virtual NetworkAccess',
+                        'Tags' | 
+                        Export-Excel -Path $File -WorksheetName 'Peering' -AutoSize -TableName 'AzureVNETPeerings' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelPeering | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Location',
+                        'Zone',
+                        'Peering Name',
+                        'VNET Name',
+                        'Address Space',
+                        'Peering VNet',
+                        'Peering Address Space',
+                        'Peering State',
+                        'Peering Use Remote Gateways',
+                        'Peering Allow Gateway Transit',
+                        'Peering Allow Forwarded Traffic',
+                        'Peering Do Not Verify Remote Gateways',
+                        'Peering Allow Virtual NetworkAccess' | 
+                        Export-Excel -Path $File -WorksheetName 'Peering' -AutoSize -TableName 'AzureVNETPeerings' -TableStyle $tableStyle -Style $Style
+                    }
 
             }
             
@@ -2928,21 +3529,43 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelFrontDoor = $AzNetwork.FrontDoor
 
-                $ExcelFrontDoor | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'Friendly Name',
-                'cName',
-                'State',
-                'Frontend',
-                'Backend',
-                'Health Probe',
-                'Load Balancing',
-                'Routing Rules'| 
-                Export-Excel -Path $File -WorksheetName 'FrontDoor' -AutoSize -TableName 'AzureFrontDoor' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelFrontDoor | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Friendly Name',
+                        'cName',
+                        'State',
+                        'Frontend',
+                        'Backend',
+                        'Health Probe',
+                        'Load Balancing',
+                        'Routing Rules',
+                        'Tags'| 
+                        Export-Excel -Path $File -WorksheetName 'FrontDoor' -AutoSize -TableName 'AzureFrontDoor' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelFrontDoor | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Friendly Name',
+                        'cName',
+                        'State',
+                        'Frontend',
+                        'Backend',
+                        'Health Probe',
+                        'Load Balancing',
+                        'Routing Rules'| 
+                        Export-Excel -Path $File -WorksheetName 'FrontDoor' -AutoSize -TableName 'AzureFrontDoor' -TableStyle $tableStyle -Style $Style
+                    }
 
             }            
 
@@ -2957,22 +3580,45 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelAppGateway = $AzNetwork.AppGateway
 
-                $ExcelAppGateway | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'State',
-                'SKU Name',
-                'SKU Capacity',
-                'Backend',
-                'Frontend',
-                'Frontend Ports',
-                'Gateways',
-                'HTTP Listeners',
-                'Request Routing Rules'| 
-                Export-Excel -Path $File -WorksheetName 'App Gateway' -AutoSize -TableName 'AzureAppGateway' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelAppGateway | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'State',
+                        'SKU Name',
+                        'SKU Capacity',
+                        'Backend',
+                        'Frontend',
+                        'Frontend Ports',
+                        'Gateways',
+                        'HTTP Listeners',
+                        'Request Routing Rules',
+                        'Tags'| 
+                        Export-Excel -Path $File -WorksheetName 'App Gateway' -AutoSize -TableName 'AzureAppGateway' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelAppGateway | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'State',
+                        'SKU Name',
+                        'SKU Capacity',
+                        'Backend',
+                        'Frontend',
+                        'Frontend Ports',
+                        'Gateways',
+                        'HTTP Listeners',
+                        'Request Routing Rules'| 
+                        Export-Excel -Path $File -WorksheetName 'App Gateway' -AutoSize -TableName 'AzureAppGateway' -TableStyle $tableStyle -Style $Style
+                    }
 
             }  
 
@@ -2986,19 +3632,39 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelRouteTable = $AzNetwork.RouteTable
 
-                $ExcelRouteTable | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'Disable BGP Route Propagation',
-                'Routes',
-                'Routes Prefixes',
-                'Routes BGP Override',
-                'Routes Next Hop IP',
-                'Routes Next Hop Type'| 
-                Export-Excel -Path $File -WorksheetName 'Route Tables' -AutoSize -TableName 'AzureRouteTables' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelRouteTable | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Disable BGP Route Propagation',
+                        'Routes',
+                        'Routes Prefixes',
+                        'Routes BGP Override',
+                        'Routes Next Hop IP',
+                        'Routes Next Hop Type',
+                        'Tags'| 
+                        Export-Excel -Path $File -WorksheetName 'Route Tables' -AutoSize -TableName 'AzureRouteTables' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelRouteTable | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Disable BGP Route Propagation',
+                        'Routes',
+                        'Routes Prefixes',
+                        'Routes BGP Override',
+                        'Routes Next Hop IP',
+                        'Routes Next Hop Type'| 
+                        Export-Excel -Path $File -WorksheetName 'Route Tables' -AutoSize -TableName 'AzureRouteTables' -TableStyle $tableStyle -Style $Style
+                    }
 
             }  
 
@@ -3012,24 +3678,49 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelVault = $AzInfra.Vault
 
-                $ExcelVault | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'SKU Family',
-                'SKU',
-                'Vault Uri',
-                'Enable RBAC',
-                'Enable Soft Delete',
-                'Enable for Disk Encryption',
-                'Enable for Template Deploy',
-                'Soft Delete Retention Days',
-                'Certificate Permissions',
-                'Key Permissions',
-                'Secret Permissions'| 
-                Export-Excel -Path $File -WorksheetName 'Key Vaults' -AutoSize -TableName 'AzureKeyVault' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelVault | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU Family',
+                        'SKU',
+                        'Vault Uri',
+                        'Enable RBAC',
+                        'Enable Soft Delete',
+                        'Enable for Disk Encryption',
+                        'Enable for Template Deploy',
+                        'Soft Delete Retention Days',
+                        'Certificate Permissions',
+                        'Key Permissions',
+                        'Secret Permissions',
+                        'Tags'| 
+                        Export-Excel -Path $File -WorksheetName 'Key Vaults' -AutoSize -TableName 'AzureKeyVault' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelVault | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU Family',
+                        'SKU',
+                        'Vault Uri',
+                        'Enable RBAC',
+                        'Enable Soft Delete',
+                        'Enable for Disk Encryption',
+                        'Enable for Template Deploy',
+                        'Soft Delete Retention Days',
+                        'Certificate Permissions',
+                        'Key Permissions',
+                        'Secret Permissions'| 
+                        Export-Excel -Path $File -WorksheetName 'Key Vaults' -AutoSize -TableName 'AzureKeyVault' -TableStyle $tableStyle -Style $Style
+                    }
 
             }  
 
@@ -3043,17 +3734,35 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelRecVault = $AzInfra.RecoveryVault
 
-                $ExcelRecVault | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'SKU Name',
-                'SKU Tier',
-                'Private Endpoint State for Backup',
-                'Private Endpoint State for Site Recovery'| 
-                Export-Excel -Path $File -WorksheetName 'Recovery Vaults' -AutoSize -TableName 'AzureRecVault' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelRecVault | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU Name',
+                        'SKU Tier',
+                        'Private Endpoint State for Backup',
+                        'Private Endpoint State for Site Recovery',
+                        'Tags'| 
+                        Export-Excel -Path $File -WorksheetName 'Recovery Vaults' -AutoSize -TableName 'AzureRecVault' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelRecVault | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU Name',
+                        'SKU Tier',
+                        'Private Endpoint State for Backup',
+                        'Private Endpoint State for Site Recovery'| 
+                        Export-Excel -Path $File -WorksheetName 'Recovery Vaults' -AutoSize -TableName 'AzureRecVault' -TableStyle $tableStyle -Style $Style
+                    }
 
             }             
 
@@ -3067,17 +3776,35 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelDNSZone = $AzNetwork.DNSZone
 
-                $ExcelDNSZone | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'Location',
-                'Zone Type',
-                'Number of Record Sets',
-                'Max Number of Record Sets',
-                'Name Servers'| 
-                Export-Excel -Path $File -WorksheetName 'DNS Zones' -AutoSize -TableName 'AzureDNSZones' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelDNSZone | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Zone Type',
+                        'Number of Record Sets',
+                        'Max Number of Record Sets',
+                        'Name Servers',
+                        'Tags'| 
+                        Export-Excel -Path $File -WorksheetName 'DNS Zones' -AutoSize -TableName 'AzureDNSZones' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelDNSZone | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Zone Type',
+                        'Number of Record Sets',
+                        'Max Number of Record Sets',
+                        'Name Servers'| 
+                        Export-Excel -Path $File -WorksheetName 'DNS Zones' -AutoSize -TableName 'AzureDNSZones' -TableStyle $tableStyle -Style $Style
+                    }
 
             }   
 
@@ -3091,26 +3818,53 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelIot = $AzCompute.Iot
 
-                $ExcelIot | 
-                ForEach-Object { [PSCustomObject]$_ } | 
-                Select-Object 'Subscription',
-                'Resource Group',
-                'Name',
-                'HostName',
-                'State',
-                'SKU',
-                'SKU Tier',
-                'SKU Capacity',
-                'Features',
-                'Enable File Upload Notifications',
-                'Default TTL As ISO8601',
-                'Max Delivery Count',
-                'EventHubs Endpoint',
-                'EventHubs Partition Count',
-                'EventHubs Path',
-                'EventHubs Retention Days',
-                'Locations'| 
-                Export-Excel -Path $File -WorksheetName 'IoT Hubs' -AutoSize -TableName 'AzureIOT' -TableStyle $tableStyle -Style $Style
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelIot | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'HostName',
+                        'State',
+                        'SKU',
+                        'SKU Tier',
+                        'SKU Capacity',
+                        'Features',
+                        'Enable File Upload Notifications',
+                        'Default TTL As ISO8601',
+                        'Max Delivery Count',
+                        'EventHubs Endpoint',
+                        'EventHubs Partition Count',
+                        'EventHubs Path',
+                        'EventHubs Retention Days',
+                        'Locations',
+                        'Tags'| 
+                        Export-Excel -Path $File -WorksheetName 'IoT Hubs' -AutoSize -TableName 'AzureIOT' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelIot | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'HostName',
+                        'State',
+                        'SKU',
+                        'SKU Tier',
+                        'SKU Capacity',
+                        'Features',
+                        'Enable File Upload Notifications',
+                        'Default TTL As ISO8601',
+                        'Max Delivery Count',
+                        'EventHubs Endpoint',
+                        'EventHubs Partition Count',
+                        'EventHubs Path',
+                        'EventHubs Retention Days',
+                        'Locations'| 
+                        Export-Excel -Path $File -WorksheetName 'IoT Hubs' -AutoSize -TableName 'AzureIOT' -TableStyle $tableStyle -Style $Style
+                    }
 
             } 
 

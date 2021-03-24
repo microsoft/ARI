@@ -1,9 +1,10 @@
 # Version Control
 
-## Version 1.3.4 - 03/24/2021
+## Version 1.3.5 - 03/24/2021
 
 ### **Azure Resource Inventory:**
         1. Change parameter -SkipSecurityCenter to -SecurityCenter. The parameter is now set to not collect Security Center by default.
+        2. Inclusion of the parameter -IncludeTags. This parameter will add the tags column in every resource tab.
 
 ---
 
