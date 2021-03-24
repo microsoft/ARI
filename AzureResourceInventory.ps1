@@ -2,11 +2,11 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.3.3                                                                   #
+#       Version: 1.3.4                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 02/08/2021                                                                 #
+#       Date: 03/24/2021                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -22,7 +22,7 @@
 ##########################################################################################
 
 
-param ($TenantID, [switch]$SkipSecurityCenter, $SubscriptionID, [switch]$SkipAdvisory) 
+param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, [switch]$SkipAdvisory) 
 
 $Runtime = Measure-Command -Expression {
 
@@ -203,16 +203,7 @@ $Runtime = Measure-Command -Expression {
 
         <######################################################### Security Center ######################################################################>
 
-        if ($SkipSecurityCenter.IsPresent) {
-            Write-Host " Skiping Secuity Center Extraction"
-            Write-Host " You set Azure Resource Inventory to not collect Security Center Advisories."
-            Write-Host " "
-            Write-Host " Collecting Security Center Can increase considerably the execution time of Azure Resource Inventory and the size of final report "
-            Write-Host " "
-            Write-Host " To skip Security Center report use <-SkipSecurityCenter> parameter. " 
-            Write-Host " "
-        }
-        else 
+        if ($SecurityCenter.IsPresent) 
             {
                 Write-Progress -activity 'Azure Inventory' -Status "6% Complete." -PercentComplete 6 -CurrentOperation "Starting Security Advisories extraction jobs.."
                 Write-Host " Azure Resource Inventory are collecting Security Center Advisories."
@@ -243,6 +234,12 @@ $Runtime = Measure-Command -Expression {
                             }
                             Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "Completed" -Completed
                     }
+            }
+        else 
+            {
+                Write-Host " "
+                Write-Host " To include Security Center details in the report, use <-SecurityCenter> parameter. " 
+                Write-Host " " 
             }
             
             Write-Progress -activity 'Azure Inventory' -PercentComplete 20
@@ -3351,8 +3348,10 @@ $Total = $Resources.count
 Write-Host ('Report Complete. Total Runtime was: ' + $Measure + ' Minutes')
 Write-Host ('Total Resources: ' + $Total)
 Write-Host ('Total Advisories: ' + $advco )
-Write-Host ('Total Security Advisories: ' + $Secadvco)
-
+if ($SecurityCenter.IsPresent)
+    {
+        Write-Host ('Total Security Advisories: ' + $Secadvco)
+    }
 
 Write-Host ''
 Write-Host ('Excel file saved at: ') -NoNewline

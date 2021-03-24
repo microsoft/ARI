@@ -1,5 +1,12 @@
 # Version Control
 
+## Version 1.3.4 - 03/24/2021
+
+### **Azure Resource Inventory:**
+        1. Change parameter -SkipSecurityCenter to -SecurityCenter. The parameter is now set to not collect Security Center by default.
+
+---
+
 ## Version 1.3.3 - 02/08/2021
 
 ### **Azure Resource Inventory:**
