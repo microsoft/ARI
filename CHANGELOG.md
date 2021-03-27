@@ -1,5 +1,12 @@
 # Version Control
 
+## Version 1.4.0 - 03/26/2021
+
+### **Azure Resource Inventory:**
+        1. Major improvements in -IncludeTags parameters (when using the parameter, the script might take considerable longer time to run)
+
+---
+
 ## Version 1.3.5 - 03/24/2021
 
 ### **Azure Resource Inventory:**

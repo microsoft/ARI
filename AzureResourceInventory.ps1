@@ -2,11 +2,11 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.3.5                                                                   #
+#       Version: 1.4.0                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 03/24/2021                                                                 #
+#       Date: 03/26/2021                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -29,7 +29,7 @@ $Runtime = Measure-Command -Expression {
     if ($DebugPreference -eq 'Inquire') {
         $DebugPreference = 'Continue'
     }
-
+    if ($IncludeTags.IsPresent) {$InTag = $true} else {$InTag = $false}
     $ErrorActionPreference = "silentlycontinue"
     $DesktopPath = "C:\AzureResourceInventory"
     $CSPath = "$HOME/AzureResourceInventory"
@@ -437,7 +437,7 @@ $Runtime = Measure-Command -Expression {
 
             $job = @()
 
-            $VM = ([PowerShell]::Create()).AddScript( { param($Sub, $VM, $NIC, $NSG, $EXT)
+            $VM = ([PowerShell]::Create()).AddScript( { param($Sub,$Intag, $VM, $NIC, $NSG, $EXT)
                     $vm = $VM
                     $vmexp = $EXT
                     $nic = $NIC
@@ -448,6 +448,7 @@ $Runtime = Measure-Command -Expression {
                     $tmp = @()
 
                     foreach ($1 in $vm) {
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES 
                         $os = if ($null -eq $data.OSProfile.LinuxConfiguration) { 'Windows' }else { 'Linux' }
@@ -477,200 +478,484 @@ $Runtime = Measure-Command -Expression {
                             $dataSize = if ($data.storageProfile.dataDisks.managedDisk.storageAccountType.count -ge 2) { ($data.storageProfile.dataDisks.diskSizeGB | Measure-Object -Sum).Sum }else { $data.storageProfile.dataDisks.diskSizeGB }
                         }
 
-                        if ($null -ne $data.networkProfile.networkInterfaces.id) {
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+
+                        if ($null -ne $data.networkProfile.networkInterfaces.id -and ![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($2 in $data.networkProfile.networkInterfaces.id) {
                                 $vmnic = $nic | Where-Object { $_.ID -eq $2 }
                                 $vmnsg = $nsg | Where-Object { $_.properties.networkInterfaces.id -eq $2 }
                                 foreach ($3 in $vmnic.properties.ipConfigurations.properties) {
-                                    $obj = @{
-                                        'Subscription'                  = $sub1.name;
-                                        'Resource Group'                = $1.RESOURCEGROUP;
-                                        'Computer Name'                 = $1.NAME;
-                                        'Location'                      = $1.LOCATION;
-                                        'Zone'                          = [string]$1.ZONES;
-                                        'Availability Set'              = $AVSET;
-                                        'VM Size'                       = $data.hardwareProfile.vmSize;
-                                        'Image Reference'               = $data.storageProfile.imageReference.publisher;
-                                        'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
-                                        'SKU'                           = $data.storageProfile.imageReference.sku;
-                                        'Admin Username'                = $data.osProfile.adminUsername;
-                                        'OS Type'                       = $os;
-                                        'Update Management'             = $UpdateMgmt;
-                                        'Boot Diagnostics'              = $bootdg;
-                                        'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
-                                        'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
-                                        'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
-                                        'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
-                                        'Data Disk Storage Type'        = $StorAcc;
-                                        'Data Disk Size (GB)'           = $dataSize;
-                                        'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
-                                        'NIC Name'                      = $vmnic.name;
-                                        'NIC Type'                      = $vmnic.properties.nicType;
-                                        'NSG'                           = if ($null -eq $vmnsg.NAME) { 'None' }else { $vmnsg.NAME };
-                                        'Enable Accelerated Networking' = $vmnic.properties.enableAcceleratedNetworking;
-                                        'Enable IP Forwarding'          = $vmnic.properties.enableIPForwarding;
-                                        'Primary IP'                    = $3.primary;
-                                        'Private IP Version'            = $3.privateIPAddressVersion;
-                                        'Private IP Address'            = $3.privateIPAddress;
-                                        'Private IP Allocation Method'  = $3.privateIPAllocationMethod;
-                                        'VM Extensions'                 = $ext;
-                                        'Tags'                          = [string]$1.tags
-                                    }
-                                    $tmp += $obj
+                                    foreach ($TagKey in $Tag.Keys) {
+                                        $obj = @{
+                                            'Subscription'                  = $sub1.name;
+                                            'Resource Group'                = $1.RESOURCEGROUP;
+                                            'Computer Name'                 = $1.NAME;
+                                            'Location'                      = $1.LOCATION;
+                                            'Zone'                          = [string]$1.ZONES;
+                                            'Availability Set'              = $AVSET;
+                                            'VM Size'                       = $data.hardwareProfile.vmSize;
+                                            'Image Reference'               = $data.storageProfile.imageReference.publisher;
+                                            'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
+                                            'SKU'                           = $data.storageProfile.imageReference.sku;
+                                            'Admin Username'                = $data.osProfile.adminUsername;
+                                            'OS Type'                       = $os;
+                                            'Update Management'             = $UpdateMgmt;
+                                            'Boot Diagnostics'              = $bootdg;
+                                            'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
+                                            'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
+                                            'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
+                                            'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
+                                            'Data Disk Storage Type'        = $StorAcc;
+                                            'Data Disk Size (GB)'           = $dataSize;
+                                            'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
+                                            'NIC Name'                      = $vmnic.name;
+                                            'NIC Type'                      = $vmnic.properties.nicType;
+                                            'NSG'                           = if ($null -eq $vmnsg.NAME) { 'None' }else { $vmnsg.NAME };
+                                            'Enable Accelerated Networking' = $vmnic.properties.enableAcceleratedNetworking;
+                                            'Enable IP Forwarding'          = $vmnic.properties.enableIPForwarding;
+                                            'Primary IP'                    = $3.primary;
+                                            'Private IP Version'            = $3.privateIPAddressVersion;
+                                            'Private IP Address'            = $3.privateIPAddress;
+                                            'Private IP Allocation Method'  = $3.privateIPAllocationMethod;
+                                            'VM Extensions'                 = $ext;
+                                            'Resource U'                    = $ResUCount;
+                                            'Tag Name'                      = [string]$TagKey;
+                                            'Tag Value'                     = [string]$Tag.$TagKey
+                                        }
+                                        $tmp += $obj
+                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    }    
                                 }
                             }
                         }
-                        else {
-                            $obj = @{
-                                'Subscription'                  = $sub1.name;
-                                'Resource Group'                = $1.RESOURCEGROUP;
-                                'Computer Name'                 = $1.NAME;
-                                'Location'                      = $1.LOCATION;
-                                'Zone'                          = [string]$1.ZONES;
-                                'Availability Set'              = $AVSET;
-                                'VM Size'                       = $data.hardwareProfile.vmSize;
-                                'Image Reference'               = $data.storageProfile.imageReference.publisher;
-                                'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
-                                'SKU'                           = $data.storageProfile.imageReference.sku;
-                                'Admin Username'                = $data.osProfile.adminUsername;
-                                'OS Type'                       = $os;
-                                'Update Management'             = $UpdateMgmt;
-                                'Boot Diagnostics'              = $bootdg;
-                                'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
-                                'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
-                                'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
-                                'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
-                                'Data Disk Storage Type'        = $StorAcc;
-                                'Data Disk Size (GB)'           = $dataSize;
-                                'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
-                                'NIC Name'                      = $null;
-                                'NIC Type'                      = $null;
-                                'NSG'                           = 'None';
-                                'Enable Accelerated Networking' = $null;
-                                'Enable IP Forwarding'          = $null;
-                                'Primary IP'                    = $null;
-                                'Private IP Version'            = $null;
-                                'Private IP Address'            = $null;
-                                'Private IP Allocation Method'  = $null;
-                                'VM Extensions'                 = $ext;
-                                'Tags'                          = [string]$1.tags
+                        if ($null -ne $data.networkProfile.networkInterfaces.id -and ![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -ne $true) {
+                            foreach ($2 in $data.networkProfile.networkInterfaces.id) {
+                                $vmnic = $nic | Where-Object { $_.ID -eq $2 }
+                                $vmnsg = $nsg | Where-Object { $_.properties.networkInterfaces.id -eq $2 }
+                                foreach ($3 in $vmnic.properties.ipConfigurations.properties) {
+                                    foreach ($TagKey in $Tag.Keys) {
+                                        $obj = @{
+                                            'Subscription'                  = $sub1.name;
+                                            'Resource Group'                = $1.RESOURCEGROUP;
+                                            'Computer Name'                 = $1.NAME;
+                                            'Location'                      = $1.LOCATION;
+                                            'Zone'                          = [string]$1.ZONES;
+                                            'Availability Set'              = $AVSET;
+                                            'VM Size'                       = $data.hardwareProfile.vmSize;
+                                            'Image Reference'               = $data.storageProfile.imageReference.publisher;
+                                            'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
+                                            'SKU'                           = $data.storageProfile.imageReference.sku;
+                                            'Admin Username'                = $data.osProfile.adminUsername;
+                                            'OS Type'                       = $os;
+                                            'Update Management'             = $UpdateMgmt;
+                                            'Boot Diagnostics'              = $bootdg;
+                                            'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
+                                            'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
+                                            'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
+                                            'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
+                                            'Data Disk Storage Type'        = $StorAcc;
+                                            'Data Disk Size (GB)'           = $dataSize;
+                                            'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
+                                            'NIC Name'                      = $vmnic.name;
+                                            'NIC Type'                      = $vmnic.properties.nicType;
+                                            'NSG'                           = if ($null -eq $vmnsg.NAME) { 'None' }else { $vmnsg.NAME };
+                                            'Enable Accelerated Networking' = $vmnic.properties.enableAcceleratedNetworking;
+                                            'Enable IP Forwarding'          = $vmnic.properties.enableIPForwarding;
+                                            'Primary IP'                    = $3.primary;
+                                            'Private IP Version'            = $3.privateIPAddressVersion;
+                                            'Private IP Address'            = $3.privateIPAddress;
+                                            'Private IP Allocation Method'  = $3.privateIPAllocationMethod;
+                                            'VM Extensions'                 = $ext;
+                                            'Resource U'                    = $ResUCount;
+                                            'Tag Name'                      = [string]$TagKey;
+                                            'Tag Value'                     = [string]$Tag.$TagKey
+                                        }
+                                        $tmp += $obj
+                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    }    
+                                }
                             }
-                            $tmp += $obj
+                        }
+                        elseif ($null -ne $data.networkProfile.networkInterfaces.id -and [string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($2 in $data.networkProfile.networkInterfaces.id) {
+                                $vmnic = $nic | Where-Object { $_.ID -eq $2 }
+                                $vmnsg = $nsg | Where-Object { $_.properties.networkInterfaces.id -eq $2 }
+                                foreach ($3 in $vmnic.properties.ipConfigurations.properties) {
+                                        $obj = @{
+                                            'Subscription'                  = $sub1.name;
+                                            'Resource Group'                = $1.RESOURCEGROUP;
+                                            'Computer Name'                 = $1.NAME;
+                                            'Location'                      = $1.LOCATION;
+                                            'Zone'                          = [string]$1.ZONES;
+                                            'Availability Set'              = $AVSET;
+                                            'VM Size'                       = $data.hardwareProfile.vmSize;
+                                            'Image Reference'               = $data.storageProfile.imageReference.publisher;
+                                            'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
+                                            'SKU'                           = $data.storageProfile.imageReference.sku;
+                                            'Admin Username'                = $data.osProfile.adminUsername;
+                                            'OS Type'                       = $os;
+                                            'Update Management'             = $UpdateMgmt;
+                                            'Boot Diagnostics'              = $bootdg;
+                                            'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
+                                            'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
+                                            'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
+                                            'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
+                                            'Data Disk Storage Type'        = $StorAcc;
+                                            'Data Disk Size (GB)'           = $dataSize;
+                                            'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
+                                            'NIC Name'                      = $vmnic.name;
+                                            'NIC Type'                      = $vmnic.properties.nicType;
+                                            'NSG'                           = if ($null -eq $vmnsg.NAME) { 'None' }else { $vmnsg.NAME };
+                                            'Enable Accelerated Networking' = $vmnic.properties.enableAcceleratedNetworking;
+                                            'Enable IP Forwarding'          = $vmnic.properties.enableIPForwarding;
+                                            'Primary IP'                    = $3.primary;
+                                            'Private IP Version'            = $3.privateIPAddressVersion;
+                                            'Private IP Address'            = $3.privateIPAddress;
+                                            'Private IP Allocation Method'  = $3.privateIPAllocationMethod;
+                                            'VM Extensions'                 = $ext;
+                                            'Resource U'                    = $ResUCount;
+                                            'Tag Name'                      = $null;
+                                            'Tag Value'                     = $null
+                                        }
+                                        $tmp += $obj  
+                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                        }
+                        elseif ($null -ne $data.networkProfile.networkInterfaces.id -and [string]::IsNullOrEmpty($Tag.Keys) -and $InTag -ne $true) {
+                            foreach ($2 in $data.networkProfile.networkInterfaces.id) {
+                                $vmnic = $nic | Where-Object { $_.ID -eq $2 }
+                                $vmnsg = $nsg | Where-Object { $_.properties.networkInterfaces.id -eq $2 }
+                                foreach ($3 in $vmnic.properties.ipConfigurations.properties) {
+                                        $obj = @{
+                                            'Subscription'                  = $sub1.name;
+                                            'Resource Group'                = $1.RESOURCEGROUP;
+                                            'Computer Name'                 = $1.NAME;
+                                            'Location'                      = $1.LOCATION;
+                                            'Zone'                          = [string]$1.ZONES;
+                                            'Availability Set'              = $AVSET;
+                                            'VM Size'                       = $data.hardwareProfile.vmSize;
+                                            'Image Reference'               = $data.storageProfile.imageReference.publisher;
+                                            'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
+                                            'SKU'                           = $data.storageProfile.imageReference.sku;
+                                            'Admin Username'                = $data.osProfile.adminUsername;
+                                            'OS Type'                       = $os;
+                                            'Update Management'             = $UpdateMgmt;
+                                            'Boot Diagnostics'              = $bootdg;
+                                            'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
+                                            'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
+                                            'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
+                                            'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
+                                            'Data Disk Storage Type'        = $StorAcc;
+                                            'Data Disk Size (GB)'           = $dataSize;
+                                            'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
+                                            'NIC Name'                      = $vmnic.name;
+                                            'NIC Type'                      = $vmnic.properties.nicType;
+                                            'NSG'                           = if ($null -eq $vmnsg.NAME) { 'None' }else { $vmnsg.NAME };
+                                            'Enable Accelerated Networking' = $vmnic.properties.enableAcceleratedNetworking;
+                                            'Enable IP Forwarding'          = $vmnic.properties.enableIPForwarding;
+                                            'Primary IP'                    = $3.primary;
+                                            'Private IP Version'            = $3.privateIPAddressVersion;
+                                            'Private IP Address'            = $3.privateIPAddress;
+                                            'Private IP Allocation Method'  = $3.privateIPAllocationMethod;
+                                            'VM Extensions'                 = $ext;
+                                            'Resource U'                    = $ResUCount;
+                                            'Tag Name'                      = $null;
+                                            'Tag Value'                     = $null
+                                        }
+                                        $tmp += $obj  
+                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                        }
+                        elseif ($null -eq $data.networkProfile.networkInterfaces.id -and ![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                $obj = @{
+                                    'Subscription'                  = $sub1.name;
+                                    'Resource Group'                = $1.RESOURCEGROUP;
+                                    'Computer Name'                 = $1.NAME;
+                                    'Location'                      = $1.LOCATION;
+                                    'Zone'                          = [string]$1.ZONES;
+                                    'Availability Set'              = $AVSET;
+                                    'VM Size'                       = $data.hardwareProfile.vmSize;
+                                    'Image Reference'               = $data.storageProfile.imageReference.publisher;
+                                    'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
+                                    'SKU'                           = $data.storageProfile.imageReference.sku;
+                                    'Admin Username'                = $data.osProfile.adminUsername;
+                                    'OS Type'                       = $os;
+                                    'Update Management'             = $UpdateMgmt;
+                                    'Boot Diagnostics'              = $bootdg;
+                                    'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
+                                    'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
+                                    'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
+                                    'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
+                                    'Data Disk Storage Type'        = $StorAcc;
+                                    'Data Disk Size (GB)'           = $dataSize;
+                                    'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
+                                    'NIC Name'                      = $null;
+                                    'NIC Type'                      = $null;
+                                    'NSG'                           = 'None';
+                                    'Enable Accelerated Networking' = $null;
+                                    'Enable IP Forwarding'          = $null;
+                                    'Primary IP'                    = $null;
+                                    'Private IP Version'            = $null;
+                                    'Private IP Address'            = $null;
+                                    'Private IP Allocation Method'  = $null;
+                                    'VM Extensions'                 = $ext;
+                                    'Resource U'                    = $ResUCount;
+                                    'Tag Name'                      = [string]$TagKey;
+                                    'Tag Value'                     = [string]$Tag.$TagKey
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
+                        }
+                        elseif ($null -eq $data.networkProfile.networkInterfaces.id -and [string]::IsNullOrEmpty($Tag.Keys) -and $InTag -ne $true) {
+                                $obj = @{
+                                    'Subscription'                  = $sub1.name;
+                                    'Resource Group'                = $1.RESOURCEGROUP;
+                                    'Computer Name'                 = $1.NAME;
+                                    'Location'                      = $1.LOCATION;
+                                    'Zone'                          = [string]$1.ZONES;
+                                    'Availability Set'              = $AVSET;
+                                    'VM Size'                       = $data.hardwareProfile.vmSize;
+                                    'Image Reference'               = $data.storageProfile.imageReference.publisher;
+                                    'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
+                                    'SKU'                           = $data.storageProfile.imageReference.sku;
+                                    'Admin Username'                = $data.osProfile.adminUsername;
+                                    'OS Type'                       = $os;
+                                    'Update Management'             = $UpdateMgmt;
+                                    'Boot Diagnostics'              = $bootdg;
+                                    'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
+                                    'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
+                                    'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
+                                    'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
+                                    'Data Disk Storage Type'        = $StorAcc;
+                                    'Data Disk Size (GB)'           = $dataSize;
+                                    'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
+                                    'NIC Name'                      = $null;
+                                    'NIC Type'                      = $null;
+                                    'NSG'                           = 'None';
+                                    'Enable Accelerated Networking' = $null;
+                                    'Enable IP Forwarding'          = $null;
+                                    'Primary IP'                    = $null;
+                                    'Private IP Version'            = $null;
+                                    'Private IP Address'            = $null;
+                                    'Private IP Allocation Method'  = $null;
+                                    'VM Extensions'                 = $ext;
+                                    'Resource U'                    = $ResUCount;
+                                    'Tag Name'                      = $null;
+                                    'Tag Value'                     = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
                         }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4])).AddArgument($($args[5]))
 
-            $VMDisk = ([PowerShell]::Create()).AddScript( { param($Sub, $VMDisk)
+            $VMDisk = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$VMDisk)
                     $tmp = @()
 
                     $disk = $VMDisk
                     $Subs = $Sub
 
                     foreach ($1 in $disk) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
                         $SKU = $1.SKU 
-
-                        $obj = @{
-                            'Subscription'           = $sub1.name;
-                            'Resource Group'         = $1.RESOURCEGROUP;
-                            'Virtual Machine'        = $1.MANAGEDBY.split('/')[8];
-                            'Disk Name'              = $1.NAME;
-                            'Location'               = $1.LOCATION;
-                            'Zone'                   = [string]$1.ZONES;
-                            'SKU'                    = $SKU.Name;
-                            'Disk Size'              = $data.diskSizeGB;
-                            'Encryption'             = $data.encryption.type;
-                            'OS Type'                = $data.osType;
-                            'Disk IOPS Read / Write' = $data.diskIOPSReadWrite;
-                            'Disk MBps Read / Write' = $data.diskMBpsReadWrite;
-                            'Disk State'             = $data.diskState;
-                            'HyperV Generation'      = $data.hyperVGeneration;
-                            'Tags'                   = [string]$1.tags
-                        }         
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                $obj = @{
+                                    'Subscription'           = $sub1.name;
+                                    'Resource Group'         = $1.RESOURCEGROUP;
+                                    'Virtual Machine'        = $1.MANAGEDBY.split('/')[8];
+                                    'Disk Name'              = $1.NAME;
+                                    'Location'               = $1.LOCATION;
+                                    'Zone'                   = [string]$1.ZONES;
+                                    'SKU'                    = $SKU.Name;
+                                    'Disk Size'              = $data.diskSizeGB;
+                                    'Encryption'             = $data.encryption.type;
+                                    'OS Type'                = $data.osType;
+                                    'Disk IOPS Read / Write' = $data.diskIOPSReadWrite;
+                                    'Disk MBps Read / Write' = $data.diskMBpsReadWrite;
+                                    'Disk State'             = $data.diskState;
+                                    'HyperV Generation'      = $data.hyperVGeneration;
+                                    'Resource U'             = $ResUCount;
+                                    'Tag Name'               = [string]$TagKey;
+                                    'Tag Value'              = [string]$Tag.$TagKey
+                                }         
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
+                        }
+                        else 
+                        {
+                            $obj = @{
+                                'Subscription'           = $sub1.name;
+                                'Resource Group'         = $1.RESOURCEGROUP;
+                                'Virtual Machine'        = $1.MANAGEDBY.split('/')[8];
+                                'Disk Name'              = $1.NAME;
+                                'Location'               = $1.LOCATION;
+                                'Zone'                   = [string]$1.ZONES;
+                                'SKU'                    = $SKU.Name;
+                                'Disk Size'              = $data.diskSizeGB;
+                                'Encryption'             = $data.encryption.type;
+                                'OS Type'                = $data.osType;
+                                'Disk IOPS Read / Write' = $data.diskIOPSReadWrite;
+                                'Disk MBps Read / Write' = $data.diskMBpsReadWrite;
+                                'Disk State'             = $data.diskState;
+                                'HyperV Generation'      = $data.hyperVGeneration;
+                                'Resource U'             = $ResUCount;
+                                'Tag Name'               = $null;
+                                'Tag Value'              = $null
+                            }         
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                        }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[5]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[6]))
 
 
-            $SQLVM = ([PowerShell]::Create()).AddScript( { param($Sub, $SQLVM)
+            $SQLVM = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$SQLVM)
                     $tmp = @()
 
                     $sqlvm = $SQLVM
                     $Subs = $Sub
 
                     foreach ($1 in $sqlvm) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-
-                        $obj = @{
-                            'Subscription'            = $sub1.name;
-                            'ResourceGroup'           = $1.RESOURCEGROUP;
-                            'Name'                    = $1.NAME;
-                            'Location'                = $1.LOCATION;
-                            'Zone'                    = $1.ZONES;
-                            'SQL Server License Type' = $data.sqlServerLicenseType;
-                            'SQL Image'               = $data.sqlImageOffer;
-                            'SQL Management'          = $data.sqlManagement;
-                            'SQL Image Sku'           = $data.sqlImageSku;
-                            'Tags'                    = [string]$1.tags
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                $obj = @{
+                                    'Subscription'            = $sub1.name;
+                                    'ResourceGroup'           = $1.RESOURCEGROUP;
+                                    'Name'                    = $1.NAME;
+                                    'Location'                = $1.LOCATION;
+                                    'Zone'                    = $1.ZONES;
+                                    'SQL Server License Type' = $data.sqlServerLicenseType;
+                                    'SQL Image'               = $data.sqlImageOffer;
+                                    'SQL Management'          = $data.sqlManagement;
+                                    'SQL Image Sku'           = $data.sqlImageSku;
+                                    'Resource U'              = $ResUCount;
+                                    'Tag Name'                = [string]$TagKey;
+                                    'Tag Value'               = [string]$Tag.$TagKey
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                         }
-                        $tmp += $obj
+                        else 
+                            {
+                                $obj = @{
+                                    'Subscription'            = $sub1.name;
+                                    'ResourceGroup'           = $1.RESOURCEGROUP;
+                                    'Name'                    = $1.NAME;
+                                    'Location'                = $1.LOCATION;
+                                    'Zone'                    = $1.ZONES;
+                                    'SQL Server License Type' = $data.sqlServerLicenseType;
+                                    'SQL Image'               = $data.sqlImageOffer;
+                                    'SQL Management'          = $data.sqlManagement;
+                                    'SQL Image Sku'           = $data.sqlImageSku;
+                                    'Resource U'              = $ResUCount;
+                                    'Tag Name'                = $null;
+                                    'Tag Value'               = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[6]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[7]))
 
 
 
-            $WebServerFarm = ([PowerShell]::Create()).AddScript( { param($Sub, $SERVERFARM)
+            $WebServerFarm = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$SERVERFARM)
                     $tmp = @()
 
                     $webfarm = $SERVERFARM
                     $Subs = $Sub
 
                     foreach ($1 in $webfarm) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
                         $sku = $1.SKU
-
-                        $obj = @{
-                            'Subscription'        = $sub1.name;
-                            'Resource Group'      = $1.RESOURCEGROUP;
-                            'Name'                = $1.NAME;
-                            'Location'            = $1.LOCATION;
-                            'SKU'                 = $sku.name;
-                            'SKU Family'          = $sku.family;
-                            'Tier'                = $sku.tier;
-                            'Capacity'            = $sku.capacity;
-                            'Workers'             = $data.currentNumberOfWorkers;
-                            'Compute Mode'        = $data.computeMode;
-                            'Max Elastic Workers' = $data.maximumElasticWorkerCount;
-                            'Max Workers'         = $data.maximumNumberOfWorkers;
-                            'Worker Kind'         = $data.kind;
-                            'Number Of Sites'     = $data.numberOfSites;
-                            'Plan Name'           = $data.planName;
-                            'Tags'                = [string]$1.tags
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                $obj = @{
+                                    'Subscription'        = $sub1.name;
+                                    'Resource Group'      = $1.RESOURCEGROUP;
+                                    'Name'                = $1.NAME;
+                                    'Location'            = $1.LOCATION;
+                                    'SKU'                 = $sku.name;
+                                    'SKU Family'          = $sku.family;
+                                    'Tier'                = $sku.tier;
+                                    'Capacity'            = $sku.capacity;
+                                    'Workers'             = $data.currentNumberOfWorkers;
+                                    'Compute Mode'        = $data.computeMode;
+                                    'Max Elastic Workers' = $data.maximumElasticWorkerCount;
+                                    'Max Workers'         = $data.maximumNumberOfWorkers;
+                                    'Worker Kind'         = $data.kind;
+                                    'Number Of Sites'     = $data.numberOfSites;
+                                    'Plan Name'           = $data.planName;
+                                    'Resource U'          = $ResUCount;
+                                    'Tag Name'            = [string]$TagKey;
+                                    'Tag Value'           = [string]$Tag.$TagKey
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                         }
-                        $tmp += $obj
+                        else {
+                            $obj = @{
+                                'Subscription'        = $sub1.name;
+                                'Resource Group'      = $1.RESOURCEGROUP;
+                                'Name'                = $1.NAME;
+                                'Location'            = $1.LOCATION;
+                                'SKU'                 = $sku.name;
+                                'SKU Family'          = $sku.family;
+                                'Tier'                = $sku.tier;
+                                'Capacity'            = $sku.capacity;
+                                'Workers'             = $data.currentNumberOfWorkers;
+                                'Compute Mode'        = $data.computeMode;
+                                'Max Elastic Workers' = $data.maximumElasticWorkerCount;
+                                'Max Workers'         = $data.maximumNumberOfWorkers;
+                                'Worker Kind'         = $data.kind;
+                                'Number Of Sites'     = $data.numberOfSites;
+                                'Plan Name'           = $data.planName;
+                                'Resource U'          = $ResUCount;
+                                'Tag Name'            = $null;
+                                'Tag Value'           = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                        }    
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[7]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[8]))
 
 
 
-            $AKS = ([PowerShell]::Create()).AddScript( { param($Sub, $AKS)
+            $AKS = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$AKS)
                     $tmp = @()
 
                     $AKS = $AKS
                     $Subs = $Sub
 
                     foreach ($1 in $AKS) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
                         if ($data.kubernetesVersion -lt 1.17) {
@@ -679,189 +964,358 @@ $Runtime = Measure-Command -Expression {
                         else {
                             $ver = 'SUPPORTED'
                         }
-
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         foreach ($2 in $data.agentPoolProfiles) {
-                            $obj = @{
-                                'Subscription'               = $sub1.name;
-                                'Resource Group'             = $1.RESOURCEGROUP;
-                                'Clusters'                   = $1.NAME;
-                                'Location'                   = $1.LOCATION;
-                                'Kubernetes Version'         = $data.kubernetesVersion;
-                                'Kubernetes Version Support' = $ver;
-                                'Role-Based Access Control'  = $data.enableRBAC;
-                                'AAD Enabled'                = if ($data.aadProfile) { $true }else { $false };
-                                'Network Type'               = $data.networkProfile.networkPlugin;
-                                'Outbound Type'              = $data.networkProfile.outboundType;
-                                'LoadBalancer Sku'           = $data.networkProfile.loadBalancerSku;
-                                'Docker Pod Cidr'            = $data.networkProfile.podCidr;
-                                'Service Cidr'               = $data.networkProfile.serviceCidr;
-                                'Docker Bridge Cidr'         = $data.networkProfile.dockerBridgeCidr;                   
-                                'Network DNS Service IP'     = $data.networkProfile.dnsServiceIP;
-                                'FQDN'                       = $data.fqdn
-                                'HTTP Application Routing'   = if ($data.addonProfiles.httpapplicationrouting.enabled) { $true }else { $false };
-                                'Node Pool Name'             = $2.name;
-                                'Pool Profile Type'          = $2.type;
-                                'Pool OS'                    = $2.osType;
-                                'Node Size'                  = $2.vmSize;
-                                'OS Disk Size (GB)'          = $2.osDiskSizeGB;
-                                'Nodes'                      = $2.count;
-                                'Autoscale'                  = $2.enableAutoScaling;
-                                'Autoscale Max'              = $2.maxCount;
-                                'Autoscale Min'              = $2.minCount;
-                                'Max Pods Per Node'          = $2.maxPods;
-                                'Orchestrator Version'       = $2.orchestratorVersion;
-                                'Enable Node Public IP'      = $2.enableNodePublicIP;
-                                'Tags'                       = [string]$1.tags
+                            if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                foreach ($TagKey in $Tag.Keys) {
+                                    $obj = @{
+                                        'Subscription'               = $sub1.name;
+                                        'Resource Group'             = $1.RESOURCEGROUP;
+                                        'Clusters'                   = $1.NAME;
+                                        'Location'                   = $1.LOCATION;
+                                        'Kubernetes Version'         = $data.kubernetesVersion;
+                                        'Kubernetes Version Support' = $ver;
+                                        'Role-Based Access Control'  = $data.enableRBAC;
+                                        'AAD Enabled'                = if ($data.aadProfile) { $true }else { $false };
+                                        'Network Type'               = $data.networkProfile.networkPlugin;
+                                        'Outbound Type'              = $data.networkProfile.outboundType;
+                                        'LoadBalancer Sku'           = $data.networkProfile.loadBalancerSku;
+                                        'Docker Pod Cidr'            = $data.networkProfile.podCidr;
+                                        'Service Cidr'               = $data.networkProfile.serviceCidr;
+                                        'Docker Bridge Cidr'         = $data.networkProfile.dockerBridgeCidr;                   
+                                        'Network DNS Service IP'     = $data.networkProfile.dnsServiceIP;
+                                        'FQDN'                       = $data.fqdn
+                                        'HTTP Application Routing'   = if ($data.addonProfiles.httpapplicationrouting.enabled) { $true }else { $false };
+                                        'Node Pool Name'             = $2.name;
+                                        'Pool Profile Type'          = $2.type;
+                                        'Pool OS'                    = $2.osType;
+                                        'Node Size'                  = $2.vmSize;
+                                        'OS Disk Size (GB)'          = $2.osDiskSizeGB;
+                                        'Nodes'                      = $2.count;
+                                        'Autoscale'                  = $2.enableAutoScaling;
+                                        'Autoscale Max'              = $2.maxCount;
+                                        'Autoscale Min'              = $2.minCount;
+                                        'Max Pods Per Node'          = $2.maxPods;
+                                        'Orchestrator Version'       = $2.orchestratorVersion;
+                                        'Enable Node Public IP'      = $2.enableNodePublicIP;
+                                        'Resource U'                 = $ResUCount;
+                                        'Tag Name'                   = [string]$TagKey;
+                                        'Tag Value'                  = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
                             }
-                            $tmp += $obj
+                            else {
+                                $obj = @{
+                                    'Subscription'               = $sub1.name;
+                                    'Resource Group'             = $1.RESOURCEGROUP;
+                                    'Clusters'                   = $1.NAME;
+                                    'Location'                   = $1.LOCATION;
+                                    'Kubernetes Version'         = $data.kubernetesVersion;
+                                    'Kubernetes Version Support' = $ver;
+                                    'Role-Based Access Control'  = $data.enableRBAC;
+                                    'AAD Enabled'                = if ($data.aadProfile) { $true }else { $false };
+                                    'Network Type'               = $data.networkProfile.networkPlugin;
+                                    'Outbound Type'              = $data.networkProfile.outboundType;
+                                    'LoadBalancer Sku'           = $data.networkProfile.loadBalancerSku;
+                                    'Docker Pod Cidr'            = $data.networkProfile.podCidr;
+                                    'Service Cidr'               = $data.networkProfile.serviceCidr;
+                                    'Docker Bridge Cidr'         = $data.networkProfile.dockerBridgeCidr;                   
+                                    'Network DNS Service IP'     = $data.networkProfile.dnsServiceIP;
+                                    'FQDN'                       = $data.fqdn
+                                    'HTTP Application Routing'   = if ($data.addonProfiles.httpapplicationrouting.enabled) { $true }else { $false };
+                                    'Node Pool Name'             = $2.name;
+                                    'Pool Profile Type'          = $2.type;
+                                    'Pool OS'                    = $2.osType;
+                                    'Node Size'                  = $2.vmSize;
+                                    'OS Disk Size (GB)'          = $2.osDiskSizeGB;
+                                    'Nodes'                      = $2.count;
+                                    'Autoscale'                  = $2.enableAutoScaling;
+                                    'Autoscale Max'              = $2.maxCount;
+                                    'Autoscale Min'              = $2.minCount;
+                                    'Max Pods Per Node'          = $2.maxPods;
+                                    'Orchestrator Version'       = $2.orchestratorVersion;
+                                    'Enable Node Public IP'      = $2.enableNodePublicIP;
+                                    'Resource U'                 = $ResUCount;
+                                    'Tag Name'                   = $null;
+                                    'Tag Value'                  = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                         }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[8]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[9]))
 
 
-            $VMSCS = ([PowerShell]::Create()).AddScript( { param($Sub, $vmscs)
+            $VMSCS = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$vmscs)
                     $tmp = @()
 
                     $vmscs = $vmscs
                     $Subs = $Sub
 
                     foreach ($1 in $vmscs) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-                            
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         foreach ($2 in $data.virtualMachineProfile.networkProfile.networkInterfaceConfigurations) {
-        
-                            $obj = @{
-                                'Subscription'                  = $sub1.name;
-                                'Resource Group'                = $1.RESOURCEGROUP;
-                                'Name'                          = $1.NAME;
-                                'Location'                      = $1.LOCATION;
-                                'SKU Tier'                      = $1.sku.tier;
-                                'Fault Domain'                  = $data.platformFaultDomainCount;
-                                'Upgrade Policy'                = $data.upgradePolicy.mode;
-                                'Capacity'                      = $1.sku.capacity;
-                                'VM Size'                       = $1.sku.name;
-                                'VM OS'                         = if ($null -eq $data.virtualMachineProfile.osProfile.LinuxConfiguration) { 'Windows' }else { 'Linux' };
-                                'Network Interface Name'        = $2.name;
-                                'Enable Accelerated Networking' = $2.properties.enableAcceleratedNetworking;
-                                'Enable IP Forwarding'          = $2.properties.enableIPForwarding;
-                                'Admin Username'                = $data.virtualMachineProfile.osProfile.adminUsername;
-                                'VM Name Prefix'                = $data.virtualMachineProfile.osProfile.computerNamePrefix;
-                                'Tags'                          = [string]$1.tags
+                            if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                foreach ($TagKey in $Tag.Keys) {
+                                    $obj = @{
+                                        'Subscription'                  = $sub1.name;
+                                        'Resource Group'                = $1.RESOURCEGROUP;
+                                        'Name'                          = $1.NAME;
+                                        'Location'                      = $1.LOCATION;
+                                        'SKU Tier'                      = $1.sku.tier;
+                                        'Fault Domain'                  = $data.platformFaultDomainCount;
+                                        'Upgrade Policy'                = $data.upgradePolicy.mode;
+                                        'Capacity'                      = $1.sku.capacity;
+                                        'VM Size'                       = $1.sku.name;
+                                        'VM OS'                         = if ($null -eq $data.virtualMachineProfile.osProfile.LinuxConfiguration) { 'Windows' }else { 'Linux' };
+                                        'Network Interface Name'        = $2.name;
+                                        'Enable Accelerated Networking' = $2.properties.enableAcceleratedNetworking;
+                                        'Enable IP Forwarding'          = $2.properties.enableIPForwarding;
+                                        'Admin Username'                = $data.virtualMachineProfile.osProfile.adminUsername;
+                                        'VM Name Prefix'                = $data.virtualMachineProfile.osProfile.computerNamePrefix;
+                                        'Resource U'                    = $ResUCount;
+                                        'Tag Name'                      = [string]$TagKey;
+                                        'Tag Value'                     = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
                             }
-                            $tmp += $obj
+                            else { 
+                                $obj = @{
+                                    'Subscription'                  = $sub1.name;
+                                    'Resource Group'                = $1.RESOURCEGROUP;
+                                    'Name'                          = $1.NAME;
+                                    'Location'                      = $1.LOCATION;
+                                    'SKU Tier'                      = $1.sku.tier;
+                                    'Fault Domain'                  = $data.platformFaultDomainCount;
+                                    'Upgrade Policy'                = $data.upgradePolicy.mode;
+                                    'Capacity'                      = $1.sku.capacity;
+                                    'VM Size'                       = $1.sku.name;
+                                    'VM OS'                         = if ($null -eq $data.virtualMachineProfile.osProfile.LinuxConfiguration) { 'Windows' }else { 'Linux' };
+                                    'Network Interface Name'        = $2.name;
+                                    'Enable Accelerated Networking' = $2.properties.enableAcceleratedNetworking;
+                                    'Enable IP Forwarding'          = $2.properties.enableIPForwarding;
+                                    'Admin Username'                = $data.virtualMachineProfile.osProfile.adminUsername;
+                                    'VM Name Prefix'                = $data.virtualMachineProfile.osProfile.computerNamePrefix;
+                                    'Resource U'                    = $ResUCount;
+                                    'Tag Name'                      = $null;
+                                    'Tag Value'                     = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                         }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[9]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[10]))
 
 
-            $CON = ([PowerShell]::Create()).AddScript( { param($Sub, $con)
+            $CON = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$con)
                     $tmp = @()
 
                     $con = $con
                     $Subs = $Sub
 
                     foreach ($1 in $con) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         foreach ($2 in $data.containers) {
-
-                            $obj = @{
-                                'Subscription'        = $sub1.name;
-                                'Resource Group'      = $1.RESOURCEGROUP;
-                                'Instance Name'       = $1.NAME;
-                                'Location'            = $1.LOCATION;
-                                'Instance OS Type'    = $data.osType;
-                                'Container Name'      = $2.name;
-                                'Container State'     = $2.properties.instanceView.currentState.state;
-                                'Container Image'     = [string]$2.properties.image;
-                                'Restart Count'       = $2.properties.instanceView.restartCount;
-                                'Start Time'          = $2.properties.instanceView.currentState.startTime;
-                                'Command'             = [string]$2.properties.command;
-                                'Request CPU'         = $2.properties.resources.requests.cpu;
-                                'Request Memory (GB)' = $2.properties.resources.requests.memoryInGB;
-                                'IP'                  = $data.ipAddress.ip;
-                                'Protocol'            = [string]$2.properties.ports.protocol;
-                                'Port'                = [string]$2.properties.ports.port;
-                                'Tags'                = [string]$1.tags
+                            if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                foreach ($TagKey in $Tag.Keys) {
+                                    $obj = @{
+                                        'Subscription'        = $sub1.name;
+                                        'Resource Group'      = $1.RESOURCEGROUP;
+                                        'Instance Name'       = $1.NAME;
+                                        'Location'            = $1.LOCATION;
+                                        'Instance OS Type'    = $data.osType;
+                                        'Container Name'      = $2.name;
+                                        'Container State'     = $2.properties.instanceView.currentState.state;
+                                        'Container Image'     = [string]$2.properties.image;
+                                        'Restart Count'       = $2.properties.instanceView.restartCount;
+                                        'Start Time'          = $2.properties.instanceView.currentState.startTime;
+                                        'Command'             = [string]$2.properties.command;
+                                        'Request CPU'         = $2.properties.resources.requests.cpu;
+                                        'Request Memory (GB)' = $2.properties.resources.requests.memoryInGB;
+                                        'IP'                  = $data.ipAddress.ip;
+                                        'Protocol'            = [string]$2.properties.ports.protocol;
+                                        'Port'                = [string]$2.properties.ports.port;
+                                        'Resource U'          = $ResUCount;
+                                        'Tag Name'            = [string]$TagKey;
+                                        'Tag Value'           = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
                             }
-
-                            $tmp += $obj
+                            else {
+                                $obj = @{
+                                    'Subscription'        = $sub1.name;
+                                    'Resource Group'      = $1.RESOURCEGROUP;
+                                    'Instance Name'       = $1.NAME;
+                                    'Location'            = $1.LOCATION;
+                                    'Instance OS Type'    = $data.osType;
+                                    'Container Name'      = $2.name;
+                                    'Container State'     = $2.properties.instanceView.currentState.state;
+                                    'Container Image'     = [string]$2.properties.image;
+                                    'Restart Count'       = $2.properties.instanceView.restartCount;
+                                    'Start Time'          = $2.properties.instanceView.currentState.startTime;
+                                    'Command'             = [string]$2.properties.command;
+                                    'Request CPU'         = $2.properties.resources.requests.cpu;
+                                    'Request Memory (GB)' = $2.properties.resources.requests.memoryInGB;
+                                    'IP'                  = $data.ipAddress.ip;
+                                    'Protocol'            = [string]$2.properties.ports.protocol;
+                                    'Port'                = [string]$2.properties.ports.port;
+                                    'Resource U'          = $ResUCount;
+                                    'Tag Name'            = $null;
+                                    'Tag Value'           = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                         }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[10]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[11]))
 
 
 
-            $SQLSRV = ([PowerShell]::Create()).AddScript( { param($Sub, $SQLSERVER)
+            $SQLSRV = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$SQLSERVER)
                     $tmp = @()
 
                     $SQLServer = $SQLSERVER
                     $Subs = $Sub
     
                     foreach ($1 in $SQLServer) {
-    
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-    
-                        $obj = @{
-                            'Subscription'          = $sub1.name;
-                            'Resource Group'        = $1.RESOURCEGROUP;
-                            'Name'                  = $1.NAME;
-                            'Location'              = $1.LOCATION;
-                            'Kind'                  = $1.kind;
-                            'Admin Login'           = $data.administratorLogin;
-                            'FQDN'                  = $data.fullyQualifiedDomainName;
-                            'Public Network Access' = $data.publicNetworkAccess;
-                            'State'                 = $data.state;
-                            'Version'               = $data.version;
-                            'Tags'                  = [string]$1.tags
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                $obj = @{
+                                    'Subscription'          = $sub1.name;
+                                    'Resource Group'        = $1.RESOURCEGROUP;
+                                    'Name'                  = $1.NAME;
+                                    'Location'              = $1.LOCATION;
+                                    'Kind'                  = $1.kind;
+                                    'Admin Login'           = $data.administratorLogin;
+                                    'FQDN'                  = $data.fullyQualifiedDomainName;
+                                    'Public Network Access' = $data.publicNetworkAccess;
+                                    'State'                 = $data.state;
+                                    'Version'               = $data.version;
+                                    'Resource U'            = $ResUCount;
+                                    'Tag Name'              = [string]$TagKey;
+                                    'Tag Value'             = [string]$Tag.$TagKey
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                         }
-                        $tmp += $obj
+                        else {
+                            $obj = @{
+                                'Subscription'          = $sub1.name;
+                                'Resource Group'        = $1.RESOURCEGROUP;
+                                'Name'                  = $1.NAME;
+                                'Location'              = $1.LOCATION;
+                                'Kind'                  = $1.kind;
+                                'Admin Login'           = $data.administratorLogin;
+                                'FQDN'                  = $data.fullyQualifiedDomainName;
+                                'Public Network Access' = $data.publicNetworkAccess;
+                                'State'                 = $data.state;
+                                'Version'               = $data.version;
+                                'Resource U'            = $ResUCount;
+                                'Tag Name'              = $null;
+                                'Tag Value'             = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                        }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[11]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[12]))
 
-            $IOT = ([PowerShell]::Create()).AddScript( { param($Sub, $IOT)
+            $IOT = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$IOT)
                     $tmp = @()
 
                     $Subs = $Sub
     
                     foreach ($1 in $IOT) {
-    
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-    
-                        $obj = @{
-                            'Subscription'          = $sub1.name;
-                            'Resource Group'        = $1.RESOURCEGROUP;
-                            'Name'                  = $1.NAME;
-                            'HostName'              = $data.hostname;
-                            'State'                 = $data.state;
-                            'SKU'                   = $1.sku.name;
-                            'SKU Tier'              = $1.sku.tier;
-                            'SKU Capacity'          = $1.sku.capacity;
-                            'Features'              = $data.features;
-                            'Enable File Upload Notifications' = $data.enableFileUploadNotifications;
-                            'Default TTL As ISO8601' = $data.cloudToDevice.defaultTtlAsIso8601;
-                            'Max Delivery Count'    = $data.cloudToDevice.maxDeliveryCount;
-                            'EventHubs Endpoint'    = $data.eventHubEndpoints.events.endpoint;
-                            'EventHubs Partition Count' = $data.eventHubEndpoints.events.partitionCount;
-                            'EventHubs Path'        = $data.eventHubEndpoints.events.path;
-                            'EventHubs Retention Days' = $data.eventHubEndpoints.events.retentionTimeInDays;
-                            'Locations'             = [string]$data.locations.location;
-                            'Tags'                  = [string]$1.tags
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                $obj = @{
+                                    'Subscription'          = $sub1.name;
+                                    'Resource Group'        = $1.RESOURCEGROUP;
+                                    'Name'                  = $1.NAME;
+                                    'HostName'              = $data.hostname;
+                                    'State'                 = $data.state;
+                                    'SKU'                   = $1.sku.name;
+                                    'SKU Tier'              = $1.sku.tier;
+                                    'SKU Capacity'          = $1.sku.capacity;
+                                    'Features'              = $data.features;
+                                    'Enable File Upload Notifications' = $data.enableFileUploadNotifications;
+                                    'Default TTL As ISO8601' = $data.cloudToDevice.defaultTtlAsIso8601;
+                                    'Max Delivery Count'    = $data.cloudToDevice.maxDeliveryCount;
+                                    'EventHubs Endpoint'    = $data.eventHubEndpoints.events.endpoint;
+                                    'EventHubs Partition Count' = $data.eventHubEndpoints.events.partitionCount;
+                                    'EventHubs Path'        = $data.eventHubEndpoints.events.path;
+                                    'EventHubs Retention Days' = $data.eventHubEndpoints.events.retentionTimeInDays;
+                                    'Locations'             = [string]$data.locations.location;
+                                    'Resource U'              = $ResUCount;
+                                    'Tag Name'                = [string]$TagKey;
+                                    'Tag Value'               = [string]$Tag.$TagKey
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                         }
-                        $tmp += $obj
+                        else {
+                            $obj = @{
+                                'Subscription'          = $sub1.name;
+                                'Resource Group'        = $1.RESOURCEGROUP;
+                                'Name'                  = $1.NAME;
+                                'HostName'              = $data.hostname;
+                                'State'                 = $data.state;
+                                'SKU'                   = $1.sku.name;
+                                'SKU Tier'              = $1.sku.tier;
+                                'SKU Capacity'          = $1.sku.capacity;
+                                'Features'              = $data.features;
+                                'Enable File Upload Notifications' = $data.enableFileUploadNotifications;
+                                'Default TTL As ISO8601' = $data.cloudToDevice.defaultTtlAsIso8601;
+                                'Max Delivery Count'    = $data.cloudToDevice.maxDeliveryCount;
+                                'EventHubs Endpoint'    = $data.eventHubEndpoints.events.endpoint;
+                                'EventHubs Partition Count' = $data.eventHubEndpoints.events.partitionCount;
+                                'EventHubs Path'        = $data.eventHubEndpoints.events.path;
+                                'EventHubs Retention Days' = $data.eventHubEndpoints.events.retentionTimeInDays;
+                                'Locations'             = [string]$data.locations.location;
+                                'Resource U'            = $ResUCount;
+                                'Tag Name'              = $null;
+                                'Tag Value'             = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                        }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[12]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[13]))
 
 
             $jobVM = $VM.BeginInvoke()
@@ -920,7 +1374,7 @@ $Runtime = Measure-Command -Expression {
 
             $AzCompute
 
-        } -ArgumentList $SUBs, $VM, $VMNIC, $NSG, $VMExp, $VMDisk, $SQLVM, $SERVERFARM, $AKS, $VMSCS, $CON, $SQLSERVER, $IOT   | Out-Null
+        } -ArgumentList $SUBs,$InTag, $VM, $VMNIC, $NSG, $VMExp, $VMDisk, $SQLVM, $SERVERFARM, $AKS, $VMSCS, $CON, $SQLSERVER, $IOT   | Out-Null
 
 
         <######################################################### NETWORK RESOURCE GROUP JOB ######################################################################>
@@ -929,91 +1383,174 @@ $Runtime = Measure-Command -Expression {
 
             $job = @()
 
-            $VNET = ([PowerShell]::Create()).AddScript( { param($Sub, $VNet)
+            $VNET = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$VNet)
                     $tmp = @()
 
                     $vnet = $VNet
                     $Subs = $Sub
 
                     foreach ($1 in $vnet) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         foreach ($2 in $data.addressSpace.addressPrefixes) {
                             foreach ($3 in $data.subnets) {
-                                
-                                $obj = @{
-                                    'Subscription'                                 = $sub1.name;
-                                    'Resource Group'                               = $1.RESOURCEGROUP;
-                                    'Name'                                         = $1.NAME;
-                                    'Location'                                     = $1.LOCATION;
-                                    'Zone'                                         = $1.ZONES;
-                                    'Address Space'                                = $2;
-                                    'Enable DDOS Protection'                       = $data.enableDdosProtection;
-                                    'Enable VM Protection'                         = $data.enableVmProtection;
-                                    'Subnet Name'                                  = $3.name;
-                                    'Subnet Prefix'                                = $3.properties.addressPrefix;
-                                    'Subnet Private Link Service Network Policies' = $3.properties.privateLinkServiceNetworkPolicies;
-                                    'Subnet Private Endpoint Network Policies'     = $3.properties.privateEndpointNetworkPolicies;
-                                    'Tags'                                         = [string]$1.tags
-                                }
-                                $tmp += $obj
+                                if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                    foreach ($TagKey in $Tag.Keys) {
+                                            $obj = @{
+                                                'Subscription'                                 = $sub1.name;
+                                                'Resource Group'                               = $1.RESOURCEGROUP;
+                                                'Name'                                         = $1.NAME;
+                                                'Location'                                     = $1.LOCATION;
+                                                'Zone'                                         = $1.ZONES;
+                                                'Address Space'                                = $2;
+                                                'Enable DDOS Protection'                       = $data.enableDdosProtection;
+                                                'Enable VM Protection'                         = $data.enableVmProtection;
+                                                'Subnet Name'                                  = $3.name;
+                                                'Subnet Prefix'                                = $3.properties.addressPrefix;
+                                                'Subnet Private Link Service Network Policies' = $3.properties.privateLinkServiceNetworkPolicies;
+                                                'Subnet Private Endpoint Network Policies'     = $3.properties.privateEndpointNetworkPolicies;
+                                                'Resource U'                                   = $ResUCount;
+                                                'Tag Name'                                     = [string]$TagKey;
+                                                'Tag Value'                                    = [string]$Tag.$TagKey
+                                            }
+                                            $tmp += $obj
+                                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                        }
+                                    }
+                                    else {
+                                        $obj = @{
+                                            'Subscription'                                 = $sub1.name;
+                                            'Resource Group'                               = $1.RESOURCEGROUP;
+                                            'Name'                                         = $1.NAME;
+                                            'Location'                                     = $1.LOCATION;
+                                            'Zone'                                         = $1.ZONES;
+                                            'Address Space'                                = $2;
+                                            'Enable DDOS Protection'                       = $data.enableDdosProtection;
+                                            'Enable VM Protection'                         = $data.enableVmProtection;
+                                            'Subnet Name'                                  = $3.name;
+                                            'Subnet Prefix'                                = $3.properties.addressPrefix;
+                                            'Subnet Private Link Service Network Policies' = $3.properties.privateLinkServiceNetworkPolicies;
+                                            'Subnet Private Endpoint Network Policies'     = $3.properties.privateEndpointNetworkPolicies;
+                                            'Resource U'                                   = $ResUCount;
+                                            'Tag Name'                                     = $null;
+                                            'Tag Value'                                    = $null
+                                        }
+                                        $tmp += $obj
+                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    }
                             }
                         }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[1]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2]))
 
 
-            $VNETGTW = ([PowerShell]::Create()).AddScript( { param($Sub, $VNETGTW)
+            $VNETGTW = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$VNETGTW)
                     $tmp = @()
 
                     $vgtws = $VNETGTW
                     $Subs = $Sub
 
                     foreach ($1 in $vgtws) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-                                                    
-                        $obj = @{
-                            'Subscription'           = $sub1.name;
-                            'Resource Group'         = $1.RESOURCEGROUP;
-                            'Name'                   = $1.NAME;
-                            'Location'               = $1.LOCATION;
-                            'SKU'                    = $data.sku.tier;
-                            'Active-active mode'     = $data.activeActive; 
-                            'Gateway Type'           = $data.gatewayType;
-                            'Gateway Generation'     = $data.vpnGatewayGeneration;
-                            'VPN Type'               = $data.vpnType;
-                            'Enable Private Address' = $data.enablePrivateIpAddress;
-                            'Enable BGP'             = $data.enableBgp;
-                            'BGP ASN'                = $data.bgpsettings.asn;
-                            'BGP Peering Address'    = $data.bgpSettings.bgpPeeringAddress;
-                            'BGP Peer Weight'        = $data.bgpSettings.peerWeight;
-                            'Gateway Public IP'      = [string]$data.ipConfigurations.properties.publicIPAddress.id.split("/")[8];
-                            'Gateway Subnet Name'    = [string]$data.ipConfigurations.properties.subnet.id.split("/")[8];
-                            'Tags'                   = [string]$1.tags
-                        }
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {  
+                                    $obj = @{
+                                        'Subscription'           = $sub1.name;
+                                        'Resource Group'         = $1.RESOURCEGROUP;
+                                        'Name'                   = $1.NAME;
+                                        'Location'               = $1.LOCATION;
+                                        'SKU'                    = $data.sku.tier;
+                                        'Active-active mode'     = $data.activeActive; 
+                                        'Gateway Type'           = $data.gatewayType;
+                                        'Gateway Generation'     = $data.vpnGatewayGeneration;
+                                        'VPN Type'               = $data.vpnType;
+                                        'Enable Private Address' = $data.enablePrivateIpAddress;
+                                        'Enable BGP'             = $data.enableBgp;
+                                        'BGP ASN'                = $data.bgpsettings.asn;
+                                        'BGP Peering Address'    = $data.bgpSettings.bgpPeeringAddress;
+                                        'BGP Peer Weight'        = $data.bgpSettings.peerWeight;
+                                        'Gateway Public IP'      = [string]$data.ipConfigurations.properties.publicIPAddress.id.split("/")[8];
+                                        'Gateway Subnet Name'    = [string]$data.ipConfigurations.properties.subnet.id.split("/")[8];
+                                        'Resource U'             = $ResUCount;
+                                        'Tag Name'               = [string]$TagKey;
+                                        'Tag Value'              = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {
+                                $obj = @{
+                                    'Subscription'           = $sub1.name;
+                                    'Resource Group'         = $1.RESOURCEGROUP;
+                                    'Name'                   = $1.NAME;
+                                    'Location'               = $1.LOCATION;
+                                    'SKU'                    = $data.sku.tier;
+                                    'Active-active mode'     = $data.activeActive; 
+                                    'Gateway Type'           = $data.gatewayType;
+                                    'Gateway Generation'     = $data.vpnGatewayGeneration;
+                                    'VPN Type'               = $data.vpnType;
+                                    'Enable Private Address' = $data.enablePrivateIpAddress;
+                                    'Enable BGP'             = $data.enableBgp;
+                                    'BGP ASN'                = $data.bgpsettings.asn;
+                                    'BGP Peering Address'    = $data.bgpSettings.bgpPeeringAddress;
+                                    'BGP Peer Weight'        = $data.bgpSettings.peerWeight;
+                                    'Gateway Public IP'      = [string]$data.ipConfigurations.properties.publicIPAddress.id.split("/")[8];
+                                    'Gateway Subnet Name'    = [string]$data.ipConfigurations.properties.subnet.id.split("/")[8];
+                                    'Resource U'             = $ResUCount;
+                                    'Tag Name'               = $null;
+                                    'Tag Value'              = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[2]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[3]))
 
 
-            $PIP = ([PowerShell]::Create()).AddScript( { param($Sub, $PIP)
+            $PIP = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$PIP)
                     $tmp = @()
 
                     $pubip = $PIP
                     $Subs = $Sub
 
                     foreach ($1 in $pubip) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-
-                        if ($null -ne $data.ipConfiguration.id) {
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if ($null -ne $data.ipConfiguration.id -and ![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) { 
+                                    $obj = @{
+                                        'Subscription'             = $sub1.name;
+                                        'Resource Group'           = $1.RESOURCEGROUP;
+                                        'Name'                     = $1.NAME;
+                                        'SKU'                      = $1.SKU.Name;
+                                        'Location'                 = $1.LOCATION;
+                                        'Type'                     = $data.publicIPAllocationMethod;
+                                        'Version'                  = $data.publicIPAddressVersion;
+                                        'IP Address'               = $data.ipAddress;
+                                        'Associated Resource'      = $data.ipConfiguration.id.split('/')[8];
+                                        'Associated Resource Type' = $data.ipConfiguration.id.split('/')[7];
+                                        'Resource U'               = $ResUCount;
+                                        'Tag Name'                 = [string]$TagKey;
+                                        'Tag Value'                = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                        }
+                        elseif ($null -ne $data.ipConfiguration.id -and $InTag -ne $true) { 
                             $obj = @{
                                 'Subscription'             = $sub1.name;
                                 'Resource Group'           = $1.RESOURCEGROUP;
@@ -1025,11 +1562,35 @@ $Runtime = Measure-Command -Expression {
                                 'IP Address'               = $data.ipAddress;
                                 'Associated Resource'      = $data.ipConfiguration.id.split('/')[8];
                                 'Associated Resource Type' = $data.ipConfiguration.id.split('/')[7];
-                                'Tags'                     = [string]$1.tags
+                                'Resource U'               = $ResUCount;
+                                'Tag Name'                 = $null;
+                                'Tag Value'                = $null
                             }
                             $tmp += $obj
+                            if ($ResUCount -eq 1) {$ResUCount = 0} 
                         }
-                        else {
+                        elseif ($null -eq $data.ipConfiguration.id -and ![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {  
+                                    $obj = @{
+                                        'Subscription'             = $sub1.name;
+                                        'Resource Group'           = $1.RESOURCEGROUP;
+                                        'Name'                     = $1.NAME;
+                                        'SKU'                      = $1.SKU.Name;
+                                        'Location'                 = $1.LOCATION;
+                                        'Type'                     = $data.publicIPAllocationMethod;
+                                        'Version'                  = $data.publicIPAddressVersion;
+                                        'IP Address'               = $data.ipAddress;
+                                        'Associated Resource'      = $null;
+                                        'Associated Resource Type' = $null;
+                                        'Resource U'               = $ResUCount;
+                                        'Tag Name'                 = [string]$TagKey;
+                                        'Tag Value'                = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                        }
+                        elseif ($null -eq $data.ipConfiguration.id -and $InTag -ne $true) {  
                             $obj = @{
                                 'Subscription'             = $sub1.name;
                                 'Resource Group'           = $1.RESOURCEGROUP;
@@ -1041,26 +1602,30 @@ $Runtime = Measure-Command -Expression {
                                 'IP Address'               = $data.ipAddress;
                                 'Associated Resource'      = $null;
                                 'Associated Resource Type' = $null;
-                                'Tags'                     = [string]$1.tags
+                                'Resource U'               = $ResUCount;
+                                'Tag Name'                 = $null;
+                                'Tag Value'                = $null
                             }
                             $tmp += $obj
+                            if ($ResUCount -eq 1) {$ResUCount = 0} 
                         }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[3]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[4]))
 
 
-            $LB = ([PowerShell]::Create()).AddScript( { param($Sub, $LB)
+            $LB = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$LB)
                     $tmp = @()
 
                     $lbs = $LB
                     $Subs = $Sub
 
                     foreach ($1 in $lbs) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if ($null -ne $data.frontendIPConfigurations -and $null -ne $data.backendAddressPools -and $null -ne $data.probes) {
                             foreach ($2 in $data.frontendIPConfigurations) {
                                 $Fronttarget = ''    
@@ -1084,27 +1649,60 @@ $Runtime = Measure-Command -Expression {
                                         $BackType = $3.properties.backendIPConfigurations.id.split('/')[7]
                                     }
                                     foreach ($4 in $data.probes) {
-                                        $obj = @{
-                                            'Subscription'              = $sub1.name;
-                                            'Resource Group'            = $1.RESOURCEGROUP;
-                                            'Name'                      = $1.NAME;
-                                            'Location'                  = $1.LOCATION;
-                                            'SKU'                       = $1.sku.name;
-                                            'Frontend Name'             = $2.name;
-                                            'Frontend Target'           = $Fronttarget;
-                                            'Frontend Type'             = $FrontType;
-                                            'Frontend Subnet'           = $frontsub;
-                                            'Backend Pool Name'         = $3.name;
-                                            'Backend Target'            = $BackTarget;
-                                            'Backend Type'              = $BackType;
-                                            'Probe Name'                = $4.name;
-                                            'Probe Interval (sec)'      = $4.properties.intervalInSeconds;
-                                            'Probe Protocol'            = $4.properties.protocol;
-                                            'Probe Port'                = $4.properties.port;
-                                            'Probe Unhealthy threshold' = $4.properties.numberOfProbes;
-                                            'Tags'                      = [string]$1.tags
-                                        }
-                                        $tmp += $obj          
+                                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                            foreach ($TagKey in $Tag.Keys) {
+                                                    $obj = @{
+                                                        'Subscription'              = $sub1.name;
+                                                        'Resource Group'            = $1.RESOURCEGROUP;
+                                                        'Name'                      = $1.NAME;
+                                                        'Location'                  = $1.LOCATION;
+                                                        'SKU'                       = $1.sku.name;
+                                                        'Frontend Name'             = $2.name;
+                                                        'Frontend Target'           = $Fronttarget;
+                                                        'Frontend Type'             = $FrontType;
+                                                        'Frontend Subnet'           = $frontsub;
+                                                        'Backend Pool Name'         = $3.name;
+                                                        'Backend Target'            = $BackTarget;
+                                                        'Backend Type'              = $BackType;
+                                                        'Probe Name'                = $4.name;
+                                                        'Probe Interval (sec)'      = $4.properties.intervalInSeconds;
+                                                        'Probe Protocol'            = $4.properties.protocol;
+                                                        'Probe Port'                = $4.properties.port;
+                                                        'Probe Unhealthy threshold' = $4.properties.numberOfProbes;
+                                                        'Resource U'                = $ResUCount;
+                                                        'Tag Name'                  = [string]$TagKey;
+                                                        'Tag Value'                 = [string]$Tag.$TagKey
+                                                    }
+                                                    $tmp += $obj
+                                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                                }
+                                            }
+                                            else { 
+                                                $obj = @{
+                                                    'Subscription'              = $sub1.name;
+                                                    'Resource Group'            = $1.RESOURCEGROUP;
+                                                    'Name'                      = $1.NAME;
+                                                    'Location'                  = $1.LOCATION;
+                                                    'SKU'                       = $1.sku.name;
+                                                    'Frontend Name'             = $2.name;
+                                                    'Frontend Target'           = $Fronttarget;
+                                                    'Frontend Type'             = $FrontType;
+                                                    'Frontend Subnet'           = $frontsub;
+                                                    'Backend Pool Name'         = $3.name;
+                                                    'Backend Target'            = $BackTarget;
+                                                    'Backend Type'              = $BackType;
+                                                    'Probe Name'                = $4.name;
+                                                    'Probe Interval (sec)'      = $4.properties.intervalInSeconds;
+                                                    'Probe Protocol'            = $4.properties.protocol;
+                                                    'Probe Port'                = $4.properties.port;
+                                                    'Probe Unhealthy threshold' = $4.properties.numberOfProbes;
+                                                    'Resource U'                = $ResUCount;
+                                                    'Tag Name'                  = $null;
+                                                    'Tag Value'                 = $null
+                                                }
+                                                $tmp += $obj
+                                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                            }    
                                     }
                                 }
                             }
@@ -1130,27 +1728,60 @@ $Runtime = Measure-Command -Expression {
                                         $BackTarget = $3.properties.backendIPConfigurations.id.split('/')[8]
                                         $BackType = $3.properties.backendIPConfigurations.id.split('/')[7]
                                     }
-                                    $obj = @{
-                                        'Subscription'              = $sub1.name;
-                                        'Resource Group'            = $1.RESOURCEGROUP;
-                                        'Name'                      = $1.NAME;
-                                        'Location'                  = $1.LOCATION;
-                                        'SKU'                       = $1.sku.name;
-                                        'Frontend Name'             = $2.name;
-                                        'Frontend Target'           = $Fronttarget;
-                                        'Frontend Type'             = $FrontType;
-                                        'Frontend Subnet'           = $frontsub;
-                                        'Backend Pool Name'         = $3.name;
-                                        'Backend Target'            = $BackTarget;
-                                        'Backend Type'              = $BackType;
-                                        'Probe Name'                = $null;
-                                        'Probe Interval (sec)'      = $null;
-                                        'Probe Protocol'            = $null;
-                                        'Probe Port'                = $null;
-                                        'Probe Unhealthy threshold' = $null;
-                                        'Tags'                      = [string]$1.tags
-                                    }
-                                    $tmp += $obj         
+                                    if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                        foreach ($TagKey in $Tag.Keys) {  
+                                                $obj = @{
+                                                    'Subscription'              = $sub1.name;
+                                                    'Resource Group'            = $1.RESOURCEGROUP;
+                                                    'Name'                      = $1.NAME;
+                                                    'Location'                  = $1.LOCATION;
+                                                    'SKU'                       = $1.sku.name;
+                                                    'Frontend Name'             = $2.name;
+                                                    'Frontend Target'           = $Fronttarget;
+                                                    'Frontend Type'             = $FrontType;
+                                                    'Frontend Subnet'           = $frontsub;
+                                                    'Backend Pool Name'         = $3.name;
+                                                    'Backend Target'            = $BackTarget;
+                                                    'Backend Type'              = $BackType;
+                                                    'Probe Name'                = $null;
+                                                    'Probe Interval (sec)'      = $null;
+                                                    'Probe Protocol'            = $null;
+                                                    'Probe Port'                = $null;
+                                                    'Probe Unhealthy threshold' = $null;
+                                                    'Resource U'                = $ResUCount;
+                                                    'Tag Name'                  = [string]$TagKey;
+                                                    'Tag Value'                 = [string]$Tag.$TagKey
+                                                }
+                                                $tmp += $obj
+                                                if ($ResUCount -eq 1) {$ResUCount = 0}          
+                                            }
+                                        }
+                                        else {
+                                            $obj = @{
+                                                'Subscription'              = $sub1.name;
+                                                'Resource Group'            = $1.RESOURCEGROUP;
+                                                'Name'                      = $1.NAME;
+                                                'Location'                  = $1.LOCATION;
+                                                'SKU'                       = $1.sku.name;
+                                                'Frontend Name'             = $2.name;
+                                                'Frontend Target'           = $Fronttarget;
+                                                'Frontend Type'             = $FrontType;
+                                                'Frontend Subnet'           = $frontsub;
+                                                'Backend Pool Name'         = $3.name;
+                                                'Backend Target'            = $BackTarget;
+                                                'Backend Type'              = $BackType;
+                                                'Probe Name'                = $null;
+                                                'Probe Interval (sec)'      = $null;
+                                                'Probe Protocol'            = $null;
+                                                'Probe Port'                = $null;
+                                                'Probe Unhealthy threshold' = $null;
+                                                'Resource U'                = $ResUCount;
+                                                'Tag Name'                  = $null;
+                                                'Tag Value'                 = $null
+                                            }
+                                            $tmp += $obj 
+                                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                        }
                                 }
                             }
                         }   
@@ -1168,27 +1799,60 @@ $Runtime = Measure-Command -Expression {
                                     $Frontsub = ''
                                     $FrontType = 'Public IP' 
                                 }         
-                                $obj = @{
-                                    'Subscription'              = $sub1.name;
-                                    'Resource Group'            = $1.RESOURCEGROUP;
-                                    'Name'                      = $1.NAME;
-                                    'Location'                  = $1.LOCATION;
-                                    'SKU'                       = $1.sku.name;
-                                    'Frontend Name'             = $2.name;
-                                    'Frontend Target'           = $Fronttarget;
-                                    'Frontend Type'             = $FrontType;
-                                    'Frontend Subnet'           = $frontsub;
-                                    'Backend Pool Name'         = $null;
-                                    'Backend Target'            = $null;
-                                    'Backend Type'              = $null;
-                                    'Probe Name'                = $null;
-                                    'Probe Interval (sec)'      = $null;
-                                    'Probe Protocol'            = $null;
-                                    'Probe Port'                = $null;
-                                    'Probe Unhealthy threshold' = $null;
-                                    'Tags'                      = [string]$1.tags
-                                }
-                                $tmp += $obj             
+                                if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                    foreach ($TagKey in $Tag.Keys) {
+                                            $obj = @{
+                                                'Subscription'              = $sub1.name;
+                                                'Resource Group'            = $1.RESOURCEGROUP;
+                                                'Name'                      = $1.NAME;
+                                                'Location'                  = $1.LOCATION;
+                                                'SKU'                       = $1.sku.name;
+                                                'Frontend Name'             = $2.name;
+                                                'Frontend Target'           = $Fronttarget;
+                                                'Frontend Type'             = $FrontType;
+                                                'Frontend Subnet'           = $frontsub;
+                                                'Backend Pool Name'         = $null;
+                                                'Backend Target'            = $null;
+                                                'Backend Type'              = $null;
+                                                'Probe Name'                = $null;
+                                                'Probe Interval (sec)'      = $null;
+                                                'Probe Protocol'            = $null;
+                                                'Probe Port'                = $null;
+                                                'Probe Unhealthy threshold' = $null;
+                                                'Resource U'                = $ResUCount;
+                                                'Tag Name'                  = [string]$TagKey;
+                                                'Tag Value'                 = [string]$Tag.$TagKey
+                                            }
+                                            $tmp += $obj   
+                                            if ($ResUCount -eq 1) {$ResUCount = 0}      
+                                        }
+                                    }
+                                    else {
+                                        $obj = @{
+                                            'Subscription'              = $sub1.name;
+                                            'Resource Group'            = $1.RESOURCEGROUP;
+                                            'Name'                      = $1.NAME;
+                                            'Location'                  = $1.LOCATION;
+                                            'SKU'                       = $1.sku.name;
+                                            'Frontend Name'             = $2.name;
+                                            'Frontend Target'           = $Fronttarget;
+                                            'Frontend Type'             = $FrontType;
+                                            'Frontend Subnet'           = $frontsub;
+                                            'Backend Pool Name'         = $null;
+                                            'Backend Target'            = $null;
+                                            'Backend Type'              = $null;
+                                            'Probe Name'                = $null;
+                                            'Probe Interval (sec)'      = $null;
+                                            'Probe Protocol'            = $null;
+                                            'Probe Port'                = $null;
+                                            'Probe Unhealthy threshold' = $null;
+                                            'Resource U'                = $ResUCount;
+                                            'Tag Name'                  = $null;
+                                            'Tag Value'                 = $null
+                                        }
+                                        $tmp += $obj 
+                                        if ($ResUCount -eq 1) {$ResUCount = 0}  
+                                    }     
                             }
                         }   
                         elseif ($null -ne $data.frontendIPConfigurations -and $null -eq $data.backendAddressPools -and $null -ne $data.probes) {
@@ -1206,27 +1870,60 @@ $Runtime = Measure-Command -Expression {
                                     $FrontType = 'Public IP' 
                                 }        
                                 foreach ($3 in $data.probes) {
-                                    $obj = @{
-                                        'Subscription'              = $sub1.name;
-                                        'Resource Group'            = $1.RESOURCEGROUP;
-                                        'Name'                      = $1.NAME;
-                                        'Location'                  = $1.LOCATION;
-                                        'SKU'                       = $1.sku.name;
-                                        'Frontend Name'             = $2.name;
-                                        'Frontend Target'           = $Fronttarget;
-                                        'Frontend Type'             = $FrontType;
-                                        'Frontend Subnet'           = $frontsub;
-                                        'Backend Pool Name'         = $null;
-                                        'Backend Target'            = $null;
-                                        'Backend Type'              = $null;
-                                        'Probe Name'                = $3.name;
-                                        'Probe Interval (sec)'      = $3.properties.intervalInSeconds;
-                                        'Probe Protocol'            = $3.properties.protocol;
-                                        'Probe Port'                = $3.properties.port;
-                                        'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
-                                        'Tags'                      = [string]$1.tags
-                                    }
-                                    $tmp += $obj            
+                                    if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                        foreach ($TagKey in $Tag.Keys) {
+                                                $obj = @{
+                                                    'Subscription'              = $sub1.name;
+                                                    'Resource Group'            = $1.RESOURCEGROUP;
+                                                    'Name'                      = $1.NAME;
+                                                    'Location'                  = $1.LOCATION;
+                                                    'SKU'                       = $1.sku.name;
+                                                    'Frontend Name'             = $2.name;
+                                                    'Frontend Target'           = $Fronttarget;
+                                                    'Frontend Type'             = $FrontType;
+                                                    'Frontend Subnet'           = $frontsub;
+                                                    'Backend Pool Name'         = $null;
+                                                    'Backend Target'            = $null;
+                                                    'Backend Type'              = $null;
+                                                    'Probe Name'                = $3.name;
+                                                    'Probe Interval (sec)'      = $3.properties.intervalInSeconds;
+                                                    'Probe Protocol'            = $3.properties.protocol;
+                                                    'Probe Port'                = $3.properties.port;
+                                                    'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
+                                                    'Resource U'                = $ResUCount;
+                                                    'Tag Name'                  = [string]$TagKey;
+                                                    'Tag Value'                 = [string]$Tag.$TagKey
+                                                }
+                                                $tmp += $obj  
+                                                if ($ResUCount -eq 1) {$ResUCount = 0}     
+                                            }
+                                        }
+                                        else {  
+                                            $obj = @{
+                                                'Subscription'              = $sub1.name;
+                                                'Resource Group'            = $1.RESOURCEGROUP;
+                                                'Name'                      = $1.NAME;
+                                                'Location'                  = $1.LOCATION;
+                                                'SKU'                       = $1.sku.name;
+                                                'Frontend Name'             = $2.name;
+                                                'Frontend Target'           = $Fronttarget;
+                                                'Frontend Type'             = $FrontType;
+                                                'Frontend Subnet'           = $frontsub;
+                                                'Backend Pool Name'         = $null;
+                                                'Backend Target'            = $null;
+                                                'Backend Type'              = $null;
+                                                'Probe Name'                = $3.name;
+                                                'Probe Interval (sec)'      = $3.properties.intervalInSeconds;
+                                                'Probe Protocol'            = $3.properties.protocol;
+                                                'Probe Port'                = $3.properties.port;
+                                                'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
+                                                'Resource U'                = $ResUCount;
+                                                'Tag Name'                  = $null;
+                                                'Tag Value'                 = $null
+                                            }
+                                            $tmp += $obj
+                                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                        }      
                                 }
                             }
                         }   
@@ -1239,62 +1936,128 @@ $Runtime = Measure-Command -Expression {
                                     $BackType = $2.properties.backendIPConfigurations.id.split('/')[7]
                                 }
                                 foreach ($3 in $data.probes) {
-                                    $obj = @{
-                                        'Subscription'              = $sub1.name;
-                                        'Resource Group'            = $1.RESOURCEGROUP;
-                                        'Name'                      = $1.NAME;
-                                        'Location'                  = $1.LOCATION;
-                                        'SKU'                       = $1.sku.name;
-                                        'Frontend Name'             = $null;
-                                        'Frontend Target'           = $null;
-                                        'Frontend Type'             = $null;
-                                        'Frontend Subnet'           = $null;
-                                        'Backend Pool Name'         = $2.name;
-                                        'Backend Target'            = $BackTarget;
-                                        'Backend Type'              = $BackType;
-                                        'Probe Name'                = $3.name;
-                                        'Probe Interval (sec)'      = $3.properties.intervalInSeconds;
-                                        'Probe Protocol'            = $3.properties.protocol;
-                                        'Probe Port'                = $3.properties.port;
-                                        'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
-                                        'Tags'                      = [string]$1.tags
-                                    }
-                                    $tmp += $obj            
+                                    if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                        foreach ($TagKey in $Tag.Keys) {
+                                                $obj = @{
+                                                    'Subscription'              = $sub1.name;
+                                                    'Resource Group'            = $1.RESOURCEGROUP;
+                                                    'Name'                      = $1.NAME;
+                                                    'Location'                  = $1.LOCATION;
+                                                    'SKU'                       = $1.sku.name;
+                                                    'Frontend Name'             = $null;
+                                                    'Frontend Target'           = $null;
+                                                    'Frontend Type'             = $null;
+                                                    'Frontend Subnet'           = $null;
+                                                    'Backend Pool Name'         = $2.name;
+                                                    'Backend Target'            = $BackTarget;
+                                                    'Backend Type'              = $BackType;
+                                                    'Probe Name'                = $3.name;
+                                                    'Probe Interval (sec)'      = $3.properties.intervalInSeconds;
+                                                    'Probe Protocol'            = $3.properties.protocol;
+                                                    'Probe Port'                = $3.properties.port;
+                                                    'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
+                                                    'Resource U'                = $ResUCount;
+                                                    'Tag Name'                  = [string]$TagKey;
+                                                    'Tag Value'                 = [string]$Tag.$TagKey
+                                                }
+                                                $tmp += $obj   
+                                                if ($ResUCount -eq 1) {$ResUCount = 0}     
+                                            }
+                                        }
+                                        else { 
+                                            $obj = @{
+                                                'Subscription'              = $sub1.name;
+                                                'Resource Group'            = $1.RESOURCEGROUP;
+                                                'Name'                      = $1.NAME;
+                                                'Location'                  = $1.LOCATION;
+                                                'SKU'                       = $1.sku.name;
+                                                'Frontend Name'             = $null;
+                                                'Frontend Target'           = $null;
+                                                'Frontend Type'             = $null;
+                                                'Frontend Subnet'           = $null;
+                                                'Backend Pool Name'         = $2.name;
+                                                'Backend Target'            = $BackTarget;
+                                                'Backend Type'              = $BackType;
+                                                'Probe Name'                = $3.name;
+                                                'Probe Interval (sec)'      = $3.properties.intervalInSeconds;
+                                                'Probe Protocol'            = $3.properties.protocol;
+                                                'Probe Port'                = $3.properties.port;
+                                                'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
+                                                'Resource U'                = $ResUCount;
+                                                'Tag Name'                  = $null;
+                                                'Tag Value'                 = $null
+                                            }
+                                            $tmp += $obj   
+                                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                        }     
                                 }
                             }            
                         }    
                         elseif ($null -eq $data.frontendIPConfigurations -and $null -eq $data.backendAddressPools -and $null -ne $data.probes) {
                             foreach ($2 in $data.probes) {
-                                $obj = @{
-                                    'Subscription'              = $sub1.name;
-                                    'Resource Group'            = $1.RESOURCEGROUP;
-                                    'Name'                      = $1.NAME;
-                                    'Location'                  = $1.LOCATION;
-                                    'SKU'                       = $1.sku.name;
-                                    'Frontend Name'             = $null;
-                                    'Frontend Target'           = $null;
-                                    'Frontend Type'             = $null;
-                                    'Frontend Subnet'           = $null;
-                                    'Backend Pool Name'         = $null;
-                                    'Backend Target'            = $null;
-                                    'Backend Type'              = $null;
-                                    'Probe Name'                = $2.name;
-                                    'Probe Interval (sec)'      = $2.properties.intervalInSeconds;
-                                    'Probe Protocol'            = $2.properties.protocol;
-                                    'Probe Port'                = $2.properties.port;
-                                    'Probe Unhealthy threshold' = $2.properties.numberOfProbes;
-                                    'Tags'                      = [string]$1.tags
-                                }
-                                $tmp += $obj
+                                if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                    foreach ($TagKey in $Tag.Keys) {
+                                            $obj = @{
+                                                'Subscription'              = $sub1.name;
+                                                'Resource Group'            = $1.RESOURCEGROUP;
+                                                'Name'                      = $1.NAME;
+                                                'Location'                  = $1.LOCATION;
+                                                'SKU'                       = $1.sku.name;
+                                                'Frontend Name'             = $null;
+                                                'Frontend Target'           = $null;
+                                                'Frontend Type'             = $null;
+                                                'Frontend Subnet'           = $null;
+                                                'Backend Pool Name'         = $null;
+                                                'Backend Target'            = $null;
+                                                'Backend Type'              = $null;
+                                                'Probe Name'                = $2.name;
+                                                'Probe Interval (sec)'      = $2.properties.intervalInSeconds;
+                                                'Probe Protocol'            = $2.properties.protocol;
+                                                'Probe Port'                = $2.properties.port;
+                                                'Probe Unhealthy threshold' = $2.properties.numberOfProbes;
+                                                'Resource U'                = $ResUCount;
+                                                'Tag Name'                  = [string]$TagKey;
+                                                'Tag Value'                 = [string]$Tag.$TagKey
+                                            }
+                                            $tmp += $obj
+                                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                        }
+                                    }
+                                    else { 
+                                        $obj = @{
+                                            'Subscription'              = $sub1.name;
+                                            'Resource Group'            = $1.RESOURCEGROUP;
+                                            'Name'                      = $1.NAME;
+                                            'Location'                  = $1.LOCATION;
+                                            'SKU'                       = $1.sku.name;
+                                            'Frontend Name'             = $null;
+                                            'Frontend Target'           = $null;
+                                            'Frontend Type'             = $null;
+                                            'Frontend Subnet'           = $null;
+                                            'Backend Pool Name'         = $null;
+                                            'Backend Target'            = $null;
+                                            'Backend Type'              = $null;
+                                            'Probe Name'                = $2.name;
+                                            'Probe Interval (sec)'      = $2.properties.intervalInSeconds;
+                                            'Probe Protocol'            = $2.properties.protocol;
+                                            'Probe Port'                = $2.properties.port;
+                                            'Probe Unhealthy threshold' = $2.properties.numberOfProbes;
+                                            'Resource U'                = $ResUCount;
+                                            'Tag Name'                  = $null;
+                                            'Tag Value'                 = $null
+                                        }
+                                        $tmp += $obj
+                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    }
                             }            
                         }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[4]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[5]))
 
 
 
-            $Peering = ([PowerShell]::Create()).AddScript( { param($Sub, $VNET)
+            $Peering = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$VNET)
                     $tmp = @()
 
                     $vnet = $VNET
@@ -1303,155 +2066,297 @@ $Runtime = Measure-Command -Expression {
                     $Subs = $Sub
 
                     foreach ($1 in $vpeering) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         foreach ($2 in $data.addressSpace.addressPrefixes) {
                             foreach ($4 in $data.virtualNetworkPeerings) {
                                 foreach ($5 in $4.properties.remoteAddressSpace.addressPrefixes) {
-                            
-                                    $obj = @{
-                                        'Subscription'                          = $sub1.name;
-                                        'Resource Group'                        = $1.RESOURCEGROUP;
-                                        'VNET Name'                             = $1.NAME;
-                                        'Location'                              = $1.LOCATION;
-                                        'Zone'                                  = $1.ZONES;
-                                        'Address Space'                         = $2;
-                                        'Peering Name'                          = $4.name;
-                                        'Peering VNet'                          = $4.properties.remoteVirtualNetwork.id.split('/')[8];
-                                        'Peering State'                         = $4.properties.peeringState;
-                                        'Peering Use Remote Gateways'           = $4.properties.useRemoteGateways;
-                                        'Peering Allow Gateway Transit'         = $4.properties.allowGatewayTransit;
-                                        'Peering Allow Forwarded Traffic'       = $4.properties.allowForwardedTraffic;
-                                        'Peering Do Not Verify Remote Gateways' = $4.properties.doNotVerifyRemoteGateways;
-                                        'Peering Allow Virtual Network Access'  = $4.properties.allowVirtualNetworkAccess;
-                                        'Peering Address Space'                 = $5;
-                                        'Tags'                                  = [string]$1.tags
-                                    }
-                                    $tmp += $obj
+                                    if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                        foreach ($TagKey in $Tag.Keys) {  
+                                                $obj = @{
+                                                    'Subscription'                          = $sub1.name;
+                                                    'Resource Group'                        = $1.RESOURCEGROUP;
+                                                    'VNET Name'                             = $1.NAME;
+                                                    'Location'                              = $1.LOCATION;
+                                                    'Zone'                                  = $1.ZONES;
+                                                    'Address Space'                         = $2;
+                                                    'Peering Name'                          = $4.name;
+                                                    'Peering VNet'                          = $4.properties.remoteVirtualNetwork.id.split('/')[8];
+                                                    'Peering State'                         = $4.properties.peeringState;
+                                                    'Peering Use Remote Gateways'           = $4.properties.useRemoteGateways;
+                                                    'Peering Allow Gateway Transit'         = $4.properties.allowGatewayTransit;
+                                                    'Peering Allow Forwarded Traffic'       = $4.properties.allowForwardedTraffic;
+                                                    'Peering Do Not Verify Remote Gateways' = $4.properties.doNotVerifyRemoteGateways;
+                                                    'Peering Allow Virtual Network Access'  = $4.properties.allowVirtualNetworkAccess;
+                                                    'Peering Address Space'                 = $5;
+                                                    'Resource U'                            = $ResUCount;
+                                                    'Tag Name'                              = [string]$TagKey;
+                                                    'Tag Value'                             = [string]$Tag.$TagKey
+                                                }
+                                                $tmp += $obj
+                                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                            }
+                                        }
+                                        else {   
+                                                $obj = @{
+                                                    'Subscription'                          = $sub1.name;
+                                                    'Resource Group'                        = $1.RESOURCEGROUP;
+                                                    'VNET Name'                             = $1.NAME;
+                                                    'Location'                              = $1.LOCATION;
+                                                    'Zone'                                  = $1.ZONES;
+                                                    'Address Space'                         = $2;
+                                                    'Peering Name'                          = $4.name;
+                                                    'Peering VNet'                          = $4.properties.remoteVirtualNetwork.id.split('/')[8];
+                                                    'Peering State'                         = $4.properties.peeringState;
+                                                    'Peering Use Remote Gateways'           = $4.properties.useRemoteGateways;
+                                                    'Peering Allow Gateway Transit'         = $4.properties.allowGatewayTransit;
+                                                    'Peering Allow Forwarded Traffic'       = $4.properties.allowForwardedTraffic;
+                                                    'Peering Do Not Verify Remote Gateways' = $4.properties.doNotVerifyRemoteGateways;
+                                                    'Peering Allow Virtual Network Access'  = $4.properties.allowVirtualNetworkAccess;
+                                                    'Peering Address Space'                 = $5;
+                                                    'Resource U'                            = $ResUCount;
+                                                    'Tag Name'                              = $null;
+                                                    'Tag Value'                             = $null
+                                                }
+                                                $tmp += $obj
+                                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                        }
                                 }
                             }
                         }
                             
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[1]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2]))
 
-            $FrontDoor = ([PowerShell]::Create()).AddScript( { param($Sub, $FRONTDOOR)
+            $FrontDoor = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$FRONTDOOR)
                     $tmp = @()
 
                     $Subs = $Sub
 
                     foreach ($1 in $FRONTDOOR) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-                                                    
-                        $obj = @{
-                            'Subscription'           = $sub1.name;
-                            'Resource Group'         = $1.RESOURCEGROUP;
-                            'Name'                   = $1.NAME;
-                            'Location'               = $1.LOCATION;
-                            'Friendly Name'          = $data.friendlyName;
-                            'cName'                  = $data.cName;
-                            'State'                  = $data.enabledState;
-                            'Frontend'               = [string]$data.frontendEndpoints.name;
-                            'Backend'                = [string]$data.backendPools.name;
-                            'Health Probe'           = [string]$data.healthProbeSettings.name;
-                            'Load Balancing'         = [string]$data.loadBalancingSettings.name;
-                            'Routing Rules'          = [string]$data.routingRules.name;
-                            'Tags'                   = [string]$1.tags
-                        }
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {  
+                                    $obj = @{
+                                        'Subscription'           = $sub1.name;
+                                        'Resource Group'         = $1.RESOURCEGROUP;
+                                        'Name'                   = $1.NAME;
+                                        'Location'               = $1.LOCATION;
+                                        'Friendly Name'          = $data.friendlyName;
+                                        'cName'                  = $data.cName;
+                                        'State'                  = $data.enabledState;
+                                        'Frontend'               = [string]$data.frontendEndpoints.name;
+                                        'Backend'                = [string]$data.backendPools.name;
+                                        'Health Probe'           = [string]$data.healthProbeSettings.name;
+                                        'Load Balancing'         = [string]$data.loadBalancingSettings.name;
+                                        'Routing Rules'          = [string]$data.routingRules.name;
+                                        'Resource U'             = $ResUCount;
+                                        'Tag Name'               = [string]$TagKey;
+                                        'Tag Value'              = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {    
+                                $obj = @{
+                                    'Subscription'           = $sub1.name;
+                                    'Resource Group'         = $1.RESOURCEGROUP;
+                                    'Name'                   = $1.NAME;
+                                    'Location'               = $1.LOCATION;
+                                    'Friendly Name'          = $data.friendlyName;
+                                    'cName'                  = $data.cName;
+                                    'State'                  = $data.enabledState;
+                                    'Frontend'               = [string]$data.frontendEndpoints.name;
+                                    'Backend'                = [string]$data.backendPools.name;
+                                    'Health Probe'           = [string]$data.healthProbeSettings.name;
+                                    'Load Balancing'         = [string]$data.loadBalancingSettings.name;
+                                    'Routing Rules'          = [string]$data.routingRules.name;
+                                    'Resource U'             = $ResUCount;
+                                    'Tag Name'               = $null;
+                                    'Tag Value'              = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[5]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[6]))
 
-            $AppGateway = ([PowerShell]::Create()).AddScript( { param($Sub, $APPGTW)
+            $AppGateway = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$APPGTW)
                     $tmp = @()
 
                     $Subs = $Sub
 
                     foreach ($1 in $APPGTW) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-                                                    
-                        $obj = @{
-                            'Subscription'           = $sub1.name;
-                            'Resource Group'         = $1.RESOURCEGROUP;
-                            'Name'                   = $1.NAME;
-                            'Location'               = $1.LOCATION;
-                            'State'                  = $data.OperationalState;
-                            'SKU Name'               = $data.sku.tier;
-                            'SKU Capacity'           = $data.sku.capacity;
-                            'Backend'                = [string]$data.backendAddressPools.name;
-                            'Frontend'               = [string]$data.frontendIPConfigurations.name;
-                            'Frontend Ports'         = [string]$data.frontendports.properties.port;
-                            'Gateways'               = [string]$data.gatewayIPConfigurations.name;
-                            'HTTP Listeners'         = [string]$data.httpListeners.name;
-                            'Request Routing Rules'  = [string]$data.RequestRoutingRules.Name;
-                            'Tags'                   = [string]$1.tags
-                        }
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {        
+                                    $obj = @{
+                                        'Subscription'           = $sub1.name;
+                                        'Resource Group'         = $1.RESOURCEGROUP;
+                                        'Name'                   = $1.NAME;
+                                        'Location'               = $1.LOCATION;
+                                        'State'                  = $data.OperationalState;
+                                        'SKU Name'               = $data.sku.tier;
+                                        'SKU Capacity'           = $data.sku.capacity;
+                                        'Backend'                = [string]$data.backendAddressPools.name;
+                                        'Frontend'               = [string]$data.frontendIPConfigurations.name;
+                                        'Frontend Ports'         = [string]$data.frontendports.properties.port;
+                                        'Gateways'               = [string]$data.gatewayIPConfigurations.name;
+                                        'HTTP Listeners'         = [string]$data.httpListeners.name;
+                                        'Request Routing Rules'  = [string]$data.RequestRoutingRules.Name;
+                                        'Resource U'             = $ResUCount;
+                                        'Tag Name'               = [string]$TagKey;
+                                        'Tag Value'              = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {        
+                                $obj = @{
+                                    'Subscription'           = $sub1.name;
+                                    'Resource Group'         = $1.RESOURCEGROUP;
+                                    'Name'                   = $1.NAME;
+                                    'Location'               = $1.LOCATION;
+                                    'State'                  = $data.OperationalState;
+                                    'SKU Name'               = $data.sku.tier;
+                                    'SKU Capacity'           = $data.sku.capacity;
+                                    'Backend'                = [string]$data.backendAddressPools.name;
+                                    'Frontend'               = [string]$data.frontendIPConfigurations.name;
+                                    'Frontend Ports'         = [string]$data.frontendports.properties.port;
+                                    'Gateways'               = [string]$data.gatewayIPConfigurations.name;
+                                    'HTTP Listeners'         = [string]$data.httpListeners.name;
+                                    'Request Routing Rules'  = [string]$data.RequestRoutingRules.Name;
+                                    'Resource U'             = $ResUCount;
+                                    'Tag Name'               = $null;
+                                    'Tag Value'              = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[6]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[7]))
 
-            $RouteTable = ([PowerShell]::Create()).AddScript( { param($Sub, $ROUTETABLE)
+            $RouteTable = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$ROUTETABLE)
                     $tmp = @()
 
                     $Subs = $Sub
 
                     foreach ($1 in $ROUTETABLE) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-                                                    
-                        $obj = @{
-                            'Subscription'           = $sub1.name;
-                            'Resource Group'         = $1.RESOURCEGROUP;
-                            'Name'                   = $1.NAME;
-                            'Location'               = $1.LOCATION;
-                            'Disable BGP Route Propagation' = $data.disableBgpRoutePropagation;
-                            'Routes'                 = [string]$data.routes.name;
-                            'Routes Prefixes'        = [string]$data.routes.properties.addressPrefix;
-                            'Routes BGP Override'    = [string]$data.routes.properties.hasBgpOverride;
-                            'Routes Next Hop IP'     = [string]$data.routes.properties.nextHopIpAddress;
-                            'Routes Next Hop Type'   = [string]$data.routes.properties.nextHopType;
-                            'Tags'                   = [string]$1.tags
-                        }
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value } 
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) { 
+                                    $obj = @{
+                                        'Subscription'           = $sub1.name;
+                                        'Resource Group'         = $1.RESOURCEGROUP;
+                                        'Name'                   = $1.NAME;
+                                        'Location'               = $1.LOCATION;
+                                        'Disable BGP Route Propagation' = $data.disableBgpRoutePropagation;
+                                        'Routes'                 = [string]$data.routes.name;
+                                        'Routes Prefixes'        = [string]$data.routes.properties.addressPrefix;
+                                        'Routes BGP Override'    = [string]$data.routes.properties.hasBgpOverride;
+                                        'Routes Next Hop IP'     = [string]$data.routes.properties.nextHopIpAddress;
+                                        'Routes Next Hop Type'   = [string]$data.routes.properties.nextHopType;
+                                        'Resource U'             = $ResUCount;
+                                        'Tag Name'               = [string]$TagKey;
+                                        'Tag Value'              = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {  
+                                $obj = @{
+                                    'Subscription'           = $sub1.name;
+                                    'Resource Group'         = $1.RESOURCEGROUP;
+                                    'Name'                   = $1.NAME;
+                                    'Location'               = $1.LOCATION;
+                                    'Disable BGP Route Propagation' = $data.disableBgpRoutePropagation;
+                                    'Routes'                 = [string]$data.routes.name;
+                                    'Routes Prefixes'        = [string]$data.routes.properties.addressPrefix;
+                                    'Routes BGP Override'    = [string]$data.routes.properties.hasBgpOverride;
+                                    'Routes Next Hop IP'     = [string]$data.routes.properties.nextHopIpAddress;
+                                    'Routes Next Hop Type'   = [string]$data.routes.properties.nextHopType;
+                                    'Resource U'             = $ResUCount;
+                                    'Tag Name'               = $null;
+                                    'Tag Value'              = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[7]))                
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[8]))                
 
-            $DNSZone = ([PowerShell]::Create()).AddScript( { param($Sub, $DNSZONE)
+            $DNSZone = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$DNSZONE)
                     $tmp = @()
 
                     $Subs = $Sub
 
                     foreach ($1 in $DNSZONE) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-                                                    
-                        $obj = @{
-                            'Subscription'           = $sub1.name;
-                            'Resource Group'         = $1.RESOURCEGROUP;
-                            'Name'                   = $1.NAME;
-                            'Location'               = $1.LOCATION;
-                            'Zone Type'              = $data.zoneType;
-                            'Number of Record Sets'  = $data.numberOfRecordSets;
-                            'Max Number of Record Sets' = $data.maxNumberofRecordSets;
-                            'Name Servers'           = [string]$data.nameServers;
-                            'Tags'                   = [string]$1.tags
-                        }
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {     
+                                    $obj = @{
+                                        'Subscription'           = $sub1.name;
+                                        'Resource Group'         = $1.RESOURCEGROUP;
+                                        'Name'                   = $1.NAME;
+                                        'Location'               = $1.LOCATION;
+                                        'Zone Type'              = $data.zoneType;
+                                        'Number of Record Sets'  = $data.numberOfRecordSets;
+                                        'Max Number of Record Sets' = $data.maxNumberofRecordSets;
+                                        'Name Servers'           = [string]$data.nameServers;
+                                        'Resource U'             = $ResUCount;
+                                        'Tag Name'               = [string]$TagKey;
+                                        'Tag Value'              = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {    
+                                $obj = @{
+                                    'Subscription'           = $sub1.name;
+                                    'Resource Group'         = $1.RESOURCEGROUP;
+                                    'Name'                   = $1.NAME;
+                                    'Location'               = $1.LOCATION;
+                                    'Zone Type'              = $data.zoneType;
+                                    'Number of Record Sets'  = $data.numberOfRecordSets;
+                                    'Max Number of Record Sets' = $data.maxNumberofRecordSets;
+                                    'Name Servers'           = [string]$data.nameServers;
+                                    'Resource U'             = $ResUCount;
+                                    'Tag Name'               = $null;
+                                    'Tag Value'              = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[8]))  
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[9]))  
 
 
             $jobVNET = $VNET.BeginInvoke()
@@ -1510,7 +2415,7 @@ $Runtime = Measure-Command -Expression {
 
             $AzNetwork
 
-        } -ArgumentList $Subs, $VNET, $VNETGTW, $PIP, $LB, $FRONTDOOR, $APPGTW, $ROUTETABLE, $DNSZONE | Out-Null
+        } -ArgumentList $Subs,$InTag, $VNET, $VNETGTW, $PIP, $LB, $FRONTDOOR, $APPGTW, $ROUTETABLE, $DNSZONE | Out-Null
 
 
         <######################################################### INFRASTRUCTURE RESOURCE GROUP JOB ######################################################################>
@@ -1520,47 +2425,82 @@ $Runtime = Measure-Command -Expression {
 
             $job = @()
 
-            $StorageAcc = ([PowerShell]::Create()).AddScript( { param($Sub, $StorageAcc)
+            $StorageAcc = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$StorageAcc)
                     $tmp = @()
 
                     $storageacc = $StorageAcc
                     $Subs = $Sub
 
                     foreach ($1 in $storageacc) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
                         $TLSv = if ($data.minimumTlsVersion -eq 'TLS1_2') { "TLS 1.2" }elseif ($data.minimumTlsVersion -eq 'TLS1_1') { "TLS 1.1" }else { "TLS 1.0" }
-
-                        $obj = @{
-                            'Subscription'                          = $sub1.name;
-                            'Resource Group'                        = $1.RESOURCEGROUP;
-                            'Name'                                  = $1.NAME;
-                            'Location'                              = $1.LOCATION;
-                            'Zone'                                  = $1.ZONES;
-                            'Supports HTTPs Traffic Only'           = $data.supportsHttpsTrafficOnly;
-                            'Allow Blob Public Access'              = if ($data.allowBlobPublicAccess -eq $false) { $false }else { $true };
-                            'TLS Version'                           = $TLSv;
-                            'Identity-based access for file shares' = if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None') { $false }elseif ($null -eq $data.azureFilesIdentityBasedAuthentication.directoryServiceOptions) { $false }else { $true };
-                            'Access Tier'                           = $data.accessTier;
-                            'Primary Location'                      = $data.primaryLocation;
-                            'Status Of Primary'                     = $data.statusOfPrimary;
-                            'Secondary Location'                    = $data.secondaryLocation;
-                            'Blob Address'                          = [string]$data.primaryEndpoints.blob;
-                            'File Address'                          = [string]$data.primaryEndpoints.file;
-                            'Table Address'                         = [string]$data.primaryEndpoints.table;
-                            'Queue Address'                         = [string]$data.primaryEndpoints.queue;
-                            'Network Acls'                          = $data.networkAcls.defaultAction;
-                            'Tags'                                  = [string]$1.tags
-                        }
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {   
+                                    $obj = @{
+                                        'Subscription'                          = $sub1.name;
+                                        'Resource Group'                        = $1.RESOURCEGROUP;
+                                        'Name'                                  = $1.NAME;
+                                        'Location'                              = $1.LOCATION;
+                                        'Zone'                                  = $1.ZONES;
+                                        'Supports HTTPs Traffic Only'           = $data.supportsHttpsTrafficOnly;
+                                        'Allow Blob Public Access'              = if ($data.allowBlobPublicAccess -eq $false) { $false }else { $true };
+                                        'TLS Version'                           = $TLSv;
+                                        'Identity-based access for file shares' = if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None') { $false }elseif ($null -eq $data.azureFilesIdentityBasedAuthentication.directoryServiceOptions) { $false }else { $true };
+                                        'Access Tier'                           = $data.accessTier;
+                                        'Primary Location'                      = $data.primaryLocation;
+                                        'Status Of Primary'                     = $data.statusOfPrimary;
+                                        'Secondary Location'                    = $data.secondaryLocation;
+                                        'Blob Address'                          = [string]$data.primaryEndpoints.blob;
+                                        'File Address'                          = [string]$data.primaryEndpoints.file;
+                                        'Table Address'                         = [string]$data.primaryEndpoints.table;
+                                        'Queue Address'                         = [string]$data.primaryEndpoints.queue;
+                                        'Network Acls'                          = $data.networkAcls.defaultAction;
+                                        'Resource U'                            = $ResUCount;
+                                        'Tag Name'                              = [string]$TagKey;
+                                        'Tag Value'                             = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {   
+                                $obj = @{
+                                    'Subscription'                          = $sub1.name;
+                                    'Resource Group'                        = $1.RESOURCEGROUP;
+                                    'Name'                                  = $1.NAME;
+                                    'Location'                              = $1.LOCATION;
+                                    'Zone'                                  = $1.ZONES;
+                                    'Supports HTTPs Traffic Only'           = $data.supportsHttpsTrafficOnly;
+                                    'Allow Blob Public Access'              = if ($data.allowBlobPublicAccess -eq $false) { $false }else { $true };
+                                    'TLS Version'                           = $TLSv;
+                                    'Identity-based access for file shares' = if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None') { $false }elseif ($null -eq $data.azureFilesIdentityBasedAuthentication.directoryServiceOptions) { $false }else { $true };
+                                    'Access Tier'                           = $data.accessTier;
+                                    'Primary Location'                      = $data.primaryLocation;
+                                    'Status Of Primary'                     = $data.statusOfPrimary;
+                                    'Secondary Location'                    = $data.secondaryLocation;
+                                    'Blob Address'                          = [string]$data.primaryEndpoints.blob;
+                                    'File Address'                          = [string]$data.primaryEndpoints.file;
+                                    'Table Address'                         = [string]$data.primaryEndpoints.table;
+                                    'Queue Address'                         = [string]$data.primaryEndpoints.queue;
+                                    'Network Acls'                          = $data.networkAcls.defaultAction;
+                                    'Resource U'                            = $ResUCount;
+                                    'Tag Name'                              = $null;
+                                    'Tag Value'                             = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[1]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2]))
 
 
 
-            $AutAcc = ([PowerShell]::Create()).AddScript( { param($Sub, $RunBook, $AutAcc)
+            $AutAcc = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$RunBook, $AutAcc)
                     $tmp = @()
 
                     $runbook = $RunBook
@@ -1568,252 +2508,480 @@ $Runtime = Measure-Command -Expression {
                     $Subs = $Sub
 
                     foreach ($0 in $autacc) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $0.subscriptionId }
                             
                         $rbs = $runbook | Where-Object { $_.id.split('/')[8] -eq $0.name }
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if ($null -ne $rbs) {
                             foreach ($1 in $rbs) {
-                                $data = $1.PROPERTIES
-                                $obj = @{
-                                    'Subscription'             = $sub1.name;
-                                    'Resource Group'           = $0.RESOURCEGROUP;
-                                    'Automation Account Name'  = $0.NAME;
-                                    'Automation Account State' = $0.properties.State;
-                                    'Automation Account SKU'   = $0.properties.sku.name;
-                                    'Location'                 = $0.LOCATION;
-                                    'Runbook Name'             = $1.Name;
-                                    'Last Modified Time'       = ([datetime]$data.lastModifiedTime).tostring('MM/dd/yyyy hh:mm') ;
-                                    'Runbook State'            = $data.state;
-                                    'Runbook Type'             = $data.runbookType;
-                                    'Runbook Description'      = $data.description;
-                                    'Job Count'                = $data.jobCount;
-                                    'Tags'                     = [string]$1.tags
+                                if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                    foreach ($TagKey in $Tag.Keys) {    
+                                        $data = $1.PROPERTIES
+                                        $obj = @{
+                                            'Subscription'             = $sub1.name;
+                                            'Resource Group'           = $0.RESOURCEGROUP;
+                                            'Automation Account Name'  = $0.NAME;
+                                            'Automation Account State' = $0.properties.State;
+                                            'Automation Account SKU'   = $0.properties.sku.name;
+                                            'Location'                 = $0.LOCATION;
+                                            'Runbook Name'             = $1.Name;
+                                            'Last Modified Time'       = ([datetime]$data.lastModifiedTime).tostring('MM/dd/yyyy hh:mm') ;
+                                            'Runbook State'            = $data.state;
+                                            'Runbook Type'             = $data.runbookType;
+                                            'Runbook Description'      = $data.description;
+                                            'Job Count'                = $data.jobCount;
+                                            'Resource U'               = $ResUCount;
+                                            'Tag Name'                 = [string]$TagKey;
+                                            'Tag Value'                = [string]$Tag.$TagKey
+                                        }
+                                        $tmp += $obj
+                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    }
                                 }
-                                $tmp += $obj
+                                else {   
+                                        $data = $1.PROPERTIES
+                                        $obj = @{
+                                            'Subscription'             = $sub1.name;
+                                            'Resource Group'           = $0.RESOURCEGROUP;
+                                            'Automation Account Name'  = $0.NAME;
+                                            'Automation Account State' = $0.properties.State;
+                                            'Automation Account SKU'   = $0.properties.sku.name;
+                                            'Location'                 = $0.LOCATION;
+                                            'Runbook Name'             = $1.Name;
+                                            'Last Modified Time'       = ([datetime]$data.lastModifiedTime).tostring('MM/dd/yyyy hh:mm') ;
+                                            'Runbook State'            = $data.state;
+                                            'Runbook Type'             = $data.runbookType;
+                                            'Runbook Description'      = $data.description;
+                                            'Job Count'                = $data.jobCount;
+                                            'Resource U'               = $ResUCount;
+                                            'Tag Name'                 = $null;
+                                            'Tag Value'                = $null
+                                        }
+                                        $tmp += $obj
+                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
                             }
                         }
                         else {
-                            $obj = @{
-                                'Subscription'             = $sub1.name;
-                                'Resource Group'           = $0.RESOURCEGROUP;
-                                'Automation Account Name'  = $0.NAME;
-                                'Automation Account State' = $0.properties.State;
-                                'Automation Account SKU'   = $0.properties.sku.name;
-                                'Location'                 = $0.LOCATION;
-                                'Runbook Name'             = $null;
-                                'Last Modified Time'       = $null;
-                                'Runbook State'            = $null;
-                                'Runbook Type'             = $null;
-                                'Runbook Description'      = $null;
-                                'Job Count'                = $null;
-                                'Tags'                     = [string]$1.tags
+                            if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                foreach ($TagKey in $Tag.Keys) {  
+                                    $obj = @{
+                                        'Subscription'             = $sub1.name;
+                                        'Resource Group'           = $0.RESOURCEGROUP;
+                                        'Automation Account Name'  = $0.NAME;
+                                        'Automation Account State' = $0.properties.State;
+                                        'Automation Account SKU'   = $0.properties.sku.name;
+                                        'Location'                 = $0.LOCATION;
+                                        'Runbook Name'             = $null;
+                                        'Last Modified Time'       = $null;
+                                        'Runbook State'            = $null;
+                                        'Runbook Type'             = $null;
+                                        'Runbook Description'      = $null;
+                                        'Job Count'                = $null;
+                                        'Resource U'               = $ResUCount;
+                                        'Tag Name'                 = [string]$TagKey;
+                                        'Tag Value'                = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
                             }
-                            $tmp += $obj
+                            else {   
+                                    $obj = @{
+                                        'Subscription'             = $sub1.name;
+                                        'Resource Group'           = $0.RESOURCEGROUP;
+                                        'Automation Account Name'  = $0.NAME;
+                                        'Automation Account State' = $0.properties.State;
+                                        'Automation Account SKU'   = $0.properties.sku.name;
+                                        'Location'                 = $0.LOCATION;
+                                        'Runbook Name'             = $null;
+                                        'Last Modified Time'       = $null;
+                                        'Runbook State'            = $null;
+                                        'Runbook Type'             = $null;
+                                        'Runbook Description'      = $null;
+                                        'Job Count'                = $null;
+                                        'Resource U'               = $ResUCount;
+                                        'Tag Name'                 = $null;
+                                        'Tag Value'                = $null
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                         }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[2])).AddArgument($($args[3]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[3])).AddArgument($($args[4]))
 
 
-            $EvtHub = ([PowerShell]::Create()).AddScript( { param($Sub, $evthub)
+            $EvtHub = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$evthub)
                     $tmp = @()
 
                     $evthub = $evthub
                     $Subs = $Sub
 
                     foreach ($1 in $evthub) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
                         $sku = $1.SKU
-
-                        $obj = @{
-                            'Subscription'         = $sub1.name;
-                            'Resource Group'       = $1.RESOURCEGROUP;
-                            'Name'                 = $1.NAME;
-                            'Location'             = $1.LOCATION;
-                            'SKU'                  = $sku.name;
-                            'Status'               = $data.status;
-                            'Geo-Replication'      = $data.zoneRedundant;
-                            'Throughput Units'     = $1.sku.capacity;
-                            'Auto-Inflate'         = $data.isAutoInflateEnabled;
-                            'Max Throughput Units' = $data.maximumThroughputUnits;
-                            'Kafka Enabled'        = $data.kafkaEnabled;
-                            'Endpoint'             = $data.serviceBusEndpoint;
-                            'Tags'                 = [string]$1.tags
-                        }
-
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) { 
+                                    $obj = @{
+                                        'Subscription'         = $sub1.name;
+                                        'Resource Group'       = $1.RESOURCEGROUP;
+                                        'Name'                 = $1.NAME;
+                                        'Location'             = $1.LOCATION;
+                                        'SKU'                  = $sku.name;
+                                        'Status'               = $data.status;
+                                        'Geo-Replication'      = $data.zoneRedundant;
+                                        'Throughput Units'     = $1.sku.capacity;
+                                        'Auto-Inflate'         = $data.isAutoInflateEnabled;
+                                        'Max Throughput Units' = $data.maximumThroughputUnits;
+                                        'Kafka Enabled'        = $data.kafkaEnabled;
+                                        'Endpoint'             = $data.serviceBusEndpoint;
+                                        'Resource U'           = $ResUCount;
+                                        'Tag Name'             = [string]$TagKey;
+                                        'Tag Value'            = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else { 
+                                    $obj = @{
+                                        'Subscription'         = $sub1.name;
+                                        'Resource Group'       = $1.RESOURCEGROUP;
+                                        'Name'                 = $1.NAME;
+                                        'Location'             = $1.LOCATION;
+                                        'SKU'                  = $sku.name;
+                                        'Status'               = $data.status;
+                                        'Geo-Replication'      = $data.zoneRedundant;
+                                        'Throughput Units'     = $1.sku.capacity;
+                                        'Auto-Inflate'         = $data.isAutoInflateEnabled;
+                                        'Max Throughput Units' = $data.maximumThroughputUnits;
+                                        'Kafka Enabled'        = $data.kafkaEnabled;
+                                        'Endpoint'             = $data.serviceBusEndpoint;
+                                        'Resource U'           = $ResUCount;
+                                        'Tag Name'             = $null;
+                                        'Tag Value'            = $null
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[4]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[5]))
 
 
 
-            $WrkSpace = ([PowerShell]::Create()).AddScript( { param($Sub, $WRKSPACE)
+            $WrkSpace = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$WRKSPACE)
                     $tmp = @()
 
                     $wrkspace = $WRKSPACE
                     $Subs = $Sub
 
                     foreach ($1 in $wrkspace) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-
-                        $obj = @{
-                            'Subscription'     = $sub1.name;
-                            'Resource Group'   = $1.RESOURCEGROUP;
-                            'Name'             = $1.NAME;
-                            'Location'         = $1.LOCATION;
-                            'SKU'              = $data.sku.name;
-                            'Retention Days'   = $data.retentionInDays;
-                            'Daily Quota (GB)' = [decimal]$data.workspaceCapping.dailyQuotaGb;
-                            'Tags'             = [string]$1.tags
-                        }
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                    $obj = @{
+                                        'Subscription'     = $sub1.name;
+                                        'Resource Group'   = $1.RESOURCEGROUP;
+                                        'Name'             = $1.NAME;
+                                        'Location'         = $1.LOCATION;
+                                        'SKU'              = $data.sku.name;
+                                        'Retention Days'   = $data.retentionInDays;
+                                        'Daily Quota (GB)' = [decimal]$data.workspaceCapping.dailyQuotaGb;
+                                        'Resource U'       = $ResUCount;
+                                        'Tag Name'         = [string]$TagKey;
+                                        'Tag Value'        = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {
+                                $obj = @{
+                                    'Subscription'     = $sub1.name;
+                                    'Resource Group'   = $1.RESOURCEGROUP;
+                                    'Name'             = $1.NAME;
+                                    'Location'         = $1.LOCATION;
+                                    'SKU'              = $data.sku.name;
+                                    'Retention Days'   = $data.retentionInDays;
+                                    'Daily Quota (GB)' = [decimal]$data.workspaceCapping.dailyQuotaGb;
+                                    'Resource U'       = $ResUCount;
+                                    'Tag Name'         = $null;
+                                    'Tag Value'        = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[5]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[6]))
 
 
-            $AvSet = ([PowerShell]::Create()).AddScript( { param($Sub, $AvSet)
+            $AvSet = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$AvSet)
                     $tmp = @()
 
                     $AvSet = $AvSet
                     $Subs = $Sub
 
                     foreach ($1 in $AvSet) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         Foreach ($vmid in $data.virtualMachines.id) {
                             $vmIds = $vmid.split('/')[8]
-
-
-                            $obj = @{
-                                'Subscription'     = $sub1.name;
-                                'Resource Group'   = $1.RESOURCEGROUP;
-                                'Name'             = $1.NAME;
-                                'Location'         = $1.LOCATION;
-                                'Fault Domains'    = $data.platformFaultDomainCount;
-                                'Update Domains'   = $data.platformUpdateDomainCount;
-                                'Virtual Machines' = $vmIds;
-                                'Tags'             = [string]$1.tags
-                            }
-
-                            $tmp += $obj
+                            if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                foreach ($TagKey in $Tag.Keys) {
+                                        $obj = @{
+                                            'Subscription'     = $sub1.name;
+                                            'Resource Group'   = $1.RESOURCEGROUP;
+                                            'Name'             = $1.NAME;
+                                            'Location'         = $1.LOCATION;
+                                            'Fault Domains'    = $data.platformFaultDomainCount;
+                                            'Update Domains'   = $data.platformUpdateDomainCount;
+                                            'Virtual Machines' = $vmIds;
+                                            'Resource U'       = $ResUCount;
+                                            'Tag Name'         = [string]$TagKey;
+                                            'Tag Value'        = [string]$Tag.$TagKey
+                                        }
+                                        $tmp += $obj
+                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    }
+                                }
+                                else {
+                                        $obj = @{
+                                            'Subscription'     = $sub1.name;
+                                            'Resource Group'   = $1.RESOURCEGROUP;
+                                            'Name'             = $1.NAME;
+                                            'Location'         = $1.LOCATION;
+                                            'Fault Domains'    = $data.platformFaultDomainCount;
+                                            'Update Domains'   = $data.platformUpdateDomainCount;
+                                            'Virtual Machines' = $vmIds;
+                                            'Resource U'       = $ResUCount;
+                                            'Tag Name'         = $null;
+                                            'Tag Value'        = $null
+                                        }
+                                        $tmp += $obj
+                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
                         }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[6]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[7]))
 
 
-            $WebSite = ([PowerShell]::Create()).AddScript( { param($Sub, $SITES)
+            $WebSite = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$SITES)
                     $tmp = @()
 
                     $WebSite = $SITES
                     $Subs = $Sub
 
                     foreach ($1 in $WebSite) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         foreach ($2 in $data.hostNameSslStates) {
-                            $obj = @{
-                                'Subscription'                  = $sub1.name;
-                                'Resource Group'                = $1.RESOURCEGROUP;
-                                'Name'                          = $1.NAME;
-                                'Kind'                          = $1.KIND;
-                                'Location'                      = $1.LOCATION;
-                                'Enabled'                       = $data.enabled;
-                                'state'                         = $data.state;
-                                'SKU'                           = $data.sku;
-                                'Content Availability State'    = $data.contentAvailabilityState;
-                                'Runtime Availability State'    = $data.runtimeAvailabilityState;
-                                'Possible Inbound IP Addresses' = $data.possibleInboundIpAddresses;
-                                'Repository Site Name'          = $data.repositorySiteName;
-                                'Availability State'            = $data.availabilityState;
-                                'HostNames'                     = $2.Name;
-                                'HostName Type'                 = $2.hostType;
-                                'ssl State'                     = $2.sslState;
-                                'Default Hostname'              = $data.defaultHostName;
-                                'Client Cert Mode'              = $data.clientCertMode;
-                                'ContainerSize'                 = $data.containerSize;
-                                'Admin Enabled'                 = $data.adminEnabled;
-                                'FTPs Host Name'                = $data.ftpsHostName;
-                                'HTTPS Only'                    = $data.httpsOnly;
-                                'Tags'                          = [string]$1.tags
-                            }
-                            $tmp += $obj
+                            if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                foreach ($TagKey in $Tag.Keys) {
+                                        $obj = @{
+                                            'Subscription'                  = $sub1.name;
+                                            'Resource Group'                = $1.RESOURCEGROUP;
+                                            'Name'                          = $1.NAME;
+                                            'Kind'                          = $1.KIND;
+                                            'Location'                      = $1.LOCATION;
+                                            'Enabled'                       = $data.enabled;
+                                            'state'                         = $data.state;
+                                            'SKU'                           = $data.sku;
+                                            'Content Availability State'    = $data.contentAvailabilityState;
+                                            'Runtime Availability State'    = $data.runtimeAvailabilityState;
+                                            'Possible Inbound IP Addresses' = $data.possibleInboundIpAddresses;
+                                            'Repository Site Name'          = $data.repositorySiteName;
+                                            'Availability State'            = $data.availabilityState;
+                                            'HostNames'                     = $2.Name;
+                                            'HostName Type'                 = $2.hostType;
+                                            'ssl State'                     = $2.sslState;
+                                            'Default Hostname'              = $data.defaultHostName;
+                                            'Client Cert Mode'              = $data.clientCertMode;
+                                            'ContainerSize'                 = $data.containerSize;
+                                            'Admin Enabled'                 = $data.adminEnabled;
+                                            'FTPs Host Name'                = $data.ftpsHostName;
+                                            'HTTPS Only'                    = $data.httpsOnly;
+                                            'Resource U'                    = $ResUCount;
+                                            'Tag Name'                      = [string]$TagKey;
+                                            'Tag Value'                     = [string]$Tag.$TagKey
+                                        }
+                                        $tmp += $obj
+                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    }
+                                }
+                                else {
+                                    $obj = @{
+                                        'Subscription'                  = $sub1.name;
+                                        'Resource Group'                = $1.RESOURCEGROUP;
+                                        'Name'                          = $1.NAME;
+                                        'Kind'                          = $1.KIND;
+                                        'Location'                      = $1.LOCATION;
+                                        'Enabled'                       = $data.enabled;
+                                        'state'                         = $data.state;
+                                        'SKU'                           = $data.sku;
+                                        'Content Availability State'    = $data.contentAvailabilityState;
+                                        'Runtime Availability State'    = $data.runtimeAvailabilityState;
+                                        'Possible Inbound IP Addresses' = $data.possibleInboundIpAddresses;
+                                        'Repository Site Name'          = $data.repositorySiteName;
+                                        'Availability State'            = $data.availabilityState;
+                                        'HostNames'                     = $2.Name;
+                                        'HostName Type'                 = $2.hostType;
+                                        'ssl State'                     = $2.sslState;
+                                        'Default Hostname'              = $data.defaultHostName;
+                                        'Client Cert Mode'              = $data.clientCertMode;
+                                        'ContainerSize'                 = $data.containerSize;
+                                        'Admin Enabled'                 = $data.adminEnabled;
+                                        'FTPs Host Name'                = $data.ftpsHostName;
+                                        'HTTPS Only'                    = $data.httpsOnly;
+                                        'Resource U'                    = $ResUCount;
+                                        'Tag Name'                      = $null;
+                                        'Tag Value'                     = $null
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
                         }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[7]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[8]))
 
 
-            $Vault = ([PowerShell]::Create()).AddScript( { param($Sub, $VAULT)
+            $Vault = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$VAULT)
                     $tmp = @()
 
                     $Subs = $Sub
 
                     foreach ($1 in $VAULT) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-
-                        $obj = @{
-                            'Subscription'                  = $sub1.name;
-                            'Resource Group'                = $1.RESOURCEGROUP;
-                            'Name'                          = $1.NAME;
-                            'Location'                      = $1.LOCATION;
-                            'SKU Family'                    = $data.sku.family;
-                            'SKU'                           = $data.sku.name;
-                            'Vault Uri'                     = $data.vaultUri;
-                            'Enable RBAC'                   = $data.enableRbacAuthorization;
-                            'Enable Soft Delete'            = $data.enableSoftDelete;
-                            'Enable for Disk Encryption'    = $data.enabledForDiskEncryption;
-                            'Enable for Template Deploy'    = $data.enabledForTemplateDeployment;
-                            'Soft Delete Retention Days'    = $data.softDeleteRetentionInDays;
-                            'Certificate Permissions'       = [string]$data.accessPolicies.permissions.certificates;
-                            'Key Permissions'               = [string]$data.accessPolicies.permissions.keys;
-                            'Secret Permissions'            = [string]$data.accessPolicies.permissions.secrets;
-                            'Tags'                          = [string]$1.tags
-                        }
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                    $obj = @{
+                                        'Subscription'                  = $sub1.name;
+                                        'Resource Group'                = $1.RESOURCEGROUP;
+                                        'Name'                          = $1.NAME;
+                                        'Location'                      = $1.LOCATION;
+                                        'SKU Family'                    = $data.sku.family;
+                                        'SKU'                           = $data.sku.name;
+                                        'Vault Uri'                     = $data.vaultUri;
+                                        'Enable RBAC'                   = $data.enableRbacAuthorization;
+                                        'Enable Soft Delete'            = $data.enableSoftDelete;
+                                        'Enable for Disk Encryption'    = $data.enabledForDiskEncryption;
+                                        'Enable for Template Deploy'    = $data.enabledForTemplateDeployment;
+                                        'Soft Delete Retention Days'    = $data.softDeleteRetentionInDays;
+                                        'Certificate Permissions'       = [string]$data.accessPolicies.permissions.certificates;
+                                        'Key Permissions'               = [string]$data.accessPolicies.permissions.keys;
+                                        'Secret Permissions'            = [string]$data.accessPolicies.permissions.secrets;
+                                        'Resource U'                    = $ResUCount;
+                                        'Tag Name'                      = [string]$TagKey;
+                                        'Tag Value'                     = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {
+                                $obj = @{
+                                    'Subscription'                  = $sub1.name;
+                                    'Resource Group'                = $1.RESOURCEGROUP;
+                                    'Name'                          = $1.NAME;
+                                    'Location'                      = $1.LOCATION;
+                                    'SKU Family'                    = $data.sku.family;
+                                    'SKU'                           = $data.sku.name;
+                                    'Vault Uri'                     = $data.vaultUri;
+                                    'Enable RBAC'                   = $data.enableRbacAuthorization;
+                                    'Enable Soft Delete'            = $data.enableSoftDelete;
+                                    'Enable for Disk Encryption'    = $data.enabledForDiskEncryption;
+                                    'Enable for Template Deploy'    = $data.enabledForTemplateDeployment;
+                                    'Soft Delete Retention Days'    = $data.softDeleteRetentionInDays;
+                                    'Certificate Permissions'       = [string]$data.accessPolicies.permissions.certificates;
+                                    'Key Permissions'               = [string]$data.accessPolicies.permissions.keys;
+                                    'Secret Permissions'            = [string]$data.accessPolicies.permissions.secrets;
+                                    'Resource U'                    = $ResUCount;
+                                    'Tag Name'                      = $null;
+                                    'Tag Value'                     = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[8]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[9]))
 
 
-            $RecoveryVault = ([PowerShell]::Create()).AddScript( { param($Sub, $RECOVAULT)
+            $RecoveryVault = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$RECOVAULT)
                     $tmp = @()
 
                     $Subs = $Sub
 
                     foreach ($1 in $RECOVAULT) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-
-                        $obj = @{
-                            'Subscription'                  = $sub1.name;
-                            'Resource Group'                = $1.RESOURCEGROUP;
-                            'Name'                          = $1.NAME;
-                            'Location'                      = $1.LOCATION;
-                            'SKU Name'                      = $1.sku.name;
-                            'SKU Tier'                      = $1.sku.tier;
-                            'Private Endpoint State for Backup' = $data.privateEndpointStateForBackup;
-                            'Private Endpoint State for Site Recovery' = $data.privateEndpointStateForSiteRecovery;
-                            'Tags'                          = [string]$1.tags
-                        }
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                    $obj = @{
+                                        'Subscription'                  = $sub1.name;
+                                        'Resource Group'                = $1.RESOURCEGROUP;
+                                        'Name'                          = $1.NAME;
+                                        'Location'                      = $1.LOCATION;
+                                        'SKU Name'                      = $1.sku.name;
+                                        'SKU Tier'                      = $1.sku.tier;
+                                        'Private Endpoint State for Backup' = $data.privateEndpointStateForBackup;
+                                        'Private Endpoint State for Site Recovery' = $data.privateEndpointStateForSiteRecovery;
+                                        'Resource U'                    = $ResUCount;
+                                        'Tag Name'                      = [string]$TagKey;
+                                        'Tag Value'                     = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {
+                                $obj = @{
+                                    'Subscription'                  = $sub1.name;
+                                    'Resource Group'                = $1.RESOURCEGROUP;
+                                    'Name'                          = $1.NAME;
+                                    'Location'                      = $1.LOCATION;
+                                    'SKU Name'                      = $1.sku.name;
+                                    'SKU Tier'                      = $1.sku.tier;
+                                    'Private Endpoint State for Backup' = $data.privateEndpointStateForBackup;
+                                    'Private Endpoint State for Site Recovery' = $data.privateEndpointStateForSiteRecovery;
+                                    'Resource U'                    = $ResUCount;
+                                    'Tag Name'                      = $null;
+                                    'Tag Value'                     = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[9]))                
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[10]))                
 
 
                 
@@ -1868,7 +3036,7 @@ $Runtime = Measure-Command -Expression {
 
             $AzInfra
 
-        } -ArgumentList $Subs, $StorageAcc, $RB, $AUT, $EVTHUB, $WRKSPACE, $AVSET, $SITES, $VAULT, $RECOVERYVAULT | Out-Null
+        } -ArgumentList $Subs, $InTag,$StorageAcc, $RB, $AUT, $EVTHUB, $WRKSPACE, $AVSET, $SITES, $VAULT, $RECOVERYVAULT | Out-Null
 
 
 
@@ -1879,122 +3047,229 @@ $Runtime = Measure-Command -Expression {
 
             $job = @()
 
-            $DB = ([PowerShell]::Create()).AddScript( { param($Sub, $DB)
+            $DB = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$DB)
                     $tmp = @()
 
                     $db = $DB
                     $Subs = $Sub
 
                     foreach ($1 in $db) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
-
-                        $obj = @{
-                            'Subscription'               = $sub1.name;
-                            'Resource Group'             = $1.RESOURCEGROUP;
-                            'Name'                       = $1.NAME;
-                            'Location'                   = $1.LOCATION;
-                            'Storage Account Type'       = $data.storageAccountType;
-                            'Default Secondary Location' = $data.defaultSecondaryLocation;
-                            'Status'                     = $data.status;
-                            'DTU Capacity'               = $data.currentSku.capacity;
-                            'DTU Tier'                   = $data.requestedServiceObjectiveName;
-                            'Zone Redundant'             = $data.zoneRedundant;
-                            'Catalog Collation'          = $data.catalogCollation;
-                            'Read Replica Count'         = $data.readReplicaCount;
-                            'Data Max Size (GB)'         = (($data.maxSizeBytes / 1024) / 1024) / 1024;
-                            'Tags'                       = [string]$1.tags
-                        }
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                    $obj = @{
+                                        'Subscription'               = $sub1.name;
+                                        'Resource Group'             = $1.RESOURCEGROUP;
+                                        'Name'                       = $1.NAME;
+                                        'Location'                   = $1.LOCATION;
+                                        'Storage Account Type'       = $data.storageAccountType;
+                                        'Default Secondary Location' = $data.defaultSecondaryLocation;
+                                        'Status'                     = $data.status;
+                                        'DTU Capacity'               = $data.currentSku.capacity;
+                                        'DTU Tier'                   = $data.requestedServiceObjectiveName;
+                                        'Zone Redundant'             = $data.zoneRedundant;
+                                        'Catalog Collation'          = $data.catalogCollation;
+                                        'Read Replica Count'         = $data.readReplicaCount;
+                                        'Data Max Size (GB)'         = (($data.maxSizeBytes / 1024) / 1024) / 1024;
+                                        'Resource U'                 = $ResUCount;
+                                        'Tag Name'                   = [string]$TagKey;
+                                        'Tag Value'                  = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {
+                                $obj = @{
+                                    'Subscription'               = $sub1.name;
+                                    'Resource Group'             = $1.RESOURCEGROUP;
+                                    'Name'                       = $1.NAME;
+                                    'Location'                   = $1.LOCATION;
+                                    'Storage Account Type'       = $data.storageAccountType;
+                                    'Default Secondary Location' = $data.defaultSecondaryLocation;
+                                    'Status'                     = $data.status;
+                                    'DTU Capacity'               = $data.currentSku.capacity;
+                                    'DTU Tier'                   = $data.requestedServiceObjectiveName;
+                                    'Zone Redundant'             = $data.zoneRedundant;
+                                    'Catalog Collation'          = $data.catalogCollation;
+                                    'Read Replica Count'         = $data.readReplicaCount;
+                                    'Data Max Size (GB)'         = (($data.maxSizeBytes / 1024) / 1024) / 1024;
+                                    'Resource U'                 = $ResUCount;
+                                    'Tag Name'                   = $null;
+                                    'Tag Value'                  = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[1]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2]))
 
-            $MySQL = ([PowerShell]::Create()).AddScript( { param($Sub, $MySQL)
+            $MySQL = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$MySQL)
                     $tmp = @()
 
                     $mysql = $MySQL
                     $Subs = $Sub
 
                     foreach ($1 in $mysql) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
                         $sku = $1.SKU
-
-                        $obj = @{
-                            'Subscription'              = $sub1.name;
-                            'Resource Group'            = $1.RESOURCEGROUP;
-                            'Name'                      = $1.NAME;
-                            'Location'                  = $1.LOCATION;
-                            'SKU'                       = $sku.name;
-                            'SKU Family'                = $sku.family;
-                            'Tier'                      = $sku.tier;
-                            'Capacity'                  = $sku.capacity;
-                            'MySQL Version'             = $data.version;
-                            'Backup Retention Days'     = $data.storageProfile.backupRetentionDays;
-                            'Geo-Redundant Backup'      = $data.storageProfile.geoRedundantBackup;
-                            'Auto Grow'                 = $data.storageProfile.storageAutogrow;
-                            'Storage MB'                = $data.storageProfile.storageMB;
-                            'Public Network Access'     = $data.publicNetworkAccess;
-                            'Admin Login'               = $data.administratorLogin;
-                            'Infrastructure Encryption' = $data.InfrastructureEncryption;
-                            'Minimal Tls Version'       = $data.minimalTlsVersion;
-                            'State'                     = $data.userVisibleState;
-                            'Replica Capacity'          = $data.replicaCapacity;
-                            'Replication Role'          = $data.replicationRole;
-                            'BYOK Enforcement'          = $data.byokEnforcement;
-                            'ssl Enforcement'           = $data.sslEnforcement;
-                            'Tags'                      = [string]$1.tags
-                        }
-
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                    $obj = @{
+                                        'Subscription'              = $sub1.name;
+                                        'Resource Group'            = $1.RESOURCEGROUP;
+                                        'Name'                      = $1.NAME;
+                                        'Location'                  = $1.LOCATION;
+                                        'SKU'                       = $sku.name;
+                                        'SKU Family'                = $sku.family;
+                                        'Tier'                      = $sku.tier;
+                                        'Capacity'                  = $sku.capacity;
+                                        'MySQL Version'             = $data.version;
+                                        'Backup Retention Days'     = $data.storageProfile.backupRetentionDays;
+                                        'Geo-Redundant Backup'      = $data.storageProfile.geoRedundantBackup;
+                                        'Auto Grow'                 = $data.storageProfile.storageAutogrow;
+                                        'Storage MB'                = $data.storageProfile.storageMB;
+                                        'Public Network Access'     = $data.publicNetworkAccess;
+                                        'Admin Login'               = $data.administratorLogin;
+                                        'Infrastructure Encryption' = $data.InfrastructureEncryption;
+                                        'Minimal Tls Version'       = $data.minimalTlsVersion;
+                                        'State'                     = $data.userVisibleState;
+                                        'Replica Capacity'          = $data.replicaCapacity;
+                                        'Replication Role'          = $data.replicationRole;
+                                        'BYOK Enforcement'          = $data.byokEnforcement;
+                                        'ssl Enforcement'           = $data.sslEnforcement;
+                                        'Resource U'                = $ResUCount;
+                                        'Tag Name'                  = [string]$TagKey;
+                                        'Tag Value'                 = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {
+                                $obj = @{
+                                    'Subscription'              = $sub1.name;
+                                    'Resource Group'            = $1.RESOURCEGROUP;
+                                    'Name'                      = $1.NAME;
+                                    'Location'                  = $1.LOCATION;
+                                    'SKU'                       = $sku.name;
+                                    'SKU Family'                = $sku.family;
+                                    'Tier'                      = $sku.tier;
+                                    'Capacity'                  = $sku.capacity;
+                                    'MySQL Version'             = $data.version;
+                                    'Backup Retention Days'     = $data.storageProfile.backupRetentionDays;
+                                    'Geo-Redundant Backup'      = $data.storageProfile.geoRedundantBackup;
+                                    'Auto Grow'                 = $data.storageProfile.storageAutogrow;
+                                    'Storage MB'                = $data.storageProfile.storageMB;
+                                    'Public Network Access'     = $data.publicNetworkAccess;
+                                    'Admin Login'               = $data.administratorLogin;
+                                    'Infrastructure Encryption' = $data.InfrastructureEncryption;
+                                    'Minimal Tls Version'       = $data.minimalTlsVersion;
+                                    'State'                     = $data.userVisibleState;
+                                    'Replica Capacity'          = $data.replicaCapacity;
+                                    'Replication Role'          = $data.replicationRole;
+                                    'BYOK Enforcement'          = $data.byokEnforcement;
+                                    'ssl Enforcement'           = $data.sslEnforcement;
+                                    'Resource U'                = $ResUCount;
+                                    'Tag Name'                  = $null;
+                                    'Tag Value'                 = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[2]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[3]))
 
-            $PostGre = ([PowerShell]::Create()).AddScript( { param($Sub, $PostGre)
+            $PostGre = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$PostGre)
                     $tmp = @()
 
                     $postgre = $PostGre
                     $Subs = $Sub
 
                     foreach ($1 in $postgre) {
-
+                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
                         $sku = $1.SKU
-
-                        $obj = @{
-                            'Subscription'              = $sub1.name;
-                            'Resource Group'            = $1.RESOURCEGROUP;
-                            'Name'                      = $1.NAME;
-                            'Location'                  = $1.LOCATION;
-                            'SKU'                       = $sku.name;
-                            'SKU Family'                = $sku.family;
-                            'Tier'                      = $sku.tier;
-                            'Capacity'                  = $sku.capacity;
-                            'MySQL Version'             = $data.version;
-                            'Backup Retention Days'     = $data.storageProfile.backupRetentionDays;
-                            'Geo-Redundant Backup'      = $data.storageProfile.geoRedundantBackup;
-                            'Auto Grow'                 = $data.storageProfile.storageAutogrow;
-                            'Storage MB'                = $data.storageProfile.storageMB;
-                            'Public Network Access'     = $data.publicNetworkAccess;
-                            'Admin Login'               = $data.administratorLogin;
-                            'Infrastructure Encryption' = $data.InfrastructureEncryption;
-                            'Minimal Tls Version'       = $data.minimalTlsVersion;
-                            'State'                     = $data.userVisibleState;
-                            'Replica Capacity'          = $data.replicaCapacity;
-                            'Replication Role'          = $data.replicationRole;
-                            'BYOK Enforcement'          = $data.byokEnforcement;
-                            'ssl Enforcement'           = $data.sslEnforcement;
-                            'Tags'                      = [string]$1.tags
-                        }
-                        $tmp += $obj
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                    $obj = @{
+                                        'Subscription'              = $sub1.name;
+                                        'Resource Group'            = $1.RESOURCEGROUP;
+                                        'Name'                      = $1.NAME;
+                                        'Location'                  = $1.LOCATION;
+                                        'SKU'                       = $sku.name;
+                                        'SKU Family'                = $sku.family;
+                                        'Tier'                      = $sku.tier;
+                                        'Capacity'                  = $sku.capacity;
+                                        'MySQL Version'             = $data.version;
+                                        'Backup Retention Days'     = $data.storageProfile.backupRetentionDays;
+                                        'Geo-Redundant Backup'      = $data.storageProfile.geoRedundantBackup;
+                                        'Auto Grow'                 = $data.storageProfile.storageAutogrow;
+                                        'Storage MB'                = $data.storageProfile.storageMB;
+                                        'Public Network Access'     = $data.publicNetworkAccess;
+                                        'Admin Login'               = $data.administratorLogin;
+                                        'Infrastructure Encryption' = $data.InfrastructureEncryption;
+                                        'Minimal Tls Version'       = $data.minimalTlsVersion;
+                                        'State'                     = $data.userVisibleState;
+                                        'Replica Capacity'          = $data.replicaCapacity;
+                                        'Replication Role'          = $data.replicationRole;
+                                        'BYOK Enforcement'          = $data.byokEnforcement;
+                                        'ssl Enforcement'           = $data.sslEnforcement;
+                                        'Resource U'                = $ResUCount;
+                                        'Tag Name'                  = [string]$TagKey;
+                                        'Tag Value'                 = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {
+                                $obj = @{
+                                    'Subscription'              = $sub1.name;
+                                    'Resource Group'            = $1.RESOURCEGROUP;
+                                    'Name'                      = $1.NAME;
+                                    'Location'                  = $1.LOCATION;
+                                    'SKU'                       = $sku.name;
+                                    'SKU Family'                = $sku.family;
+                                    'Tier'                      = $sku.tier;
+                                    'Capacity'                  = $sku.capacity;
+                                    'MySQL Version'             = $data.version;
+                                    'Backup Retention Days'     = $data.storageProfile.backupRetentionDays;
+                                    'Geo-Redundant Backup'      = $data.storageProfile.geoRedundantBackup;
+                                    'Auto Grow'                 = $data.storageProfile.storageAutogrow;
+                                    'Storage MB'                = $data.storageProfile.storageMB;
+                                    'Public Network Access'     = $data.publicNetworkAccess;
+                                    'Admin Login'               = $data.administratorLogin;
+                                    'Infrastructure Encryption' = $data.InfrastructureEncryption;
+                                    'Minimal Tls Version'       = $data.minimalTlsVersion;
+                                    'State'                     = $data.userVisibleState;
+                                    'Replica Capacity'          = $data.replicaCapacity;
+                                    'Replication Role'          = $data.replicationRole;
+                                    'BYOK Enforcement'          = $data.byokEnforcement;
+                                    'ssl Enforcement'           = $data.sslEnforcement;
+                                    'Resource U'                = $ResUCount;
+                                    'Tag Name'                  = $null;
+                                    'Tag Value'                 = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[3]))
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[4]))
 
             $jobDB = $DB.BeginInvoke()
             $jobMySQL = $MySQL.BeginInvoke()
@@ -2022,7 +3297,7 @@ $Runtime = Measure-Command -Expression {
 
             $AzDB
 
-        } -ArgumentList $Subs, $DB, $MySQL, $POSTGRE | Out-Null
+        } -ArgumentList $Subs, $InTag,$DB, $MySQL, $POSTGRE | Out-Null
 
 
 
@@ -2225,7 +3500,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelVMs | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Computer Name',
                         'VM Size',
@@ -2256,14 +3531,16 @@ $Runtime = Measure-Command -Expression {
                         'Private IP Address',
                         'Private IP Allocation Method',
                         'VM Extensions',
-                        'Tags' | 
+                        'Resource U',
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'VMs' -TableName 'AzureVMs' -TableStyle $tableStyle -ConditionalText $condtxtvm -Style $Style, $StyleExt
                     }
                     else 
                     {
                         $ExcelVMs | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Computer Name',
                         'VM Size',
@@ -2293,7 +3570,8 @@ $Runtime = Measure-Command -Expression {
                         'Private IP Version',
                         'Private IP Address',
                         'Private IP Allocation Method',
-                        'VM Extensions' | 
+                        'VM Extensions',
+                        'Resource U' | 
                         Export-Excel -Path $File -WorksheetName 'VMs' -TableName 'AzureVMs' -TableStyle $tableStyle -ConditionalText $condtxtvm -Style $Style, $StyleExt
                     }
 
@@ -2314,7 +3592,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelVMDisks | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Virtual Machine',
                         'Disk Name',
@@ -2328,14 +3606,15 @@ $Runtime = Measure-Command -Expression {
                         'Disk IOPS Read / Write',
                         'Disk MBps Read / Write',
                         'HyperV Generation',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'Disks' -TableName 'AzureDisks' -TableStyle $tableStyle -ConditionalText $condtxtdsk -Style $Style
                     }
                 else 
                     {
                         $ExcelVMDisks | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Virtual Machine',
                         'Disk Name',
@@ -2375,7 +3654,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelStorageAcc | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2393,14 +3672,15 @@ $Runtime = Measure-Command -Expression {
                         'Table Address',
                         'Queue Address',
                         'Network Acls',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value'  | 
                         Export-Excel -Path $File -WorksheetName 'StorageAcc' -AutoSize -TableName 'AzureStorageAccs' -TableStyle $tableStyle -ConditionalText $condtxtStorage -Style $Style
                     }
                 else 
                     {
                         $ExcelStorageAcc | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2438,7 +3718,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelVNET | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2450,14 +3730,15 @@ $Runtime = Measure-Command -Expression {
                         'Subnet Prefix',
                         'Subnet Private Link Service Network Policies',
                         'Subnet Private Endpoint Network Policies',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value'  | 
                         Export-Excel -Path $File -WorksheetName 'VNET' -AutoSize -TableName 'AzureVNETs' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
                     }
                 else 
                     {
                         $ExcelVNET | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2489,7 +3770,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelVNETGTW | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2505,14 +3786,15 @@ $Runtime = Measure-Command -Expression {
                         'BGP Peer Weight',
                         'Gateway Public IP',
                         'Gateway Subnet Name',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value'  | 
                         Export-Excel -Path $File -WorksheetName 'Gateways' -AutoSize -TableName 'AzureVNETGateways' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
                     }
                 else 
                     {
                         $ExcelVNETGTW | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2550,7 +3832,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelSQLVM | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'ResourceGroup',
                         'Name',
                         'Location',
@@ -2559,14 +3841,15 @@ $Runtime = Measure-Command -Expression {
                         'SQL Image',
                         'SQL Management',
                         'SQL Image Sku',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value'  | 
                         Export-Excel -Path $File -WorksheetName 'SQL VMs' -AutoSize -TableName 'AzureSQLVMs' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelSQLVM | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'ResourceGroup',
                         'Name',
                         'Location',
@@ -2597,7 +3880,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelDB | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2610,14 +3893,15 @@ $Runtime = Measure-Command -Expression {
                         'Zone Redundant',
                         'Catalog Collation',
                         'Read Replica Count',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value'  | 
                         Export-Excel -Path $File -WorksheetName 'SQL DBs' -AutoSize -TableName 'AzureSQLDBs' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelDB | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2652,7 +3936,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelAutAcc | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Automation Account Name',
                         'Automation Account State',
@@ -2664,14 +3948,15 @@ $Runtime = Measure-Command -Expression {
                         'Runbook Type',
                         'Runbook Description',
                         'Job Count',
-                        'Tags' |
+                        'Tag Name',
+                        'Tag Value' |
                         Export-Excel -Path $File -WorksheetName 'Runbooks' -AutoSize -TableName 'AzureRunbooks' -TableStyle $tableStyle -Style $Style, $StyleExt
                     }
                 else 
                     {
                         $ExcelAutAcc | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Automation Account Name',
                         'Automation Account State',
@@ -2703,7 +3988,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelPIP | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'SKU',
@@ -2713,14 +3998,15 @@ $Runtime = Measure-Command -Expression {
                         'IP Address',
                         'Associated Resource',
                         'Associated Resource Type',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -TableName 'AzurePubIPs' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelPIP | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'SKU',
@@ -2753,7 +4039,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelEvtHub | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2765,14 +4051,15 @@ $Runtime = Measure-Command -Expression {
                         'Max Throughput Units',
                         'Kafka Enabled',
                         'Endpoint',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'Event Hubs' -AutoSize -TableName 'AzureEventHubs' -TableStyle $tableStyle -ConditionalText $txtEvt -Style $Style
                     }
                 else 
                     {
                         $ExcelEvtHub | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2804,7 +4091,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelMySQL | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2826,14 +4113,15 @@ $Runtime = Measure-Command -Expression {
                         'Replication Role',
                         'BYOK Enforcement',
                         'ssl Enforcement',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'MySQL' -AutoSize -TableName 'AzureMySQL' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelMySQL | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2875,7 +4163,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelPostGre | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2897,14 +4185,15 @@ $Runtime = Measure-Command -Expression {
                         'Replication Role',
                         'BYOK Enforcement',
                         'ssl Enforcement',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'PostgreSQL' -AutoSize -TableName 'AzurePostgreSQL' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelPostGre | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2946,7 +4235,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelWebFarm | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -2961,14 +4250,15 @@ $Runtime = Measure-Command -Expression {
                         'Worker Kind',
                         'Number Of Sites',
                         'Plan Name',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'Web Servers' -AutoSize -TableName 'AzureWebServers' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelWebFarm | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3004,21 +4294,22 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelWrkSpace | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
                         'SKU',
                         'Retention Days',
                         'Daily Quota (GB)',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'Workspaces' -AutoSize -TableName 'AzureWorkspace' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelWrkSpace | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3048,7 +4339,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelAKS | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Clusters',
                         'Location',
@@ -3077,14 +4368,15 @@ $Runtime = Measure-Command -Expression {
                         'Max Pods Per Node',
                         'Orchestrator Version',
                         'Enable Node Public IP',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName 'AzureKubernetes' -TableStyle $tableStyle -ConditionalText $txtaksv -Numberformat '0' -Style $Style
                     }
                 else 
                     {
                         $ExcelAKS | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Clusters',
                         'Location',
@@ -3133,7 +4425,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelContainer | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Instance Name',
                         'Location',
@@ -3149,14 +4441,15 @@ $Runtime = Measure-Command -Expression {
                         'IP',
                         'Protocol',
                         'Port',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'Containers' -AutoSize -TableName 'AzureContainers' -TableStyle $tableStyle -Style $Style
                     }
                 else
                     {
                         $ExcelContainer | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Instance Name',
                         'Location',
@@ -3192,21 +4485,22 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelAvSet | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
                         'Fault Domains',
                         'Update Domains',
                         'Virtual Machines',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'Availability Sets' -AutoSize -TableName 'AvailabilitySets' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelAvSet | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3233,7 +4527,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelWebSite | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Kind',
@@ -3255,14 +4549,15 @@ $Runtime = Measure-Command -Expression {
                         'Admin Enabled',
                         'FTPs Host Name',
                         'HTTPS Only',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'Web Sites' -AutoSize -TableName 'WebSites' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelWebSite | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Kind',
@@ -3303,7 +4598,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelVMSCS | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3318,14 +4613,15 @@ $Runtime = Measure-Command -Expression {
                         'Enable IP Forwading',
                         'Admin Username',
                         'VM Name Prefix',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'VM Scale Sets' -AutoSize -TableName 'VMScaleSets' -TableStyle $tableStyle -Style $Style
                     }
                 else    
                     {
                         $ExcelVMSCS | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3363,7 +4659,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelLB | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3380,14 +4676,15 @@ $Runtime = Measure-Command -Expression {
                         'Probe Protocol',
                         'Probe Port',
                         'Probe Unhealthy threshold',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value'  | 
                         Export-Excel -Path $File -WorksheetName 'Load Balancers' -AutoSize -TableName 'LoadBalancers' -TableStyle $tableStyle -ConditionalText $txtLB -Style $Style
                     }
                 else 
                     {
                         $ExcelLB | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3425,7 +4722,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelSQLServer | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3435,14 +4732,15 @@ $Runtime = Measure-Command -Expression {
                         'Public Network Access',
                         'State',
                         'Version',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'SQL Servers' -AutoSize -TableName 'AzureSQLServers' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelSQLServer | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3475,7 +4773,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelPeering | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Location',
                         'Zone',
@@ -3490,14 +4788,15 @@ $Runtime = Measure-Command -Expression {
                         'Peering Allow Forwarded Traffic',
                         'Peering Do Not Verify Remote Gateways',
                         'Peering Allow Virtual NetworkAccess',
-                        'Tags' | 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'Peering' -AutoSize -TableName 'AzureVNETPeerings' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelPeering | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Location',
                         'Zone',
@@ -3533,7 +4832,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelFrontDoor | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3545,14 +4844,15 @@ $Runtime = Measure-Command -Expression {
                         'Health Probe',
                         'Load Balancing',
                         'Routing Rules',
-                        'Tags'| 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'FrontDoor' -AutoSize -TableName 'AzureFrontDoor' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelFrontDoor | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3584,7 +4884,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelAppGateway | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3597,14 +4897,15 @@ $Runtime = Measure-Command -Expression {
                         'Gateways',
                         'HTTP Listeners',
                         'Request Routing Rules',
-                        'Tags'| 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'App Gateway' -AutoSize -TableName 'AzureAppGateway' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelAppGateway | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3636,7 +4937,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelRouteTable | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3646,14 +4947,15 @@ $Runtime = Measure-Command -Expression {
                         'Routes BGP Override',
                         'Routes Next Hop IP',
                         'Routes Next Hop Type',
-                        'Tags'| 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'Route Tables' -AutoSize -TableName 'AzureRouteTables' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelRouteTable | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3682,7 +4984,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelVault | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3697,14 +4999,15 @@ $Runtime = Measure-Command -Expression {
                         'Certificate Permissions',
                         'Key Permissions',
                         'Secret Permissions',
-                        'Tags'| 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'Key Vaults' -AutoSize -TableName 'AzureKeyVault' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelVault | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3738,7 +5041,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelRecVault | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3746,14 +5049,15 @@ $Runtime = Measure-Command -Expression {
                         'SKU Tier',
                         'Private Endpoint State for Backup',
                         'Private Endpoint State for Site Recovery',
-                        'Tags'| 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'Recovery Vaults' -AutoSize -TableName 'AzureRecVault' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelRecVault | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3780,7 +5084,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelDNSZone | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3788,14 +5092,15 @@ $Runtime = Measure-Command -Expression {
                         'Number of Record Sets',
                         'Max Number of Record Sets',
                         'Name Servers',
-                        'Tags'| 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'DNS Zones' -AutoSize -TableName 'AzureDNSZones' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelDNSZone | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'Location',
@@ -3822,7 +5127,7 @@ $Runtime = Measure-Command -Expression {
                     {
                         $ExcelIot | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'HostName',
@@ -3839,14 +5144,15 @@ $Runtime = Measure-Command -Expression {
                         'EventHubs Path',
                         'EventHubs Retention Days',
                         'Locations',
-                        'Tags'| 
+                        'Tag Name',
+                        'Tag Value' | 
                         Export-Excel -Path $File -WorksheetName 'IoT Hubs' -AutoSize -TableName 'AzureIOT' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
                         $ExcelIot | 
                         ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object 'Subscription',
+                        Select-Object -Unique 'Subscription',
                         'Resource Group',
                         'Name',
                         'HostName',
@@ -4065,7 +5371,7 @@ $Runtime = Measure-Command -Expression {
                     Address         = $excel.Overview.cells["M25"] # top-left corner of the table
                     SourceWorkSheet = $excel.VMs
                     PivotRows       = @("VM Size")
-                    PivotData       = @{"VM Size" = "Count" }
+                    PivotData       = @{"Resource U" = "Sum" }
                     PivotTableStyle   = $tableStyle
                     IncludePivotChart = $true
                     ChartType         = "BarClustered"
