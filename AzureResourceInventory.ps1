@@ -2,11 +2,11 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.0                                                                   #
+#       Version: 1.4.1                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 03/26/2021                                                                 #
+#       Date: 04/06/2021                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -481,107 +481,54 @@ $Runtime = Measure-Command -Expression {
                         $Tag = @{}
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
 
-                        if ($null -ne $data.networkProfile.networkInterfaces.id -and ![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                        if ($null -ne $data.networkProfile.networkInterfaces.id) {
                             foreach ($2 in $data.networkProfile.networkInterfaces.id) {
                                 $vmnic = $nic | Where-Object { $_.ID -eq $2 }
                                 $vmnsg = $nsg | Where-Object { $_.properties.networkInterfaces.id -eq $2 }
                                 foreach ($3 in $vmnic.properties.ipConfigurations.properties) {
-                                    foreach ($TagKey in $Tag.Keys) {
-                                        $obj = @{
-                                            'Subscription'                  = $sub1.name;
-                                            'Resource Group'                = $1.RESOURCEGROUP;
-                                            'Computer Name'                 = $1.NAME;
-                                            'Location'                      = $1.LOCATION;
-                                            'Zone'                          = [string]$1.ZONES;
-                                            'Availability Set'              = $AVSET;
-                                            'VM Size'                       = $data.hardwareProfile.vmSize;
-                                            'Image Reference'               = $data.storageProfile.imageReference.publisher;
-                                            'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
-                                            'SKU'                           = $data.storageProfile.imageReference.sku;
-                                            'Admin Username'                = $data.osProfile.adminUsername;
-                                            'OS Type'                       = $os;
-                                            'Update Management'             = $UpdateMgmt;
-                                            'Boot Diagnostics'              = $bootdg;
-                                            'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
-                                            'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
-                                            'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
-                                            'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
-                                            'Data Disk Storage Type'        = $StorAcc;
-                                            'Data Disk Size (GB)'           = $dataSize;
-                                            'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
-                                            'NIC Name'                      = $vmnic.name;
-                                            'NIC Type'                      = $vmnic.properties.nicType;
-                                            'NSG'                           = if ($null -eq $vmnsg.NAME) { 'None' }else { $vmnsg.NAME };
-                                            'Enable Accelerated Networking' = $vmnic.properties.enableAcceleratedNetworking;
-                                            'Enable IP Forwarding'          = $vmnic.properties.enableIPForwarding;
-                                            'Primary IP'                    = $3.primary;
-                                            'Private IP Version'            = $3.privateIPAddressVersion;
-                                            'Private IP Address'            = $3.privateIPAddress;
-                                            'Private IP Allocation Method'  = $3.privateIPAllocationMethod;
-                                            'VM Extensions'                 = $ext;
-                                            'Resource U'                    = $ResUCount;
-                                            'Tag Name'                      = [string]$TagKey;
-                                            'Tag Value'                     = [string]$Tag.$TagKey
-                                        }
-                                        $tmp += $obj
-                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                    }    
-                                }
-                            }
-                        }
-                        if ($null -ne $data.networkProfile.networkInterfaces.id -and ![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -ne $true) {
-                            foreach ($2 in $data.networkProfile.networkInterfaces.id) {
-                                $vmnic = $nic | Where-Object { $_.ID -eq $2 }
-                                $vmnsg = $nsg | Where-Object { $_.properties.networkInterfaces.id -eq $2 }
-                                foreach ($3 in $vmnic.properties.ipConfigurations.properties) {
-                                    foreach ($TagKey in $Tag.Keys) {
-                                        $obj = @{
-                                            'Subscription'                  = $sub1.name;
-                                            'Resource Group'                = $1.RESOURCEGROUP;
-                                            'Computer Name'                 = $1.NAME;
-                                            'Location'                      = $1.LOCATION;
-                                            'Zone'                          = [string]$1.ZONES;
-                                            'Availability Set'              = $AVSET;
-                                            'VM Size'                       = $data.hardwareProfile.vmSize;
-                                            'Image Reference'               = $data.storageProfile.imageReference.publisher;
-                                            'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
-                                            'SKU'                           = $data.storageProfile.imageReference.sku;
-                                            'Admin Username'                = $data.osProfile.adminUsername;
-                                            'OS Type'                       = $os;
-                                            'Update Management'             = $UpdateMgmt;
-                                            'Boot Diagnostics'              = $bootdg;
-                                            'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
-                                            'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
-                                            'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
-                                            'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
-                                            'Data Disk Storage Type'        = $StorAcc;
-                                            'Data Disk Size (GB)'           = $dataSize;
-                                            'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
-                                            'NIC Name'                      = $vmnic.name;
-                                            'NIC Type'                      = $vmnic.properties.nicType;
-                                            'NSG'                           = if ($null -eq $vmnsg.NAME) { 'None' }else { $vmnsg.NAME };
-                                            'Enable Accelerated Networking' = $vmnic.properties.enableAcceleratedNetworking;
-                                            'Enable IP Forwarding'          = $vmnic.properties.enableIPForwarding;
-                                            'Primary IP'                    = $3.primary;
-                                            'Private IP Version'            = $3.privateIPAddressVersion;
-                                            'Private IP Address'            = $3.privateIPAddress;
-                                            'Private IP Allocation Method'  = $3.privateIPAllocationMethod;
-                                            'VM Extensions'                 = $ext;
-                                            'Resource U'                    = $ResUCount;
-                                            'Tag Name'                      = [string]$TagKey;
-                                            'Tag Value'                     = [string]$Tag.$TagKey
-                                        }
-                                        $tmp += $obj
-                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                    }    
-                                }
-                            }
-                        }
-                        elseif ($null -ne $data.networkProfile.networkInterfaces.id -and [string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
-                            foreach ($2 in $data.networkProfile.networkInterfaces.id) {
-                                $vmnic = $nic | Where-Object { $_.ID -eq $2 }
-                                $vmnsg = $nsg | Where-Object { $_.properties.networkInterfaces.id -eq $2 }
-                                foreach ($3 in $vmnic.properties.ipConfigurations.properties) {
+                                    if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                        foreach ($TagKey in $Tag.Keys) {
+                                            $obj = @{
+                                                'Subscription'                  = $sub1.name;
+                                                'Resource Group'                = $1.RESOURCEGROUP;
+                                                'Computer Name'                 = $1.NAME;
+                                                'Location'                      = $1.LOCATION;
+                                                'Zone'                          = [string]$1.ZONES;
+                                                'Availability Set'              = $AVSET;
+                                                'VM Size'                       = $data.hardwareProfile.vmSize;
+                                                'Image Reference'               = $data.storageProfile.imageReference.publisher;
+                                                'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
+                                                'SKU'                           = $data.storageProfile.imageReference.sku;
+                                                'Admin Username'                = $data.osProfile.adminUsername;
+                                                'OS Type'                       = $os;
+                                                'Update Management'             = $UpdateMgmt;
+                                                'Boot Diagnostics'              = $bootdg;
+                                                'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
+                                                'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
+                                                'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
+                                                'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
+                                                'Data Disk Storage Type'        = $StorAcc;
+                                                'Data Disk Size (GB)'           = $dataSize;
+                                                'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
+                                                'NIC Name'                      = $vmnic.name;
+                                                'NIC Type'                      = $vmnic.properties.nicType;
+                                                'NSG'                           = if ($null -eq $vmnsg.NAME) { 'None' }else { $vmnsg.NAME };
+                                                'Enable Accelerated Networking' = $vmnic.properties.enableAcceleratedNetworking;
+                                                'Enable IP Forwarding'          = $vmnic.properties.enableIPForwarding;
+                                                'Primary IP'                    = $3.primary;
+                                                'Private IP Version'            = $3.privateIPAddressVersion;
+                                                'Private IP Address'            = $3.privateIPAddress;
+                                                'Private IP Allocation Method'  = $3.privateIPAllocationMethod;
+                                                'VM Extensions'                 = $ext;
+                                                'Resource U'                    = $ResUCount;
+                                                'Tag Name'                      = [string]$TagKey;
+                                                'Tag Value'                     = [string]$Tag.$TagKey
+                                            }
+                                            $tmp += $obj
+                                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                        } 
+                                    }
+                                    elseif ([string]::IsNullOrEmpty($Tag.Keys) -or $InTag -ne $true) {
                                         $obj = @{
                                             'Subscription'                  = $sub1.name;
                                             'Resource Group'                = $1.RESOURCEGROUP;
@@ -620,98 +567,54 @@ $Runtime = Measure-Command -Expression {
                                         }
                                         $tmp += $obj  
                                         if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    }   
                                 }
                             }
                         }
-                        elseif ($null -ne $data.networkProfile.networkInterfaces.id -and [string]::IsNullOrEmpty($Tag.Keys) -and $InTag -ne $true) {
-                            foreach ($2 in $data.networkProfile.networkInterfaces.id) {
-                                $vmnic = $nic | Where-Object { $_.ID -eq $2 }
-                                $vmnsg = $nsg | Where-Object { $_.properties.networkInterfaces.id -eq $2 }
-                                foreach ($3 in $vmnic.properties.ipConfigurations.properties) {
-                                        $obj = @{
-                                            'Subscription'                  = $sub1.name;
-                                            'Resource Group'                = $1.RESOURCEGROUP;
-                                            'Computer Name'                 = $1.NAME;
-                                            'Location'                      = $1.LOCATION;
-                                            'Zone'                          = [string]$1.ZONES;
-                                            'Availability Set'              = $AVSET;
-                                            'VM Size'                       = $data.hardwareProfile.vmSize;
-                                            'Image Reference'               = $data.storageProfile.imageReference.publisher;
-                                            'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
-                                            'SKU'                           = $data.storageProfile.imageReference.sku;
-                                            'Admin Username'                = $data.osProfile.adminUsername;
-                                            'OS Type'                       = $os;
-                                            'Update Management'             = $UpdateMgmt;
-                                            'Boot Diagnostics'              = $bootdg;
-                                            'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
-                                            'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
-                                            'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
-                                            'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
-                                            'Data Disk Storage Type'        = $StorAcc;
-                                            'Data Disk Size (GB)'           = $dataSize;
-                                            'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
-                                            'NIC Name'                      = $vmnic.name;
-                                            'NIC Type'                      = $vmnic.properties.nicType;
-                                            'NSG'                           = if ($null -eq $vmnsg.NAME) { 'None' }else { $vmnsg.NAME };
-                                            'Enable Accelerated Networking' = $vmnic.properties.enableAcceleratedNetworking;
-                                            'Enable IP Forwarding'          = $vmnic.properties.enableIPForwarding;
-                                            'Primary IP'                    = $3.primary;
-                                            'Private IP Version'            = $3.privateIPAddressVersion;
-                                            'Private IP Address'            = $3.privateIPAddress;
-                                            'Private IP Allocation Method'  = $3.privateIPAllocationMethod;
-                                            'VM Extensions'                 = $ext;
-                                            'Resource U'                    = $ResUCount;
-                                            'Tag Name'                      = $null;
-                                            'Tag Value'                     = $null
-                                        }
-                                        $tmp += $obj  
-                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                        elseif ($null -eq $data.networkProfile.networkInterfaces.id) {
+                            if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                                foreach ($TagKey in $Tag.Keys) {
+                                    $obj = @{
+                                        'Subscription'                  = $sub1.name;
+                                        'Resource Group'                = $1.RESOURCEGROUP;
+                                        'Computer Name'                 = $1.NAME;
+                                        'Location'                      = $1.LOCATION;
+                                        'Zone'                          = [string]$1.ZONES;
+                                        'Availability Set'              = $AVSET;
+                                        'VM Size'                       = $data.hardwareProfile.vmSize;
+                                        'Image Reference'               = $data.storageProfile.imageReference.publisher;
+                                        'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
+                                        'SKU'                           = $data.storageProfile.imageReference.sku;
+                                        'Admin Username'                = $data.osProfile.adminUsername;
+                                        'OS Type'                       = $os;
+                                        'Update Management'             = $UpdateMgmt;
+                                        'Boot Diagnostics'              = $bootdg;
+                                        'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
+                                        'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
+                                        'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
+                                        'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
+                                        'Data Disk Storage Type'        = $StorAcc;
+                                        'Data Disk Size (GB)'           = $dataSize;
+                                        'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
+                                        'NIC Name'                      = $null;
+                                        'NIC Type'                      = $null;
+                                        'NSG'                           = 'None';
+                                        'Enable Accelerated Networking' = $null;
+                                        'Enable IP Forwarding'          = $null;
+                                        'Primary IP'                    = $null;
+                                        'Private IP Version'            = $null;
+                                        'Private IP Address'            = $null;
+                                        'Private IP Allocation Method'  = $null;
+                                        'VM Extensions'                 = $ext;
+                                        'Resource U'                    = $ResUCount;
+                                        'Tag Name'                      = [string]$TagKey;
+                                        'Tag Value'                     = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
                                 }
                             }
-                        }
-                        elseif ($null -eq $data.networkProfile.networkInterfaces.id -and ![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
-                            foreach ($TagKey in $Tag.Keys) {
-                                $obj = @{
-                                    'Subscription'                  = $sub1.name;
-                                    'Resource Group'                = $1.RESOURCEGROUP;
-                                    'Computer Name'                 = $1.NAME;
-                                    'Location'                      = $1.LOCATION;
-                                    'Zone'                          = [string]$1.ZONES;
-                                    'Availability Set'              = $AVSET;
-                                    'VM Size'                       = $data.hardwareProfile.vmSize;
-                                    'Image Reference'               = $data.storageProfile.imageReference.publisher;
-                                    'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
-                                    'SKU'                           = $data.storageProfile.imageReference.sku;
-                                    'Admin Username'                = $data.osProfile.adminUsername;
-                                    'OS Type'                       = $os;
-                                    'Update Management'             = $UpdateMgmt;
-                                    'Boot Diagnostics'              = $bootdg;
-                                    'Performance Diagnostic Agent'  = if ($azDiag -ne '') { $true }else { $false };
-                                    'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
-                                    'OS Disk Storage Type'          = $data.storageProfile.osDisk.managedDisk.storageAccountType;
-                                    'OS Disk Size (GB)'             = $data.storageProfile.osDisk.diskSizeGB;
-                                    'Data Disk Storage Type'        = $StorAcc;
-                                    'Data Disk Size (GB)'           = $dataSize;
-                                    'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
-                                    'NIC Name'                      = $null;
-                                    'NIC Type'                      = $null;
-                                    'NSG'                           = 'None';
-                                    'Enable Accelerated Networking' = $null;
-                                    'Enable IP Forwarding'          = $null;
-                                    'Primary IP'                    = $null;
-                                    'Private IP Version'            = $null;
-                                    'Private IP Address'            = $null;
-                                    'Private IP Allocation Method'  = $null;
-                                    'VM Extensions'                 = $ext;
-                                    'Resource U'                    = $ResUCount;
-                                    'Tag Name'                      = [string]$TagKey;
-                                    'Tag Value'                     = [string]$Tag.$TagKey
-                                }
-                                $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
-                            }
-                        }
-                        elseif ($null -eq $data.networkProfile.networkInterfaces.id -and [string]::IsNullOrEmpty($Tag.Keys) -and $InTag -ne $true) {
+                            elseif ([string]::IsNullOrEmpty($Tag.Keys) -or $InTag -ne $true) {
                                 $obj = @{
                                     'Subscription'                  = $sub1.name;
                                     'Resource Group'                = $1.RESOURCEGROUP;
@@ -750,8 +653,9 @@ $Runtime = Measure-Command -Expression {
                                 }
                                 $tmp += $obj
                                 if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }   
                         }
-                    }
+                    }    
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4])).AddArgument($($args[5]))
 

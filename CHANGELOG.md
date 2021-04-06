@@ -1,5 +1,12 @@
 # Version Control
 
+## Version 1.4.1 - 04/06/2021
+
+### **Azure Resource Inventory:**
+        1. Fixes in Resource U column regarding duplicated records
+
+---
+
 ## Version 1.4.0 - 03/26/2021
 
 ### **Azure Resource Inventory:**
