@@ -1,5 +1,12 @@
 # Version Control
 
+## Version 1.4.2 - 04/30/2021
+
+### **Azure Resource Inventory:**
+        1. Fixes in VM NICs reporting
+
+---
+
 ## Version 1.4.1 - 04/06/2021
 
 ### **Azure Resource Inventory:**

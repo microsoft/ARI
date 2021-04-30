@@ -2,11 +2,11 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.1                                                                   #
+#       Version: 1.4.2                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 04/06/2021                                                                 #
+#       Date: 04/30/2021                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -510,11 +510,11 @@ $Runtime = Measure-Command -Expression {
                                                 'Data Disk Storage Type'        = $StorAcc;
                                                 'Data Disk Size (GB)'           = $dataSize;
                                                 'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
-                                                'NIC Name'                      = $vmnic.name;
-                                                'NIC Type'                      = $vmnic.properties.nicType;
+                                                'NIC Name'                      = [string]$vmnic[0].name;
+                                                'NIC Type'                      = [string]$vmnic[0].properties.nicType;
                                                 'NSG'                           = if ($null -eq $vmnsg.NAME) { 'None' }else { $vmnsg.NAME };
-                                                'Enable Accelerated Networking' = $vmnic.properties.enableAcceleratedNetworking;
-                                                'Enable IP Forwarding'          = $vmnic.properties.enableIPForwarding;
+                                                'Enable Accelerated Networking' = [string]$vmnic[0].properties.enableAcceleratedNetworking;
+                                                'Enable IP Forwarding'          = [string]$vmnic[0].properties.enableIPForwarding;
                                                 'Primary IP'                    = $3.primary;
                                                 'Private IP Version'            = $3.privateIPAddressVersion;
                                                 'Private IP Address'            = $3.privateIPAddress;
@@ -551,11 +551,11 @@ $Runtime = Measure-Command -Expression {
                                             'Data Disk Storage Type'        = $StorAcc;
                                             'Data Disk Size (GB)'           = $dataSize;
                                             'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
-                                            'NIC Name'                      = $vmnic.name;
-                                            'NIC Type'                      = $vmnic.properties.nicType;
+                                            'NIC Name'                      = [string]$vmnic[0].name;
+                                            'NIC Type'                      = [string]$vmnic[0].properties.nicType;
                                             'NSG'                           = if ($null -eq $vmnsg.NAME) { 'None' }else { $vmnsg.NAME };
-                                            'Enable Accelerated Networking' = $vmnic.properties.enableAcceleratedNetworking;
-                                            'Enable IP Forwarding'          = $vmnic.properties.enableIPForwarding;
+                                            'Enable Accelerated Networking' = [string]$vmnic[0].properties.enableAcceleratedNetworking;
+                                            'Enable IP Forwarding'          = [string]$vmnic[0].properties.enableIPForwarding;
                                             'Primary IP'                    = $3.primary;
                                             'Private IP Version'            = $3.privateIPAddressVersion;
                                             'Private IP Address'            = $3.privateIPAddress;
