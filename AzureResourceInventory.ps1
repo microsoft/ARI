@@ -2,11 +2,11 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.2                                                                   #
+#       Version: 1.4.3                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
-#       Date: 04/30/2021                                                                 #
+#       Date: 05/17/2021                                                                 #
 #                                                                                        #
 #           https://github.com/RenatoGregio/AzureResourceInventory                       #
 #                                                                                        #
@@ -70,13 +70,13 @@ $Runtime = Measure-Command -Expression {
                 az extension add --name resource-graph 
             }
             Write-Host "Validating ImportExcel Module.."
-            $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
+            $VarExcel = Get-InstalledModule -Name ImportExcel -ListAvailable -ErrorAction silentlycontinue
             if ($null -eq $VarExcel) 
                 {
                     Write-Host "Trying to install ImportExcel Module.."
                     Install-Module -Name ImportExcel -Force
                 }
-            $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
+            $VarExcel = Get-InstalledModule -Name ImportExcel -ListAvailable -ErrorAction silentlycontinue
             if ($null -eq $VarExcel) 
                 {
                     Read-Host 'Admininstrator rights required to install ImportExcel Module. Press <Enter> to finish script'
@@ -138,6 +138,12 @@ $Runtime = Measure-Command -Expression {
             if ($PSVersionTable.PSEdition -eq 'Desktop') {
                 $Global:PSEnvironment = "Desktop"
                 write-host "PowerShell Desktop Identified."
+                write-host ""
+                LoginSession
+            }
+            elseif ($PSVersionTable.PSEdition -eq 'Core') {
+                $Global:PSEnvironment = "Core"
+                write-host "PowerShell Core Identified."
                 write-host ""
                 LoginSession
             }
@@ -3882,6 +3888,7 @@ $Runtime = Measure-Command -Expression {
             if ($Type -eq 'microsoft.network/publicipaddresses') {
 
                 Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
+                $condtxtpip = New-ConditionalText "" -Range I:I
                 Write-Debug ('Generating Public IP sheet for: ' + $pubip.count + ' Public IPs.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -3904,7 +3911,7 @@ $Runtime = Measure-Command -Expression {
                         'Associated Resource Type',
                         'Tag Name',
                         'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -TableName 'AzurePubIPs' -TableStyle $tableStyle -Style $Style
+                        Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -TableName 'AzurePubIPs' -TableStyle $tableStyle -Style $Style -ConditionalText $condtxtpip
                     }
                 else 
                     {

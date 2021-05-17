@@ -1,5 +1,13 @@
 # Version Control
 
+## Version 1.4.3 - 05/17/2021
+
+### **Azure Resource Inventory:**
+        1. Fixes when using PowerShell Core (Following sugestions by Mike-Ling)
+        2. Added reporting of unused Public IP
+
+---
+
 ## Version 1.4.2 - 04/30/2021
 
 ### **Azure Resource Inventory:**
