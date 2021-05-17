@@ -1,5 +1,11 @@
 # Version Control
 
+## Version 1.4.4 - 05/17/2021
+
+### **Azure Resource Inventory:**
+        1. Fixes when using newest versions of Azure Resource Graph Az Cli extension
+
+---
 ## Version 1.4.3 - 05/17/2021
 
 ### **Azure Resource Inventory:**
