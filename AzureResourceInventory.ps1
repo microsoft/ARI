@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.3                                                                   #
+#       Version: 1.4.4                                                                   #
 #       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
 #                Renato Gregio <renato.gregio@microsoft.com>                             #
 #                                                                                        #
@@ -70,13 +70,13 @@ $Runtime = Measure-Command -Expression {
                 az extension add --name resource-graph 
             }
             Write-Host "Validating ImportExcel Module.."
-            $VarExcel = Get-InstalledModule -Name ImportExcel -ListAvailable -ErrorAction silentlycontinue
+            $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
             if ($null -eq $VarExcel) 
                 {
                     Write-Host "Trying to install ImportExcel Module.."
                     Install-Module -Name ImportExcel -Force
                 }
-            $VarExcel = Get-InstalledModule -Name ImportExcel -ListAvailable -ErrorAction silentlycontinue
+            $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
             if ($null -eq $VarExcel) 
                 {
                     Read-Host 'Admininstrator rights required to install ImportExcel Module. Press <Enter> to finish script'
@@ -136,13 +136,11 @@ $Runtime = Measure-Command -Expression {
 
         function checkPS() {
             if ($PSVersionTable.PSEdition -eq 'Desktop') {
-                $Global:PSEnvironment = "Desktop"
                 write-host "PowerShell Desktop Identified."
                 write-host ""
                 LoginSession
             }
             elseif ($PSVersionTable.PSEdition -eq 'Core') {
-                $Global:PSEnvironment = "Core"
                 write-host "PowerShell Core Identified."
                 write-host ""
                 LoginSession
@@ -184,7 +182,7 @@ $Runtime = Measure-Command -Expression {
         if (!($SkipAdvisory.IsPresent)) {
             Write-Debug ('Extracting total number of Advisories from Tenant')
             $AdvSize = az graph query -q  "advisorresources | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-            $AdvSizeNum = $AdvSize.'count_'
+            $AdvSizeNum = $AdvSize.data.'count_'
 
             Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Advisories extraction jobs.."
 
@@ -199,7 +197,7 @@ $Runtime = Measure-Command -Expression {
                         $Looper ++
                         Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                         $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                        $Global:Advisories += $Advisor
+                        $Global:Advisories += $Advisor.data
                         Start-Sleep 3
                         $Limit = $Limit + 1000
                     }
@@ -220,7 +218,7 @@ $Runtime = Measure-Command -Expression {
 
                 Write-Debug ('Extracting total number of Security Advisories from Tenant')
                 $SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-                $SecSizeNum = $SecSize.'count_'
+                $SecSizeNum = $SecSize.data.'count_'
 
 
                 if ($SecSizeNum -ge 1) 
@@ -234,7 +232,7 @@ $Runtime = Measure-Command -Expression {
                                 $Looper ++
                                 Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                                 $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                                $Global:Security += $SecCenter
+                                $Global:Security += $SecCenter.data
                                 Start-Sleep 3
                                 $Limit = $Limit + 1000
                             }
@@ -262,7 +260,7 @@ $Runtime = Measure-Command -Expression {
                     az account set --subscription $SUBID
                     
                     $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-                    $EnvSizeNum = $EnvSize.'count_'
+                    $EnvSizeNum = $EnvSize.data.'count_'
                         
                     if ($EnvSizeNum -ge 1) {
                         $Loop = $EnvSizeNum / 1000
@@ -272,7 +270,7 @@ $Runtime = Measure-Command -Expression {
     
                         while ($Looper -lt $Loop) {
                             $Resource = az graph query -q  "resources | where subscriptionId == '$SUBID' | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                            $Global:Resources += $Resource 
+                            $Global:Resources += $Resource.data 
                             Start-Sleep 3      
                             $Looper ++
                             Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs ($SubName)" -PercentComplete (($Looper / $Loop) * 100)
