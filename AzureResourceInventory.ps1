@@ -2,25 +2,55 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.4                                                                   #
-#       Authors: Claudio Merola <clvieira@microsoft.com>                                 #
-#                Renato Gregio <renato.gregio@microsoft.com>                             #
+#       Version: 1.4.5                                                                   #
 #                                                                                        #
-#       Date: 05/17/2021                                                                 #
-#                                                                                        #
-#           https://github.com/RenatoGregio/AzureResourceInventory                       #
-#                                                                                        #
-#                                                                                        #
-#        DISCLAIMER:                                                                     #
-#        Please note that while being developed by Microsoft employees,                  #
-#        Azure Resource Inventory is not a Microsoft service or product.                 #
-#                                                                                        #         
-#        Azure Resource Inventory is a personal driven project, there are none implicit  # 
-#        or explicit obligations related to this project, it is provided 'as is' with    #
-#        no warranties and confer no rights.                                             #
+#       Date: 05/19/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
+<#
+.SYNOPSIS  
+    This script creates Excel file to Analyze Azure Resources inside a Tenant
+  
+.DESCRIPTION  
+    Do you want to analyze your Azure Advisories in a table format? Document it in xlsx format.
+ 
+.PARAMETER TenantID
+    Specify the tenant ID you want to create a Resource Inventory.
+    
+    >>> IMPORTANT: YOU NEED TO USE THIS PARAMETER FOR TENANTS WITH MULTI-FACTOR AUTHENTICATION. <<< 
+ 
+.PARAMETER SubscriptionID
+    Use this parameter to collect a specific Subscription in a Tenant
 
+.PARAMETER SecurityCenter
+    Use this parameter to collect Security Center Advisories
+
+.PARAMETER SkipAdvisory
+    Use this parameter to skip the capture of Azure Advisories
+
+.PARAMETER IncludeTags
+    Use this parameter to include Tags of every Azure Resources
+
+.PARAMETER Debug
+    Execute ASCI in debug mode. 
+
+.EXAMPLE
+    Default utilization. Read all tenants you have privileges, select a tenant in menu and collect from all subscriptions:
+    PS C:\> .\AzureResourceInventory.ps1
+
+    Define the Tenant ID:
+    PS C:\> .\AzureResourceInventory.ps1 -TenantID <your-Tenant-Id>
+
+    Define the Tenant ID and for a specific Subscription:
+    PS C:\>.\AzureResourceInventory.ps1 -TenantID <your-Tenant-Id> -SubscriptionID <your-Subscription-Id>
+
+.NOTES
+    AUTHOR: Claudio Merola and Renato Gregio - Customer Engineer - Customer Success Unit | Azure Infrastucture/Automation/Devops/Governance | Microsoft
+
+.LINK
+    https://github.com/azureinventory
+    Please note that while being developed by a Microsoft employee, Azure inventory Scripts is not a Microsoft service or product. Azure Inventory Scripts are a personal driven project, there are none implicit or explicit obligations related to this project, it is provided 'as is' with no warranties and confer no rights.
+#>
 
 param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, [switch]$SkipAdvisory, [switch]$IncludeTags) 
 
@@ -182,7 +212,7 @@ $Runtime = Measure-Command -Expression {
         if (!($SkipAdvisory.IsPresent)) {
             Write-Debug ('Extracting total number of Advisories from Tenant')
             $AdvSize = az graph query -q  "advisorresources | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-            $AdvSizeNum = $AdvSize.data.'count_'
+            if($AdvSize.data) {$AdvSizeNum = $AdvSize.data.'count_'}else{$AdvSizeNum = $AdvSize.'count_'}
 
             Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Advisories extraction jobs.."
 
@@ -197,7 +227,7 @@ $Runtime = Measure-Command -Expression {
                         $Looper ++
                         Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                         $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                        $Global:Advisories += $Advisor.data
+                        if($Advisor.data) {$Global:Advisories += $Advisor.data} else {$Global:Advisories += $Advisor}
                         Start-Sleep 3
                         $Limit = $Limit + 1000
                     }
@@ -218,7 +248,7 @@ $Runtime = Measure-Command -Expression {
 
                 Write-Debug ('Extracting total number of Security Advisories from Tenant')
                 $SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-                $SecSizeNum = $SecSize.data.'count_'
+                if($SecSize.data) {$SecSizeNum = $SecSize.data.'count_'} else {$SecSizeNum = $SecSize.'count_'}
 
 
                 if ($SecSizeNum -ge 1) 
@@ -232,7 +262,7 @@ $Runtime = Measure-Command -Expression {
                                 $Looper ++
                                 Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                                 $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                                $Global:Security += $SecCenter.data
+                                if($SecCenter.data) {$Global:Security += $SecCenter.data} else {$Global:Security += $SecCenter}
                                 Start-Sleep 3
                                 $Limit = $Limit + 1000
                             }
@@ -260,7 +290,7 @@ $Runtime = Measure-Command -Expression {
                     az account set --subscription $SUBID
                     
                     $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-                    $EnvSizeNum = $EnvSize.data.'count_'
+                    if($EnvSize.data) {$EnvSizeNum = $EnvSize.data.'count_'} else {$EnvSizeNum = $EnvSize.'count_'}
                         
                     if ($EnvSizeNum -ge 1) {
                         $Loop = $EnvSizeNum / 1000
@@ -270,7 +300,7 @@ $Runtime = Measure-Command -Expression {
     
                         while ($Looper -lt $Loop) {
                             $Resource = az graph query -q  "resources | where subscriptionId == '$SUBID' | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                            $Global:Resources += $Resource.data 
+                            if($Resource.data) {$Global:Resources += $Resource.data} else {$Global:Resources += $Resource} 
                             Start-Sleep 3      
                             $Looper ++
                             Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs ($SubName)" -PercentComplete (($Looper / $Loop) * 100)
