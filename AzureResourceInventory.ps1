@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.5                                                                   #
+#       Version: 1.4.6                                                                   #
 #                                                                                        #
-#       Date: 05/19/2021                                                                 #
+#       Date: 05/21/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -358,7 +358,7 @@ $Runtime = Measure-Command -Expression {
         $CON = @()
         $AVSET = @()
         $SITES = @()
-        $VMSCS = @()
+        $VMSS = @()
         $LB = @()
         $SQLSERVER = @()
         $FRONTDOOR = @()
@@ -368,6 +368,7 @@ $Runtime = Measure-Command -Expression {
         $RECOVERYVAULT = @()
         $DNSZONE = @()
         $IOT = @()
+        $APIM = @()
 
 
         ForEach ($Resource in $Resources) {
@@ -393,10 +394,9 @@ $Runtime = Measure-Command -Expression {
             if ($Resource.TYPE -eq 'microsoft.containerinstance/containergroups') { $CON += $Resource }
             if ($Resource.TYPE -eq 'microsoft.compute/availabilitysets' ) { $AVSET += $Resource }
             if ($Resource.TYPE -eq 'microsoft.web/sites' ) { $SITES += $Resource }
-            if ($Resource.TYPE -eq 'microsoft.compute/virtualmachinescalesets' ) { $VMSCS += $Resource }
+            if ($Resource.TYPE -eq 'microsoft.compute/virtualmachinescalesets' ) { $VMSS += $Resource }
             if ($Resource.TYPE -eq 'microsoft.network/loadbalancers' ) { $LB += $Resource }
             if ($Resource.TYPE -eq 'microsoft.sql/servers' ) { $SQLSERVER += $Resource }
-
             if ($Resource.TYPE -eq 'microsoft.network/frontdoors' ) { $FRONTDOOR += $Resource }
             if ($Resource.TYPE -eq 'microsoft.network/applicationgateways' ) { $APPGTW += $Resource }
             if ($Resource.TYPE -eq 'microsoft.network/routetables' ) { $ROUTETABLE += $Resource }
@@ -404,6 +404,8 @@ $Runtime = Measure-Command -Expression {
             if ($Resource.TYPE -eq 'microsoft.recoveryservices/vaults' ) { $RECOVERYVAULT += $Resource }
             if ($Resource.TYPE -eq 'microsoft.network/dnszones' ) { $DNSZONE += $Resource }
             if ($Resource.TYPE -eq 'microsoft.devices/iothubs' ) { $IOT += $Resource }
+
+            if ($Resource.TYPE -eq 'microsoft.apimanagement/service' ) { $APIM += $Resource }
         }
 
 
@@ -989,13 +991,13 @@ $Runtime = Measure-Command -Expression {
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[9]))
 
 
-            $VMSCS = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$vmscs)
+            $VMSS = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$vmss)
                     $tmp = @()
 
-                    $vmscs = $vmscs
+                    $vmss = $vmss
                     $Subs = $Sub
 
-                    foreach ($1 in $vmscs) {
+                    foreach ($1 in $vmss) {
                         $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
@@ -1261,7 +1263,7 @@ $Runtime = Measure-Command -Expression {
             $jobSQLVM = $SQLVM.BeginInvoke()
             $jobSERVERFARM = $WebServerFarm.BeginInvoke()
             $jobAKS = $AKS.BeginInvoke()
-            $jobVMSCS = $VMSCS.BeginInvoke()
+            $jobVMSS = $VMSS.BeginInvoke()
             $jobCON = $CON.BeginInvoke()
             $jobSQLSRV = $SQLSRV.BeginInvoke()
             $jobIOT = $IOT.BeginInvoke()
@@ -1271,7 +1273,7 @@ $Runtime = Measure-Command -Expression {
             $job += $jobSQLVM
             $job += $jobSERVERFARM
             $job += $jobAKS
-            $job += $jobVMSCS
+            $job += $jobVMSS
             $job += $jobCON
             $job += $jobSQLSRV
             $job += $jobIOT
@@ -1283,7 +1285,7 @@ $Runtime = Measure-Command -Expression {
             $SQLVMS = $SQLVM.EndInvoke($jobSQLVM)
             $WebServerFarmS = $WebServerFarm.EndInvoke($jobSERVERFARM)
             $AKSS = $AKS.EndInvoke($jobAKS)
-            $VMSCSS = $VMSCS.EndInvoke($jobVMSCS)
+            $VMSSS = $VMSS.EndInvoke($jobVMSS)
             $CONS = $CON.EndInvoke($jobCON)
             $SQLSRVS = $SQLSRV.EndInvoke($jobSQLSRV)
             $IOTS = $IOT.EndInvoke($jobIOT)
@@ -1293,7 +1295,7 @@ $Runtime = Measure-Command -Expression {
             $SQLVM.Dispose()
             $WebServerFarm.Dispose()
             $AKS.Dispose()
-            $VMSCS.Dispose()
+            $VMSS.Dispose()
             $CON.Dispose()
             $SQLSRV.Dispose()
             $IOT.Dispose()
@@ -1304,7 +1306,7 @@ $Runtime = Measure-Command -Expression {
                 'SQLVM'      = $SQLVMS;
                 'SERVERFARM' = $WebServerFarmS;
                 'AKS'        = $AKSS;
-                'VMSCS'      = $VMSCSS;
+                'VMSS'       = $VMSSS;
                 'CON'        = $CONS;
                 'SQLSERVER'  = $SQLSRVS;
                 'IOT'        = $IOTS
@@ -1312,7 +1314,7 @@ $Runtime = Measure-Command -Expression {
 
             $AzCompute
 
-        } -ArgumentList $SUBs,$InTag, $VM, $VMNIC, $NSG, $VMExp, $VMDisk, $SQLVM, $SERVERFARM, $AKS, $VMSCS, $CON, $SQLSERVER, $IOT   | Out-Null
+        } -ArgumentList $SUBs,$InTag, $VM, $VMNIC, $NSG, $VMExp, $VMDisk, $SQLVM, $SERVERFARM, $AKS, $VMSS, $CON, $SQLSERVER, $IOT   | Out-Null
 
 
         <######################################################### NETWORK RESOURCE GROUP JOB ######################################################################>
@@ -2922,6 +2924,75 @@ $Runtime = Measure-Command -Expression {
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[10]))                
 
 
+                $APIM = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$APIM)
+                    $tmp = @()
+
+                    $Subs = $Sub
+
+                    foreach ($1 in $APIM) {
+                        $ResUCount = 1
+                        $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
+                        $data = $1.PROPERTIES
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                    $obj = @{
+                                        'Subscription'                  = $sub1.name;
+                                        'Resource Group'                = $1.RESOURCEGROUP;
+                                        'Name'                          = $1.NAME;
+                                        'Location'                      = $1.LOCATION;
+                                        'SKU'                           = $1.sku.name;
+                                        'Gateway URL'                   = $data.gatewayUrl;
+                                        'Virtual Network Type'          = $data.virtualNetworkType;
+                                        'Virtual Network'               = $data.virtualNetworkConfiguration.subnetResourceId.split("/")[8];
+                                        'Http2'                         = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2";
+                                        'Backend SSL 3.0'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30";
+                                        'Backend TLS 1.0'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10";
+                                        'Backend TLS 1.1'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11";
+                                        'Triple DES'                    = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TripleDes168";
+                                        'Client SSL 3.0'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30";
+                                        'Client TLS 1.0'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10";
+                                        'Client TLS 1.1'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11";
+                                        'Public IP'                     = $data.publicIPAddresses;
+                                        'Tag Name'                      = [string]$TagKey;
+                                        'Tag Value'                     = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {
+                                $obj = @{
+                                    'Subscription'                  = $sub1.name;
+                                    'Resource Group'                = $1.RESOURCEGROUP;
+                                    'Name'                          = $1.NAME;
+                                    'Location'                      = $1.LOCATION;
+                                    'SKU'                           = $1.sku.name;
+                                    'Gateway URL'                   = $data.gatewayUrl;
+                                    'Virtual Network Type'          = $data.virtualNetworkType;
+                                    'Virtual Network'               = $data.virtualNetworkConfiguration.subnetResourceId.split("/")[8];
+                                    'Http2'                         = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2";
+                                    'Backend SSL 3.0'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30";
+                                    'Backend TLS 1.0'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10";
+                                    'Backend TLS 1.1'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11";
+                                    'Triple DES'                    = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TripleDes168";
+                                    'Client SSL 3.0'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30";
+                                    'Client TLS 1.0'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10";
+                                    'Client TLS 1.1'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11";
+                                    'Public IP'                     = $data.publicIPAddresses;
+                                    'Tag Name'                      = $null;
+                                    'Tag Value'                     = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
+                    }
+                    $tmp
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[11]))                
+
+
+
                 
             $jobStorageAcc = $StorageAcc.BeginInvoke()
             $jobAutAcc = $AutAcc.BeginInvoke()
@@ -2931,6 +3002,7 @@ $Runtime = Measure-Command -Expression {
             $jobWebSite = $WebSite.BeginInvoke()
             $jobVault = $Vault.BeginInvoke()
             $jobRecoveryVault = $RecoveryVault.BeginInvoke()
+            $jobAPIM = $APIM.BeginInvoke()
 
             $job += $jobStorageAcc
             $job += $jobAutAcc
@@ -2940,6 +3012,7 @@ $Runtime = Measure-Command -Expression {
             $job += $jobWebSite
             $job += $jobVault
             $job += $jobRecoveryVault
+            $job += $APIM
 
             while ($Job.Runspace.IsCompleted -contains $false) {}
 
@@ -2951,6 +3024,7 @@ $Runtime = Measure-Command -Expression {
             $WebSiteS = $WebSite.EndInvoke($jobWebSite)
             $VaultS = $Vault.EndInvoke($jobVault)
             $RecoveryVaultS = $RecoveryVault.EndInvoke($jobRecoveryVault)
+            $APIMS = $APIM.EndInvoke($jobAPIM)
 
             $StorageAcc.Dispose()
             $AutAcc.Dispose()
@@ -2960,6 +3034,7 @@ $Runtime = Measure-Command -Expression {
             $WebSite.Dispose()
             $Vault.Dispose()
             $RecoveryVault.Dispose()
+            $APIM.Dispose()
 
             $AzInfra = @{
                 'StorageAcc'    = $StorageAccS;
@@ -2969,12 +3044,13 @@ $Runtime = Measure-Command -Expression {
                 'AvSet'         = $AvSetS;
                 'WebSite'       = $WebSiteS;
                 'Vault'         = $VaultS;
-                'RecoveryVault' = $RecoveryVaultS
+                'RecoveryVault' = $RecoveryVaultS;
+                'APIM'          = $APIMS
             }
 
             $AzInfra
 
-        } -ArgumentList $Subs, $InTag,$StorageAcc, $RB, $AUT, $EVTHUB, $WRKSPACE, $AVSET, $SITES, $VAULT, $RECOVERYVAULT | Out-Null
+        } -ArgumentList $Subs, $InTag,$StorageAcc, $RB, $AUT, $EVTHUB, $WRKSPACE, $AVSET, $SITES, $VAULT, $RECOVERYVAULT, $APIM | Out-Null
 
 
 
@@ -3354,7 +3430,6 @@ $Runtime = Measure-Command -Expression {
         write-Debug $adv.count -NoNewline -ForegroundColor Magenta
         Write-Debug (' Advisories.')
 
-
         #### Validated Resources:
         #### 1 - Virtual Machines
         #### 2 - Virtual Machines Disk
@@ -3385,7 +3460,7 @@ $Runtime = Measure-Command -Expression {
         #### 27 - Recovery Vault
         #### 28 - DNS Zone
         #### 29 - IOT
-
+        #### 30 - APIM
 
         Write-Progress -activity $DataActive -Status "Processing Resources Inventory" -PercentComplete 0
         $c = 0
@@ -4531,11 +4606,11 @@ $Runtime = Measure-Command -Expression {
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
                         
-                $ExcelVMSCS = $AzCompute.VMSCS
+                $ExcelVMSS = $AzCompute.VMSS
 
                 if ($IncludeTags.IsPresent)
                     {
-                        $ExcelVMSCS | 
+                        $ExcelVMSS | 
                         ForEach-Object { [PSCustomObject]$_ } | 
                         Select-Object -Unique 'Subscription',
                         'Resource Group',
@@ -4554,11 +4629,11 @@ $Runtime = Measure-Command -Expression {
                         'VM Name Prefix',
                         'Tag Name',
                         'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'VM Scale Sets' -AutoSize -TableName 'VMScaleSets' -TableStyle $tableStyle -Style $Style
+                        Export-Excel -Path $File -WorksheetName 'VMSS' -AutoSize -TableName 'AzureVMSS' -TableStyle $tableStyle -Style $Style
                     }
                 else    
                     {
-                        $ExcelVMSCS | 
+                        $ExcelVMSS | 
                         ForEach-Object { [PSCustomObject]$_ } | 
                         Select-Object -Unique 'Subscription',
                         'Resource Group',
@@ -4575,7 +4650,7 @@ $Runtime = Measure-Command -Expression {
                         'Enable IP Forwading',
                         'Admin Username',
                         'VM Name Prefix' | 
-                        Export-Excel -Path $File -WorksheetName 'VM Scale Sets' -AutoSize -TableName 'VMScaleSets' -TableStyle $tableStyle -Style $Style
+                        Export-Excel -Path $File -WorksheetName 'VMSS' -AutoSize -TableName 'AzureVMSS' -TableStyle $tableStyle -Style $Style
                     }
 
             }
@@ -5113,6 +5188,66 @@ $Runtime = Measure-Command -Expression {
 
             } 
 
+            <############################################################################## 30 - APIM ###################################################################>
+
+
+            if ($Type -eq 'microsoft.apimanagement/service') {
+
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
+                $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
+
+                $ExcelAPIM = $AzInfra.APIM
+
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelAPIM | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object -Unique 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'Gateway URL',
+                        'Virtual Network Type',
+                        'Virtual Network',
+                        'Http2',
+                        'Backend SSL 3.0',
+                        'Backend TLS 1.0',
+                        'Backend TLS 1.1',
+                        'Triple DES',
+                        'Client SSL 3.0',
+                        'Client TLS 1.0',
+                        'Client TLS 1.1',
+                        'Public IP',
+                        'Tag Name',
+                        'Tag Value' | 
+                        Export-Excel -Path $File -WorksheetName 'APIM' -AutoSize -TableName 'AzureAPIM' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelAPIM | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object -Unique 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'Gateway URL',
+                        'Virtual Network Type',
+                        'Virtual Network',
+                        'Http2',
+                        'Backend SSL 3.0',
+                        'Backend TLS 1.0',
+                        'Backend TLS 1.1',
+                        'Triple DES',
+                        'Client SSL 3.0',
+                        'Client TLS 1.0',
+                        'Client TLS 1.1',
+                        'Public IP'| 
+                        Export-Excel -Path $File -WorksheetName 'APIM' -AutoSize -TableName 'AzureAPIM' -TableStyle $tableStyle -Style $Style
+                    }
+
+            } 
 
             $c++
         }
