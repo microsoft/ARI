@@ -1,5 +1,13 @@
 # Version Control
 
+## Version 1.4.6 - 05/21/2021
+
+### **Azure Resource Inventory:**
+        1. Added support for API Management
+        2. Changes in the VMSS Name reference
+
+---
+
 ## Version 1.4.5 - 05/19/2021
 
 ### **Azure Resource Inventory:**

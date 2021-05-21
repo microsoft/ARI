@@ -49,6 +49,7 @@ Until this documentation Azure Resource inventory was able to collect Azure Secu
 |microsoft.keyvault|vaults|
 |microsoft.recoveryservices|vaults|
 |microsoft.devices|iothubs|
+|microsoft.apimanagement|service
 
 
 
