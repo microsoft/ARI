@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.6                                                                   #
+#       Version: 1.4.7                                                                   #
 #                                                                                        #
-#       Date: 05/21/2021                                                                 #
+#       Date: 05/22/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -2954,7 +2954,7 @@ $Runtime = Measure-Command -Expression {
                                         'Client SSL 3.0'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30";
                                         'Client TLS 1.0'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10";
                                         'Client TLS 1.1'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11";
-                                        'Public IP'                     = $data.publicIPAddresses;
+                                        'Public IP'                     = [string]$data.publicIPAddresses;
                                         'Tag Name'                      = [string]$TagKey;
                                         'Tag Value'                     = [string]$Tag.$TagKey
                                     }
@@ -2980,7 +2980,7 @@ $Runtime = Measure-Command -Expression {
                                     'Client SSL 3.0'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30";
                                     'Client TLS 1.0'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10";
                                     'Client TLS 1.1'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11";
-                                    'Public IP'                     = $data.publicIPAddresses;
+                                    'Public IP'                     = [string]$data.publicIPAddresses;
                                     'Tag Name'                      = $null;
                                     'Tag Value'                     = $null
                                 }
