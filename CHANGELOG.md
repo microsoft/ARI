@@ -1,5 +1,12 @@
 # Version Control
 
+## Version 1.4.8 - 05/28/2021
+
+### **Azure Resource Inventory:**
+        1. Added "Use" column in the Public IP tab, to report Public IPs not associated with any resources.
+
+---
+
 ## Version 1.4.7 - 05/22/2021
 
 ### **Azure Resource Inventory:**

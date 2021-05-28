@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.7                                                                   #
+#       Version: 1.4.8                                                                   #
 #                                                                                        #
-#       Date: 05/22/2021                                                                 #
+#       Date: 05/285/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -1468,6 +1468,7 @@ $Runtime = Measure-Command -Expression {
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
                         $Tag = @{}
+                        if(!($data.ipConfiguration.id)) {$Use = 'Underutilized'} else {$Use = 'Utilized'}
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if ($null -ne $data.ipConfiguration.id -and ![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) { 
@@ -1480,6 +1481,7 @@ $Runtime = Measure-Command -Expression {
                                         'Type'                     = $data.publicIPAllocationMethod;
                                         'Version'                  = $data.publicIPAddressVersion;
                                         'IP Address'               = $data.ipAddress;
+                                        'Use'                      = $Use;
                                         'Associated Resource'      = $data.ipConfiguration.id.split('/')[8];
                                         'Associated Resource Type' = $data.ipConfiguration.id.split('/')[7];
                                         'Resource U'               = $ResUCount;
@@ -1500,6 +1502,7 @@ $Runtime = Measure-Command -Expression {
                                 'Type'                     = $data.publicIPAllocationMethod;
                                 'Version'                  = $data.publicIPAddressVersion;
                                 'IP Address'               = $data.ipAddress;
+                                'Use'                      = $Use;
                                 'Associated Resource'      = $data.ipConfiguration.id.split('/')[8];
                                 'Associated Resource Type' = $data.ipConfiguration.id.split('/')[7];
                                 'Resource U'               = $ResUCount;
@@ -1520,6 +1523,7 @@ $Runtime = Measure-Command -Expression {
                                         'Type'                     = $data.publicIPAllocationMethod;
                                         'Version'                  = $data.publicIPAddressVersion;
                                         'IP Address'               = $data.ipAddress;
+                                        'Use'                      = $Use;
                                         'Associated Resource'      = $null;
                                         'Associated Resource Type' = $null;
                                         'Resource U'               = $ResUCount;
@@ -1540,6 +1544,7 @@ $Runtime = Measure-Command -Expression {
                                 'Type'                     = $data.publicIPAllocationMethod;
                                 'Version'                  = $data.publicIPAddressVersion;
                                 'IP Address'               = $data.ipAddress;
+                                'Use'                      = $Use;
                                 'Associated Resource'      = $null;
                                 'Associated Resource Type' = $null;
                                 'Resource U'               = $ResUCount;
@@ -3991,7 +3996,7 @@ $Runtime = Measure-Command -Expression {
             if ($Type -eq 'microsoft.network/publicipaddresses') {
 
                 Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
-                $condtxtpip = New-ConditionalText "" -Range I:I
+                $condtxtpip = New-ConditionalText Underutilized -Range I:I
                 Write-Debug ('Generating Public IP sheet for: ' + $pubip.count + ' Public IPs.')
 
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
@@ -4010,6 +4015,7 @@ $Runtime = Measure-Command -Expression {
                         'Type',
                         'Version',
                         'IP Address',
+                        'Use',
                         'Associated Resource',
                         'Associated Resource Type',
                         'Tag Name',
@@ -4028,9 +4034,10 @@ $Runtime = Measure-Command -Expression {
                         'Type',
                         'Version',
                         'IP Address',
+                        'Use',
                         'Associated Resource',
                         'Associated Resource Type' | 
-                        Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -TableName 'AzurePubIPs' -TableStyle $tableStyle -Style $Style
+                        Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -TableName 'AzurePubIPs' -TableStyle $tableStyle -Style $Style -ConditionalText $condtxtpip
                     }
 
             }
