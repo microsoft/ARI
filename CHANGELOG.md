@@ -1,5 +1,12 @@
 # Version Control
 
+## Version 1.4.9 - 06/11/2021
+
+### **Azure Resource Inventory:**
+        1. Fixes in APIM Inventory.
+
+---
+
 ## Version 1.4.8 - 05/28/2021
 
 ### **Azure Resource Inventory:**
@@ -10,57 +17,57 @@
 ## Version 1.4.7 - 05/22/2021
 
 ### **Azure Resource Inventory:**
-        1. Fixes on APIM Resource Inventory
+        1. Fixes on APIM Resource Inventory.
 
 ---
 
 ## Version 1.4.6 - 05/21/2021
 
 ### **Azure Resource Inventory:**
-        1. Added support for API Management
-        2. Changes in the VMSS Name reference
+        1. Added support for API Management.
+        2. Changes in the VMSS Name reference.
 
 ---
 
 ## Version 1.4.5 - 05/19/2021
 
 ### **Azure Resource Inventory:**
-        1. Fixes when using oldest versions of Azure Resource Graph Az Cli extension (should work with old and new version of the Extension)
+        1. Fixes when using oldest versions of Azure Resource Graph Az Cli extension (should work with old and new version of the Extension).
 
 ---
 
 ## Version 1.4.4 - 05/17/2021
 
 ### **Azure Resource Inventory:**
-        1. Fixes when using newest versions of Azure Resource Graph Az Cli extension
+        1. Fixes when using newest versions of Azure Resource Graph Az Cli extension.
 
 ---
 ## Version 1.4.3 - 05/17/2021
 
 ### **Azure Resource Inventory:**
-        1. Fixes when using PowerShell Core (Following sugestions by Mike-Ling)
-        2. Added reporting of unused Public IP
+        1. Fixes when using PowerShell Core (Following sugestions by Mike-Ling).
+        2. Added reporting of unused Public IP.
 
 ---
 
 ## Version 1.4.2 - 04/30/2021
 
 ### **Azure Resource Inventory:**
-        1. Fixes in VM NICs reporting
+        1. Fixes in VM NICs reporting.
 
 ---
 
 ## Version 1.4.1 - 04/06/2021
 
 ### **Azure Resource Inventory:**
-        1. Fixes in Resource U column regarding duplicated records
+        1. Fixes in Resource U column regarding duplicated records.
 
 ---
 
 ## Version 1.4.0 - 03/26/2021
 
 ### **Azure Resource Inventory:**
-        1. Major improvements in -IncludeTags parameters (when using the parameter, the script might take considerable longer time to run)
+        1. Major improvements in -IncludeTags parameters (when using the parameter, the script might take considerable longer time to run).
 
 ---
 
@@ -75,58 +82,58 @@
 ## Version 1.3.3 - 02/08/2021
 
 ### **Azure Resource Inventory:**
-        1. Fixed Warning when no AKS exists in the environment
+        1. Fixed Warning when no AKS exists in the environment.
 
 ---
 
 ## Version 1.3.1 - 02/01/2021
 
 ### **Azure Resource Inventory:**
-        1. Fixed Storage Account Public Access bug
+        1. Fixed Storage Account Public Access bug.
 
 ---
 
 ## Version 1.3.0 - 01/04/2021
 
 ### **Azure Resource Inventory:**
-        1. Added FrontDoor Resource
-        2. Added Application Gateway Resource
-        3. Added Route Tables Resource
-        4. Added Key Vault Resource
-        5. Added Recovery Vault Resource
-        6. Added DNS Zones Resource
-        7. Added Iot Hubs Resource
+        1. Added FrontDoor Resource.
+        2. Added Application Gateway Resource.
+        3. Added Route Tables Resource.
+        4. Added Key Vault Resource.
+        5. Added Recovery Vault Resource.
+        6. Added DNS Zones Resource.
+        7. Added Iot Hubs Resource.
 
 ---
 
 ## Version 1.2.2 - 12/28/2020
 
 ### **Azure Resource Inventory:**
-        1. Added SkipAdvisory parameter
-        2. Fixed some performance issues
+        1. Added SkipAdvisory parameter.
+        2. Fixed some performance issues.
 
 ---
 
 ## Version 1.2.0 - 12/11/2020
 
 ### **Azure Resource Inventory:**
-        1. Added extra data for Azure VM
-        2. Added extra data for Disks
-        2. Added notes to relevant issues with official Microsoft link
+        1. Added extra data for Azure VM.
+        2. Added extra data for Disks.
+        2. Added notes to relevant issues with official Microsoft link.
 
 ---
 ## Version 1.1.0 - 12/08/2020
 
 ### **Azure Resource Inventory:**
-        1. Implemented Jobs during Azure extraction (Jobs were used only in the reporting phase)
-        2. Fixed an issue with ImportExcel Module
+        1. Implemented Jobs during Azure extraction (Jobs were used only in the reporting phase).
+        2. Fixed an issue with ImportExcel Module.
 
 ---
 ## Version 1.0.7 - 12/07/2020
 
 ### **Azure Resource Inventory:**
         1. Added "Running as Admin" validation when installing ImportExcel module.
-        2. Fixed a minor issue in the -SkipSecurityCenter parameter
+        2. Fixed a minor issue in the -SkipSecurityCenter parameter.
 
 ---
 ## Version 1.0.5 - 12/06/2020

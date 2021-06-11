@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.8                                                                   #
+#       Version: 1.4.9                                                                   #
 #                                                                                        #
-#       Date: 05/28/2021                                                                 #
+#       Date: 06/11/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -121,7 +121,7 @@ $Runtime = Measure-Command -Expression {
                 write-host "Authenticating Azure"
                 write-host ""
                 az account clear | Out-Null
-                az login | Out-Null
+                az login --only-show-errors | Out-Null
                 write-host ""
                 write-host ""
                 $Tenants = az account list --query [].homeTenantId -o tsv --only-show-errors | Sort-Object -Unique
@@ -280,7 +280,6 @@ $Runtime = Measure-Command -Expression {
 
             Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "100% Complete." -Completed
  
-
             Foreach ($Subscription in $Subscriptions) {
 
                 Write-Debug ('Extracting total number of Resources from Subscription: ' + $Subscription.Name)
@@ -313,11 +312,6 @@ $Runtime = Measure-Command -Expression {
     }
 
     <######################################################### END Extractor Function ######################################################################>
-
-
-
-
-
 
 
 
@@ -2931,7 +2925,6 @@ $Runtime = Measure-Command -Expression {
 
                 $APIM = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$APIM)
                     $tmp = @()
-
                     $Subs = $Sub
 
                     foreach ($1 in $APIM) {
@@ -2996,8 +2989,6 @@ $Runtime = Measure-Command -Expression {
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[11]))                
 
-
-
                 
             $jobStorageAcc = $StorageAcc.BeginInvoke()
             $jobAutAcc = $AutAcc.BeginInvoke()
@@ -3017,7 +3008,7 @@ $Runtime = Measure-Command -Expression {
             $job += $jobWebSite
             $job += $jobVault
             $job += $jobRecoveryVault
-            $job += $APIM
+            $job += $jobAPIM
 
             while ($Job.Runspace.IsCompleted -contains $false) {}
 
@@ -3806,7 +3797,7 @@ $Runtime = Measure-Command -Expression {
                         'Gateway Subnet Name',
                         'Tag Name',
                         'Tag Value'  | 
-                        Export-Excel -Path $File -WorksheetName 'Gateways' -AutoSize -TableName 'AzureVNETGateways' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+                        Export-Excel -Path $File -WorksheetName 'VNET Gateways' -AutoSize -TableName 'AzureVNETGateways' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
                     }
                 else 
                     {
@@ -3828,7 +3819,7 @@ $Runtime = Measure-Command -Expression {
                         'BGP Peer Weight',
                         'Gateway Public IP',
                         'Gateway Subnet Name'| 
-                        Export-Excel -Path $File -WorksheetName 'Gateways' -AutoSize -TableName 'AzureVNETGateways' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+                        Export-Excel -Path $File -WorksheetName 'VNET Gateways' -AutoSize -TableName 'AzureVNETGateways' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
                     }
     
             }
