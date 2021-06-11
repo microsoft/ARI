@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.9                                                                   #
+#       Version: 1.4.10                                                                   #
 #                                                                                        #
 #       Date: 06/11/2021                                                                 #
 #                                                                                        #
@@ -63,10 +63,6 @@ $Runtime = Measure-Command -Expression {
     $ErrorActionPreference = "silentlycontinue"
     $DesktopPath = "C:\AzureResourceInventory"
     $CSPath = "$HOME/AzureResourceInventory"
-    $Global:Resources = @()
-    $Global:Advisories = @()
-    $Global:Security = @()
-    $Global:Subscriptions = ''
 
     <######################################### Help ################################################>
 
@@ -86,6 +82,11 @@ $Runtime = Measure-Command -Expression {
     <###################################################### Environment ######################################################################>
 
     function Extractor {
+
+        $Global:Resources = @()
+        $Global:Advisories = @()
+        $Global:Security = @()
+        $Global:Subscriptions = ''
         function checkAzCli() {
             Write-Host "Validating Az Cli.."
             $azcli = az --version
@@ -2932,6 +2933,7 @@ $Runtime = Measure-Command -Expression {
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
                         $Tag = @{}
+                        if ($data.virtualNetworkType -eq 'None') {$NetType = ''} else {$NetType = [string]$data.virtualNetworkConfiguration.subnetResourceId.split("/")[8]}
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {
@@ -2943,7 +2945,7 @@ $Runtime = Measure-Command -Expression {
                                         'SKU'                           = $1.sku.name;
                                         'Gateway URL'                   = $data.gatewayUrl;
                                         'Virtual Network Type'          = $data.virtualNetworkType;
-                                        'Virtual Network'               = $data.virtualNetworkConfiguration.subnetResourceId.split("/")[8];
+                                        'Virtual Network'               = $NetType;
                                         'Http2'                         = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2";
                                         'Backend SSL 3.0'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30";
                                         'Backend TLS 1.0'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10";
@@ -2969,7 +2971,7 @@ $Runtime = Measure-Command -Expression {
                                     'SKU'                           = $1.sku.name;
                                     'Gateway URL'                   = $data.gatewayUrl;
                                     'Virtual Network Type'          = $data.virtualNetworkType;
-                                    'Virtual Network'               = $data.virtualNetworkConfiguration.subnetResourceId.split("/")[8];
+                                    'Virtual Network'               = $NetType;
                                     'Http2'                         = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2";
                                     'Backend SSL 3.0'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30";
                                     'Backend TLS 1.0'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10";
