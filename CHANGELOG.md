@@ -1,5 +1,12 @@
 # Version Control
 
+## Version 1.4.10 - 06/11/2021
+
+### **Azure Resource Inventory:**
+        1. Fixes in APIM processing.
+
+---
+
 ## Version 1.4.9 - 06/11/2021
 
 ### **Azure Resource Inventory:**
