@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.10                                                                   #
+#       Version: 1.4.11                                                                  #
 #                                                                                        #
-#       Date: 06/11/2021                                                                 #
+#       Date: 06/22/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -289,7 +289,7 @@ $Runtime = Measure-Command -Expression {
                     $SubName = $Subscription.name
                     az account set --subscription $SUBID
                     
-                    $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+                    $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | summarize count()" --output json --only-show-errors | ConvertFrom-Json
                     if($EnvSize.data) {$EnvSizeNum = $EnvSize.data.'count_'} else {$EnvSizeNum = $EnvSize.'count_'}
                         
                     if ($EnvSizeNum -ge 1) {
@@ -299,7 +299,7 @@ $Runtime = Measure-Command -Expression {
                         $Limit = 0
     
                         while ($Looper -lt $Loop) {
-                            $Resource = az graph query -q  "resources | where subscriptionId == '$SUBID' | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                            $Resource = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
                             if($Resource.data) {$Global:Resources += $Resource.data} else {$Global:Resources += $Resource} 
                             Start-Sleep 3      
                             $Looper ++
@@ -313,9 +313,6 @@ $Runtime = Measure-Command -Expression {
     }
 
     <######################################################### END Extractor Function ######################################################################>
-
-
-
 
 
     
@@ -2690,9 +2687,9 @@ $Runtime = Measure-Command -Expression {
                                             'Resource Group'   = $1.RESOURCEGROUP;
                                             'Name'             = $1.NAME;
                                             'Location'         = $1.LOCATION;
-                                            'Fault Domains'    = $data.platformFaultDomainCount;
-                                            'Update Domains'   = $data.platformUpdateDomainCount;
-                                            'Virtual Machines' = $vmIds;
+                                            'Fault Domains'    = [string]$data.platformFaultDomainCount;
+                                            'Update Domains'   = [string]$data.platformUpdateDomainCount;
+                                            'Virtual Machines' = [string]$vmIds;
                                             'Resource U'       = $ResUCount;
                                             'Tag Name'         = [string]$TagKey;
                                             'Tag Value'        = [string]$Tag.$TagKey
@@ -2707,9 +2704,9 @@ $Runtime = Measure-Command -Expression {
                                             'Resource Group'   = $1.RESOURCEGROUP;
                                             'Name'             = $1.NAME;
                                             'Location'         = $1.LOCATION;
-                                            'Fault Domains'    = $data.platformFaultDomainCount;
-                                            'Update Domains'   = $data.platformUpdateDomainCount;
-                                            'Virtual Machines' = $vmIds;
+                                            'Fault Domains'    = [string]$data.platformFaultDomainCount;
+                                            'Update Domains'   = [string]$data.platformUpdateDomainCount;
+                                            'Virtual Machines' = [string]$vmIds;
                                             'Resource U'       = $ResUCount;
                                             'Tag Name'         = $null;
                                             'Tag Value'        = $null

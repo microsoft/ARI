@@ -1,5 +1,13 @@
 # Version Control
 
+## Version 1.4.11 - 06/22/2021
+
+### **Azure Resource Inventory:**
+        1. Changes in AvSet Resource Inventory.
+        2. Excluding resources when "properties" field sums more than 123000 characters.
+
+---
+
 ## Version 1.4.10 - 06/11/2021
 
 ### **Azure Resource Inventory:**
