@@ -3386,7 +3386,7 @@ $Runtime = Measure-Command -Expression {
 
             $Sec | 
             ForEach-Object { [PSCustomObject]$_ } | 
-            Select-Object 'Subscription ID',
+            Select-Object 'Subscription',
             'Resource Group',
             'Resource Type',
             'Resource Name',
