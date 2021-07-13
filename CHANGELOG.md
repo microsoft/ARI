@@ -1,5 +1,12 @@
 # Version Control
 
+## Version 1.4.12 - 06/24/2021
+
+### **Azure Resource Inventory:**
+        1. Changes in functions core base.
+
+---
+
 ## Version 1.4.11 - 06/22/2021
 
 ### **Azure Resource Inventory:**

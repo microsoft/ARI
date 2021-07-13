@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.11                                                                  #
+#       Version: 1.4.12                                                                  #
 #                                                                                        #
-#       Date: 06/22/2021                                                                 #
+#       Date: 06/24/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -79,14 +79,17 @@ $Runtime = Measure-Command -Expression {
         Write-Output "" 
     }
 
-    <###################################################### Environment ######################################################################>
-
-    function Extractor {
-
+    function Variables {
         $Global:Resources = @()
         $Global:Advisories = @()
         $Global:Security = @()
         $Global:Subscriptions = ''
+    } 
+
+    <###################################################### Environment ######################################################################>
+
+    function Extractor {
+
         function checkAzCli() {
             Write-Host "Validating Az Cli.."
             $azcli = az --version
@@ -2666,14 +2669,13 @@ $Runtime = Measure-Command -Expression {
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[6]))
 
 
-            $AvSet = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$AvSet)
+            $AvSet = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $AvSet)
                     $tmp = @()
 
                     $AvSet = $AvSet
                     $Subs = $Sub
 
                     foreach ($1 in $AvSet) {
-                        $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
                         $Tag = @{}
@@ -2690,12 +2692,10 @@ $Runtime = Measure-Command -Expression {
                                             'Fault Domains'    = [string]$data.platformFaultDomainCount;
                                             'Update Domains'   = [string]$data.platformUpdateDomainCount;
                                             'Virtual Machines' = [string]$vmIds;
-                                            'Resource U'       = $ResUCount;
                                             'Tag Name'         = [string]$TagKey;
                                             'Tag Value'        = [string]$Tag.$TagKey
                                         }
                                         $tmp += $obj
-                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
                                     }
                                 }
                                 else {
@@ -2707,12 +2707,10 @@ $Runtime = Measure-Command -Expression {
                                             'Fault Domains'    = [string]$data.platformFaultDomainCount;
                                             'Update Domains'   = [string]$data.platformUpdateDomainCount;
                                             'Virtual Machines' = [string]$vmIds;
-                                            'Resource U'       = $ResUCount;
                                             'Tag Name'         = $null;
                                             'Tag Value'        = $null
                                         }
                                         $tmp += $obj
-                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
                                 }
                         }
                     }
@@ -5467,7 +5465,7 @@ $Runtime = Measure-Command -Expression {
         Get-Job | Remove-Job
     }
 
-
+    Variables
     Extractor
     ImportDataExcel
 
