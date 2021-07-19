@@ -1,5 +1,15 @@
 # Version Control
 
+## Version 1.4.13 - 07/19/2021
+
+### **Azure Resource Inventory:**
+        1. Improvments on SQL DB sheet.
+        2. Added Private DNS Zones sheet.
+        3. Added Bastion Hosts sheet.
+        4. Added Stream Analytics Jobs sheet.
+
+---
+
 ## Version 1.4.12 - 06/24/2021
 
 ### **Azure Resource Inventory:**

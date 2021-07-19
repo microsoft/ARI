@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.12                                                                  #
+#       Version: 1.4.13                                                                  #
 #                                                                                        #
-#       Date: 06/24/2021                                                                 #
+#       Date: 07/15/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -361,9 +361,12 @@ $Runtime = Measure-Command -Expression {
         $ROUTETABLE = @()
         $VAULT = @()
         $RECOVERYVAULT = @()
-        $DNSZONE = @()
+        $PubDNS = @()
+        $PrivDNS = @()
         $IOT = @()
         $APIM = @()
+        $BASTION = @()
+        $STREAMJobs = @()
 
 
         ForEach ($Resource in $Resources) {
@@ -397,13 +400,16 @@ $Runtime = Measure-Command -Expression {
             if ($Resource.TYPE -eq 'microsoft.network/routetables' ) { $ROUTETABLE += $Resource }
             if ($Resource.TYPE -eq 'microsoft.keyvault/vaults' ) { $VAULT += $Resource }
             if ($Resource.TYPE -eq 'microsoft.recoveryservices/vaults' ) { $RECOVERYVAULT += $Resource }
-            if ($Resource.TYPE -eq 'microsoft.network/dnszones' ) { $DNSZONE += $Resource }
+            if ($Resource.TYPE -eq 'microsoft.network/dnszones' ) { $PubDNS += $Resource }
+            if ($Resource.TYPE -eq 'microsoft.network/privatednszones' ) { $PrivDNS += $Resource }            
             if ($Resource.TYPE -eq 'microsoft.devices/iothubs' ) { $IOT += $Resource }
-
             if ($Resource.TYPE -eq 'microsoft.apimanagement/service' ) { $APIM += $Resource }
+
+            if ($Resource.TYPE -eq 'microsoft.network/bastionhosts' ) { $BASTION += $Resource }
+            if ($Resource.TYPE -eq 'microsoft.streamanalytics/streamingjobs' ) { $STREAMJobs += $Resource }
+     
         }
-
-
+      
         <######################################################### ADVISORY JOB ######################################################################>
 
         Start-Job -Name 'Advisory' -ScriptBlock {
@@ -2247,12 +2253,12 @@ $Runtime = Measure-Command -Expression {
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[8]))                
 
-            $DNSZone = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$DNSZONE)
+            $PubDNS = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$PubDNS)
                     $tmp = @()
 
                     $Subs = $Sub
 
-                    foreach ($1 in $DNSZONE) {
+                    foreach ($1 in $PubDNS) {
                         $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
@@ -2296,7 +2302,58 @@ $Runtime = Measure-Command -Expression {
                             }
                     }
                     $tmp
-                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[9]))  
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[9]))
+
+
+                $PrivDNS.properties
+
+                $PrivDNS = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$PrivDNS)
+                    $tmp = @()
+
+                    $Subs = $Sub
+
+                    foreach ($1 in $PrivDNS) {
+                        $ResUCount = 1
+                        $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
+                        $data = $1.PROPERTIES
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {     
+                                    $obj = @{
+                                        'Subscription'           = $sub1.name;
+                                        'Resource Group'         = $1.RESOURCEGROUP;
+                                        'Name'                   = $1.NAME;
+                                        'Location'               = $1.LOCATION;
+                                        'Number of Records'      = $data.numberOfRecordSets;
+                                        'Virtual Network Links'  = $data.numberOfVirtualNetworkLinks;
+                                        'Network Links with Registration' = $data.numberOfVirtualNetworkLinksWithRegistration;
+                                        'Tag Name'               = [string]$TagKey;
+                                        'Tag Value'              = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {    
+                                $obj = @{
+                                    'Subscription'           = $sub1.name;
+                                    'Resource Group'         = $1.RESOURCEGROUP;
+                                    'Name'                   = $1.NAME;
+                                    'Location'               = $1.LOCATION;
+                                    'Number of Records'      = $data.numberOfRecordSets;
+                                    'Virtual Network Links'  = $data.numberOfVirtualNetworkLinks;
+                                    'Network Links with Registration' = $data.numberOfVirtualNetworkLinksWithRegistration;
+                                    'Tag Name'               = $null;
+                                    'Tag Value'              = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
+                    }
+                    $tmp
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[10]))  
+
 
 
             $jobVNET = $VNET.BeginInvoke()
@@ -2307,7 +2364,8 @@ $Runtime = Measure-Command -Expression {
             $jobFrontDoor = $FrontDoor.BeginInvoke()
             $jobAppGateway = $AppGateway.BeginInvoke()
             $jobRouteTable = $RouteTable.BeginInvoke()
-            $jobDNSZone = $DNSZone.BeginInvoke()
+            $jobPubDNS = $PubDNS.BeginInvoke()
+            $jobPrivDNS = $PrivDNS.BeginInvoke()
 
             $job += $jobVNET
             $job += $jobVNETGTW
@@ -2317,7 +2375,8 @@ $Runtime = Measure-Command -Expression {
             $job += $jobFrontDoor
             $job += $jobAppGateway
             $job += $jobRouteTable
-            $job += $jobDNSZone
+            $job += $jobPubDNS
+            $job += $jobPrivDNS
 
             while ($Job.Runspace.IsCompleted -contains $false) {}
 
@@ -2329,7 +2388,8 @@ $Runtime = Measure-Command -Expression {
             $FrontDoorS = $FrontDoor.EndInvoke($jobFrontDoor)
             $AppGatewayS = $AppGateway.EndInvoke($jobAppGateway)
             $RouteTableS = $RouteTable.EndInvoke($jobRouteTable)
-            $DNSZoneS = $DNSZone.EndInvoke($jobDNSZone)
+            $PubDNSS = $PubDNS.EndInvoke($jobPubDNS)
+            $PrivDNSS = $PrivDNS.EndInvoke($jobPrivDNS)
 
             $VNET.Dispose()
             $VNETGTW.Dispose()
@@ -2339,7 +2399,8 @@ $Runtime = Measure-Command -Expression {
             $FrontDoor.Dispose()
             $AppGateway.Dispose()
             $RouteTable.Dispose()
-            $DNSZone.Dispose()
+            $PubDNS.Dispose()
+            $PrivDNS.Dispose()
 
             $AzNetwork = @{
                 'VNET'    = $VNETS;
@@ -2350,12 +2411,13 @@ $Runtime = Measure-Command -Expression {
                 'FrontDoor' = $FrontDoorS;
                 'AppGateway' = $AppGatewayS;
                 'RouteTable' = $RouteTableS;
-                'DNSZone' = $DNSZoneS
+                'Public DNS' = $PubDNSS;
+                'Private DNS' = $PrivDNSS;
             }
 
             $AzNetwork
 
-        } -ArgumentList $Subs,$InTag, $VNET, $VNETGTW, $PIP, $LB, $FRONTDOOR, $APPGTW, $ROUTETABLE, $DNSZONE | Out-Null
+        } -ArgumentList $Subs,$InTag, $VNET, $VNETGTW, $PIP, $LB, $FRONTDOOR, $APPGTW, $ROUTETABLE, $PubDNS, $PrivDNS | Out-Null
 
 
         <######################################################### INFRASTRUCTURE RESOURCE GROUP JOB ######################################################################>
@@ -2919,7 +2981,7 @@ $Runtime = Measure-Command -Expression {
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[10]))                
 
 
-                $APIM = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$APIM)
+                $APIM = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $APIM)
                     $tmp = @()
                     $Subs = $Sub
 
@@ -2985,8 +3047,62 @@ $Runtime = Measure-Command -Expression {
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[11]))                
-
                 
+
+                $BASTION = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $BASTION)
+                    $tmp = @()
+                    $Subs = $Sub
+
+                    foreach ($1 in $BASTION) {
+                        $ResUCount = 1
+                        $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
+                        $data = $1.PROPERTIES
+                        $BastVNET = $data.ipConfigurations.properties.subnet.id.split("/")[8]
+                        $BastPIP = $data.ipConfigurations.properties.publicIPAddress.id.split("/")[8]
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                    $obj = @{
+                                        'Subscription'                  = $sub1.name;
+                                        'Resource Group'                = $1.RESOURCEGROUP;
+                                        'Name'                          = $1.NAME;
+                                        'Location'                      = $1.LOCATION;
+                                        'SKU'                           = $1.sku.name;
+                                        'DNS Name'                      = $data.dnsName;
+                                        'Virtual Network'               = $BastVNET;
+                                        'Public IP'                     = $BastPIP;
+                                        'Scale Units'                   = $data.scaleUnits;
+                                        'Tag Name'                      = [string]$TagKey;
+                                        'Tag Value'                     = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {
+                                $obj = @{
+                                    'Subscription'                  = $sub1.name;
+                                    'Resource Group'                = $1.RESOURCEGROUP;
+                                    'Name'                          = $1.NAME;
+                                    'Location'                      = $1.LOCATION;
+                                    'SKU'                           = $1.sku.name;
+                                    'DNS Name'                      = $data.dnsName;
+                                    'Virtual Network'               = $BastVNET;
+                                    'Public IP'                     = $BastPIP;
+                                    'Scale Units'                   = $data.scaleUnits;
+                                    'Tag Name'                      = $null;
+                                    'Tag Value'                     = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
+                    }
+                    $tmp
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[12]))                    
+
+
+             
             $jobStorageAcc = $StorageAcc.BeginInvoke()
             $jobAutAcc = $AutAcc.BeginInvoke()
             $jobEvtHub = $EvtHub.BeginInvoke()
@@ -2996,6 +3112,7 @@ $Runtime = Measure-Command -Expression {
             $jobVault = $Vault.BeginInvoke()
             $jobRecoveryVault = $RecoveryVault.BeginInvoke()
             $jobAPIM = $APIM.BeginInvoke()
+            $jobBASTION = $BASTION.BeginInvoke()
 
             $job += $jobStorageAcc
             $job += $jobAutAcc
@@ -3006,6 +3123,7 @@ $Runtime = Measure-Command -Expression {
             $job += $jobVault
             $job += $jobRecoveryVault
             $job += $jobAPIM
+            $job += $jobBASTION
 
             while ($Job.Runspace.IsCompleted -contains $false) {}
 
@@ -3018,6 +3136,7 @@ $Runtime = Measure-Command -Expression {
             $VaultS = $Vault.EndInvoke($jobVault)
             $RecoveryVaultS = $RecoveryVault.EndInvoke($jobRecoveryVault)
             $APIMS = $APIM.EndInvoke($jobAPIM)
+            $BASTIONS = $BASTION.EndInvoke($jobBASTION)
 
             $StorageAcc.Dispose()
             $AutAcc.Dispose()
@@ -3028,6 +3147,7 @@ $Runtime = Measure-Command -Expression {
             $Vault.Dispose()
             $RecoveryVault.Dispose()
             $APIM.Dispose()
+            $BASTION.Dispose()
 
             $AzInfra = @{
                 'StorageAcc'    = $StorageAccS;
@@ -3038,12 +3158,13 @@ $Runtime = Measure-Command -Expression {
                 'WebSite'       = $WebSiteS;
                 'Vault'         = $VaultS;
                 'RecoveryVault' = $RecoveryVaultS;
-                'APIM'          = $APIMS
+                'APIM'          = $APIMS;
+                'BASTION'       = $BASTIONS
             }
 
             $AzInfra
 
-        } -ArgumentList $Subs, $InTag,$StorageAcc, $RB, $AUT, $EVTHUB, $WRKSPACE, $AVSET, $SITES, $VAULT, $RECOVERYVAULT, $APIM | Out-Null
+        } -ArgumentList $Subs, $InTag,$StorageAcc, $RB, $AUT, $EVTHUB, $WRKSPACE, $AVSET, $SITES, $VAULT, $RECOVERYVAULT, $APIM, $BASTION | Out-Null
 
 
 
@@ -3064,6 +3185,7 @@ $Runtime = Measure-Command -Expression {
                         $ResUCount = 1
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
+                        $DBServer = [string]$1.id.split("/")[8]
                         $Tag = @{}
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
@@ -3074,6 +3196,7 @@ $Runtime = Measure-Command -Expression {
                                         'Name'                       = $1.NAME;
                                         'Location'                   = $1.LOCATION;
                                         'Storage Account Type'       = $data.storageAccountType;
+                                        'Database Server'            = $DBServer;
                                         'Default Secondary Location' = $data.defaultSecondaryLocation;
                                         'Status'                     = $data.status;
                                         'DTU Capacity'               = $data.currentSku.capacity;
@@ -3097,6 +3220,7 @@ $Runtime = Measure-Command -Expression {
                                     'Name'                       = $1.NAME;
                                     'Location'                   = $1.LOCATION;
                                     'Storage Account Type'       = $data.storageAccountType;
+                                    'Database Server'            = $DBServer;
                                     'Default Secondary Location' = $data.defaultSecondaryLocation;
                                     'Status'                     = $data.status;
                                     'DTU Capacity'               = $data.currentSku.capacity;
@@ -3278,33 +3402,111 @@ $Runtime = Measure-Command -Expression {
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[4]))
 
+
+
+                $STREAMJobs = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$STREAM)
+                    $tmp = @()
+                    $Subs = $Sub
+
+                    foreach ($1 in $STREAM) {
+                        $ResUCount = 1
+                        $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
+                        $data = $1.PROPERTIES
+                        $Creadate = (get-date $data.createdDate).ToString("yyyy-MM-dd HH:mm:ss")
+                        $LastOutput = (get-date $data.lastOutputEventTime).ToString("yyyy-MM-dd HH:mm:ss:ffff")
+                        $OutputStart = (get-date $data.outputStartTime).ToString("yyyy-MM-dd HH:mm:ss:ffff")
+                        $Tag = @{}
+                        $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
+                        if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {
+                                    $obj = @{
+                                        'Subscription'              = $sub1.name;
+                                        'Resource Group'            = $1.RESOURCEGROUP;
+                                        'Name'                      = $1.NAME;
+                                        'Location'                  = $1.LOCATION;
+                                        'SKU'                       = $data.sku.name;
+                                        'Compatibility Level'       = $data.compatibilityLevel;
+                                        'Content Storage Policy'    = $data.contentStoragePolicy;
+                                        'Created Date'              = $Creadate;
+                                        'Data Locale'               = $data.dataLocale;
+                                        'Late Arrival Max Delay in Seconds'      = $data.eventsLateArrivalMaxDelayInSeconds;
+                                        'Out of Order Max Delay in Seconds'      = $data.eventsOutOfOrderMaxDelayInSeconds;
+                                        'Out of Order Policy'       = $data.eventsOutOfOrderPolicy;
+                                        'Job State'                 = $data.jobState;
+                                        'Job Type'                  = $data.jobType;
+                                        'Last Output Event Time'    = $LastOutput;
+                                        'Output Start Time'         = $OutputStart;
+                                        'Output Error Policy'       = $data.outputErrorPolicy;
+                                        'Tag Name'                  = [string]$TagKey;
+                                        'Tag Value'                 = [string]$Tag.$TagKey
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                }
+                            }
+                            else {
+                                $obj = @{
+                                    'Subscription'              = $sub1.name;
+                                    'Resource Group'            = $1.RESOURCEGROUP;
+                                    'Name'                      = $1.NAME;
+                                    'Location'                  = $1.LOCATION;
+                                    'SKU'                       = $data.sku.name;
+                                    'Compatibility Level'       = $data.compatibilityLevel;
+                                    'Content Storage Policy'    = $data.contentStoragePolicy;
+                                    'Created Date'              = $Creadate;
+                                    'Data Locale'               = $data.dataLocale;
+                                    'Late Arrival Max Delay in Seconds'      = $data.eventsLateArrivalMaxDelayInSeconds;
+                                    'Out of Order Max Delay in Seconds'      = $data.eventsOutOfOrderMaxDelayInSeconds;
+                                    'Out of Order Policy'       = $data.eventsOutOfOrderPolicy;
+                                    'Job State'                 = $data.jobState;
+                                    'Job Type'                  = $data.jobType;
+                                    'Last Output Event Time'    = $LastOutput;
+                                    'Output Start Time'         = $OutputStart;
+                                    'Output Error Policy'       = $data.outputErrorPolicy;
+                                    'Tag Name'                  = $null;
+                                    'Tag Value'                 = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            }
+                    }
+                    $tmp
+                }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[5]))                
+
+
+
             $jobDB = $DB.BeginInvoke()
             $jobMySQL = $MySQL.BeginInvoke()
             $jobPostGre = $PostGre.BeginInvoke()
+            $jobSTREAMJobs = $STREAMJobs.BeginInvoke()
 
             $job += $jobDB
             $job += $jobMySQL
             $job += $jobPostGre
+            $job += $jobSTREAMJobs
 
             while ($Job.Runspace.IsCompleted -contains $false) {}
 
             $DBS = $DB.EndInvoke($jobDB)
             $MySQLS = $MySQL.EndInvoke($jobMySQL)
             $PostGreS = $PostGre.EndInvoke($jobPostGre)
+            $STREAMJobsS = $STREAMJobs.EndInvoke($jobSTREAMJobs)
 
             $DB.Dispose()
             $MySQL.Dispose()
             $PostGre.Dispose()
+            $STREAMJobs.Dispose()
 
             $AzDB = @{
                 'DB'      = $DBS;
                 'MySQL'   = $MySQLS;
-                'PostGre' = $PostGreS
+                'PostGre' = $PostGreS;
+                'Stream Analytics Jobs'  = $STREAMJobsS
             }
 
             $AzDB
 
-        } -ArgumentList $Subs, $InTag,$DB, $MySQL, $POSTGRE | Out-Null
+        } -ArgumentList $Subs, $InTag,$DB, $MySQL, $POSTGRE, $STREAMJobs | Out-Null
 
 
 
@@ -3424,15 +3626,15 @@ $Runtime = Measure-Command -Expression {
         Write-Debug (' Advisories.')
 
         #### Validated Resources:
-        #### 1 - Virtual Machines
-        #### 2 - Virtual Machines Disk
-        #### 3 - Storage Account
-        #### 4 - Virtual Network
-        #### 5 - Virtual Network Gateway
-        #### 6 - SQL Virtual Machines
-        #### 7 - SQL Databases
-        #### 8 - Automation Acc / Runbooks
-        #### 9 - Public IPs
+        #### 01 - Virtual Machines
+        #### 02 - Virtual Machines Disk
+        #### 03 - Storage Account
+        #### 04 - Virtual Network
+        #### 05 - Virtual Network Gateway
+        #### 06 - SQL Virtual Machines
+        #### 07 - SQL Databases
+        #### 08 - Automation Acc / Runbooks
+        #### 09 - Public IPs
         #### 10 - Event Hubs
         #### 11 - MySQL
         #### 12 - Postgres
@@ -3451,9 +3653,12 @@ $Runtime = Measure-Command -Expression {
         #### 25 - Route Table
         #### 26 - Key Vault
         #### 27 - Recovery Vault
-        #### 28 - DNS Zone
+        #### 28 - Public DNS Zone
         #### 29 - IOT
         #### 30 - APIM
+        #### 31 - Private DNS Zone
+        #### 32 - Bastion Hosts
+        #### 33 - Streamanalytics
 
         Write-Progress -activity $DataActive -Status "Processing Resources Inventory" -PercentComplete 0
         $c = 0
@@ -3891,6 +4096,7 @@ $Runtime = Measure-Command -Expression {
                         'Name',
                         'Location',
                         'Storage Account Type',
+                        'Database Server',
                         'Default Secondary Location',
                         'Status',
                         'DTU Capacity',
@@ -3912,6 +4118,7 @@ $Runtime = Measure-Command -Expression {
                         'Name',
                         'Location',
                         'Storage Account Type',
+                        'Database Server',
                         'Default Secondary Location',
                         'Status',
                         'DTU Capacity',
@@ -5079,7 +5286,7 @@ $Runtime = Measure-Command -Expression {
 
             }             
 
-            <############################################################################## 28 - DNS Zones ###################################################################>
+            <############################################################################## 28 - Public DNS Zones ###################################################################>
 
 
             if ($Type -eq 'microsoft.network/dnszones') {
@@ -5087,11 +5294,11 @@ $Runtime = Measure-Command -Expression {
                 Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
                 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
-                $ExcelDNSZone = $AzNetwork.DNSZone
+                $ExcelPubDNS = $AzNetwork.'Public DNS'
 
                 if ($IncludeTags.IsPresent)
                     {
-                        $ExcelDNSZone | 
+                        $ExcelPubDNS | 
                         ForEach-Object { [PSCustomObject]$_ } | 
                         Select-Object -Unique 'Subscription',
                         'Resource Group',
@@ -5103,11 +5310,11 @@ $Runtime = Measure-Command -Expression {
                         'Name Servers',
                         'Tag Name',
                         'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'DNS Zones' -AutoSize -TableName 'AzureDNSZones' -TableStyle $tableStyle -Style $Style
+                        Export-Excel -Path $File -WorksheetName 'Public DNS' -AutoSize -TableName 'AzurePubDNSZones' -TableStyle $tableStyle -Style $Style
                     }
                 else 
                     {
-                        $ExcelDNSZone | 
+                        $ExcelPubDNS | 
                         ForEach-Object { [PSCustomObject]$_ } | 
                         Select-Object -Unique 'Subscription',
                         'Resource Group',
@@ -5117,7 +5324,7 @@ $Runtime = Measure-Command -Expression {
                         'Number of Record Sets',
                         'Max Number of Record Sets',
                         'Name Servers'| 
-                        Export-Excel -Path $File -WorksheetName 'DNS Zones' -AutoSize -TableName 'AzureDNSZones' -TableStyle $tableStyle -Style $Style
+                        Export-Excel -Path $File -WorksheetName 'Public DNS' -AutoSize -TableName 'AzurePubDNSZones' -TableStyle $tableStyle -Style $Style
                     }
 
             }   
@@ -5243,6 +5450,157 @@ $Runtime = Measure-Command -Expression {
                     }
 
             } 
+
+
+            <############################################################################## 31 - Private DNS Zones ###################################################################>
+
+
+            if ($Type -eq 'microsoft.network/privatednszones') {
+
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
+                $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
+
+                $ExcelPrivDNS = $AzNetwork.'Private DNS'
+
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelPrivDNS | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object -Unique 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Number of Records',
+                        'Virtual Network Links',
+                        'Network Links with Registration',
+                        'Tag Name',
+                        'Tag Value' | 
+                        Export-Excel -Path $File -WorksheetName 'Private DNS' -AutoSize -TableName 'AzurePrivDNSZones' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelPrivDNS | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object -Unique 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'Number of Records',
+                        'Virtual Network Links',
+                        'Network Links with Registration'| 
+                        Export-Excel -Path $File -WorksheetName 'Private DNS' -AutoSize -TableName 'AzurePrivDNSZones' -TableStyle $tableStyle -Style $Style
+                    }
+
+            }   
+
+
+            <############################################################################## 32 - Bastion Hosts ###################################################################>
+
+
+            if ($Type -eq 'microsoft.network/bastionhosts') {
+
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
+                $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
+
+                $ExcelBASTION = $AzInfra.'BASTION'
+
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelBASTION | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object -Unique 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'DNS Name',
+                        'Virtual Network',
+                        'Public IP',
+                        'Scale Units',
+                        'Tag Name',
+                        'Tag Value' | 
+                        Export-Excel -Path $File -WorksheetName 'Bastion Hosts' -AutoSize -TableName 'AzureBastion' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelBASTION | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object -Unique 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'DNS Name',
+                        'Virtual Network',
+                        'Public IP',
+                        'Scale Units'| 
+                        Export-Excel -Path $File -WorksheetName 'Bastion Hosts' -AutoSize -TableName 'AzureBastion' -TableStyle $tableStyle -Style $Style
+                    }
+
+            }   
+
+
+            <############################################################################## 33 - Stream Analytics Jobs ###################################################################>
+
+
+            if ($Type -eq 'microsoft.streamanalytics/streamingjobs') {
+
+                Write-Progress -activity $DataActive -Status "$Prog% Complete." -PercentComplete $Prog
+                $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
+
+                $ExcelStreamanalytics = $AzDatabase.'Stream Analytics Jobs'
+
+                if ($IncludeTags.IsPresent)
+                    {
+                        $ExcelStreamanalytics | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object -Unique 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'Compatibility Level',
+                        'Content Storage Policy',
+                        'Created Date',
+                        'Data Locale',
+                        'Late Arrival Max Delay in Seconds',
+                        'Out of Order Max Delay in Seconds',
+                        'Out of Order Policy',
+                        'Job State',
+                        'Job Type',
+                        'Last Output Event Time',
+                        'Output Start Time',
+                        'Output Error Policy',
+                        'Tag Name',
+                        'Tag Value' | 
+                        Export-Excel -Path $File -WorksheetName 'Stream Analytics Jobs' -AutoSize -TableName 'AzureStreamAnalyticsJobs' -TableStyle $tableStyle -Style $Style
+                    }
+                else 
+                    {
+                        $ExcelStreamanalytics | 
+                        ForEach-Object { [PSCustomObject]$_ } | 
+                        Select-Object -Unique 'Subscription',
+                        'Resource Group',
+                        'Name',
+                        'Location',
+                        'SKU',
+                        'Compatibility Level',
+                        'Content Storage Policy',
+                        'Created Date',
+                        'Data Locale',
+                        'Late Arrival Max Delay in Seconds',
+                        'Out of Order Max Delay in Seconds',
+                        'Out of Order Policy',
+                        'Job State',
+                        'Job Type',
+                        'Last Output Event Time',
+                        'Output Start Time',
+                        'Output Error Policy'| 
+                        Export-Excel -Path $File -WorksheetName 'Stream Analytics Jobs' -AutoSize -TableName 'AzureStreamAnalyticsJobs' -TableStyle $tableStyle -Style $Style
+                    }
+
+            }               
+
 
             $c++
         }
