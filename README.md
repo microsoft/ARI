@@ -68,7 +68,7 @@ What things you need to run the script
 
 ``` powershell
 1. Install-Module ImportExcel
-2. Az CLI 
+2. az cli 
 3. az extension add --name resource-graph
 ```
 To install Azure CLI go to [Microsoft Docs](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) and follow the instructions to install.   
