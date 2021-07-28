@@ -1,5 +1,10 @@
 # Version Control
 
+## Version 1.4.14 - 07/19/2021
+
+### **Azure Resource Inventory:**
+        1. Fix CheckPS and LoginSession Function for Azure CloudShell
+
 ## Version 1.4.13 - 07/19/2021
 
 ### **Azure Resource Inventory:**
