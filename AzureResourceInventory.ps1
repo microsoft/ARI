@@ -59,7 +59,7 @@ $Runtime = Measure-Command -Expression {
     if ($DebugPreference -eq 'Inquire') {
         $DebugPreference = 'Continue'
     }
-    if ($IncludeTags.IsPresent) {$InTag = $true} else {$InTag = $false}
+    if ($IncludeTags.IsPresent) { $InTag = $true } else { $InTag = $false }
     $ErrorActionPreference = "silentlycontinue"
     $DesktopPath = "C:\AzureResourceInventory"
     $CSPath = "$HOME/AzureResourceInventory"
@@ -105,21 +105,18 @@ $Runtime = Measure-Command -Expression {
             }
             Write-Host "Validating ImportExcel Module.."
             $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
-            if ($null -eq $VarExcel) 
-                {
-                    Write-Host "Trying to install ImportExcel Module.."
-                    Install-Module -Name ImportExcel -Force
-                }
+            if ($null -eq $VarExcel) {
+                Write-Host "Trying to install ImportExcel Module.."
+                Install-Module -Name ImportExcel -Force
+            }
             $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
-            if ($null -eq $VarExcel) 
-                {
-                    Read-Host 'Admininstrator rights required to install ImportExcel Module. Press <Enter> to finish script'
-                    Exit
-                }
+            if ($null -eq $VarExcel) {
+                Read-Host 'Admininstrator rights required to install ImportExcel Module. Press <Enter> to finish script'
+                Exit
+            }
         }
 
         function LoginSession() {
-            $Global:DefaultPath = "$DesktopPath\"
             if ($TenantID -eq '' -or $null -eq $TenantID) {
                 write-host "Tenant ID not specified. Use -TenantID parameter if you want to specify directly. "        
                 write-host "Authenticating Azure"
@@ -171,11 +168,13 @@ $Runtime = Measure-Command -Expression {
         function checkPS() {
             if ($PSVersionTable.PSEdition -eq 'Desktop') {
                 write-host "PowerShell Desktop Identified."
+                $Global:DefaultPath = "$DesktopPath\"
                 write-host ""
                 LoginSession
             }
             elseif ($PSVersionTable.PSEdition -eq 'Core') {
                 write-host "PowerShell Core Identified."
+                $Global:DefaultPath = "$CSPath/"
                 write-host ""
                 LoginSession
             }
@@ -184,7 +183,7 @@ $Runtime = Measure-Command -Expression {
                 write-host 'Azure CloudShell Identified.'
                 write-host ""
                 <#### For Azure CloudShell change your StorageAccount Name, Container and SAS for Grid Extractor transfer. ####>
-                $Global:DefaultPath = "$CSPath/" 
+                $Global:DefaultPath = "$CSPath/"
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
             }
         }
@@ -216,7 +215,7 @@ $Runtime = Measure-Command -Expression {
         if (!($SkipAdvisory.IsPresent)) {
             Write-Debug ('Extracting total number of Advisories from Tenant')
             $AdvSize = az graph query -q  "advisorresources | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-            if($AdvSize.data) {$AdvSizeNum = $AdvSize.data.'count_'}else{$AdvSizeNum = $AdvSize.'count_'}
+            if ($AdvSize.data) { $AdvSizeNum = $AdvSize.data.'count_' }else { $AdvSizeNum = $AdvSize.'count_' }
 
             Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Advisories extraction jobs.."
 
@@ -226,92 +225,87 @@ $Runtime = Measure-Command -Expression {
                 $Looper = 0
                 $Limit = 0
 
-                while ($Looper -lt $Loop) 
-                    {
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                        if($Advisor.data) {$Global:Advisories += $Advisor.data} else {$Global:Advisories += $Advisor}
-                        Start-Sleep 3
-                        $Limit = $Limit + 1000
-                    }
-                    Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "Completed" -Completed
+                while ($Looper -lt $Loop) {
+                    $Looper ++
+                    Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                    $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                    if ($Advisor.data) { $Global:Advisories += $Advisor.data } else { $Global:Advisories += $Advisor }
+                    Start-Sleep 3
+                    $Limit = $Limit + 1000
+                }
+                Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "Completed" -Completed
             }
         }   
 
         <######################################################### Security Center ######################################################################>
 
-        if ($SecurityCenter.IsPresent) 
-            {
-                Write-Progress -activity 'Azure Inventory' -Status "6% Complete." -PercentComplete 6 -CurrentOperation "Starting Security Advisories extraction jobs.."
-                Write-Host " Azure Resource Inventory are collecting Security Center Advisories."
-                Write-Host " Collecting Security Center Can increase considerably the execution time of Azure Resource Inventory and the size of final report "
-                Write-Host " "
-                Write-Host " If you want to skip Security Center report use <-SkipSecurityCenter> parameter. "
-                Write-Host " "
+        if ($SecurityCenter.IsPresent) {
+            Write-Progress -activity 'Azure Inventory' -Status "6% Complete." -PercentComplete 6 -CurrentOperation "Starting Security Advisories extraction jobs.."
+            Write-Host " Azure Resource Inventory are collecting Security Center Advisories."
+            Write-Host " Collecting Security Center Can increase considerably the execution time of Azure Resource Inventory and the size of final report "
+            Write-Host " "
+            Write-Host " If you want to skip Security Center report use <-SkipSecurityCenter> parameter. "
+            Write-Host " "
 
-                Write-Debug ('Extracting total number of Security Advisories from Tenant')
-                $SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-                if($SecSize.data) {$SecSizeNum = $SecSize.data.'count_'} else {$SecSizeNum = $SecSize.'count_'}
+            Write-Debug ('Extracting total number of Security Advisories from Tenant')
+            $SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+            if ($SecSize.data) { $SecSizeNum = $SecSize.data.'count_' } else { $SecSizeNum = $SecSize.'count_' }
 
 
-                if ($SecSizeNum -ge 1) 
-                    {
-                        $Loop = $SecSizeNum / 1000
-                        $Loop = [math]::ceiling($Loop)
-                        $Looper = 0
-                        $Limit = 0
-                        while ($Looper -lt $Loop) 
-                            {
-                                $Looper ++
-                                Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                                $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                                if($SecCenter.data) {$Global:Security += $SecCenter.data} else {$Global:Security += $SecCenter}
-                                Start-Sleep 3
-                                $Limit = $Limit + 1000
-                            }
-                            Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "Completed" -Completed
-                    }
+            if ($SecSizeNum -ge 1) {
+                $Loop = $SecSizeNum / 1000
+                $Loop = [math]::ceiling($Loop)
+                $Looper = 0
+                $Limit = 0
+                while ($Looper -lt $Loop) {
+                    $Looper ++
+                    Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                    $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                    if ($SecCenter.data) { $Global:Security += $SecCenter.data } else { $Global:Security += $SecCenter }
+                    Start-Sleep 3
+                    $Limit = $Limit + 1000
+                }
+                Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "Completed" -Completed
             }
-        else 
-            {
-                Write-Host " "
-                Write-Host " To include Security Center details in the report, use <-SecurityCenter> parameter. " 
-                Write-Host " " 
-            }
+        }
+        else {
+            Write-Host " "
+            Write-Host " To include Security Center details in the report, use <-SecurityCenter> parameter. " 
+            Write-Host " " 
+        }
             
-            Write-Progress -activity 'Azure Inventory' -PercentComplete 20
+        Write-Progress -activity 'Azure Inventory' -PercentComplete 20
 
-            Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "100% Complete." -Completed
+        Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "100% Complete." -Completed
  
-            Foreach ($Subscription in $Subscriptions) {
+        Foreach ($Subscription in $Subscriptions) {
 
-                Write-Debug ('Extracting total number of Resources from Subscription: ' + $Subscription.Name)
+            Write-Debug ('Extracting total number of Resources from Subscription: ' + $Subscription.Name)
                           
-                    $SUBID = $Subscription.id
-                    $SubName = $Subscription.name
-                    az account set --subscription $SUBID
+            $SUBID = $Subscription.id
+            $SubName = $Subscription.name
+            az account set --subscription $SUBID
                     
-                    $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-                    if($EnvSize.data) {$EnvSizeNum = $EnvSize.data.'count_'} else {$EnvSizeNum = $EnvSize.'count_'}
+            $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+            if ($EnvSize.data) { $EnvSizeNum = $EnvSize.data.'count_' } else { $EnvSizeNum = $EnvSize.'count_' }
                         
-                    if ($EnvSizeNum -ge 1) {
-                        $Loop = $EnvSizeNum / 1000
-                        $Loop = [math]::ceiling($Loop)
-                        $Looper = 0
-                        $Limit = 0
+            if ($EnvSizeNum -ge 1) {
+                $Loop = $EnvSizeNum / 1000
+                $Loop = [math]::ceiling($Loop)
+                $Looper = 0
+                $Limit = 0
     
-                        while ($Looper -lt $Loop) {
-                            $Resource = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                            if($Resource.data) {$Global:Resources += $Resource.data} else {$Global:Resources += $Resource} 
-                            Start-Sleep 3      
-                            $Looper ++
-                            Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs ($SubName)" -PercentComplete (($Looper / $Loop) * 100)
-                            $Limit = $Limit + 1000
-                        }
-                    }
+                while ($Looper -lt $Loop) {
+                    $Resource = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                    if ($Resource.data) { $Global:Resources += $Resource.data } else { $Global:Resources += $Resource } 
+                    Start-Sleep 3      
+                    $Looper ++
                     Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs ($SubName)" -PercentComplete (($Looper / $Loop) * 100)
-            }   
+                    $Limit = $Limit + 1000
+                }
+            }
+            Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs ($SubName)" -PercentComplete (($Looper / $Loop) * 100)
+        }   
     
     }
 
@@ -474,7 +468,7 @@ $Runtime = Measure-Command -Expression {
 
             $job = @()
 
-            $VM = ([PowerShell]::Create()).AddScript( { param($Sub,$Intag, $VM, $NIC, $NSG, $EXT)
+            $VM = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag, $VM, $NIC, $NSG, $EXT)
                     $vm = $VM
                     $vmexp = $EXT
                     $nic = $NIC
@@ -492,7 +486,7 @@ $Runtime = Measure-Command -Expression {
                         $AVSET = ''
                         $dataSize = ''
                         $StorAcc = ''
-                        $UpdateMgmt = if ($null -eq $data.osProfile.LinuxConfiguration.patchSettings.patchMode) {$data.osProfile.WindowsConfiguration.patchSettings.patchMode} else {$data.osProfile.LinuxConfiguration.patchSettings.patchMode}
+                        $UpdateMgmt = if ($null -eq $data.osProfile.LinuxConfiguration.patchSettings.patchMode) { $data.osProfile.WindowsConfiguration.patchSettings.patchMode } else { $data.osProfile.LinuxConfiguration.patchSettings.patchMode }
 
                         $ext = @()
                         $AzDiag = ''
@@ -562,7 +556,7 @@ $Runtime = Measure-Command -Expression {
                                                 'Tag Value'                     = [string]$Tag.$TagKey
                                             }
                                             $tmp += $obj
-                                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
                                         } 
                                     }
                                     elseif ([string]::IsNullOrEmpty($Tag.Keys) -or $InTag -ne $true) {
@@ -603,7 +597,7 @@ $Runtime = Measure-Command -Expression {
                                             'Tag Value'                     = $null
                                         }
                                         $tmp += $obj  
-                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
                                     }   
                                 }
                             }
@@ -648,7 +642,7 @@ $Runtime = Measure-Command -Expression {
                                         'Tag Value'                     = [string]$Tag.$TagKey
                                     }
                                     $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    if ($ResUCount -eq 1) { $ResUCount = 0 } 
                                 }
                             }
                             elseif ([string]::IsNullOrEmpty($Tag.Keys) -or $InTag -ne $true) {
@@ -689,14 +683,14 @@ $Runtime = Measure-Command -Expression {
                                     'Tag Value'                     = $null
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }   
                         }
                     }    
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4])).AddArgument($($args[5]))
 
-            $VMDisk = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$VMDisk)
+            $VMDisk = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag, $VMDisk)
                     $tmp = @()
 
                     $disk = $VMDisk
@@ -731,11 +725,10 @@ $Runtime = Measure-Command -Expression {
                                     'Tag Value'              = [string]$Tag.$TagKey
                                 }         
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
                         }
-                        else 
-                        {
+                        else {
                             $obj = @{
                                 'Subscription'           = $sub1.name;
                                 'Resource Group'         = $1.RESOURCEGROUP;
@@ -756,14 +749,14 @@ $Runtime = Measure-Command -Expression {
                                 'Tag Value'              = $null
                             }         
                             $tmp += $obj
-                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
                         }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[6]))
 
 
-            $SQLVM = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$SQLVM)
+            $SQLVM = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $SQLVM)
                     $tmp = @()
 
                     $sqlvm = $SQLVM
@@ -792,35 +785,34 @@ $Runtime = Measure-Command -Expression {
                                     'Tag Value'               = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
                         }
-                        else 
-                            {
-                                $obj = @{
-                                    'Subscription'            = $sub1.name;
-                                    'ResourceGroup'           = $1.RESOURCEGROUP;
-                                    'Name'                    = $1.NAME;
-                                    'Location'                = $1.LOCATION;
-                                    'Zone'                    = $1.ZONES;
-                                    'SQL Server License Type' = $data.sqlServerLicenseType;
-                                    'SQL Image'               = $data.sqlImageOffer;
-                                    'SQL Management'          = $data.sqlManagement;
-                                    'SQL Image Sku'           = $data.sqlImageSku;
-                                    'Resource U'              = $ResUCount;
-                                    'Tag Name'                = $null;
-                                    'Tag Value'               = $null
-                                }
-                                $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                        else {
+                            $obj = @{
+                                'Subscription'            = $sub1.name;
+                                'ResourceGroup'           = $1.RESOURCEGROUP;
+                                'Name'                    = $1.NAME;
+                                'Location'                = $1.LOCATION;
+                                'Zone'                    = $1.ZONES;
+                                'SQL Server License Type' = $data.sqlServerLicenseType;
+                                'SQL Image'               = $data.sqlImageOffer;
+                                'SQL Management'          = $data.sqlManagement;
+                                'SQL Image Sku'           = $data.sqlImageSku;
+                                'Resource U'              = $ResUCount;
+                                'Tag Name'                = $null;
+                                'Tag Value'               = $null
                             }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[7]))
 
 
 
-            $WebServerFarm = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$SERVERFARM)
+            $WebServerFarm = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag, $SERVERFARM)
                     $tmp = @()
 
                     $webfarm = $SERVERFARM
@@ -856,7 +848,7 @@ $Runtime = Measure-Command -Expression {
                                     'Tag Value'           = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
                         }
                         else {
@@ -881,7 +873,7 @@ $Runtime = Measure-Command -Expression {
                                 'Tag Value'           = $null
                             }
                             $tmp += $obj
-                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
                         }    
                     }
                     $tmp
@@ -889,7 +881,7 @@ $Runtime = Measure-Command -Expression {
 
 
 
-            $AKS = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$AKS)
+            $AKS = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag, $AKS)
                     $tmp = @()
 
                     $AKS = $AKS
@@ -945,7 +937,7 @@ $Runtime = Measure-Command -Expression {
                                         'Tag Value'                  = [string]$Tag.$TagKey
                                     }
                                     $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    if ($ResUCount -eq 1) { $ResUCount = 0 } 
                                 }
                             }
                             else {
@@ -984,7 +976,7 @@ $Runtime = Measure-Command -Expression {
                                     'Tag Value'                  = $null
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
                         }
                     }
@@ -992,7 +984,7 @@ $Runtime = Measure-Command -Expression {
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[9]))
 
 
-            $VMSS = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$vmss)
+            $VMSS = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag, $vmss)
                     $tmp = @()
 
                     $vmss = $vmss
@@ -1028,7 +1020,7 @@ $Runtime = Measure-Command -Expression {
                                         'Tag Value'                     = [string]$Tag.$TagKey
                                     }
                                     $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    if ($ResUCount -eq 1) { $ResUCount = 0 } 
                                 }
                             }
                             else { 
@@ -1053,7 +1045,7 @@ $Runtime = Measure-Command -Expression {
                                     'Tag Value'                     = $null
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
                         }
                     }
@@ -1061,7 +1053,7 @@ $Runtime = Measure-Command -Expression {
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[10]))
 
 
-            $CON = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$con)
+            $CON = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag, $con)
                     $tmp = @()
 
                     $con = $con
@@ -1098,7 +1090,7 @@ $Runtime = Measure-Command -Expression {
                                         'Tag Value'           = [string]$Tag.$TagKey
                                     }
                                     $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    if ($ResUCount -eq 1) { $ResUCount = 0 } 
                                 }
                             }
                             else {
@@ -1124,7 +1116,7 @@ $Runtime = Measure-Command -Expression {
                                     'Tag Value'           = $null
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
                         }
                     }
@@ -1133,7 +1125,7 @@ $Runtime = Measure-Command -Expression {
 
 
 
-            $SQLSRV = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$SQLSERVER)
+            $SQLSRV = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $SQLSERVER)
                     $tmp = @()
 
                     $SQLServer = $SQLSERVER
@@ -1163,7 +1155,7 @@ $Runtime = Measure-Command -Expression {
                                     'Tag Value'             = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
                         }
                         else {
@@ -1183,13 +1175,13 @@ $Runtime = Measure-Command -Expression {
                                 'Tag Value'             = $null
                             }
                             $tmp += $obj
-                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
                         }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[12]))
 
-            $IOT = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag,$IOT)
+            $IOT = ([PowerShell]::Create()).AddScript( { param($Sub, $Intag, $IOT)
                     $tmp = @()
 
                     $Subs = $Sub
@@ -1203,56 +1195,56 @@ $Runtime = Measure-Command -Expression {
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {
                                 $obj = @{
-                                    'Subscription'          = $sub1.name;
-                                    'Resource Group'        = $1.RESOURCEGROUP;
-                                    'Name'                  = $1.NAME;
-                                    'HostName'              = $data.hostname;
-                                    'State'                 = $data.state;
-                                    'SKU'                   = $1.sku.name;
-                                    'SKU Tier'              = $1.sku.tier;
-                                    'SKU Capacity'          = $1.sku.capacity;
-                                    'Features'              = $data.features;
+                                    'Subscription'                     = $sub1.name;
+                                    'Resource Group'                   = $1.RESOURCEGROUP;
+                                    'Name'                             = $1.NAME;
+                                    'HostName'                         = $data.hostname;
+                                    'State'                            = $data.state;
+                                    'SKU'                              = $1.sku.name;
+                                    'SKU Tier'                         = $1.sku.tier;
+                                    'SKU Capacity'                     = $1.sku.capacity;
+                                    'Features'                         = $data.features;
                                     'Enable File Upload Notifications' = $data.enableFileUploadNotifications;
-                                    'Default TTL As ISO8601' = $data.cloudToDevice.defaultTtlAsIso8601;
-                                    'Max Delivery Count'    = $data.cloudToDevice.maxDeliveryCount;
-                                    'EventHubs Endpoint'    = $data.eventHubEndpoints.events.endpoint;
-                                    'EventHubs Partition Count' = $data.eventHubEndpoints.events.partitionCount;
-                                    'EventHubs Path'        = $data.eventHubEndpoints.events.path;
-                                    'EventHubs Retention Days' = $data.eventHubEndpoints.events.retentionTimeInDays;
-                                    'Locations'             = [string]$data.locations.location;
-                                    'Resource U'              = $ResUCount;
-                                    'Tag Name'                = [string]$TagKey;
-                                    'Tag Value'               = [string]$Tag.$TagKey
+                                    'Default TTL As ISO8601'           = $data.cloudToDevice.defaultTtlAsIso8601;
+                                    'Max Delivery Count'               = $data.cloudToDevice.maxDeliveryCount;
+                                    'EventHubs Endpoint'               = $data.eventHubEndpoints.events.endpoint;
+                                    'EventHubs Partition Count'        = $data.eventHubEndpoints.events.partitionCount;
+                                    'EventHubs Path'                   = $data.eventHubEndpoints.events.path;
+                                    'EventHubs Retention Days'         = $data.eventHubEndpoints.events.retentionTimeInDays;
+                                    'Locations'                        = [string]$data.locations.location;
+                                    'Resource U'                       = $ResUCount;
+                                    'Tag Name'                         = [string]$TagKey;
+                                    'Tag Value'                        = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
                         }
                         else {
                             $obj = @{
-                                'Subscription'          = $sub1.name;
-                                'Resource Group'        = $1.RESOURCEGROUP;
-                                'Name'                  = $1.NAME;
-                                'HostName'              = $data.hostname;
-                                'State'                 = $data.state;
-                                'SKU'                   = $1.sku.name;
-                                'SKU Tier'              = $1.sku.tier;
-                                'SKU Capacity'          = $1.sku.capacity;
-                                'Features'              = $data.features;
+                                'Subscription'                     = $sub1.name;
+                                'Resource Group'                   = $1.RESOURCEGROUP;
+                                'Name'                             = $1.NAME;
+                                'HostName'                         = $data.hostname;
+                                'State'                            = $data.state;
+                                'SKU'                              = $1.sku.name;
+                                'SKU Tier'                         = $1.sku.tier;
+                                'SKU Capacity'                     = $1.sku.capacity;
+                                'Features'                         = $data.features;
                                 'Enable File Upload Notifications' = $data.enableFileUploadNotifications;
-                                'Default TTL As ISO8601' = $data.cloudToDevice.defaultTtlAsIso8601;
-                                'Max Delivery Count'    = $data.cloudToDevice.maxDeliveryCount;
-                                'EventHubs Endpoint'    = $data.eventHubEndpoints.events.endpoint;
-                                'EventHubs Partition Count' = $data.eventHubEndpoints.events.partitionCount;
-                                'EventHubs Path'        = $data.eventHubEndpoints.events.path;
-                                'EventHubs Retention Days' = $data.eventHubEndpoints.events.retentionTimeInDays;
-                                'Locations'             = [string]$data.locations.location;
-                                'Resource U'            = $ResUCount;
-                                'Tag Name'              = $null;
-                                'Tag Value'             = $null
+                                'Default TTL As ISO8601'           = $data.cloudToDevice.defaultTtlAsIso8601;
+                                'Max Delivery Count'               = $data.cloudToDevice.maxDeliveryCount;
+                                'EventHubs Endpoint'               = $data.eventHubEndpoints.events.endpoint;
+                                'EventHubs Partition Count'        = $data.eventHubEndpoints.events.partitionCount;
+                                'EventHubs Path'                   = $data.eventHubEndpoints.events.path;
+                                'EventHubs Retention Days'         = $data.eventHubEndpoints.events.retentionTimeInDays;
+                                'Locations'                        = [string]$data.locations.location;
+                                'Resource U'                       = $ResUCount;
+                                'Tag Name'                         = $null;
+                                'Tag Value'                        = $null
                             }
                             $tmp += $obj
-                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
                         }
                     }
                     $tmp
@@ -1315,7 +1307,7 @@ $Runtime = Measure-Command -Expression {
 
             $AzCompute
 
-        } -ArgumentList $SUBs,$InTag, $VM, $VMNIC, $NSG, $VMExp, $VMDisk, $SQLVM, $SERVERFARM, $AKS, $VMSS, $CON, $SQLSERVER, $IOT   | Out-Null
+        } -ArgumentList $SUBs, $InTag, $VM, $VMNIC, $NSG, $VMExp, $VMDisk, $SQLVM, $SERVERFARM, $AKS, $VMSS, $CON, $SQLSERVER, $IOT   | Out-Null
 
 
         <######################################################### NETWORK RESOURCE GROUP JOB ######################################################################>
@@ -1324,7 +1316,7 @@ $Runtime = Measure-Command -Expression {
 
             $job = @()
 
-            $VNET = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$VNet)
+            $VNET = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $VNet)
                     $tmp = @()
 
                     $vnet = $VNet
@@ -1340,28 +1332,6 @@ $Runtime = Measure-Command -Expression {
                             foreach ($3 in $data.subnets) {
                                 if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                                     foreach ($TagKey in $Tag.Keys) {
-                                            $obj = @{
-                                                'Subscription'                                 = $sub1.name;
-                                                'Resource Group'                               = $1.RESOURCEGROUP;
-                                                'Name'                                         = $1.NAME;
-                                                'Location'                                     = $1.LOCATION;
-                                                'Zone'                                         = $1.ZONES;
-                                                'Address Space'                                = $2;
-                                                'Enable DDOS Protection'                       = $data.enableDdosProtection;
-                                                'Enable VM Protection'                         = $data.enableVmProtection;
-                                                'Subnet Name'                                  = $3.name;
-                                                'Subnet Prefix'                                = $3.properties.addressPrefix;
-                                                'Subnet Private Link Service Network Policies' = $3.properties.privateLinkServiceNetworkPolicies;
-                                                'Subnet Private Endpoint Network Policies'     = $3.properties.privateEndpointNetworkPolicies;
-                                                'Resource U'                                   = $ResUCount;
-                                                'Tag Name'                                     = [string]$TagKey;
-                                                'Tag Value'                                    = [string]$Tag.$TagKey
-                                            }
-                                            $tmp += $obj
-                                            if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                        }
-                                    }
-                                    else {
                                         $obj = @{
                                             'Subscription'                                 = $sub1.name;
                                             'Resource Group'                               = $1.RESOURCEGROUP;
@@ -1376,12 +1346,34 @@ $Runtime = Measure-Command -Expression {
                                             'Subnet Private Link Service Network Policies' = $3.properties.privateLinkServiceNetworkPolicies;
                                             'Subnet Private Endpoint Network Policies'     = $3.properties.privateEndpointNetworkPolicies;
                                             'Resource U'                                   = $ResUCount;
-                                            'Tag Name'                                     = $null;
-                                            'Tag Value'                                    = $null
+                                            'Tag Name'                                     = [string]$TagKey;
+                                            'Tag Value'                                    = [string]$Tag.$TagKey
                                         }
                                         $tmp += $obj
-                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
                                     }
+                                }
+                                else {
+                                    $obj = @{
+                                        'Subscription'                                 = $sub1.name;
+                                        'Resource Group'                               = $1.RESOURCEGROUP;
+                                        'Name'                                         = $1.NAME;
+                                        'Location'                                     = $1.LOCATION;
+                                        'Zone'                                         = $1.ZONES;
+                                        'Address Space'                                = $2;
+                                        'Enable DDOS Protection'                       = $data.enableDdosProtection;
+                                        'Enable VM Protection'                         = $data.enableVmProtection;
+                                        'Subnet Name'                                  = $3.name;
+                                        'Subnet Prefix'                                = $3.properties.addressPrefix;
+                                        'Subnet Private Link Service Network Policies' = $3.properties.privateLinkServiceNetworkPolicies;
+                                        'Subnet Private Endpoint Network Policies'     = $3.properties.privateEndpointNetworkPolicies;
+                                        'Resource U'                                   = $ResUCount;
+                                        'Tag Name'                                     = $null;
+                                        'Tag Value'                                    = $null
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                }
                             }
                         }
                     }
@@ -1389,7 +1381,7 @@ $Runtime = Measure-Command -Expression {
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2]))
 
 
-            $VNETGTW = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$VNETGTW)
+            $VNETGTW = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $VNETGTW)
                     $tmp = @()
 
                     $vgtws = $VNETGTW
@@ -1403,32 +1395,6 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {  
-                                    $obj = @{
-                                        'Subscription'           = $sub1.name;
-                                        'Resource Group'         = $1.RESOURCEGROUP;
-                                        'Name'                   = $1.NAME;
-                                        'Location'               = $1.LOCATION;
-                                        'SKU'                    = $data.sku.tier;
-                                        'Active-active mode'     = $data.activeActive; 
-                                        'Gateway Type'           = $data.gatewayType;
-                                        'Gateway Generation'     = $data.vpnGatewayGeneration;
-                                        'VPN Type'               = $data.vpnType;
-                                        'Enable Private Address' = $data.enablePrivateIpAddress;
-                                        'Enable BGP'             = $data.enableBgp;
-                                        'BGP ASN'                = $data.bgpsettings.asn;
-                                        'BGP Peering Address'    = $data.bgpSettings.bgpPeeringAddress;
-                                        'BGP Peer Weight'        = $data.bgpSettings.peerWeight;
-                                        'Gateway Public IP'      = [string]$data.ipConfigurations.properties.publicIPAddress.id.split("/")[8];
-                                        'Gateway Subnet Name'    = [string]$data.ipConfigurations.properties.subnet.id.split("/")[8];
-                                        'Resource U'             = $ResUCount;
-                                        'Tag Name'               = [string]$TagKey;
-                                        'Tag Value'              = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {
                                 $obj = @{
                                     'Subscription'           = $sub1.name;
                                     'Resource Group'         = $1.RESOURCEGROUP;
@@ -1447,18 +1413,44 @@ $Runtime = Measure-Command -Expression {
                                     'Gateway Public IP'      = [string]$data.ipConfigurations.properties.publicIPAddress.id.split("/")[8];
                                     'Gateway Subnet Name'    = [string]$data.ipConfigurations.properties.subnet.id.split("/")[8];
                                     'Resource U'             = $ResUCount;
-                                    'Tag Name'               = $null;
-                                    'Tag Value'              = $null
+                                    'Tag Name'               = [string]$TagKey;
+                                    'Tag Value'              = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {
+                            $obj = @{
+                                'Subscription'           = $sub1.name;
+                                'Resource Group'         = $1.RESOURCEGROUP;
+                                'Name'                   = $1.NAME;
+                                'Location'               = $1.LOCATION;
+                                'SKU'                    = $data.sku.tier;
+                                'Active-active mode'     = $data.activeActive; 
+                                'Gateway Type'           = $data.gatewayType;
+                                'Gateway Generation'     = $data.vpnGatewayGeneration;
+                                'VPN Type'               = $data.vpnType;
+                                'Enable Private Address' = $data.enablePrivateIpAddress;
+                                'Enable BGP'             = $data.enableBgp;
+                                'BGP ASN'                = $data.bgpsettings.asn;
+                                'BGP Peering Address'    = $data.bgpSettings.bgpPeeringAddress;
+                                'BGP Peer Weight'        = $data.bgpSettings.peerWeight;
+                                'Gateway Public IP'      = [string]$data.ipConfigurations.properties.publicIPAddress.id.split("/")[8];
+                                'Gateway Subnet Name'    = [string]$data.ipConfigurations.properties.subnet.id.split("/")[8];
+                                'Resource U'             = $ResUCount;
+                                'Tag Name'               = $null;
+                                'Tag Value'              = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[3]))
 
 
-            $PIP = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$PIP)
+            $PIP = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $PIP)
                     $tmp = @()
 
                     $pubip = $PIP
@@ -1469,29 +1461,29 @@ $Runtime = Measure-Command -Expression {
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
                         $Tag = @{}
-                        if(!($data.ipConfiguration.id)) {$Use = 'Underutilized'} else {$Use = 'Utilized'}
+                        if (!($data.ipConfiguration.id)) { $Use = 'Underutilized' } else { $Use = 'Utilized' }
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if ($null -ne $data.ipConfiguration.id -and ![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) { 
-                                    $obj = @{
-                                        'Subscription'             = $sub1.name;
-                                        'Resource Group'           = $1.RESOURCEGROUP;
-                                        'Name'                     = $1.NAME;
-                                        'SKU'                      = $1.SKU.Name;
-                                        'Location'                 = $1.LOCATION;
-                                        'Type'                     = $data.publicIPAllocationMethod;
-                                        'Version'                  = $data.publicIPAddressVersion;
-                                        'IP Address'               = $data.ipAddress;
-                                        'Use'                      = $Use;
-                                        'Associated Resource'      = $data.ipConfiguration.id.split('/')[8];
-                                        'Associated Resource Type' = $data.ipConfiguration.id.split('/')[7];
-                                        'Resource U'               = $ResUCount;
-                                        'Tag Name'                 = [string]$TagKey;
-                                        'Tag Value'                = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                $obj = @{
+                                    'Subscription'             = $sub1.name;
+                                    'Resource Group'           = $1.RESOURCEGROUP;
+                                    'Name'                     = $1.NAME;
+                                    'SKU'                      = $1.SKU.Name;
+                                    'Location'                 = $1.LOCATION;
+                                    'Type'                     = $data.publicIPAllocationMethod;
+                                    'Version'                  = $data.publicIPAddressVersion;
+                                    'IP Address'               = $data.ipAddress;
+                                    'Use'                      = $Use;
+                                    'Associated Resource'      = $data.ipConfiguration.id.split('/')[8];
+                                    'Associated Resource Type' = $data.ipConfiguration.id.split('/')[7];
+                                    'Resource U'               = $ResUCount;
+                                    'Tag Name'                 = [string]$TagKey;
+                                    'Tag Value'                = [string]$Tag.$TagKey
                                 }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                            }
                         }
                         elseif ($null -ne $data.ipConfiguration.id -and $InTag -ne $true) { 
                             $obj = @{
@@ -1511,29 +1503,29 @@ $Runtime = Measure-Command -Expression {
                                 'Tag Value'                = $null
                             }
                             $tmp += $obj
-                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
                         }
                         elseif ($null -eq $data.ipConfiguration.id -and ![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {  
-                                    $obj = @{
-                                        'Subscription'             = $sub1.name;
-                                        'Resource Group'           = $1.RESOURCEGROUP;
-                                        'Name'                     = $1.NAME;
-                                        'SKU'                      = $1.SKU.Name;
-                                        'Location'                 = $1.LOCATION;
-                                        'Type'                     = $data.publicIPAllocationMethod;
-                                        'Version'                  = $data.publicIPAddressVersion;
-                                        'IP Address'               = $data.ipAddress;
-                                        'Use'                      = $Use;
-                                        'Associated Resource'      = $null;
-                                        'Associated Resource Type' = $null;
-                                        'Resource U'               = $ResUCount;
-                                        'Tag Name'                 = [string]$TagKey;
-                                        'Tag Value'                = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                $obj = @{
+                                    'Subscription'             = $sub1.name;
+                                    'Resource Group'           = $1.RESOURCEGROUP;
+                                    'Name'                     = $1.NAME;
+                                    'SKU'                      = $1.SKU.Name;
+                                    'Location'                 = $1.LOCATION;
+                                    'Type'                     = $data.publicIPAllocationMethod;
+                                    'Version'                  = $data.publicIPAddressVersion;
+                                    'IP Address'               = $data.ipAddress;
+                                    'Use'                      = $Use;
+                                    'Associated Resource'      = $null;
+                                    'Associated Resource Type' = $null;
+                                    'Resource U'               = $ResUCount;
+                                    'Tag Name'                 = [string]$TagKey;
+                                    'Tag Value'                = [string]$Tag.$TagKey
                                 }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                            }
                         }
                         elseif ($null -eq $data.ipConfiguration.id -and $InTag -ne $true) {  
                             $obj = @{
@@ -1553,14 +1545,14 @@ $Runtime = Measure-Command -Expression {
                                 'Tag Value'                = $null
                             }
                             $tmp += $obj
-                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
                         }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[4]))
 
 
-            $LB = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$LB)
+            $LB = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $LB)
                     $tmp = @()
 
                     $lbs = $LB
@@ -1597,33 +1589,6 @@ $Runtime = Measure-Command -Expression {
                                     foreach ($4 in $data.probes) {
                                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                                             foreach ($TagKey in $Tag.Keys) {
-                                                    $obj = @{
-                                                        'Subscription'              = $sub1.name;
-                                                        'Resource Group'            = $1.RESOURCEGROUP;
-                                                        'Name'                      = $1.NAME;
-                                                        'Location'                  = $1.LOCATION;
-                                                        'SKU'                       = $1.sku.name;
-                                                        'Frontend Name'             = $2.name;
-                                                        'Frontend Target'           = $Fronttarget;
-                                                        'Frontend Type'             = $FrontType;
-                                                        'Frontend Subnet'           = $frontsub;
-                                                        'Backend Pool Name'         = $3.name;
-                                                        'Backend Target'            = $BackTarget;
-                                                        'Backend Type'              = $BackType;
-                                                        'Probe Name'                = $4.name;
-                                                        'Probe Interval (sec)'      = $4.properties.intervalInSeconds;
-                                                        'Probe Protocol'            = $4.properties.protocol;
-                                                        'Probe Port'                = $4.properties.port;
-                                                        'Probe Unhealthy threshold' = $4.properties.numberOfProbes;
-                                                        'Resource U'                = $ResUCount;
-                                                        'Tag Name'                  = [string]$TagKey;
-                                                        'Tag Value'                 = [string]$Tag.$TagKey
-                                                    }
-                                                    $tmp += $obj
-                                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                                }
-                                            }
-                                            else { 
                                                 $obj = @{
                                                     'Subscription'              = $sub1.name;
                                                     'Resource Group'            = $1.RESOURCEGROUP;
@@ -1643,12 +1608,39 @@ $Runtime = Measure-Command -Expression {
                                                     'Probe Port'                = $4.properties.port;
                                                     'Probe Unhealthy threshold' = $4.properties.numberOfProbes;
                                                     'Resource U'                = $ResUCount;
-                                                    'Tag Name'                  = $null;
-                                                    'Tag Value'                 = $null
+                                                    'Tag Name'                  = [string]$TagKey;
+                                                    'Tag Value'                 = [string]$Tag.$TagKey
                                                 }
                                                 $tmp += $obj
-                                                if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                            }    
+                                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                            }
+                                        }
+                                        else { 
+                                            $obj = @{
+                                                'Subscription'              = $sub1.name;
+                                                'Resource Group'            = $1.RESOURCEGROUP;
+                                                'Name'                      = $1.NAME;
+                                                'Location'                  = $1.LOCATION;
+                                                'SKU'                       = $1.sku.name;
+                                                'Frontend Name'             = $2.name;
+                                                'Frontend Target'           = $Fronttarget;
+                                                'Frontend Type'             = $FrontType;
+                                                'Frontend Subnet'           = $frontsub;
+                                                'Backend Pool Name'         = $3.name;
+                                                'Backend Target'            = $BackTarget;
+                                                'Backend Type'              = $BackType;
+                                                'Probe Name'                = $4.name;
+                                                'Probe Interval (sec)'      = $4.properties.intervalInSeconds;
+                                                'Probe Protocol'            = $4.properties.protocol;
+                                                'Probe Port'                = $4.properties.port;
+                                                'Probe Unhealthy threshold' = $4.properties.numberOfProbes;
+                                                'Resource U'                = $ResUCount;
+                                                'Tag Name'                  = $null;
+                                                'Tag Value'                 = $null
+                                            }
+                                            $tmp += $obj
+                                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                        }    
                                     }
                                 }
                             }
@@ -1676,33 +1668,6 @@ $Runtime = Measure-Command -Expression {
                                     }
                                     if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                                         foreach ($TagKey in $Tag.Keys) {  
-                                                $obj = @{
-                                                    'Subscription'              = $sub1.name;
-                                                    'Resource Group'            = $1.RESOURCEGROUP;
-                                                    'Name'                      = $1.NAME;
-                                                    'Location'                  = $1.LOCATION;
-                                                    'SKU'                       = $1.sku.name;
-                                                    'Frontend Name'             = $2.name;
-                                                    'Frontend Target'           = $Fronttarget;
-                                                    'Frontend Type'             = $FrontType;
-                                                    'Frontend Subnet'           = $frontsub;
-                                                    'Backend Pool Name'         = $3.name;
-                                                    'Backend Target'            = $BackTarget;
-                                                    'Backend Type'              = $BackType;
-                                                    'Probe Name'                = $null;
-                                                    'Probe Interval (sec)'      = $null;
-                                                    'Probe Protocol'            = $null;
-                                                    'Probe Port'                = $null;
-                                                    'Probe Unhealthy threshold' = $null;
-                                                    'Resource U'                = $ResUCount;
-                                                    'Tag Name'                  = [string]$TagKey;
-                                                    'Tag Value'                 = [string]$Tag.$TagKey
-                                                }
-                                                $tmp += $obj
-                                                if ($ResUCount -eq 1) {$ResUCount = 0}          
-                                            }
-                                        }
-                                        else {
                                             $obj = @{
                                                 'Subscription'              = $sub1.name;
                                                 'Resource Group'            = $1.RESOURCEGROUP;
@@ -1722,12 +1687,39 @@ $Runtime = Measure-Command -Expression {
                                                 'Probe Port'                = $null;
                                                 'Probe Unhealthy threshold' = $null;
                                                 'Resource U'                = $ResUCount;
-                                                'Tag Name'                  = $null;
-                                                'Tag Value'                 = $null
+                                                'Tag Name'                  = [string]$TagKey;
+                                                'Tag Value'                 = [string]$Tag.$TagKey
                                             }
-                                            $tmp += $obj 
-                                            if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                            $tmp += $obj
+                                            if ($ResUCount -eq 1) { $ResUCount = 0 }          
                                         }
+                                    }
+                                    else {
+                                        $obj = @{
+                                            'Subscription'              = $sub1.name;
+                                            'Resource Group'            = $1.RESOURCEGROUP;
+                                            'Name'                      = $1.NAME;
+                                            'Location'                  = $1.LOCATION;
+                                            'SKU'                       = $1.sku.name;
+                                            'Frontend Name'             = $2.name;
+                                            'Frontend Target'           = $Fronttarget;
+                                            'Frontend Type'             = $FrontType;
+                                            'Frontend Subnet'           = $frontsub;
+                                            'Backend Pool Name'         = $3.name;
+                                            'Backend Target'            = $BackTarget;
+                                            'Backend Type'              = $BackType;
+                                            'Probe Name'                = $null;
+                                            'Probe Interval (sec)'      = $null;
+                                            'Probe Protocol'            = $null;
+                                            'Probe Port'                = $null;
+                                            'Probe Unhealthy threshold' = $null;
+                                            'Resource U'                = $ResUCount;
+                                            'Tag Name'                  = $null;
+                                            'Tag Value'                 = $null
+                                        }
+                                        $tmp += $obj 
+                                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                    }
                                 }
                             }
                         }   
@@ -1747,33 +1739,6 @@ $Runtime = Measure-Command -Expression {
                                 }         
                                 if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                                     foreach ($TagKey in $Tag.Keys) {
-                                            $obj = @{
-                                                'Subscription'              = $sub1.name;
-                                                'Resource Group'            = $1.RESOURCEGROUP;
-                                                'Name'                      = $1.NAME;
-                                                'Location'                  = $1.LOCATION;
-                                                'SKU'                       = $1.sku.name;
-                                                'Frontend Name'             = $2.name;
-                                                'Frontend Target'           = $Fronttarget;
-                                                'Frontend Type'             = $FrontType;
-                                                'Frontend Subnet'           = $frontsub;
-                                                'Backend Pool Name'         = $null;
-                                                'Backend Target'            = $null;
-                                                'Backend Type'              = $null;
-                                                'Probe Name'                = $null;
-                                                'Probe Interval (sec)'      = $null;
-                                                'Probe Protocol'            = $null;
-                                                'Probe Port'                = $null;
-                                                'Probe Unhealthy threshold' = $null;
-                                                'Resource U'                = $ResUCount;
-                                                'Tag Name'                  = [string]$TagKey;
-                                                'Tag Value'                 = [string]$Tag.$TagKey
-                                            }
-                                            $tmp += $obj   
-                                            if ($ResUCount -eq 1) {$ResUCount = 0}      
-                                        }
-                                    }
-                                    else {
                                         $obj = @{
                                             'Subscription'              = $sub1.name;
                                             'Resource Group'            = $1.RESOURCEGROUP;
@@ -1793,12 +1758,39 @@ $Runtime = Measure-Command -Expression {
                                             'Probe Port'                = $null;
                                             'Probe Unhealthy threshold' = $null;
                                             'Resource U'                = $ResUCount;
-                                            'Tag Name'                  = $null;
-                                            'Tag Value'                 = $null
+                                            'Tag Name'                  = [string]$TagKey;
+                                            'Tag Value'                 = [string]$Tag.$TagKey
                                         }
-                                        $tmp += $obj 
-                                        if ($ResUCount -eq 1) {$ResUCount = 0}  
-                                    }     
+                                        $tmp += $obj   
+                                        if ($ResUCount -eq 1) { $ResUCount = 0 }      
+                                    }
+                                }
+                                else {
+                                    $obj = @{
+                                        'Subscription'              = $sub1.name;
+                                        'Resource Group'            = $1.RESOURCEGROUP;
+                                        'Name'                      = $1.NAME;
+                                        'Location'                  = $1.LOCATION;
+                                        'SKU'                       = $1.sku.name;
+                                        'Frontend Name'             = $2.name;
+                                        'Frontend Target'           = $Fronttarget;
+                                        'Frontend Type'             = $FrontType;
+                                        'Frontend Subnet'           = $frontsub;
+                                        'Backend Pool Name'         = $null;
+                                        'Backend Target'            = $null;
+                                        'Backend Type'              = $null;
+                                        'Probe Name'                = $null;
+                                        'Probe Interval (sec)'      = $null;
+                                        'Probe Protocol'            = $null;
+                                        'Probe Port'                = $null;
+                                        'Probe Unhealthy threshold' = $null;
+                                        'Resource U'                = $ResUCount;
+                                        'Tag Name'                  = $null;
+                                        'Tag Value'                 = $null
+                                    }
+                                    $tmp += $obj 
+                                    if ($ResUCount -eq 1) { $ResUCount = 0 }  
+                                }     
                             }
                         }   
                         elseif ($null -ne $data.frontendIPConfigurations -and $null -eq $data.backendAddressPools -and $null -ne $data.probes) {
@@ -1818,33 +1810,6 @@ $Runtime = Measure-Command -Expression {
                                 foreach ($3 in $data.probes) {
                                     if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                                         foreach ($TagKey in $Tag.Keys) {
-                                                $obj = @{
-                                                    'Subscription'              = $sub1.name;
-                                                    'Resource Group'            = $1.RESOURCEGROUP;
-                                                    'Name'                      = $1.NAME;
-                                                    'Location'                  = $1.LOCATION;
-                                                    'SKU'                       = $1.sku.name;
-                                                    'Frontend Name'             = $2.name;
-                                                    'Frontend Target'           = $Fronttarget;
-                                                    'Frontend Type'             = $FrontType;
-                                                    'Frontend Subnet'           = $frontsub;
-                                                    'Backend Pool Name'         = $null;
-                                                    'Backend Target'            = $null;
-                                                    'Backend Type'              = $null;
-                                                    'Probe Name'                = $3.name;
-                                                    'Probe Interval (sec)'      = $3.properties.intervalInSeconds;
-                                                    'Probe Protocol'            = $3.properties.protocol;
-                                                    'Probe Port'                = $3.properties.port;
-                                                    'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
-                                                    'Resource U'                = $ResUCount;
-                                                    'Tag Name'                  = [string]$TagKey;
-                                                    'Tag Value'                 = [string]$Tag.$TagKey
-                                                }
-                                                $tmp += $obj  
-                                                if ($ResUCount -eq 1) {$ResUCount = 0}     
-                                            }
-                                        }
-                                        else {  
                                             $obj = @{
                                                 'Subscription'              = $sub1.name;
                                                 'Resource Group'            = $1.RESOURCEGROUP;
@@ -1864,12 +1829,39 @@ $Runtime = Measure-Command -Expression {
                                                 'Probe Port'                = $3.properties.port;
                                                 'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
                                                 'Resource U'                = $ResUCount;
-                                                'Tag Name'                  = $null;
-                                                'Tag Value'                 = $null
+                                                'Tag Name'                  = [string]$TagKey;
+                                                'Tag Value'                 = [string]$Tag.$TagKey
                                             }
-                                            $tmp += $obj
-                                            if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                        }      
+                                            $tmp += $obj  
+                                            if ($ResUCount -eq 1) { $ResUCount = 0 }     
+                                        }
+                                    }
+                                    else {  
+                                        $obj = @{
+                                            'Subscription'              = $sub1.name;
+                                            'Resource Group'            = $1.RESOURCEGROUP;
+                                            'Name'                      = $1.NAME;
+                                            'Location'                  = $1.LOCATION;
+                                            'SKU'                       = $1.sku.name;
+                                            'Frontend Name'             = $2.name;
+                                            'Frontend Target'           = $Fronttarget;
+                                            'Frontend Type'             = $FrontType;
+                                            'Frontend Subnet'           = $frontsub;
+                                            'Backend Pool Name'         = $null;
+                                            'Backend Target'            = $null;
+                                            'Backend Type'              = $null;
+                                            'Probe Name'                = $3.name;
+                                            'Probe Interval (sec)'      = $3.properties.intervalInSeconds;
+                                            'Probe Protocol'            = $3.properties.protocol;
+                                            'Probe Port'                = $3.properties.port;
+                                            'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
+                                            'Resource U'                = $ResUCount;
+                                            'Tag Name'                  = $null;
+                                            'Tag Value'                 = $null
+                                        }
+                                        $tmp += $obj
+                                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                    }      
                                 }
                             }
                         }   
@@ -1884,33 +1876,6 @@ $Runtime = Measure-Command -Expression {
                                 foreach ($3 in $data.probes) {
                                     if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                                         foreach ($TagKey in $Tag.Keys) {
-                                                $obj = @{
-                                                    'Subscription'              = $sub1.name;
-                                                    'Resource Group'            = $1.RESOURCEGROUP;
-                                                    'Name'                      = $1.NAME;
-                                                    'Location'                  = $1.LOCATION;
-                                                    'SKU'                       = $1.sku.name;
-                                                    'Frontend Name'             = $null;
-                                                    'Frontend Target'           = $null;
-                                                    'Frontend Type'             = $null;
-                                                    'Frontend Subnet'           = $null;
-                                                    'Backend Pool Name'         = $2.name;
-                                                    'Backend Target'            = $BackTarget;
-                                                    'Backend Type'              = $BackType;
-                                                    'Probe Name'                = $3.name;
-                                                    'Probe Interval (sec)'      = $3.properties.intervalInSeconds;
-                                                    'Probe Protocol'            = $3.properties.protocol;
-                                                    'Probe Port'                = $3.properties.port;
-                                                    'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
-                                                    'Resource U'                = $ResUCount;
-                                                    'Tag Name'                  = [string]$TagKey;
-                                                    'Tag Value'                 = [string]$Tag.$TagKey
-                                                }
-                                                $tmp += $obj   
-                                                if ($ResUCount -eq 1) {$ResUCount = 0}     
-                                            }
-                                        }
-                                        else { 
                                             $obj = @{
                                                 'Subscription'              = $sub1.name;
                                                 'Resource Group'            = $1.RESOURCEGROUP;
@@ -1930,12 +1895,39 @@ $Runtime = Measure-Command -Expression {
                                                 'Probe Port'                = $3.properties.port;
                                                 'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
                                                 'Resource U'                = $ResUCount;
-                                                'Tag Name'                  = $null;
-                                                'Tag Value'                 = $null
+                                                'Tag Name'                  = [string]$TagKey;
+                                                'Tag Value'                 = [string]$Tag.$TagKey
                                             }
                                             $tmp += $obj   
-                                            if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                        }     
+                                            if ($ResUCount -eq 1) { $ResUCount = 0 }     
+                                        }
+                                    }
+                                    else { 
+                                        $obj = @{
+                                            'Subscription'              = $sub1.name;
+                                            'Resource Group'            = $1.RESOURCEGROUP;
+                                            'Name'                      = $1.NAME;
+                                            'Location'                  = $1.LOCATION;
+                                            'SKU'                       = $1.sku.name;
+                                            'Frontend Name'             = $null;
+                                            'Frontend Target'           = $null;
+                                            'Frontend Type'             = $null;
+                                            'Frontend Subnet'           = $null;
+                                            'Backend Pool Name'         = $2.name;
+                                            'Backend Target'            = $BackTarget;
+                                            'Backend Type'              = $BackType;
+                                            'Probe Name'                = $3.name;
+                                            'Probe Interval (sec)'      = $3.properties.intervalInSeconds;
+                                            'Probe Protocol'            = $3.properties.protocol;
+                                            'Probe Port'                = $3.properties.port;
+                                            'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
+                                            'Resource U'                = $ResUCount;
+                                            'Tag Name'                  = $null;
+                                            'Tag Value'                 = $null
+                                        }
+                                        $tmp += $obj   
+                                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                    }     
                                 }
                             }            
                         }    
@@ -1943,33 +1935,6 @@ $Runtime = Measure-Command -Expression {
                             foreach ($2 in $data.probes) {
                                 if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                                     foreach ($TagKey in $Tag.Keys) {
-                                            $obj = @{
-                                                'Subscription'              = $sub1.name;
-                                                'Resource Group'            = $1.RESOURCEGROUP;
-                                                'Name'                      = $1.NAME;
-                                                'Location'                  = $1.LOCATION;
-                                                'SKU'                       = $1.sku.name;
-                                                'Frontend Name'             = $null;
-                                                'Frontend Target'           = $null;
-                                                'Frontend Type'             = $null;
-                                                'Frontend Subnet'           = $null;
-                                                'Backend Pool Name'         = $null;
-                                                'Backend Target'            = $null;
-                                                'Backend Type'              = $null;
-                                                'Probe Name'                = $2.name;
-                                                'Probe Interval (sec)'      = $2.properties.intervalInSeconds;
-                                                'Probe Protocol'            = $2.properties.protocol;
-                                                'Probe Port'                = $2.properties.port;
-                                                'Probe Unhealthy threshold' = $2.properties.numberOfProbes;
-                                                'Resource U'                = $ResUCount;
-                                                'Tag Name'                  = [string]$TagKey;
-                                                'Tag Value'                 = [string]$Tag.$TagKey
-                                            }
-                                            $tmp += $obj
-                                            if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                        }
-                                    }
-                                    else { 
                                         $obj = @{
                                             'Subscription'              = $sub1.name;
                                             'Resource Group'            = $1.RESOURCEGROUP;
@@ -1989,12 +1954,39 @@ $Runtime = Measure-Command -Expression {
                                             'Probe Port'                = $2.properties.port;
                                             'Probe Unhealthy threshold' = $2.properties.numberOfProbes;
                                             'Resource U'                = $ResUCount;
-                                            'Tag Name'                  = $null;
-                                            'Tag Value'                 = $null
+                                            'Tag Name'                  = [string]$TagKey;
+                                            'Tag Value'                 = [string]$Tag.$TagKey
                                         }
                                         $tmp += $obj
-                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
                                     }
+                                }
+                                else { 
+                                    $obj = @{
+                                        'Subscription'              = $sub1.name;
+                                        'Resource Group'            = $1.RESOURCEGROUP;
+                                        'Name'                      = $1.NAME;
+                                        'Location'                  = $1.LOCATION;
+                                        'SKU'                       = $1.sku.name;
+                                        'Frontend Name'             = $null;
+                                        'Frontend Target'           = $null;
+                                        'Frontend Type'             = $null;
+                                        'Frontend Subnet'           = $null;
+                                        'Backend Pool Name'         = $null;
+                                        'Backend Target'            = $null;
+                                        'Backend Type'              = $null;
+                                        'Probe Name'                = $2.name;
+                                        'Probe Interval (sec)'      = $2.properties.intervalInSeconds;
+                                        'Probe Protocol'            = $2.properties.protocol;
+                                        'Probe Port'                = $2.properties.port;
+                                        'Probe Unhealthy threshold' = $2.properties.numberOfProbes;
+                                        'Resource U'                = $ResUCount;
+                                        'Tag Name'                  = $null;
+                                        'Tag Value'                 = $null
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                }
                             }            
                         }
                     }
@@ -2003,7 +1995,7 @@ $Runtime = Measure-Command -Expression {
 
 
 
-            $Peering = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$VNET)
+            $Peering = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $VNET)
                     $tmp = @()
 
                     $vnet = $VNET
@@ -2022,54 +2014,54 @@ $Runtime = Measure-Command -Expression {
                                 foreach ($5 in $4.properties.remoteAddressSpace.addressPrefixes) {
                                     if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                                         foreach ($TagKey in $Tag.Keys) {  
-                                                $obj = @{
-                                                    'Subscription'                          = $sub1.name;
-                                                    'Resource Group'                        = $1.RESOURCEGROUP;
-                                                    'VNET Name'                             = $1.NAME;
-                                                    'Location'                              = $1.LOCATION;
-                                                    'Zone'                                  = $1.ZONES;
-                                                    'Address Space'                         = $2;
-                                                    'Peering Name'                          = $4.name;
-                                                    'Peering VNet'                          = $4.properties.remoteVirtualNetwork.id.split('/')[8];
-                                                    'Peering State'                         = $4.properties.peeringState;
-                                                    'Peering Use Remote Gateways'           = $4.properties.useRemoteGateways;
-                                                    'Peering Allow Gateway Transit'         = $4.properties.allowGatewayTransit;
-                                                    'Peering Allow Forwarded Traffic'       = $4.properties.allowForwardedTraffic;
-                                                    'Peering Do Not Verify Remote Gateways' = $4.properties.doNotVerifyRemoteGateways;
-                                                    'Peering Allow Virtual Network Access'  = $4.properties.allowVirtualNetworkAccess;
-                                                    'Peering Address Space'                 = $5;
-                                                    'Resource U'                            = $ResUCount;
-                                                    'Tag Name'                              = [string]$TagKey;
-                                                    'Tag Value'                             = [string]$Tag.$TagKey
-                                                }
-                                                $tmp += $obj
-                                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                            $obj = @{
+                                                'Subscription'                          = $sub1.name;
+                                                'Resource Group'                        = $1.RESOURCEGROUP;
+                                                'VNET Name'                             = $1.NAME;
+                                                'Location'                              = $1.LOCATION;
+                                                'Zone'                                  = $1.ZONES;
+                                                'Address Space'                         = $2;
+                                                'Peering Name'                          = $4.name;
+                                                'Peering VNet'                          = $4.properties.remoteVirtualNetwork.id.split('/')[8];
+                                                'Peering State'                         = $4.properties.peeringState;
+                                                'Peering Use Remote Gateways'           = $4.properties.useRemoteGateways;
+                                                'Peering Allow Gateway Transit'         = $4.properties.allowGatewayTransit;
+                                                'Peering Allow Forwarded Traffic'       = $4.properties.allowForwardedTraffic;
+                                                'Peering Do Not Verify Remote Gateways' = $4.properties.doNotVerifyRemoteGateways;
+                                                'Peering Allow Virtual Network Access'  = $4.properties.allowVirtualNetworkAccess;
+                                                'Peering Address Space'                 = $5;
+                                                'Resource U'                            = $ResUCount;
+                                                'Tag Name'                              = [string]$TagKey;
+                                                'Tag Value'                             = [string]$Tag.$TagKey
                                             }
+                                            $tmp += $obj
+                                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
                                         }
-                                        else {   
-                                                $obj = @{
-                                                    'Subscription'                          = $sub1.name;
-                                                    'Resource Group'                        = $1.RESOURCEGROUP;
-                                                    'VNET Name'                             = $1.NAME;
-                                                    'Location'                              = $1.LOCATION;
-                                                    'Zone'                                  = $1.ZONES;
-                                                    'Address Space'                         = $2;
-                                                    'Peering Name'                          = $4.name;
-                                                    'Peering VNet'                          = $4.properties.remoteVirtualNetwork.id.split('/')[8];
-                                                    'Peering State'                         = $4.properties.peeringState;
-                                                    'Peering Use Remote Gateways'           = $4.properties.useRemoteGateways;
-                                                    'Peering Allow Gateway Transit'         = $4.properties.allowGatewayTransit;
-                                                    'Peering Allow Forwarded Traffic'       = $4.properties.allowForwardedTraffic;
-                                                    'Peering Do Not Verify Remote Gateways' = $4.properties.doNotVerifyRemoteGateways;
-                                                    'Peering Allow Virtual Network Access'  = $4.properties.allowVirtualNetworkAccess;
-                                                    'Peering Address Space'                 = $5;
-                                                    'Resource U'                            = $ResUCount;
-                                                    'Tag Name'                              = $null;
-                                                    'Tag Value'                             = $null
-                                                }
-                                                $tmp += $obj
-                                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    }
+                                    else {   
+                                        $obj = @{
+                                            'Subscription'                          = $sub1.name;
+                                            'Resource Group'                        = $1.RESOURCEGROUP;
+                                            'VNET Name'                             = $1.NAME;
+                                            'Location'                              = $1.LOCATION;
+                                            'Zone'                                  = $1.ZONES;
+                                            'Address Space'                         = $2;
+                                            'Peering Name'                          = $4.name;
+                                            'Peering VNet'                          = $4.properties.remoteVirtualNetwork.id.split('/')[8];
+                                            'Peering State'                         = $4.properties.peeringState;
+                                            'Peering Use Remote Gateways'           = $4.properties.useRemoteGateways;
+                                            'Peering Allow Gateway Transit'         = $4.properties.allowGatewayTransit;
+                                            'Peering Allow Forwarded Traffic'       = $4.properties.allowForwardedTraffic;
+                                            'Peering Do Not Verify Remote Gateways' = $4.properties.doNotVerifyRemoteGateways;
+                                            'Peering Allow Virtual Network Access'  = $4.properties.allowVirtualNetworkAccess;
+                                            'Peering Address Space'                 = $5;
+                                            'Resource U'                            = $ResUCount;
+                                            'Tag Name'                              = $null;
+                                            'Tag Value'                             = $null
                                         }
+                                        $tmp += $obj
+                                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                    }
                                 }
                             }
                         }
@@ -2078,7 +2070,7 @@ $Runtime = Measure-Command -Expression {
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2]))
 
-            $FrontDoor = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$FRONTDOOR)
+            $FrontDoor = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $FRONTDOOR)
                     $tmp = @()
 
                     $Subs = $Sub
@@ -2091,53 +2083,53 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {  
-                                    $obj = @{
-                                        'Subscription'           = $sub1.name;
-                                        'Resource Group'         = $1.RESOURCEGROUP;
-                                        'Name'                   = $1.NAME;
-                                        'Location'               = $1.LOCATION;
-                                        'Friendly Name'          = $data.friendlyName;
-                                        'cName'                  = $data.cName;
-                                        'State'                  = $data.enabledState;
-                                        'Frontend'               = [string]$data.frontendEndpoints.name;
-                                        'Backend'                = [string]$data.backendPools.name;
-                                        'Health Probe'           = [string]$data.healthProbeSettings.name;
-                                        'Load Balancing'         = [string]$data.loadBalancingSettings.name;
-                                        'Routing Rules'          = [string]$data.routingRules.name;
-                                        'Resource U'             = $ResUCount;
-                                        'Tag Name'               = [string]$TagKey;
-                                        'Tag Value'              = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {    
                                 $obj = @{
-                                    'Subscription'           = $sub1.name;
-                                    'Resource Group'         = $1.RESOURCEGROUP;
-                                    'Name'                   = $1.NAME;
-                                    'Location'               = $1.LOCATION;
-                                    'Friendly Name'          = $data.friendlyName;
-                                    'cName'                  = $data.cName;
-                                    'State'                  = $data.enabledState;
-                                    'Frontend'               = [string]$data.frontendEndpoints.name;
-                                    'Backend'                = [string]$data.backendPools.name;
-                                    'Health Probe'           = [string]$data.healthProbeSettings.name;
-                                    'Load Balancing'         = [string]$data.loadBalancingSettings.name;
-                                    'Routing Rules'          = [string]$data.routingRules.name;
-                                    'Resource U'             = $ResUCount;
-                                    'Tag Name'               = $null;
-                                    'Tag Value'              = $null
+                                    'Subscription'   = $sub1.name;
+                                    'Resource Group' = $1.RESOURCEGROUP;
+                                    'Name'           = $1.NAME;
+                                    'Location'       = $1.LOCATION;
+                                    'Friendly Name'  = $data.friendlyName;
+                                    'cName'          = $data.cName;
+                                    'State'          = $data.enabledState;
+                                    'Frontend'       = [string]$data.frontendEndpoints.name;
+                                    'Backend'        = [string]$data.backendPools.name;
+                                    'Health Probe'   = [string]$data.healthProbeSettings.name;
+                                    'Load Balancing' = [string]$data.loadBalancingSettings.name;
+                                    'Routing Rules'  = [string]$data.routingRules.name;
+                                    'Resource U'     = $ResUCount;
+                                    'Tag Name'       = [string]$TagKey;
+                                    'Tag Value'      = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {    
+                            $obj = @{
+                                'Subscription'   = $sub1.name;
+                                'Resource Group' = $1.RESOURCEGROUP;
+                                'Name'           = $1.NAME;
+                                'Location'       = $1.LOCATION;
+                                'Friendly Name'  = $data.friendlyName;
+                                'cName'          = $data.cName;
+                                'State'          = $data.enabledState;
+                                'Frontend'       = [string]$data.frontendEndpoints.name;
+                                'Backend'        = [string]$data.backendPools.name;
+                                'Health Probe'   = [string]$data.healthProbeSettings.name;
+                                'Load Balancing' = [string]$data.loadBalancingSettings.name;
+                                'Routing Rules'  = [string]$data.routingRules.name;
+                                'Resource U'     = $ResUCount;
+                                'Tag Name'       = $null;
+                                'Tag Value'      = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[6]))
 
-            $AppGateway = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$APPGTW)
+            $AppGateway = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $APPGTW)
                     $tmp = @()
 
                     $Subs = $Sub
@@ -2150,55 +2142,55 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {        
-                                    $obj = @{
-                                        'Subscription'           = $sub1.name;
-                                        'Resource Group'         = $1.RESOURCEGROUP;
-                                        'Name'                   = $1.NAME;
-                                        'Location'               = $1.LOCATION;
-                                        'State'                  = $data.OperationalState;
-                                        'SKU Name'               = $data.sku.tier;
-                                        'SKU Capacity'           = $data.sku.capacity;
-                                        'Backend'                = [string]$data.backendAddressPools.name;
-                                        'Frontend'               = [string]$data.frontendIPConfigurations.name;
-                                        'Frontend Ports'         = [string]$data.frontendports.properties.port;
-                                        'Gateways'               = [string]$data.gatewayIPConfigurations.name;
-                                        'HTTP Listeners'         = [string]$data.httpListeners.name;
-                                        'Request Routing Rules'  = [string]$data.RequestRoutingRules.Name;
-                                        'Resource U'             = $ResUCount;
-                                        'Tag Name'               = [string]$TagKey;
-                                        'Tag Value'              = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {        
                                 $obj = @{
-                                    'Subscription'           = $sub1.name;
-                                    'Resource Group'         = $1.RESOURCEGROUP;
-                                    'Name'                   = $1.NAME;
-                                    'Location'               = $1.LOCATION;
-                                    'State'                  = $data.OperationalState;
-                                    'SKU Name'               = $data.sku.tier;
-                                    'SKU Capacity'           = $data.sku.capacity;
-                                    'Backend'                = [string]$data.backendAddressPools.name;
-                                    'Frontend'               = [string]$data.frontendIPConfigurations.name;
-                                    'Frontend Ports'         = [string]$data.frontendports.properties.port;
-                                    'Gateways'               = [string]$data.gatewayIPConfigurations.name;
-                                    'HTTP Listeners'         = [string]$data.httpListeners.name;
-                                    'Request Routing Rules'  = [string]$data.RequestRoutingRules.Name;
-                                    'Resource U'             = $ResUCount;
-                                    'Tag Name'               = $null;
-                                    'Tag Value'              = $null
+                                    'Subscription'          = $sub1.name;
+                                    'Resource Group'        = $1.RESOURCEGROUP;
+                                    'Name'                  = $1.NAME;
+                                    'Location'              = $1.LOCATION;
+                                    'State'                 = $data.OperationalState;
+                                    'SKU Name'              = $data.sku.tier;
+                                    'SKU Capacity'          = $data.sku.capacity;
+                                    'Backend'               = [string]$data.backendAddressPools.name;
+                                    'Frontend'              = [string]$data.frontendIPConfigurations.name;
+                                    'Frontend Ports'        = [string]$data.frontendports.properties.port;
+                                    'Gateways'              = [string]$data.gatewayIPConfigurations.name;
+                                    'HTTP Listeners'        = [string]$data.httpListeners.name;
+                                    'Request Routing Rules' = [string]$data.RequestRoutingRules.Name;
+                                    'Resource U'            = $ResUCount;
+                                    'Tag Name'              = [string]$TagKey;
+                                    'Tag Value'             = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {        
+                            $obj = @{
+                                'Subscription'          = $sub1.name;
+                                'Resource Group'        = $1.RESOURCEGROUP;
+                                'Name'                  = $1.NAME;
+                                'Location'              = $1.LOCATION;
+                                'State'                 = $data.OperationalState;
+                                'SKU Name'              = $data.sku.tier;
+                                'SKU Capacity'          = $data.sku.capacity;
+                                'Backend'               = [string]$data.backendAddressPools.name;
+                                'Frontend'              = [string]$data.frontendIPConfigurations.name;
+                                'Frontend Ports'        = [string]$data.frontendports.properties.port;
+                                'Gateways'              = [string]$data.gatewayIPConfigurations.name;
+                                'HTTP Listeners'        = [string]$data.httpListeners.name;
+                                'Request Routing Rules' = [string]$data.RequestRoutingRules.Name;
+                                'Resource U'            = $ResUCount;
+                                'Tag Name'              = $null;
+                                'Tag Value'             = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[7]))
 
-            $RouteTable = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$ROUTETABLE)
+            $RouteTable = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $ROUTETABLE)
                     $tmp = @()
 
                     $Subs = $Sub
@@ -2211,49 +2203,49 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value } 
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) { 
-                                    $obj = @{
-                                        'Subscription'           = $sub1.name;
-                                        'Resource Group'         = $1.RESOURCEGROUP;
-                                        'Name'                   = $1.NAME;
-                                        'Location'               = $1.LOCATION;
-                                        'Disable BGP Route Propagation' = $data.disableBgpRoutePropagation;
-                                        'Routes'                 = [string]$data.routes.name;
-                                        'Routes Prefixes'        = [string]$data.routes.properties.addressPrefix;
-                                        'Routes BGP Override'    = [string]$data.routes.properties.hasBgpOverride;
-                                        'Routes Next Hop IP'     = [string]$data.routes.properties.nextHopIpAddress;
-                                        'Routes Next Hop Type'   = [string]$data.routes.properties.nextHopType;
-                                        'Resource U'             = $ResUCount;
-                                        'Tag Name'               = [string]$TagKey;
-                                        'Tag Value'              = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {  
                                 $obj = @{
-                                    'Subscription'           = $sub1.name;
-                                    'Resource Group'         = $1.RESOURCEGROUP;
-                                    'Name'                   = $1.NAME;
-                                    'Location'               = $1.LOCATION;
+                                    'Subscription'                  = $sub1.name;
+                                    'Resource Group'                = $1.RESOURCEGROUP;
+                                    'Name'                          = $1.NAME;
+                                    'Location'                      = $1.LOCATION;
                                     'Disable BGP Route Propagation' = $data.disableBgpRoutePropagation;
-                                    'Routes'                 = [string]$data.routes.name;
-                                    'Routes Prefixes'        = [string]$data.routes.properties.addressPrefix;
-                                    'Routes BGP Override'    = [string]$data.routes.properties.hasBgpOverride;
-                                    'Routes Next Hop IP'     = [string]$data.routes.properties.nextHopIpAddress;
-                                    'Routes Next Hop Type'   = [string]$data.routes.properties.nextHopType;
-                                    'Resource U'             = $ResUCount;
-                                    'Tag Name'               = $null;
-                                    'Tag Value'              = $null
+                                    'Routes'                        = [string]$data.routes.name;
+                                    'Routes Prefixes'               = [string]$data.routes.properties.addressPrefix;
+                                    'Routes BGP Override'           = [string]$data.routes.properties.hasBgpOverride;
+                                    'Routes Next Hop IP'            = [string]$data.routes.properties.nextHopIpAddress;
+                                    'Routes Next Hop Type'          = [string]$data.routes.properties.nextHopType;
+                                    'Resource U'                    = $ResUCount;
+                                    'Tag Name'                      = [string]$TagKey;
+                                    'Tag Value'                     = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {  
+                            $obj = @{
+                                'Subscription'                  = $sub1.name;
+                                'Resource Group'                = $1.RESOURCEGROUP;
+                                'Name'                          = $1.NAME;
+                                'Location'                      = $1.LOCATION;
+                                'Disable BGP Route Propagation' = $data.disableBgpRoutePropagation;
+                                'Routes'                        = [string]$data.routes.name;
+                                'Routes Prefixes'               = [string]$data.routes.properties.addressPrefix;
+                                'Routes BGP Override'           = [string]$data.routes.properties.hasBgpOverride;
+                                'Routes Next Hop IP'            = [string]$data.routes.properties.nextHopIpAddress;
+                                'Routes Next Hop Type'          = [string]$data.routes.properties.nextHopType;
+                                'Resource U'                    = $ResUCount;
+                                'Tag Name'                      = $null;
+                                'Tag Value'                     = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[8]))                
 
-            $PubDNS = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$PubDNS)
+            $PubDNS = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $PubDNS)
                     $tmp = @()
 
                     $Subs = $Sub
@@ -2266,48 +2258,48 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {     
-                                    $obj = @{
-                                        'Subscription'           = $sub1.name;
-                                        'Resource Group'         = $1.RESOURCEGROUP;
-                                        'Name'                   = $1.NAME;
-                                        'Location'               = $1.LOCATION;
-                                        'Zone Type'              = $data.zoneType;
-                                        'Number of Record Sets'  = $data.numberOfRecordSets;
-                                        'Max Number of Record Sets' = $data.maxNumberofRecordSets;
-                                        'Name Servers'           = [string]$data.nameServers;
-                                        'Resource U'             = $ResUCount;
-                                        'Tag Name'               = [string]$TagKey;
-                                        'Tag Value'              = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {    
                                 $obj = @{
-                                    'Subscription'           = $sub1.name;
-                                    'Resource Group'         = $1.RESOURCEGROUP;
-                                    'Name'                   = $1.NAME;
-                                    'Location'               = $1.LOCATION;
-                                    'Zone Type'              = $data.zoneType;
-                                    'Number of Record Sets'  = $data.numberOfRecordSets;
+                                    'Subscription'              = $sub1.name;
+                                    'Resource Group'            = $1.RESOURCEGROUP;
+                                    'Name'                      = $1.NAME;
+                                    'Location'                  = $1.LOCATION;
+                                    'Zone Type'                 = $data.zoneType;
+                                    'Number of Record Sets'     = $data.numberOfRecordSets;
                                     'Max Number of Record Sets' = $data.maxNumberofRecordSets;
-                                    'Name Servers'           = [string]$data.nameServers;
-                                    'Resource U'             = $ResUCount;
-                                    'Tag Name'               = $null;
-                                    'Tag Value'              = $null
+                                    'Name Servers'              = [string]$data.nameServers;
+                                    'Resource U'                = $ResUCount;
+                                    'Tag Name'                  = [string]$TagKey;
+                                    'Tag Value'                 = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {    
+                            $obj = @{
+                                'Subscription'              = $sub1.name;
+                                'Resource Group'            = $1.RESOURCEGROUP;
+                                'Name'                      = $1.NAME;
+                                'Location'                  = $1.LOCATION;
+                                'Zone Type'                 = $data.zoneType;
+                                'Number of Record Sets'     = $data.numberOfRecordSets;
+                                'Max Number of Record Sets' = $data.maxNumberofRecordSets;
+                                'Name Servers'              = [string]$data.nameServers;
+                                'Resource U'                = $ResUCount;
+                                'Tag Name'                  = $null;
+                                'Tag Value'                 = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[9]))
 
 
-                $PrivDNS.properties
+            $PrivDNS.properties
 
-                $PrivDNS = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$PrivDNS)
+            $PrivDNS = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $PrivDNS)
                     $tmp = @()
 
                     $Subs = $Sub
@@ -2320,36 +2312,36 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {     
-                                    $obj = @{
-                                        'Subscription'           = $sub1.name;
-                                        'Resource Group'         = $1.RESOURCEGROUP;
-                                        'Name'                   = $1.NAME;
-                                        'Location'               = $1.LOCATION;
-                                        'Number of Records'      = $data.numberOfRecordSets;
-                                        'Virtual Network Links'  = $data.numberOfVirtualNetworkLinks;
-                                        'Network Links with Registration' = $data.numberOfVirtualNetworkLinksWithRegistration;
-                                        'Tag Name'               = [string]$TagKey;
-                                        'Tag Value'              = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {    
                                 $obj = @{
-                                    'Subscription'           = $sub1.name;
-                                    'Resource Group'         = $1.RESOURCEGROUP;
-                                    'Name'                   = $1.NAME;
-                                    'Location'               = $1.LOCATION;
-                                    'Number of Records'      = $data.numberOfRecordSets;
-                                    'Virtual Network Links'  = $data.numberOfVirtualNetworkLinks;
+                                    'Subscription'                    = $sub1.name;
+                                    'Resource Group'                  = $1.RESOURCEGROUP;
+                                    'Name'                            = $1.NAME;
+                                    'Location'                        = $1.LOCATION;
+                                    'Number of Records'               = $data.numberOfRecordSets;
+                                    'Virtual Network Links'           = $data.numberOfVirtualNetworkLinks;
                                     'Network Links with Registration' = $data.numberOfVirtualNetworkLinksWithRegistration;
-                                    'Tag Name'               = $null;
-                                    'Tag Value'              = $null
+                                    'Tag Name'                        = [string]$TagKey;
+                                    'Tag Value'                       = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {    
+                            $obj = @{
+                                'Subscription'                    = $sub1.name;
+                                'Resource Group'                  = $1.RESOURCEGROUP;
+                                'Name'                            = $1.NAME;
+                                'Location'                        = $1.LOCATION;
+                                'Number of Records'               = $data.numberOfRecordSets;
+                                'Virtual Network Links'           = $data.numberOfVirtualNetworkLinks;
+                                'Network Links with Registration' = $data.numberOfVirtualNetworkLinksWithRegistration;
+                                'Tag Name'                        = $null;
+                                'Tag Value'                       = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[10]))  
@@ -2403,21 +2395,21 @@ $Runtime = Measure-Command -Expression {
             $PrivDNS.Dispose()
 
             $AzNetwork = @{
-                'VNET'    = $VNETS;
-                'VNETGTW' = $VNETGTWS;
-                'PIP'     = $PIPS;
-                'LB'      = $LBS;
-                'Peering' = $PeeringS;
-                'FrontDoor' = $FrontDoorS;
-                'AppGateway' = $AppGatewayS;
-                'RouteTable' = $RouteTableS;
-                'Public DNS' = $PubDNSS;
+                'VNET'        = $VNETS;
+                'VNETGTW'     = $VNETGTWS;
+                'PIP'         = $PIPS;
+                'LB'          = $LBS;
+                'Peering'     = $PeeringS;
+                'FrontDoor'   = $FrontDoorS;
+                'AppGateway'  = $AppGatewayS;
+                'RouteTable'  = $RouteTableS;
+                'Public DNS'  = $PubDNSS;
                 'Private DNS' = $PrivDNSS;
             }
 
             $AzNetwork
 
-        } -ArgumentList $Subs,$InTag, $VNET, $VNETGTW, $PIP, $LB, $FRONTDOOR, $APPGTW, $ROUTETABLE, $PubDNS, $PrivDNS | Out-Null
+        } -ArgumentList $Subs, $InTag, $VNET, $VNETGTW, $PIP, $LB, $FRONTDOOR, $APPGTW, $ROUTETABLE, $PubDNS, $PrivDNS | Out-Null
 
 
         <######################################################### INFRASTRUCTURE RESOURCE GROUP JOB ######################################################################>
@@ -2427,7 +2419,7 @@ $Runtime = Measure-Command -Expression {
 
             $job = @()
 
-            $StorageAcc = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$StorageAcc)
+            $StorageAcc = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $StorageAcc)
                     $tmp = @()
 
                     $storageacc = $StorageAcc
@@ -2442,34 +2434,6 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {   
-                                    $obj = @{
-                                        'Subscription'                          = $sub1.name;
-                                        'Resource Group'                        = $1.RESOURCEGROUP;
-                                        'Name'                                  = $1.NAME;
-                                        'Location'                              = $1.LOCATION;
-                                        'Zone'                                  = $1.ZONES;
-                                        'Supports HTTPs Traffic Only'           = $data.supportsHttpsTrafficOnly;
-                                        'Allow Blob Public Access'              = if ($data.allowBlobPublicAccess -eq $false) { $false }else { $true };
-                                        'TLS Version'                           = $TLSv;
-                                        'Identity-based access for file shares' = if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None') { $false }elseif ($null -eq $data.azureFilesIdentityBasedAuthentication.directoryServiceOptions) { $false }else { $true };
-                                        'Access Tier'                           = $data.accessTier;
-                                        'Primary Location'                      = $data.primaryLocation;
-                                        'Status Of Primary'                     = $data.statusOfPrimary;
-                                        'Secondary Location'                    = $data.secondaryLocation;
-                                        'Blob Address'                          = [string]$data.primaryEndpoints.blob;
-                                        'File Address'                          = [string]$data.primaryEndpoints.file;
-                                        'Table Address'                         = [string]$data.primaryEndpoints.table;
-                                        'Queue Address'                         = [string]$data.primaryEndpoints.queue;
-                                        'Network Acls'                          = $data.networkAcls.defaultAction;
-                                        'Resource U'                            = $ResUCount;
-                                        'Tag Name'                              = [string]$TagKey;
-                                        'Tag Value'                             = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {   
                                 $obj = @{
                                     'Subscription'                          = $sub1.name;
                                     'Resource Group'                        = $1.RESOURCEGROUP;
@@ -2490,19 +2454,47 @@ $Runtime = Measure-Command -Expression {
                                     'Queue Address'                         = [string]$data.primaryEndpoints.queue;
                                     'Network Acls'                          = $data.networkAcls.defaultAction;
                                     'Resource U'                            = $ResUCount;
-                                    'Tag Name'                              = $null;
-                                    'Tag Value'                             = $null
+                                    'Tag Name'                              = [string]$TagKey;
+                                    'Tag Value'                             = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {   
+                            $obj = @{
+                                'Subscription'                          = $sub1.name;
+                                'Resource Group'                        = $1.RESOURCEGROUP;
+                                'Name'                                  = $1.NAME;
+                                'Location'                              = $1.LOCATION;
+                                'Zone'                                  = $1.ZONES;
+                                'Supports HTTPs Traffic Only'           = $data.supportsHttpsTrafficOnly;
+                                'Allow Blob Public Access'              = if ($data.allowBlobPublicAccess -eq $false) { $false }else { $true };
+                                'TLS Version'                           = $TLSv;
+                                'Identity-based access for file shares' = if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None') { $false }elseif ($null -eq $data.azureFilesIdentityBasedAuthentication.directoryServiceOptions) { $false }else { $true };
+                                'Access Tier'                           = $data.accessTier;
+                                'Primary Location'                      = $data.primaryLocation;
+                                'Status Of Primary'                     = $data.statusOfPrimary;
+                                'Secondary Location'                    = $data.secondaryLocation;
+                                'Blob Address'                          = [string]$data.primaryEndpoints.blob;
+                                'File Address'                          = [string]$data.primaryEndpoints.file;
+                                'Table Address'                         = [string]$data.primaryEndpoints.table;
+                                'Queue Address'                         = [string]$data.primaryEndpoints.queue;
+                                'Network Acls'                          = $data.networkAcls.defaultAction;
+                                'Resource U'                            = $ResUCount;
+                                'Tag Name'                              = $null;
+                                'Tag Value'                             = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2]))
 
 
 
-            $AutAcc = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$RunBook, $AutAcc)
+            $AutAcc = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $RunBook, $AutAcc)
                     $tmp = @()
 
                     $runbook = $RunBook
@@ -2539,30 +2531,30 @@ $Runtime = Measure-Command -Expression {
                                             'Tag Value'                = [string]$Tag.$TagKey
                                         }
                                         $tmp += $obj
-                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
                                     }
                                 }
                                 else {   
-                                        $data = $1.PROPERTIES
-                                        $obj = @{
-                                            'Subscription'             = $sub1.name;
-                                            'Resource Group'           = $0.RESOURCEGROUP;
-                                            'Automation Account Name'  = $0.NAME;
-                                            'Automation Account State' = $0.properties.State;
-                                            'Automation Account SKU'   = $0.properties.sku.name;
-                                            'Location'                 = $0.LOCATION;
-                                            'Runbook Name'             = $1.Name;
-                                            'Last Modified Time'       = ([datetime]$data.lastModifiedTime).tostring('MM/dd/yyyy hh:mm') ;
-                                            'Runbook State'            = $data.state;
-                                            'Runbook Type'             = $data.runbookType;
-                                            'Runbook Description'      = $data.description;
-                                            'Job Count'                = $data.jobCount;
-                                            'Resource U'               = $ResUCount;
-                                            'Tag Name'                 = $null;
-                                            'Tag Value'                = $null
-                                        }
-                                        $tmp += $obj
-                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    $data = $1.PROPERTIES
+                                    $obj = @{
+                                        'Subscription'             = $sub1.name;
+                                        'Resource Group'           = $0.RESOURCEGROUP;
+                                        'Automation Account Name'  = $0.NAME;
+                                        'Automation Account State' = $0.properties.State;
+                                        'Automation Account SKU'   = $0.properties.sku.name;
+                                        'Location'                 = $0.LOCATION;
+                                        'Runbook Name'             = $1.Name;
+                                        'Last Modified Time'       = ([datetime]$data.lastModifiedTime).tostring('MM/dd/yyyy hh:mm') ;
+                                        'Runbook State'            = $data.state;
+                                        'Runbook Type'             = $data.runbookType;
+                                        'Runbook Description'      = $data.description;
+                                        'Job Count'                = $data.jobCount;
+                                        'Resource U'               = $ResUCount;
+                                        'Tag Name'                 = $null;
+                                        'Tag Value'                = $null
+                                    }
+                                    $tmp += $obj
+                                    if ($ResUCount -eq 1) { $ResUCount = 0 } 
                                 }
                             }
                         }
@@ -2587,29 +2579,29 @@ $Runtime = Measure-Command -Expression {
                                         'Tag Value'                = [string]$Tag.$TagKey
                                     }
                                     $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    if ($ResUCount -eq 1) { $ResUCount = 0 } 
                                 }
                             }
                             else {   
-                                    $obj = @{
-                                        'Subscription'             = $sub1.name;
-                                        'Resource Group'           = $0.RESOURCEGROUP;
-                                        'Automation Account Name'  = $0.NAME;
-                                        'Automation Account State' = $0.properties.State;
-                                        'Automation Account SKU'   = $0.properties.sku.name;
-                                        'Location'                 = $0.LOCATION;
-                                        'Runbook Name'             = $null;
-                                        'Last Modified Time'       = $null;
-                                        'Runbook State'            = $null;
-                                        'Runbook Type'             = $null;
-                                        'Runbook Description'      = $null;
-                                        'Job Count'                = $null;
-                                        'Resource U'               = $ResUCount;
-                                        'Tag Name'                 = $null;
-                                        'Tag Value'                = $null
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                $obj = @{
+                                    'Subscription'             = $sub1.name;
+                                    'Resource Group'           = $0.RESOURCEGROUP;
+                                    'Automation Account Name'  = $0.NAME;
+                                    'Automation Account State' = $0.properties.State;
+                                    'Automation Account SKU'   = $0.properties.sku.name;
+                                    'Location'                 = $0.LOCATION;
+                                    'Runbook Name'             = $null;
+                                    'Last Modified Time'       = $null;
+                                    'Runbook State'            = $null;
+                                    'Runbook Type'             = $null;
+                                    'Runbook Description'      = $null;
+                                    'Job Count'                = $null;
+                                    'Resource U'               = $ResUCount;
+                                    'Tag Name'                 = $null;
+                                    'Tag Value'                = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
                         }
                     }
@@ -2617,7 +2609,7 @@ $Runtime = Measure-Command -Expression {
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[3])).AddArgument($($args[4]))
 
 
-            $EvtHub = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$evthub)
+            $EvtHub = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $evthub)
                     $tmp = @()
 
                     $evthub = $evthub
@@ -2632,55 +2624,55 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) { 
-                                    $obj = @{
-                                        'Subscription'         = $sub1.name;
-                                        'Resource Group'       = $1.RESOURCEGROUP;
-                                        'Name'                 = $1.NAME;
-                                        'Location'             = $1.LOCATION;
-                                        'SKU'                  = $sku.name;
-                                        'Status'               = $data.status;
-                                        'Geo-Replication'      = $data.zoneRedundant;
-                                        'Throughput Units'     = $1.sku.capacity;
-                                        'Auto-Inflate'         = $data.isAutoInflateEnabled;
-                                        'Max Throughput Units' = $data.maximumThroughputUnits;
-                                        'Kafka Enabled'        = $data.kafkaEnabled;
-                                        'Endpoint'             = $data.serviceBusEndpoint;
-                                        'Resource U'           = $ResUCount;
-                                        'Tag Name'             = [string]$TagKey;
-                                        'Tag Value'            = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                $obj = @{
+                                    'Subscription'         = $sub1.name;
+                                    'Resource Group'       = $1.RESOURCEGROUP;
+                                    'Name'                 = $1.NAME;
+                                    'Location'             = $1.LOCATION;
+                                    'SKU'                  = $sku.name;
+                                    'Status'               = $data.status;
+                                    'Geo-Replication'      = $data.zoneRedundant;
+                                    'Throughput Units'     = $1.sku.capacity;
+                                    'Auto-Inflate'         = $data.isAutoInflateEnabled;
+                                    'Max Throughput Units' = $data.maximumThroughputUnits;
+                                    'Kafka Enabled'        = $data.kafkaEnabled;
+                                    'Endpoint'             = $data.serviceBusEndpoint;
+                                    'Resource U'           = $ResUCount;
+                                    'Tag Name'             = [string]$TagKey;
+                                    'Tag Value'            = [string]$Tag.$TagKey
                                 }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
-                            else { 
-                                    $obj = @{
-                                        'Subscription'         = $sub1.name;
-                                        'Resource Group'       = $1.RESOURCEGROUP;
-                                        'Name'                 = $1.NAME;
-                                        'Location'             = $1.LOCATION;
-                                        'SKU'                  = $sku.name;
-                                        'Status'               = $data.status;
-                                        'Geo-Replication'      = $data.zoneRedundant;
-                                        'Throughput Units'     = $1.sku.capacity;
-                                        'Auto-Inflate'         = $data.isAutoInflateEnabled;
-                                        'Max Throughput Units' = $data.maximumThroughputUnits;
-                                        'Kafka Enabled'        = $data.kafkaEnabled;
-                                        'Endpoint'             = $data.serviceBusEndpoint;
-                                        'Resource U'           = $ResUCount;
-                                        'Tag Name'             = $null;
-                                        'Tag Value'            = $null
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                        }
+                        else { 
+                            $obj = @{
+                                'Subscription'         = $sub1.name;
+                                'Resource Group'       = $1.RESOURCEGROUP;
+                                'Name'                 = $1.NAME;
+                                'Location'             = $1.LOCATION;
+                                'SKU'                  = $sku.name;
+                                'Status'               = $data.status;
+                                'Geo-Replication'      = $data.zoneRedundant;
+                                'Throughput Units'     = $1.sku.capacity;
+                                'Auto-Inflate'         = $data.isAutoInflateEnabled;
+                                'Max Throughput Units' = $data.maximumThroughputUnits;
+                                'Kafka Enabled'        = $data.kafkaEnabled;
+                                'Endpoint'             = $data.serviceBusEndpoint;
+                                'Resource U'           = $ResUCount;
+                                'Tag Name'             = $null;
+                                'Tag Value'            = $null
                             }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[5]))
 
 
 
-            $WrkSpace = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$WRKSPACE)
+            $WrkSpace = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $WRKSPACE)
                     $tmp = @()
 
                     $wrkspace = $WRKSPACE
@@ -2694,23 +2686,6 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {
-                                    $obj = @{
-                                        'Subscription'     = $sub1.name;
-                                        'Resource Group'   = $1.RESOURCEGROUP;
-                                        'Name'             = $1.NAME;
-                                        'Location'         = $1.LOCATION;
-                                        'SKU'              = $data.sku.name;
-                                        'Retention Days'   = $data.retentionInDays;
-                                        'Daily Quota (GB)' = [decimal]$data.workspaceCapping.dailyQuotaGb;
-                                        'Resource U'       = $ResUCount;
-                                        'Tag Name'         = [string]$TagKey;
-                                        'Tag Value'        = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {
                                 $obj = @{
                                     'Subscription'     = $sub1.name;
                                     'Resource Group'   = $1.RESOURCEGROUP;
@@ -2720,12 +2695,29 @@ $Runtime = Measure-Command -Expression {
                                     'Retention Days'   = $data.retentionInDays;
                                     'Daily Quota (GB)' = [decimal]$data.workspaceCapping.dailyQuotaGb;
                                     'Resource U'       = $ResUCount;
-                                    'Tag Name'         = $null;
-                                    'Tag Value'        = $null
+                                    'Tag Name'         = [string]$TagKey;
+                                    'Tag Value'        = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {
+                            $obj = @{
+                                'Subscription'     = $sub1.name;
+                                'Resource Group'   = $1.RESOURCEGROUP;
+                                'Name'             = $1.NAME;
+                                'Location'         = $1.LOCATION;
+                                'SKU'              = $data.sku.name;
+                                'Retention Days'   = $data.retentionInDays;
+                                'Daily Quota (GB)' = [decimal]$data.workspaceCapping.dailyQuotaGb;
+                                'Resource U'       = $ResUCount;
+                                'Tag Name'         = $null;
+                                'Tag Value'        = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[6]))
@@ -2746,41 +2738,41 @@ $Runtime = Measure-Command -Expression {
                             $vmIds = $vmid.split('/')[8]
                             if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                                 foreach ($TagKey in $Tag.Keys) {
-                                        $obj = @{
-                                            'Subscription'     = $sub1.name;
-                                            'Resource Group'   = $1.RESOURCEGROUP;
-                                            'Name'             = $1.NAME;
-                                            'Location'         = $1.LOCATION;
-                                            'Fault Domains'    = [string]$data.platformFaultDomainCount;
-                                            'Update Domains'   = [string]$data.platformUpdateDomainCount;
-                                            'Virtual Machines' = [string]$vmIds;
-                                            'Tag Name'         = [string]$TagKey;
-                                            'Tag Value'        = [string]$Tag.$TagKey
-                                        }
-                                        $tmp += $obj
+                                    $obj = @{
+                                        'Subscription'     = $sub1.name;
+                                        'Resource Group'   = $1.RESOURCEGROUP;
+                                        'Name'             = $1.NAME;
+                                        'Location'         = $1.LOCATION;
+                                        'Fault Domains'    = [string]$data.platformFaultDomainCount;
+                                        'Update Domains'   = [string]$data.platformUpdateDomainCount;
+                                        'Virtual Machines' = [string]$vmIds;
+                                        'Tag Name'         = [string]$TagKey;
+                                        'Tag Value'        = [string]$Tag.$TagKey
                                     }
+                                    $tmp += $obj
                                 }
-                                else {
-                                        $obj = @{
-                                            'Subscription'     = $sub1.name;
-                                            'Resource Group'   = $1.RESOURCEGROUP;
-                                            'Name'             = $1.NAME;
-                                            'Location'         = $1.LOCATION;
-                                            'Fault Domains'    = [string]$data.platformFaultDomainCount;
-                                            'Update Domains'   = [string]$data.platformUpdateDomainCount;
-                                            'Virtual Machines' = [string]$vmIds;
-                                            'Tag Name'         = $null;
-                                            'Tag Value'        = $null
-                                        }
-                                        $tmp += $obj
+                            }
+                            else {
+                                $obj = @{
+                                    'Subscription'     = $sub1.name;
+                                    'Resource Group'   = $1.RESOURCEGROUP;
+                                    'Name'             = $1.NAME;
+                                    'Location'         = $1.LOCATION;
+                                    'Fault Domains'    = [string]$data.platformFaultDomainCount;
+                                    'Update Domains'   = [string]$data.platformUpdateDomainCount;
+                                    'Virtual Machines' = [string]$vmIds;
+                                    'Tag Name'         = $null;
+                                    'Tag Value'        = $null
                                 }
+                                $tmp += $obj
+                            }
                         }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[7]))
 
 
-            $WebSite = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$SITES)
+            $WebSite = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $SITES)
                     $tmp = @()
 
                     $WebSite = $SITES
@@ -2795,38 +2787,6 @@ $Runtime = Measure-Command -Expression {
                         foreach ($2 in $data.hostNameSslStates) {
                             if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                                 foreach ($TagKey in $Tag.Keys) {
-                                        $obj = @{
-                                            'Subscription'                  = $sub1.name;
-                                            'Resource Group'                = $1.RESOURCEGROUP;
-                                            'Name'                          = $1.NAME;
-                                            'Kind'                          = $1.KIND;
-                                            'Location'                      = $1.LOCATION;
-                                            'Enabled'                       = $data.enabled;
-                                            'state'                         = $data.state;
-                                            'SKU'                           = $data.sku;
-                                            'Content Availability State'    = $data.contentAvailabilityState;
-                                            'Runtime Availability State'    = $data.runtimeAvailabilityState;
-                                            'Possible Inbound IP Addresses' = $data.possibleInboundIpAddresses;
-                                            'Repository Site Name'          = $data.repositorySiteName;
-                                            'Availability State'            = $data.availabilityState;
-                                            'HostNames'                     = $2.Name;
-                                            'HostName Type'                 = $2.hostType;
-                                            'ssl State'                     = $2.sslState;
-                                            'Default Hostname'              = $data.defaultHostName;
-                                            'Client Cert Mode'              = $data.clientCertMode;
-                                            'ContainerSize'                 = $data.containerSize;
-                                            'Admin Enabled'                 = $data.adminEnabled;
-                                            'FTPs Host Name'                = $data.ftpsHostName;
-                                            'HTTPS Only'                    = $data.httpsOnly;
-                                            'Resource U'                    = $ResUCount;
-                                            'Tag Name'                      = [string]$TagKey;
-                                            'Tag Value'                     = [string]$Tag.$TagKey
-                                        }
-                                        $tmp += $obj
-                                        if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                    }
-                                }
-                                else {
                                     $obj = @{
                                         'Subscription'                  = $sub1.name;
                                         'Resource Group'                = $1.RESOURCEGROUP;
@@ -2851,19 +2811,51 @@ $Runtime = Measure-Command -Expression {
                                         'FTPs Host Name'                = $data.ftpsHostName;
                                         'HTTPS Only'                    = $data.httpsOnly;
                                         'Resource U'                    = $ResUCount;
-                                        'Tag Name'                      = $null;
-                                        'Tag Value'                     = $null
+                                        'Tag Name'                      = [string]$TagKey;
+                                        'Tag Value'                     = [string]$Tag.$TagKey
                                     }
                                     $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                    if ($ResUCount -eq 1) { $ResUCount = 0 } 
                                 }
+                            }
+                            else {
+                                $obj = @{
+                                    'Subscription'                  = $sub1.name;
+                                    'Resource Group'                = $1.RESOURCEGROUP;
+                                    'Name'                          = $1.NAME;
+                                    'Kind'                          = $1.KIND;
+                                    'Location'                      = $1.LOCATION;
+                                    'Enabled'                       = $data.enabled;
+                                    'state'                         = $data.state;
+                                    'SKU'                           = $data.sku;
+                                    'Content Availability State'    = $data.contentAvailabilityState;
+                                    'Runtime Availability State'    = $data.runtimeAvailabilityState;
+                                    'Possible Inbound IP Addresses' = $data.possibleInboundIpAddresses;
+                                    'Repository Site Name'          = $data.repositorySiteName;
+                                    'Availability State'            = $data.availabilityState;
+                                    'HostNames'                     = $2.Name;
+                                    'HostName Type'                 = $2.hostType;
+                                    'ssl State'                     = $2.sslState;
+                                    'Default Hostname'              = $data.defaultHostName;
+                                    'Client Cert Mode'              = $data.clientCertMode;
+                                    'ContainerSize'                 = $data.containerSize;
+                                    'Admin Enabled'                 = $data.adminEnabled;
+                                    'FTPs Host Name'                = $data.ftpsHostName;
+                                    'HTTPS Only'                    = $data.httpsOnly;
+                                    'Resource U'                    = $ResUCount;
+                                    'Tag Name'                      = $null;
+                                    'Tag Value'                     = $null
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                            }
                         }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[8]))
 
 
-            $Vault = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$VAULT)
+            $Vault = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $VAULT)
                     $tmp = @()
 
                     $Subs = $Sub
@@ -2876,60 +2868,60 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {
-                                    $obj = @{
-                                        'Subscription'                  = $sub1.name;
-                                        'Resource Group'                = $1.RESOURCEGROUP;
-                                        'Name'                          = $1.NAME;
-                                        'Location'                      = $1.LOCATION;
-                                        'SKU Family'                    = $data.sku.family;
-                                        'SKU'                           = $data.sku.name;
-                                        'Vault Uri'                     = $data.vaultUri;
-                                        'Enable RBAC'                   = $data.enableRbacAuthorization;
-                                        'Enable Soft Delete'            = $data.enableSoftDelete;
-                                        'Enable for Disk Encryption'    = $data.enabledForDiskEncryption;
-                                        'Enable for Template Deploy'    = $data.enabledForTemplateDeployment;
-                                        'Soft Delete Retention Days'    = $data.softDeleteRetentionInDays;
-                                        'Certificate Permissions'       = [string]$data.accessPolicies.permissions.certificates;
-                                        'Key Permissions'               = [string]$data.accessPolicies.permissions.keys;
-                                        'Secret Permissions'            = [string]$data.accessPolicies.permissions.secrets;
-                                        'Resource U'                    = $ResUCount;
-                                        'Tag Name'                      = [string]$TagKey;
-                                        'Tag Value'                     = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {
                                 $obj = @{
-                                    'Subscription'                  = $sub1.name;
-                                    'Resource Group'                = $1.RESOURCEGROUP;
-                                    'Name'                          = $1.NAME;
-                                    'Location'                      = $1.LOCATION;
-                                    'SKU Family'                    = $data.sku.family;
-                                    'SKU'                           = $data.sku.name;
-                                    'Vault Uri'                     = $data.vaultUri;
-                                    'Enable RBAC'                   = $data.enableRbacAuthorization;
-                                    'Enable Soft Delete'            = $data.enableSoftDelete;
-                                    'Enable for Disk Encryption'    = $data.enabledForDiskEncryption;
-                                    'Enable for Template Deploy'    = $data.enabledForTemplateDeployment;
-                                    'Soft Delete Retention Days'    = $data.softDeleteRetentionInDays;
-                                    'Certificate Permissions'       = [string]$data.accessPolicies.permissions.certificates;
-                                    'Key Permissions'               = [string]$data.accessPolicies.permissions.keys;
-                                    'Secret Permissions'            = [string]$data.accessPolicies.permissions.secrets;
-                                    'Resource U'                    = $ResUCount;
-                                    'Tag Name'                      = $null;
-                                    'Tag Value'                     = $null
+                                    'Subscription'               = $sub1.name;
+                                    'Resource Group'             = $1.RESOURCEGROUP;
+                                    'Name'                       = $1.NAME;
+                                    'Location'                   = $1.LOCATION;
+                                    'SKU Family'                 = $data.sku.family;
+                                    'SKU'                        = $data.sku.name;
+                                    'Vault Uri'                  = $data.vaultUri;
+                                    'Enable RBAC'                = $data.enableRbacAuthorization;
+                                    'Enable Soft Delete'         = $data.enableSoftDelete;
+                                    'Enable for Disk Encryption' = $data.enabledForDiskEncryption;
+                                    'Enable for Template Deploy' = $data.enabledForTemplateDeployment;
+                                    'Soft Delete Retention Days' = $data.softDeleteRetentionInDays;
+                                    'Certificate Permissions'    = [string]$data.accessPolicies.permissions.certificates;
+                                    'Key Permissions'            = [string]$data.accessPolicies.permissions.keys;
+                                    'Secret Permissions'         = [string]$data.accessPolicies.permissions.secrets;
+                                    'Resource U'                 = $ResUCount;
+                                    'Tag Name'                   = [string]$TagKey;
+                                    'Tag Value'                  = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {
+                            $obj = @{
+                                'Subscription'               = $sub1.name;
+                                'Resource Group'             = $1.RESOURCEGROUP;
+                                'Name'                       = $1.NAME;
+                                'Location'                   = $1.LOCATION;
+                                'SKU Family'                 = $data.sku.family;
+                                'SKU'                        = $data.sku.name;
+                                'Vault Uri'                  = $data.vaultUri;
+                                'Enable RBAC'                = $data.enableRbacAuthorization;
+                                'Enable Soft Delete'         = $data.enableSoftDelete;
+                                'Enable for Disk Encryption' = $data.enabledForDiskEncryption;
+                                'Enable for Template Deploy' = $data.enabledForTemplateDeployment;
+                                'Soft Delete Retention Days' = $data.softDeleteRetentionInDays;
+                                'Certificate Permissions'    = [string]$data.accessPolicies.permissions.certificates;
+                                'Key Permissions'            = [string]$data.accessPolicies.permissions.keys;
+                                'Secret Permissions'         = [string]$data.accessPolicies.permissions.secrets;
+                                'Resource U'                 = $ResUCount;
+                                'Tag Name'                   = $null;
+                                'Tag Value'                  = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[9]))
 
 
-            $RecoveryVault = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$RECOVAULT)
+            $RecoveryVault = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $RECOVAULT)
                     $tmp = @()
 
                     $Subs = $Sub
@@ -2942,46 +2934,46 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {
-                                    $obj = @{
-                                        'Subscription'                  = $sub1.name;
-                                        'Resource Group'                = $1.RESOURCEGROUP;
-                                        'Name'                          = $1.NAME;
-                                        'Location'                      = $1.LOCATION;
-                                        'SKU Name'                      = $1.sku.name;
-                                        'SKU Tier'                      = $1.sku.tier;
-                                        'Private Endpoint State for Backup' = $data.privateEndpointStateForBackup;
-                                        'Private Endpoint State for Site Recovery' = $data.privateEndpointStateForSiteRecovery;
-                                        'Resource U'                    = $ResUCount;
-                                        'Tag Name'                      = [string]$TagKey;
-                                        'Tag Value'                     = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {
                                 $obj = @{
-                                    'Subscription'                  = $sub1.name;
-                                    'Resource Group'                = $1.RESOURCEGROUP;
-                                    'Name'                          = $1.NAME;
-                                    'Location'                      = $1.LOCATION;
-                                    'SKU Name'                      = $1.sku.name;
-                                    'SKU Tier'                      = $1.sku.tier;
-                                    'Private Endpoint State for Backup' = $data.privateEndpointStateForBackup;
+                                    'Subscription'                             = $sub1.name;
+                                    'Resource Group'                           = $1.RESOURCEGROUP;
+                                    'Name'                                     = $1.NAME;
+                                    'Location'                                 = $1.LOCATION;
+                                    'SKU Name'                                 = $1.sku.name;
+                                    'SKU Tier'                                 = $1.sku.tier;
+                                    'Private Endpoint State for Backup'        = $data.privateEndpointStateForBackup;
                                     'Private Endpoint State for Site Recovery' = $data.privateEndpointStateForSiteRecovery;
-                                    'Resource U'                    = $ResUCount;
-                                    'Tag Name'                      = $null;
-                                    'Tag Value'                     = $null
+                                    'Resource U'                               = $ResUCount;
+                                    'Tag Name'                                 = [string]$TagKey;
+                                    'Tag Value'                                = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {
+                            $obj = @{
+                                'Subscription'                             = $sub1.name;
+                                'Resource Group'                           = $1.RESOURCEGROUP;
+                                'Name'                                     = $1.NAME;
+                                'Location'                                 = $1.LOCATION;
+                                'SKU Name'                                 = $1.sku.name;
+                                'SKU Tier'                                 = $1.sku.tier;
+                                'Private Endpoint State for Backup'        = $data.privateEndpointStateForBackup;
+                                'Private Endpoint State for Site Recovery' = $data.privateEndpointStateForSiteRecovery;
+                                'Resource U'                               = $ResUCount;
+                                'Tag Name'                                 = $null;
+                                'Tag Value'                                = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[10]))                
 
 
-                $APIM = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $APIM)
+            $APIM = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $APIM)
                     $tmp = @()
                     $Subs = $Sub
 
@@ -2990,66 +2982,66 @@ $Runtime = Measure-Command -Expression {
                         $sub1 = $SUBs | Where-Object { $_.id -eq $1.subscriptionId }
                         $data = $1.PROPERTIES
                         $Tag = @{}
-                        if ($data.virtualNetworkType -eq 'None') {$NetType = ''} else {$NetType = [string]$data.virtualNetworkConfiguration.subnetResourceId.split("/")[8]}
+                        if ($data.virtualNetworkType -eq 'None') { $NetType = '' } else { $NetType = [string]$data.virtualNetworkConfiguration.subnetResourceId.split("/")[8] }
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {
-                                    $obj = @{
-                                        'Subscription'                  = $sub1.name;
-                                        'Resource Group'                = $1.RESOURCEGROUP;
-                                        'Name'                          = $1.NAME;
-                                        'Location'                      = $1.LOCATION;
-                                        'SKU'                           = $1.sku.name;
-                                        'Gateway URL'                   = $data.gatewayUrl;
-                                        'Virtual Network Type'          = $data.virtualNetworkType;
-                                        'Virtual Network'               = $NetType;
-                                        'Http2'                         = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2";
-                                        'Backend SSL 3.0'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30";
-                                        'Backend TLS 1.0'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10";
-                                        'Backend TLS 1.1'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11";
-                                        'Triple DES'                    = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TripleDes168";
-                                        'Client SSL 3.0'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30";
-                                        'Client TLS 1.0'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10";
-                                        'Client TLS 1.1'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11";
-                                        'Public IP'                     = [string]$data.publicIPAddresses;
-                                        'Tag Name'                      = [string]$TagKey;
-                                        'Tag Value'                     = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {
                                 $obj = @{
-                                    'Subscription'                  = $sub1.name;
-                                    'Resource Group'                = $1.RESOURCEGROUP;
-                                    'Name'                          = $1.NAME;
-                                    'Location'                      = $1.LOCATION;
-                                    'SKU'                           = $1.sku.name;
-                                    'Gateway URL'                   = $data.gatewayUrl;
-                                    'Virtual Network Type'          = $data.virtualNetworkType;
-                                    'Virtual Network'               = $NetType;
-                                    'Http2'                         = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2";
-                                    'Backend SSL 3.0'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30";
-                                    'Backend TLS 1.0'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10";
-                                    'Backend TLS 1.1'               = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11";
-                                    'Triple DES'                    = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TripleDes168";
-                                    'Client SSL 3.0'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30";
-                                    'Client TLS 1.0'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10";
-                                    'Client TLS 1.1'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11";
-                                    'Public IP'                     = [string]$data.publicIPAddresses;
-                                    'Tag Name'                      = $null;
-                                    'Tag Value'                     = $null
+                                    'Subscription'         = $sub1.name;
+                                    'Resource Group'       = $1.RESOURCEGROUP;
+                                    'Name'                 = $1.NAME;
+                                    'Location'             = $1.LOCATION;
+                                    'SKU'                  = $1.sku.name;
+                                    'Gateway URL'          = $data.gatewayUrl;
+                                    'Virtual Network Type' = $data.virtualNetworkType;
+                                    'Virtual Network'      = $NetType;
+                                    'Http2'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2";
+                                    'Backend SSL 3.0'      = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30";
+                                    'Backend TLS 1.0'      = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10";
+                                    'Backend TLS 1.1'      = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11";
+                                    'Triple DES'           = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TripleDes168";
+                                    'Client SSL 3.0'       = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30";
+                                    'Client TLS 1.0'       = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10";
+                                    'Client TLS 1.1'       = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11";
+                                    'Public IP'            = [string]$data.publicIPAddresses;
+                                    'Tag Name'             = [string]$TagKey;
+                                    'Tag Value'            = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {
+                            $obj = @{
+                                'Subscription'         = $sub1.name;
+                                'Resource Group'       = $1.RESOURCEGROUP;
+                                'Name'                 = $1.NAME;
+                                'Location'             = $1.LOCATION;
+                                'SKU'                  = $1.sku.name;
+                                'Gateway URL'          = $data.gatewayUrl;
+                                'Virtual Network Type' = $data.virtualNetworkType;
+                                'Virtual Network'      = $NetType;
+                                'Http2'                = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2";
+                                'Backend SSL 3.0'      = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30";
+                                'Backend TLS 1.0'      = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10";
+                                'Backend TLS 1.1'      = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11";
+                                'Triple DES'           = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TripleDes168";
+                                'Client SSL 3.0'       = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30";
+                                'Client TLS 1.0'       = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10";
+                                'Client TLS 1.1'       = $data.customProperties."Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11";
+                                'Public IP'            = [string]$data.publicIPAddresses;
+                                'Tag Name'             = $null;
+                                'Tag Value'            = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[11]))                
                 
 
-                $BASTION = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $BASTION)
+            $BASTION = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $BASTION)
                     $tmp = @()
                     $Subs = $Sub
 
@@ -3063,40 +3055,40 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {
-                                    $obj = @{
-                                        'Subscription'                  = $sub1.name;
-                                        'Resource Group'                = $1.RESOURCEGROUP;
-                                        'Name'                          = $1.NAME;
-                                        'Location'                      = $1.LOCATION;
-                                        'SKU'                           = $1.sku.name;
-                                        'DNS Name'                      = $data.dnsName;
-                                        'Virtual Network'               = $BastVNET;
-                                        'Public IP'                     = $BastPIP;
-                                        'Scale Units'                   = $data.scaleUnits;
-                                        'Tag Name'                      = [string]$TagKey;
-                                        'Tag Value'                     = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {
                                 $obj = @{
-                                    'Subscription'                  = $sub1.name;
-                                    'Resource Group'                = $1.RESOURCEGROUP;
-                                    'Name'                          = $1.NAME;
-                                    'Location'                      = $1.LOCATION;
-                                    'SKU'                           = $1.sku.name;
-                                    'DNS Name'                      = $data.dnsName;
-                                    'Virtual Network'               = $BastVNET;
-                                    'Public IP'                     = $BastPIP;
-                                    'Scale Units'                   = $data.scaleUnits;
-                                    'Tag Name'                      = $null;
-                                    'Tag Value'                     = $null
+                                    'Subscription'    = $sub1.name;
+                                    'Resource Group'  = $1.RESOURCEGROUP;
+                                    'Name'            = $1.NAME;
+                                    'Location'        = $1.LOCATION;
+                                    'SKU'             = $1.sku.name;
+                                    'DNS Name'        = $data.dnsName;
+                                    'Virtual Network' = $BastVNET;
+                                    'Public IP'       = $BastPIP;
+                                    'Scale Units'     = $data.scaleUnits;
+                                    'Tag Name'        = [string]$TagKey;
+                                    'Tag Value'       = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {
+                            $obj = @{
+                                'Subscription'    = $sub1.name;
+                                'Resource Group'  = $1.RESOURCEGROUP;
+                                'Name'            = $1.NAME;
+                                'Location'        = $1.LOCATION;
+                                'SKU'             = $1.sku.name;
+                                'DNS Name'        = $data.dnsName;
+                                'Virtual Network' = $BastVNET;
+                                'Public IP'       = $BastPIP;
+                                'Scale Units'     = $data.scaleUnits;
+                                'Tag Name'        = $null;
+                                'Tag Value'       = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[12]))                    
@@ -3164,7 +3156,7 @@ $Runtime = Measure-Command -Expression {
 
             $AzInfra
 
-        } -ArgumentList $Subs, $InTag,$StorageAcc, $RB, $AUT, $EVTHUB, $WRKSPACE, $AVSET, $SITES, $VAULT, $RECOVERYVAULT, $APIM, $BASTION | Out-Null
+        } -ArgumentList $Subs, $InTag, $StorageAcc, $RB, $AUT, $EVTHUB, $WRKSPACE, $AVSET, $SITES, $VAULT, $RECOVERYVAULT, $APIM, $BASTION | Out-Null
 
 
 
@@ -3175,7 +3167,7 @@ $Runtime = Measure-Command -Expression {
 
             $job = @()
 
-            $DB = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$DB)
+            $DB = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $DB)
                     $tmp = @()
 
                     $db = $DB
@@ -3190,30 +3182,6 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {
-                                    $obj = @{
-                                        'Subscription'               = $sub1.name;
-                                        'Resource Group'             = $1.RESOURCEGROUP;
-                                        'Name'                       = $1.NAME;
-                                        'Location'                   = $1.LOCATION;
-                                        'Storage Account Type'       = $data.storageAccountType;
-                                        'Database Server'            = $DBServer;
-                                        'Default Secondary Location' = $data.defaultSecondaryLocation;
-                                        'Status'                     = $data.status;
-                                        'DTU Capacity'               = $data.currentSku.capacity;
-                                        'DTU Tier'                   = $data.requestedServiceObjectiveName;
-                                        'Zone Redundant'             = $data.zoneRedundant;
-                                        'Catalog Collation'          = $data.catalogCollation;
-                                        'Read Replica Count'         = $data.readReplicaCount;
-                                        'Data Max Size (GB)'         = (($data.maxSizeBytes / 1024) / 1024) / 1024;
-                                        'Resource U'                 = $ResUCount;
-                                        'Tag Name'                   = [string]$TagKey;
-                                        'Tag Value'                  = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {
                                 $obj = @{
                                     'Subscription'               = $sub1.name;
                                     'Resource Group'             = $1.RESOURCEGROUP;
@@ -3230,17 +3198,41 @@ $Runtime = Measure-Command -Expression {
                                     'Read Replica Count'         = $data.readReplicaCount;
                                     'Data Max Size (GB)'         = (($data.maxSizeBytes / 1024) / 1024) / 1024;
                                     'Resource U'                 = $ResUCount;
-                                    'Tag Name'                   = $null;
-                                    'Tag Value'                  = $null
+                                    'Tag Name'                   = [string]$TagKey;
+                                    'Tag Value'                  = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {
+                            $obj = @{
+                                'Subscription'               = $sub1.name;
+                                'Resource Group'             = $1.RESOURCEGROUP;
+                                'Name'                       = $1.NAME;
+                                'Location'                   = $1.LOCATION;
+                                'Storage Account Type'       = $data.storageAccountType;
+                                'Database Server'            = $DBServer;
+                                'Default Secondary Location' = $data.defaultSecondaryLocation;
+                                'Status'                     = $data.status;
+                                'DTU Capacity'               = $data.currentSku.capacity;
+                                'DTU Tier'                   = $data.requestedServiceObjectiveName;
+                                'Zone Redundant'             = $data.zoneRedundant;
+                                'Catalog Collation'          = $data.catalogCollation;
+                                'Read Replica Count'         = $data.readReplicaCount;
+                                'Data Max Size (GB)'         = (($data.maxSizeBytes / 1024) / 1024) / 1024;
+                                'Resource U'                 = $ResUCount;
+                                'Tag Name'                   = $null;
+                                'Tag Value'                  = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2]))
 
-            $MySQL = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$MySQL)
+            $MySQL = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $MySQL)
                     $tmp = @()
 
                     $mysql = $MySQL
@@ -3255,38 +3247,6 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {
-                                    $obj = @{
-                                        'Subscription'              = $sub1.name;
-                                        'Resource Group'            = $1.RESOURCEGROUP;
-                                        'Name'                      = $1.NAME;
-                                        'Location'                  = $1.LOCATION;
-                                        'SKU'                       = $sku.name;
-                                        'SKU Family'                = $sku.family;
-                                        'Tier'                      = $sku.tier;
-                                        'Capacity'                  = $sku.capacity;
-                                        'MySQL Version'             = $data.version;
-                                        'Backup Retention Days'     = $data.storageProfile.backupRetentionDays;
-                                        'Geo-Redundant Backup'      = $data.storageProfile.geoRedundantBackup;
-                                        'Auto Grow'                 = $data.storageProfile.storageAutogrow;
-                                        'Storage MB'                = $data.storageProfile.storageMB;
-                                        'Public Network Access'     = $data.publicNetworkAccess;
-                                        'Admin Login'               = $data.administratorLogin;
-                                        'Infrastructure Encryption' = $data.InfrastructureEncryption;
-                                        'Minimal Tls Version'       = $data.minimalTlsVersion;
-                                        'State'                     = $data.userVisibleState;
-                                        'Replica Capacity'          = $data.replicaCapacity;
-                                        'Replication Role'          = $data.replicationRole;
-                                        'BYOK Enforcement'          = $data.byokEnforcement;
-                                        'ssl Enforcement'           = $data.sslEnforcement;
-                                        'Resource U'                = $ResUCount;
-                                        'Tag Name'                  = [string]$TagKey;
-                                        'Tag Value'                 = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {
                                 $obj = @{
                                     'Subscription'              = $sub1.name;
                                     'Resource Group'            = $1.RESOURCEGROUP;
@@ -3311,17 +3271,49 @@ $Runtime = Measure-Command -Expression {
                                     'BYOK Enforcement'          = $data.byokEnforcement;
                                     'ssl Enforcement'           = $data.sslEnforcement;
                                     'Resource U'                = $ResUCount;
-                                    'Tag Name'                  = $null;
-                                    'Tag Value'                 = $null
+                                    'Tag Name'                  = [string]$TagKey;
+                                    'Tag Value'                 = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {
+                            $obj = @{
+                                'Subscription'              = $sub1.name;
+                                'Resource Group'            = $1.RESOURCEGROUP;
+                                'Name'                      = $1.NAME;
+                                'Location'                  = $1.LOCATION;
+                                'SKU'                       = $sku.name;
+                                'SKU Family'                = $sku.family;
+                                'Tier'                      = $sku.tier;
+                                'Capacity'                  = $sku.capacity;
+                                'MySQL Version'             = $data.version;
+                                'Backup Retention Days'     = $data.storageProfile.backupRetentionDays;
+                                'Geo-Redundant Backup'      = $data.storageProfile.geoRedundantBackup;
+                                'Auto Grow'                 = $data.storageProfile.storageAutogrow;
+                                'Storage MB'                = $data.storageProfile.storageMB;
+                                'Public Network Access'     = $data.publicNetworkAccess;
+                                'Admin Login'               = $data.administratorLogin;
+                                'Infrastructure Encryption' = $data.InfrastructureEncryption;
+                                'Minimal Tls Version'       = $data.minimalTlsVersion;
+                                'State'                     = $data.userVisibleState;
+                                'Replica Capacity'          = $data.replicaCapacity;
+                                'Replication Role'          = $data.replicationRole;
+                                'BYOK Enforcement'          = $data.byokEnforcement;
+                                'ssl Enforcement'           = $data.sslEnforcement;
+                                'Resource U'                = $ResUCount;
+                                'Tag Name'                  = $null;
+                                'Tag Value'                 = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[3]))
 
-            $PostGre = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$PostGre)
+            $PostGre = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $PostGre)
                     $tmp = @()
 
                     $postgre = $PostGre
@@ -3336,38 +3328,6 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {
-                                    $obj = @{
-                                        'Subscription'              = $sub1.name;
-                                        'Resource Group'            = $1.RESOURCEGROUP;
-                                        'Name'                      = $1.NAME;
-                                        'Location'                  = $1.LOCATION;
-                                        'SKU'                       = $sku.name;
-                                        'SKU Family'                = $sku.family;
-                                        'Tier'                      = $sku.tier;
-                                        'Capacity'                  = $sku.capacity;
-                                        'MySQL Version'             = $data.version;
-                                        'Backup Retention Days'     = $data.storageProfile.backupRetentionDays;
-                                        'Geo-Redundant Backup'      = $data.storageProfile.geoRedundantBackup;
-                                        'Auto Grow'                 = $data.storageProfile.storageAutogrow;
-                                        'Storage MB'                = $data.storageProfile.storageMB;
-                                        'Public Network Access'     = $data.publicNetworkAccess;
-                                        'Admin Login'               = $data.administratorLogin;
-                                        'Infrastructure Encryption' = $data.InfrastructureEncryption;
-                                        'Minimal Tls Version'       = $data.minimalTlsVersion;
-                                        'State'                     = $data.userVisibleState;
-                                        'Replica Capacity'          = $data.replicaCapacity;
-                                        'Replication Role'          = $data.replicationRole;
-                                        'BYOK Enforcement'          = $data.byokEnforcement;
-                                        'ssl Enforcement'           = $data.sslEnforcement;
-                                        'Resource U'                = $ResUCount;
-                                        'Tag Name'                  = [string]$TagKey;
-                                        'Tag Value'                 = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {
                                 $obj = @{
                                     'Subscription'              = $sub1.name;
                                     'Resource Group'            = $1.RESOURCEGROUP;
@@ -3392,19 +3352,51 @@ $Runtime = Measure-Command -Expression {
                                     'BYOK Enforcement'          = $data.byokEnforcement;
                                     'ssl Enforcement'           = $data.sslEnforcement;
                                     'Resource U'                = $ResUCount;
-                                    'Tag Name'                  = $null;
-                                    'Tag Value'                 = $null
+                                    'Tag Name'                  = [string]$TagKey;
+                                    'Tag Value'                 = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {
+                            $obj = @{
+                                'Subscription'              = $sub1.name;
+                                'Resource Group'            = $1.RESOURCEGROUP;
+                                'Name'                      = $1.NAME;
+                                'Location'                  = $1.LOCATION;
+                                'SKU'                       = $sku.name;
+                                'SKU Family'                = $sku.family;
+                                'Tier'                      = $sku.tier;
+                                'Capacity'                  = $sku.capacity;
+                                'MySQL Version'             = $data.version;
+                                'Backup Retention Days'     = $data.storageProfile.backupRetentionDays;
+                                'Geo-Redundant Backup'      = $data.storageProfile.geoRedundantBackup;
+                                'Auto Grow'                 = $data.storageProfile.storageAutogrow;
+                                'Storage MB'                = $data.storageProfile.storageMB;
+                                'Public Network Access'     = $data.publicNetworkAccess;
+                                'Admin Login'               = $data.administratorLogin;
+                                'Infrastructure Encryption' = $data.InfrastructureEncryption;
+                                'Minimal Tls Version'       = $data.minimalTlsVersion;
+                                'State'                     = $data.userVisibleState;
+                                'Replica Capacity'          = $data.replicaCapacity;
+                                'Replication Role'          = $data.replicationRole;
+                                'BYOK Enforcement'          = $data.byokEnforcement;
+                                'ssl Enforcement'           = $data.sslEnforcement;
+                                'Resource U'                = $ResUCount;
+                                'Tag Name'                  = $null;
+                                'Tag Value'                 = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[4]))
 
 
 
-                $STREAMJobs = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag,$STREAM)
+            $STREAMJobs = ([PowerShell]::Create()).AddScript( { param($Sub, $InTag, $STREAM)
                     $tmp = @()
                     $Subs = $Sub
 
@@ -3419,56 +3411,56 @@ $Runtime = Measure-Command -Expression {
                         $1.tags.psobject.properties | ForEach-Object { $Tag[$_.Name] = $_.Value }
                         if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                             foreach ($TagKey in $Tag.Keys) {
-                                    $obj = @{
-                                        'Subscription'              = $sub1.name;
-                                        'Resource Group'            = $1.RESOURCEGROUP;
-                                        'Name'                      = $1.NAME;
-                                        'Location'                  = $1.LOCATION;
-                                        'SKU'                       = $data.sku.name;
-                                        'Compatibility Level'       = $data.compatibilityLevel;
-                                        'Content Storage Policy'    = $data.contentStoragePolicy;
-                                        'Created Date'              = $Creadate;
-                                        'Data Locale'               = $data.dataLocale;
-                                        'Late Arrival Max Delay in Seconds'      = $data.eventsLateArrivalMaxDelayInSeconds;
-                                        'Out of Order Max Delay in Seconds'      = $data.eventsOutOfOrderMaxDelayInSeconds;
-                                        'Out of Order Policy'       = $data.eventsOutOfOrderPolicy;
-                                        'Job State'                 = $data.jobState;
-                                        'Job Type'                  = $data.jobType;
-                                        'Last Output Event Time'    = $LastOutput;
-                                        'Output Start Time'         = $OutputStart;
-                                        'Output Error Policy'       = $data.outputErrorPolicy;
-                                        'Tag Name'                  = [string]$TagKey;
-                                        'Tag Value'                 = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) {$ResUCount = 0} 
-                                }
-                            }
-                            else {
                                 $obj = @{
-                                    'Subscription'              = $sub1.name;
-                                    'Resource Group'            = $1.RESOURCEGROUP;
-                                    'Name'                      = $1.NAME;
-                                    'Location'                  = $1.LOCATION;
-                                    'SKU'                       = $data.sku.name;
-                                    'Compatibility Level'       = $data.compatibilityLevel;
-                                    'Content Storage Policy'    = $data.contentStoragePolicy;
-                                    'Created Date'              = $Creadate;
-                                    'Data Locale'               = $data.dataLocale;
-                                    'Late Arrival Max Delay in Seconds'      = $data.eventsLateArrivalMaxDelayInSeconds;
-                                    'Out of Order Max Delay in Seconds'      = $data.eventsOutOfOrderMaxDelayInSeconds;
-                                    'Out of Order Policy'       = $data.eventsOutOfOrderPolicy;
-                                    'Job State'                 = $data.jobState;
-                                    'Job Type'                  = $data.jobType;
-                                    'Last Output Event Time'    = $LastOutput;
-                                    'Output Start Time'         = $OutputStart;
-                                    'Output Error Policy'       = $data.outputErrorPolicy;
-                                    'Tag Name'                  = $null;
-                                    'Tag Value'                 = $null
+                                    'Subscription'                      = $sub1.name;
+                                    'Resource Group'                    = $1.RESOURCEGROUP;
+                                    'Name'                              = $1.NAME;
+                                    'Location'                          = $1.LOCATION;
+                                    'SKU'                               = $data.sku.name;
+                                    'Compatibility Level'               = $data.compatibilityLevel;
+                                    'Content Storage Policy'            = $data.contentStoragePolicy;
+                                    'Created Date'                      = $Creadate;
+                                    'Data Locale'                       = $data.dataLocale;
+                                    'Late Arrival Max Delay in Seconds' = $data.eventsLateArrivalMaxDelayInSeconds;
+                                    'Out of Order Max Delay in Seconds' = $data.eventsOutOfOrderMaxDelayInSeconds;
+                                    'Out of Order Policy'               = $data.eventsOutOfOrderPolicy;
+                                    'Job State'                         = $data.jobState;
+                                    'Job Type'                          = $data.jobType;
+                                    'Last Output Event Time'            = $LastOutput;
+                                    'Output Start Time'                 = $OutputStart;
+                                    'Output Error Policy'               = $data.outputErrorPolicy;
+                                    'Tag Name'                          = [string]$TagKey;
+                                    'Tag Value'                         = [string]$Tag.$TagKey
                                 }
                                 $tmp += $obj
-                                if ($ResUCount -eq 1) {$ResUCount = 0} 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
+                        }
+                        else {
+                            $obj = @{
+                                'Subscription'                      = $sub1.name;
+                                'Resource Group'                    = $1.RESOURCEGROUP;
+                                'Name'                              = $1.NAME;
+                                'Location'                          = $1.LOCATION;
+                                'SKU'                               = $data.sku.name;
+                                'Compatibility Level'               = $data.compatibilityLevel;
+                                'Content Storage Policy'            = $data.contentStoragePolicy;
+                                'Created Date'                      = $Creadate;
+                                'Data Locale'                       = $data.dataLocale;
+                                'Late Arrival Max Delay in Seconds' = $data.eventsLateArrivalMaxDelayInSeconds;
+                                'Out of Order Max Delay in Seconds' = $data.eventsOutOfOrderMaxDelayInSeconds;
+                                'Out of Order Policy'               = $data.eventsOutOfOrderPolicy;
+                                'Job State'                         = $data.jobState;
+                                'Job Type'                          = $data.jobType;
+                                'Last Output Event Time'            = $LastOutput;
+                                'Output Start Time'                 = $OutputStart;
+                                'Output Error Policy'               = $data.outputErrorPolicy;
+                                'Tag Name'                          = $null;
+                                'Tag Value'                         = $null
+                            }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                        }
                     }
                     $tmp
                 }).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[5]))                
@@ -3498,15 +3490,15 @@ $Runtime = Measure-Command -Expression {
             $STREAMJobs.Dispose()
 
             $AzDB = @{
-                'DB'      = $DBS;
-                'MySQL'   = $MySQLS;
-                'PostGre' = $PostGreS;
-                'Stream Analytics Jobs'  = $STREAMJobsS
+                'DB'                    = $DBS;
+                'MySQL'                 = $MySQLS;
+                'PostGre'               = $PostGreS;
+                'Stream Analytics Jobs' = $STREAMJobsS
             }
 
             $AzDB
 
-        } -ArgumentList $Subs, $InTag,$DB, $MySQL, $POSTGRE, $STREAMJobs | Out-Null
+        } -ArgumentList $Subs, $InTag, $DB, $MySQL, $POSTGRE, $STREAMJobs | Out-Null
 
 
 
@@ -3707,84 +3699,82 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelVMs = $AzCompute.VM
 
-                if ($IncludeTags.IsPresent) 
-                    {
-                        $ExcelVMs | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Computer Name',
-                        'VM Size',
-                        'OS Type',
-                        'Location',
-                        'Image Reference',
-                        'Image Version',
-                        'SKU',
-                        'Admin Username',
-                        'Update Management',
-                        'Boot Diagnostics',
-                        'Performance Diagnostic Agent',
-                        'Azure Monitor',
-                        'OS Disk Storage Type',
-                        'OS Disk Size (GB)',
-                        'Data Disk Storage Type',
-                        'Data Disk Size (GB)',
-                        'Power State',
-                        'Availability Set',
-                        'Zone',
-                        'NIC Name',
-                        'NIC Type',
-                        'NSG',
-                        'Enable Accelerated Networking',
-                        'Enable IP Forwarding',
-                        'Primary IP',
-                        'Private IP Version',
-                        'Private IP Address',
-                        'Private IP Allocation Method',
-                        'VM Extensions',
-                        'Resource U',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'VMs' -TableName 'AzureVMs' -TableStyle $tableStyle -ConditionalText $condtxtvm -Style $Style, $StyleExt
-                    }
-                    else 
-                    {
-                        $ExcelVMs | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Computer Name',
-                        'VM Size',
-                        'OS Type',
-                        'Location',
-                        'Image Reference',
-                        'Image Version',
-                        'SKU',
-                        'Admin Username',
-                        'Update Management',
-                        'Boot Diagnostics',
-                        'Performance Diagnostic Agent',
-                        'Azure Monitor',
-                        'OS Disk Storage Type',
-                        'OS Disk Size (GB)',
-                        'Data Disk Storage Type',
-                        'Data Disk Size (GB)',
-                        'Power State',
-                        'Availability Set',
-                        'Zone',
-                        'NIC Name',
-                        'NIC Type',
-                        'NSG',
-                        'Enable Accelerated Networking',
-                        'Enable IP Forwarding',
-                        'Primary IP',
-                        'Private IP Version',
-                        'Private IP Address',
-                        'Private IP Allocation Method',
-                        'VM Extensions',
-                        'Resource U' | 
-                        Export-Excel -Path $File -WorksheetName 'VMs' -TableName 'AzureVMs' -TableStyle $tableStyle -ConditionalText $condtxtvm -Style $Style, $StyleExt
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelVMs | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Computer Name',
+                    'VM Size',
+                    'OS Type',
+                    'Location',
+                    'Image Reference',
+                    'Image Version',
+                    'SKU',
+                    'Admin Username',
+                    'Update Management',
+                    'Boot Diagnostics',
+                    'Performance Diagnostic Agent',
+                    'Azure Monitor',
+                    'OS Disk Storage Type',
+                    'OS Disk Size (GB)',
+                    'Data Disk Storage Type',
+                    'Data Disk Size (GB)',
+                    'Power State',
+                    'Availability Set',
+                    'Zone',
+                    'NIC Name',
+                    'NIC Type',
+                    'NSG',
+                    'Enable Accelerated Networking',
+                    'Enable IP Forwarding',
+                    'Primary IP',
+                    'Private IP Version',
+                    'Private IP Address',
+                    'Private IP Allocation Method',
+                    'VM Extensions',
+                    'Resource U',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'VMs' -TableName 'AzureVMs' -TableStyle $tableStyle -ConditionalText $condtxtvm -Style $Style, $StyleExt
+                }
+                else {
+                    $ExcelVMs | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Computer Name',
+                    'VM Size',
+                    'OS Type',
+                    'Location',
+                    'Image Reference',
+                    'Image Version',
+                    'SKU',
+                    'Admin Username',
+                    'Update Management',
+                    'Boot Diagnostics',
+                    'Performance Diagnostic Agent',
+                    'Azure Monitor',
+                    'OS Disk Storage Type',
+                    'OS Disk Size (GB)',
+                    'Data Disk Storage Type',
+                    'Data Disk Size (GB)',
+                    'Power State',
+                    'Availability Set',
+                    'Zone',
+                    'NIC Name',
+                    'NIC Type',
+                    'NSG',
+                    'Enable Accelerated Networking',
+                    'Enable IP Forwarding',
+                    'Primary IP',
+                    'Private IP Version',
+                    'Private IP Address',
+                    'Private IP Allocation Method',
+                    'VM Extensions',
+                    'Resource U' | 
+                    Export-Excel -Path $File -WorksheetName 'VMs' -TableName 'AzureVMs' -TableStyle $tableStyle -ConditionalText $condtxtvm -Style $Style, $StyleExt
+                }
 
             }
 
@@ -3799,48 +3789,46 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelVMDisks = $AzCompute.VMDisk
                         
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelVMDisks | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Virtual Machine',
-                        'Disk Name',
-                        'Zone',
-                        'SKU',
-                        'Disk Size',
-                        'Location',
-                        'Encryption',
-                        'OS Type',
-                        'Disk State',
-                        'Disk IOPS Read / Write',
-                        'Disk MBps Read / Write',
-                        'HyperV Generation',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Disks' -TableName 'AzureDisks' -TableStyle $tableStyle -ConditionalText $condtxtdsk -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelVMDisks | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Virtual Machine',
-                        'Disk Name',
-                        'Zone',
-                        'SKU',
-                        'Disk Size',
-                        'Location',
-                        'Encryption',
-                        'OS Type',
-                        'Disk State',
-                        'Disk IOPS Read / Write',
-                        'Disk MBps Read / Write',
-                        'HyperV Generation' | 
-                        Export-Excel -Path $File -WorksheetName 'Disks' -TableName 'AzureDisks' -TableStyle $tableStyle -ConditionalText $condtxtdsk -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelVMDisks | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Virtual Machine',
+                    'Disk Name',
+                    'Zone',
+                    'SKU',
+                    'Disk Size',
+                    'Location',
+                    'Encryption',
+                    'OS Type',
+                    'Disk State',
+                    'Disk IOPS Read / Write',
+                    'Disk MBps Read / Write',
+                    'HyperV Generation',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Disks' -TableName 'AzureDisks' -TableStyle $tableStyle -ConditionalText $condtxtdsk -Style $Style
+                }
+                else {
+                    $ExcelVMDisks | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Virtual Machine',
+                    'Disk Name',
+                    'Zone',
+                    'SKU',
+                    'Disk Size',
+                    'Location',
+                    'Encryption',
+                    'OS Type',
+                    'Disk State',
+                    'Disk IOPS Read / Write',
+                    'Disk MBps Read / Write',
+                    'HyperV Generation' | 
+                    Export-Excel -Path $File -WorksheetName 'Disks' -TableName 'AzureDisks' -TableStyle $tableStyle -ConditionalText $condtxtdsk -Style $Style
+                }
 
             }
 
@@ -3861,56 +3849,54 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelStorageAcc = $AzInfra.StorageAcc
             
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelStorageAcc | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Zone',
-                        'Supports HTTPS Traffic Only',
-                        'Allow Blob Public Access',
-                        'TLS Version',
-                        'Identity-based access for file shares',
-                        'Access Tier',
-                        'Primary Location',
-                        'Status Of Primary',
-                        'Secondary Location',
-                        'Blob Address',
-                        'File Address',
-                        'Table Address',
-                        'Queue Address',
-                        'Network Acls',
-                        'Tag Name',
-                        'Tag Value'  | 
-                        Export-Excel -Path $File -WorksheetName 'StorageAcc' -AutoSize -TableName 'AzureStorageAccs' -TableStyle $tableStyle -ConditionalText $condtxtStorage -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelStorageAcc | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Zone',
-                        'Supports HTTPS Traffic Only',
-                        'Allow Blob Public Access',
-                        'TLS Version',
-                        'Identity-based access for file shares',
-                        'Access Tier',
-                        'Primary Location',
-                        'Status Of Primary',
-                        'Secondary Location',
-                        'Blob Address',
-                        'File Address',
-                        'Table Address',
-                        'Queue Address',
-                        'Network Acls' | 
-                        Export-Excel -Path $File -WorksheetName 'StorageAcc' -AutoSize -TableName 'AzureStorageAccs' -TableStyle $tableStyle -ConditionalText $condtxtStorage -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelStorageAcc | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Zone',
+                    'Supports HTTPS Traffic Only',
+                    'Allow Blob Public Access',
+                    'TLS Version',
+                    'Identity-based access for file shares',
+                    'Access Tier',
+                    'Primary Location',
+                    'Status Of Primary',
+                    'Secondary Location',
+                    'Blob Address',
+                    'File Address',
+                    'Table Address',
+                    'Queue Address',
+                    'Network Acls',
+                    'Tag Name',
+                    'Tag Value'  | 
+                    Export-Excel -Path $File -WorksheetName 'StorageAcc' -AutoSize -TableName 'AzureStorageAccs' -TableStyle $tableStyle -ConditionalText $condtxtStorage -Style $Style
+                }
+                else {
+                    $ExcelStorageAcc | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Zone',
+                    'Supports HTTPS Traffic Only',
+                    'Allow Blob Public Access',
+                    'TLS Version',
+                    'Identity-based access for file shares',
+                    'Access Tier',
+                    'Primary Location',
+                    'Status Of Primary',
+                    'Secondary Location',
+                    'Blob Address',
+                    'File Address',
+                    'Table Address',
+                    'Queue Address',
+                    'Network Acls' | 
+                    Export-Excel -Path $File -WorksheetName 'StorageAcc' -AutoSize -TableName 'AzureStorageAccs' -TableStyle $tableStyle -ConditionalText $condtxtStorage -Style $Style
+                }
             }
 
 
@@ -3925,44 +3911,42 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelVNET = $AzNetwork.VNET          
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelVNET | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Zone',
-                        'Address Space',
-                        'Enable DDOS Protection',
-                        'Enable VM Protection',
-                        'Subnet Name',
-                        'Subnet Prefix',
-                        'Subnet Private Link Service Network Policies',
-                        'Subnet Private Endpoint Network Policies',
-                        'Tag Name',
-                        'Tag Value'  | 
-                        Export-Excel -Path $File -WorksheetName 'VNET' -AutoSize -TableName 'AzureVNETs' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelVNET | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Zone',
-                        'Address Space',
-                        'Enable DDOS Protection',
-                        'Enable VM Protection',
-                        'Subnet Name',
-                        'Subnet Prefix',
-                        'Subnet Private Link Service Network Policies',
-                        'Subnet Private Endpoint Network Policies'| 
-                        Export-Excel -Path $File -WorksheetName 'VNET' -AutoSize -TableName 'AzureVNETs' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelVNET | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Zone',
+                    'Address Space',
+                    'Enable DDOS Protection',
+                    'Enable VM Protection',
+                    'Subnet Name',
+                    'Subnet Prefix',
+                    'Subnet Private Link Service Network Policies',
+                    'Subnet Private Endpoint Network Policies',
+                    'Tag Name',
+                    'Tag Value'  | 
+                    Export-Excel -Path $File -WorksheetName 'VNET' -AutoSize -TableName 'AzureVNETs' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+                }
+                else {
+                    $ExcelVNET | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Zone',
+                    'Address Space',
+                    'Enable DDOS Protection',
+                    'Enable VM Protection',
+                    'Subnet Name',
+                    'Subnet Prefix',
+                    'Subnet Private Link Service Network Policies',
+                    'Subnet Private Endpoint Network Policies' | 
+                    Export-Excel -Path $File -WorksheetName 'VNET' -AutoSize -TableName 'AzureVNETs' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+                }
 
             }
 
@@ -3977,52 +3961,50 @@ $Runtime = Measure-Command -Expression {
     
                 $ExcelVNETGTW = $AzNetwork.VNETGTW
                         
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelVNETGTW | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'Active-active mode',
-                        'Gateway Type',
-                        'Gateway Generation',
-                        'VPN Type',
-                        'Enable Private Address',
-                        'Enable BGP',
-                        'BGP ASN',
-                        'BGP Peering Address',
-                        'BGP Peer Weight',
-                        'Gateway Public IP',
-                        'Gateway Subnet Name',
-                        'Tag Name',
-                        'Tag Value'  | 
-                        Export-Excel -Path $File -WorksheetName 'VNET Gateways' -AutoSize -TableName 'AzureVNETGateways' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelVNETGTW | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'Active-active mode',
-                        'Gateway Type',
-                        'Gateway Generation',
-                        'VPN Type',
-                        'Enable Private Address',
-                        'Enable BGP',
-                        'BGP ASN',
-                        'BGP Peering Address',
-                        'BGP Peer Weight',
-                        'Gateway Public IP',
-                        'Gateway Subnet Name'| 
-                        Export-Excel -Path $File -WorksheetName 'VNET Gateways' -AutoSize -TableName 'AzureVNETGateways' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelVNETGTW | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'Active-active mode',
+                    'Gateway Type',
+                    'Gateway Generation',
+                    'VPN Type',
+                    'Enable Private Address',
+                    'Enable BGP',
+                    'BGP ASN',
+                    'BGP Peering Address',
+                    'BGP Peer Weight',
+                    'Gateway Public IP',
+                    'Gateway Subnet Name',
+                    'Tag Name',
+                    'Tag Value'  | 
+                    Export-Excel -Path $File -WorksheetName 'VNET Gateways' -AutoSize -TableName 'AzureVNETGateways' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+                }
+                else {
+                    $ExcelVNETGTW | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'Active-active mode',
+                    'Gateway Type',
+                    'Gateway Generation',
+                    'VPN Type',
+                    'Enable Private Address',
+                    'Enable BGP',
+                    'BGP ASN',
+                    'BGP Peering Address',
+                    'BGP Peer Weight',
+                    'Gateway Public IP',
+                    'Gateway Subnet Name' | 
+                    Export-Excel -Path $File -WorksheetName 'VNET Gateways' -AutoSize -TableName 'AzureVNETGateways' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+                }
     
             }
     
@@ -4039,38 +4021,36 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelSQLVM = $AzCompute.SQLVM
             
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelSQLVM | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'ResourceGroup',
-                        'Name',
-                        'Location',
-                        'Zone',
-                        'SQL Server License Type',
-                        'SQL Image',
-                        'SQL Management',
-                        'SQL Image Sku',
-                        'Tag Name',
-                        'Tag Value'  | 
-                        Export-Excel -Path $File -WorksheetName 'SQL VMs' -AutoSize -TableName 'AzureSQLVMs' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelSQLVM | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'ResourceGroup',
-                        'Name',
-                        'Location',
-                        'Zone',
-                        'SQL Server License Type',
-                        'SQL Image',
-                        'SQL Management',
-                        'SQL Image Sku' | 
-                        Export-Excel -Path $File -WorksheetName 'SQL VMs' -AutoSize -TableName 'AzureSQLVMs' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelSQLVM | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'ResourceGroup',
+                    'Name',
+                    'Location',
+                    'Zone',
+                    'SQL Server License Type',
+                    'SQL Image',
+                    'SQL Management',
+                    'SQL Image Sku',
+                    'Tag Name',
+                    'Tag Value'  | 
+                    Export-Excel -Path $File -WorksheetName 'SQL VMs' -AutoSize -TableName 'AzureSQLVMs' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelSQLVM | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'ResourceGroup',
+                    'Name',
+                    'Location',
+                    'Zone',
+                    'SQL Server License Type',
+                    'SQL Image',
+                    'SQL Management',
+                    'SQL Image Sku' | 
+                    Export-Excel -Path $File -WorksheetName 'SQL VMs' -AutoSize -TableName 'AzureSQLVMs' -TableStyle $tableStyle -Style $Style
+                }
 
             }
 
@@ -4087,48 +4067,46 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelDB = $AzDatabase.DB
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelDB | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Storage Account Type',
-                        'Database Server',
-                        'Default Secondary Location',
-                        'Status',
-                        'DTU Capacity',
-                        'DTU Tier',
-                        'Data Max Size (GB)',
-                        'Zone Redundant',
-                        'Catalog Collation',
-                        'Read Replica Count',
-                        'Tag Name',
-                        'Tag Value'  | 
-                        Export-Excel -Path $File -WorksheetName 'SQL DBs' -AutoSize -TableName 'AzureSQLDBs' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelDB | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Storage Account Type',
-                        'Database Server',
-                        'Default Secondary Location',
-                        'Status',
-                        'DTU Capacity',
-                        'DTU Tier',
-                        'Data Max Size (GB)',
-                        'Zone Redundant',
-                        'Catalog Collation',
-                        'Read Replica Count' | 
-                        Export-Excel -Path $File -WorksheetName 'SQL DBs' -AutoSize -TableName 'AzureSQLDBs' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelDB | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Storage Account Type',
+                    'Database Server',
+                    'Default Secondary Location',
+                    'Status',
+                    'DTU Capacity',
+                    'DTU Tier',
+                    'Data Max Size (GB)',
+                    'Zone Redundant',
+                    'Catalog Collation',
+                    'Read Replica Count',
+                    'Tag Name',
+                    'Tag Value'  | 
+                    Export-Excel -Path $File -WorksheetName 'SQL DBs' -AutoSize -TableName 'AzureSQLDBs' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelDB | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Storage Account Type',
+                    'Database Server',
+                    'Default Secondary Location',
+                    'Status',
+                    'DTU Capacity',
+                    'DTU Tier',
+                    'Data Max Size (GB)',
+                    'Zone Redundant',
+                    'Catalog Collation',
+                    'Read Replica Count' | 
+                    Export-Excel -Path $File -WorksheetName 'SQL DBs' -AutoSize -TableName 'AzureSQLDBs' -TableStyle $tableStyle -Style $Style
+                }
 
             }
 
@@ -4145,44 +4123,42 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelAutAcc = $AzInfra.AutomationAcc
             
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelAutAcc | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Automation Account Name',
-                        'Automation Account State',
-                        'Automation Account SKU',
-                        'Location',
-                        'Runbook Name',
-                        'Last Modified Time',
-                        'Runbook State',
-                        'Runbook Type',
-                        'Runbook Description',
-                        'Job Count',
-                        'Tag Name',
-                        'Tag Value' |
-                        Export-Excel -Path $File -WorksheetName 'Runbooks' -AutoSize -TableName 'AzureRunbooks' -TableStyle $tableStyle -Style $Style, $StyleExt
-                    }
-                else 
-                    {
-                        $ExcelAutAcc | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Automation Account Name',
-                        'Automation Account State',
-                        'Automation Account SKU',
-                        'Location',
-                        'Runbook Name',
-                        'Last Modified Time',
-                        'Runbook State',
-                        'Runbook Type',
-                        'Runbook Description',
-                        'Job Count' |
-                        Export-Excel -Path $File -WorksheetName 'Runbooks' -AutoSize -TableName 'AzureRunbooks' -TableStyle $tableStyle -Style $Style, $StyleExt
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelAutAcc | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Automation Account Name',
+                    'Automation Account State',
+                    'Automation Account SKU',
+                    'Location',
+                    'Runbook Name',
+                    'Last Modified Time',
+                    'Runbook State',
+                    'Runbook Type',
+                    'Runbook Description',
+                    'Job Count',
+                    'Tag Name',
+                    'Tag Value' |
+                    Export-Excel -Path $File -WorksheetName 'Runbooks' -AutoSize -TableName 'AzureRunbooks' -TableStyle $tableStyle -Style $Style, $StyleExt
+                }
+                else {
+                    $ExcelAutAcc | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Automation Account Name',
+                    'Automation Account State',
+                    'Automation Account SKU',
+                    'Location',
+                    'Runbook Name',
+                    'Last Modified Time',
+                    'Runbook State',
+                    'Runbook Type',
+                    'Runbook Description',
+                    'Job Count' |
+                    Export-Excel -Path $File -WorksheetName 'Runbooks' -AutoSize -TableName 'AzureRunbooks' -TableStyle $tableStyle -Style $Style, $StyleExt
+                }
 
             }
 
@@ -4198,42 +4174,40 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelPIP = $AzNetwork.PIP
             
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelPIP | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'SKU',
-                        'Location',
-                        'Type',
-                        'Version',
-                        'IP Address',
-                        'Use',
-                        'Associated Resource',
-                        'Associated Resource Type',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -TableName 'AzurePubIPs' -TableStyle $tableStyle -Style $Style -ConditionalText $condtxtpip
-                    }
-                else 
-                    {
-                        $ExcelPIP | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'SKU',
-                        'Location',
-                        'Type',
-                        'Version',
-                        'IP Address',
-                        'Use',
-                        'Associated Resource',
-                        'Associated Resource Type' | 
-                        Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -TableName 'AzurePubIPs' -TableStyle $tableStyle -Style $Style -ConditionalText $condtxtpip
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelPIP | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'SKU',
+                    'Location',
+                    'Type',
+                    'Version',
+                    'IP Address',
+                    'Use',
+                    'Associated Resource',
+                    'Associated Resource Type',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -TableName 'AzurePubIPs' -TableStyle $tableStyle -Style $Style -ConditionalText $condtxtpip
+                }
+                else {
+                    $ExcelPIP | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'SKU',
+                    'Location',
+                    'Type',
+                    'Version',
+                    'IP Address',
+                    'Use',
+                    'Associated Resource',
+                    'Associated Resource Type' | 
+                    Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -TableName 'AzurePubIPs' -TableStyle $tableStyle -Style $Style -ConditionalText $condtxtpip
+                }
 
             }
 
@@ -4251,44 +4225,42 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelEvtHub = $AzInfra.EvtHub
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelEvtHub | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'Status',
-                        'Geo-Rep',
-                        'Throughput Units',
-                        'Auto-Inflate',
-                        'Max Throughput Units',
-                        'Kafka Enabled',
-                        'Endpoint',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Event Hubs' -AutoSize -TableName 'AzureEventHubs' -TableStyle $tableStyle -ConditionalText $txtEvt -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelEvtHub | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'Status',
-                        'Geo-Rep',
-                        'Throughput Units',
-                        'Auto-Inflate',
-                        'Max Throughput Units',
-                        'Kafka Enabled',
-                        'Endpoint' | 
-                        Export-Excel -Path $File -WorksheetName 'Event Hubs' -AutoSize -TableName 'AzureEventHubs' -TableStyle $tableStyle -ConditionalText $txtEvt -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelEvtHub | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'Status',
+                    'Geo-Rep',
+                    'Throughput Units',
+                    'Auto-Inflate',
+                    'Max Throughput Units',
+                    'Kafka Enabled',
+                    'Endpoint',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Event Hubs' -AutoSize -TableName 'AzureEventHubs' -TableStyle $tableStyle -ConditionalText $txtEvt -Style $Style
+                }
+                else {
+                    $ExcelEvtHub | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'Status',
+                    'Geo-Rep',
+                    'Throughput Units',
+                    'Auto-Inflate',
+                    'Max Throughput Units',
+                    'Kafka Enabled',
+                    'Endpoint' | 
+                    Export-Excel -Path $File -WorksheetName 'Event Hubs' -AutoSize -TableName 'AzureEventHubs' -TableStyle $tableStyle -ConditionalText $txtEvt -Style $Style
+                }
 
             }
 
@@ -4303,64 +4275,62 @@ $Runtime = Measure-Command -Expression {
           
                 $ExcelMySQL = $AzDatabase.MySQL
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelMySQL | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'SKU Family',
-                        'Tier',
-                        'Capacity',
-                        'MySQL Version',
-                        'Backup Retention Days',
-                        'Geo-Redundant Backup',
-                        'Auto Grow',
-                        'Storage MB',
-                        'Public Network Access',
-                        'Admin Login',
-                        'Infrastructure Encryption',
-                        'Minimal Tls Version',
-                        'State',
-                        'Replica Capacity',
-                        'Replication Role',
-                        'BYOK Enforcement',
-                        'ssl Enforcement',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'MySQL' -AutoSize -TableName 'AzureMySQL' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelMySQL | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'SKU Family',
-                        'Tier',
-                        'Capacity',
-                        'MySQL Version',
-                        'Backup Retention Days',
-                        'Geo-Redundant Backup',
-                        'Auto Grow',
-                        'Storage MB',
-                        'Public Network Access',
-                        'Admin Login',
-                        'Infrastructure Encryption',
-                        'Minimal Tls Version',
-                        'State',
-                        'Replica Capacity',
-                        'Replication Role',
-                        'BYOK Enforcement',
-                        'ssl Enforcement'| 
-                        Export-Excel -Path $File -WorksheetName 'MySQL' -AutoSize -TableName 'AzureMySQL' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelMySQL | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'SKU Family',
+                    'Tier',
+                    'Capacity',
+                    'MySQL Version',
+                    'Backup Retention Days',
+                    'Geo-Redundant Backup',
+                    'Auto Grow',
+                    'Storage MB',
+                    'Public Network Access',
+                    'Admin Login',
+                    'Infrastructure Encryption',
+                    'Minimal Tls Version',
+                    'State',
+                    'Replica Capacity',
+                    'Replication Role',
+                    'BYOK Enforcement',
+                    'ssl Enforcement',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'MySQL' -AutoSize -TableName 'AzureMySQL' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelMySQL | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'SKU Family',
+                    'Tier',
+                    'Capacity',
+                    'MySQL Version',
+                    'Backup Retention Days',
+                    'Geo-Redundant Backup',
+                    'Auto Grow',
+                    'Storage MB',
+                    'Public Network Access',
+                    'Admin Login',
+                    'Infrastructure Encryption',
+                    'Minimal Tls Version',
+                    'State',
+                    'Replica Capacity',
+                    'Replication Role',
+                    'BYOK Enforcement',
+                    'ssl Enforcement' | 
+                    Export-Excel -Path $File -WorksheetName 'MySQL' -AutoSize -TableName 'AzureMySQL' -TableStyle $tableStyle -Style $Style
+                }
 
             }
 
@@ -4375,64 +4345,62 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelPostGre = $AzDatabase.PostGre
             
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelPostGre | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'SKU Family',
-                        'Tier',
-                        'Capacity',
-                        'MySQL Version',
-                        'Backup Retention Days',
-                        'Geo-Redundant Backup',
-                        'Auto Grow',
-                        'Storage MB',
-                        'Public Network Access',
-                        'Admin Login',
-                        'Infrastructure Encryption',
-                        'Minimal Tls Version',
-                        'State',
-                        'Replica Capacity',
-                        'Replication Role',
-                        'BYOK Enforcement',
-                        'ssl Enforcement',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'PostgreSQL' -AutoSize -TableName 'AzurePostgreSQL' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelPostGre | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'SKU Family',
-                        'Tier',
-                        'Capacity',
-                        'MySQL Version',
-                        'Backup Retention Days',
-                        'Geo-Redundant Backup',
-                        'Auto Grow',
-                        'Storage MB',
-                        'Public Network Access',
-                        'Admin Login',
-                        'Infrastructure Encryption',
-                        'Minimal Tls Version',
-                        'State',
-                        'Replica Capacity',
-                        'Replication Role',
-                        'BYOK Enforcement',
-                        'ssl Enforcement' | 
-                        Export-Excel -Path $File -WorksheetName 'PostgreSQL' -AutoSize -TableName 'AzurePostgreSQL' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelPostGre | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'SKU Family',
+                    'Tier',
+                    'Capacity',
+                    'MySQL Version',
+                    'Backup Retention Days',
+                    'Geo-Redundant Backup',
+                    'Auto Grow',
+                    'Storage MB',
+                    'Public Network Access',
+                    'Admin Login',
+                    'Infrastructure Encryption',
+                    'Minimal Tls Version',
+                    'State',
+                    'Replica Capacity',
+                    'Replication Role',
+                    'BYOK Enforcement',
+                    'ssl Enforcement',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'PostgreSQL' -AutoSize -TableName 'AzurePostgreSQL' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelPostGre | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'SKU Family',
+                    'Tier',
+                    'Capacity',
+                    'MySQL Version',
+                    'Backup Retention Days',
+                    'Geo-Redundant Backup',
+                    'Auto Grow',
+                    'Storage MB',
+                    'Public Network Access',
+                    'Admin Login',
+                    'Infrastructure Encryption',
+                    'Minimal Tls Version',
+                    'State',
+                    'Replica Capacity',
+                    'Replication Role',
+                    'BYOK Enforcement',
+                    'ssl Enforcement' | 
+                    Export-Excel -Path $File -WorksheetName 'PostgreSQL' -AutoSize -TableName 'AzurePostgreSQL' -TableStyle $tableStyle -Style $Style
+                }
 
             }
 
@@ -4447,50 +4415,48 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelWebFarm = $AzCompute.SERVERFARM
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelWebFarm | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'SKU Family',
-                        'Tier',
-                        'Capacity',
-                        'Workers',
-                        'Compute Mode',
-                        'Max Elastic Workers',
-                        'Max Workers',
-                        'Worker Kind',
-                        'Number Of Sites',
-                        'Plan Name',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Web Servers' -AutoSize -TableName 'AzureWebServers' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelWebFarm | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'SKU Family',
-                        'Tier',
-                        'Capacity',
-                        'Workers',
-                        'Compute Mode',
-                        'Max Elastic Workers',
-                        'Max Workers',
-                        'Worker Kind',
-                        'Number Of Sites',
-                        'Plan Name' | 
-                        Export-Excel -Path $File -WorksheetName 'Web Servers' -AutoSize -TableName 'AzureWebServers' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelWebFarm | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'SKU Family',
+                    'Tier',
+                    'Capacity',
+                    'Workers',
+                    'Compute Mode',
+                    'Max Elastic Workers',
+                    'Max Workers',
+                    'Worker Kind',
+                    'Number Of Sites',
+                    'Plan Name',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Web Servers' -AutoSize -TableName 'AzureWebServers' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelWebFarm | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'SKU Family',
+                    'Tier',
+                    'Capacity',
+                    'Workers',
+                    'Compute Mode',
+                    'Max Elastic Workers',
+                    'Max Workers',
+                    'Worker Kind',
+                    'Number Of Sites',
+                    'Plan Name' | 
+                    Export-Excel -Path $File -WorksheetName 'Web Servers' -AutoSize -TableName 'AzureWebServers' -TableStyle $tableStyle -Style $Style
+                }
 
             }
 
@@ -4506,34 +4472,32 @@ $Runtime = Measure-Command -Expression {
             
                 $ExcelWrkSpace = $AzInfra.WrkSpace
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelWrkSpace | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'Retention Days',
-                        'Daily Quota (GB)',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Workspaces' -AutoSize -TableName 'AzureWorkspace' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelWrkSpace | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'Retention Days',
-                        'Daily Quota (GB)' | 
-                        Export-Excel -Path $File -WorksheetName 'Workspaces' -AutoSize -TableName 'AzureWorkspace' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelWrkSpace | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'Retention Days',
+                    'Daily Quota (GB)',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Workspaces' -AutoSize -TableName 'AzureWorkspace' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelWrkSpace | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'Retention Days',
+                    'Daily Quota (GB)' | 
+                    Export-Excel -Path $File -WorksheetName 'Workspaces' -AutoSize -TableName 'AzureWorkspace' -TableStyle $tableStyle -Style $Style
+                }
 
             }
 
@@ -4551,78 +4515,76 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelAKS = $AzCompute.AKS
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelAKS | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Clusters',
-                        'Location',
-                        'Kubernetes Version',
-                        'Kubernetes Version Support',
-                        'Role-Based Access Control',
-                        'AAD Enabled',
-                        'Network Type',
-                        'Outbound Type',
-                        'LoadBalancer Sku',
-                        'Docker Pod Cidr',
-                        'Service Cidr',
-                        'Docker Bridge Cidr',           
-                        'Network DNS Service IP',
-                        'FQDN',
-                        'HTTP Application Routing',
-                        'Node Pool Name',
-                        'Pool Profile Type',
-                        'Pool OS',
-                        'Node Size',
-                        'OS Disk Size (GB)',
-                        'Nodes',
-                        'Autoscale',
-                        'Autoscale Max',
-                        'Autoscale Min',
-                        'Max Pods Per Node',
-                        'Orchestrator Version',
-                        'Enable Node Public IP',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName 'AzureKubernetes' -TableStyle $tableStyle -ConditionalText $txtaksv -Numberformat '0' -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelAKS | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Clusters',
-                        'Location',
-                        'Kubernetes Version',
-                        'Kubernetes Version Support',
-                        'Role-Based Access Control',
-                        'AAD Enabled',
-                        'Network Type',
-                        'Outbound Type',
-                        'LoadBalancer Sku',
-                        'Docker Pod Cidr',
-                        'Service Cidr',
-                        'Docker Bridge Cidr',           
-                        'Network DNS Service IP',
-                        'FQDN',
-                        'HTTP Application Routing',
-                        'Node Pool Name',
-                        'Pool Profile Type',
-                        'Pool OS',
-                        'Node Size',
-                        'OS Disk Size (GB)',
-                        'Nodes',
-                        'Autoscale',
-                        'Autoscale Max',
-                        'Autoscale Min',
-                        'Max Pods Per Node',
-                        'Orchestrator Version',
-                        'Enable Node Public IP' | 
-                        Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName 'AzureKubernetes' -TableStyle $tableStyle -ConditionalText $txtaksv -Numberformat '0' -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelAKS | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Clusters',
+                    'Location',
+                    'Kubernetes Version',
+                    'Kubernetes Version Support',
+                    'Role-Based Access Control',
+                    'AAD Enabled',
+                    'Network Type',
+                    'Outbound Type',
+                    'LoadBalancer Sku',
+                    'Docker Pod Cidr',
+                    'Service Cidr',
+                    'Docker Bridge Cidr',           
+                    'Network DNS Service IP',
+                    'FQDN',
+                    'HTTP Application Routing',
+                    'Node Pool Name',
+                    'Pool Profile Type',
+                    'Pool OS',
+                    'Node Size',
+                    'OS Disk Size (GB)',
+                    'Nodes',
+                    'Autoscale',
+                    'Autoscale Max',
+                    'Autoscale Min',
+                    'Max Pods Per Node',
+                    'Orchestrator Version',
+                    'Enable Node Public IP',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName 'AzureKubernetes' -TableStyle $tableStyle -ConditionalText $txtaksv -Numberformat '0' -Style $Style
+                }
+                else {
+                    $ExcelAKS | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Clusters',
+                    'Location',
+                    'Kubernetes Version',
+                    'Kubernetes Version Support',
+                    'Role-Based Access Control',
+                    'AAD Enabled',
+                    'Network Type',
+                    'Outbound Type',
+                    'LoadBalancer Sku',
+                    'Docker Pod Cidr',
+                    'Service Cidr',
+                    'Docker Bridge Cidr',           
+                    'Network DNS Service IP',
+                    'FQDN',
+                    'HTTP Application Routing',
+                    'Node Pool Name',
+                    'Pool Profile Type',
+                    'Pool OS',
+                    'Node Size',
+                    'OS Disk Size (GB)',
+                    'Nodes',
+                    'Autoscale',
+                    'Autoscale Max',
+                    'Autoscale Min',
+                    'Max Pods Per Node',
+                    'Orchestrator Version',
+                    'Enable Node Public IP' | 
+                    Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName 'AzureKubernetes' -TableStyle $tableStyle -ConditionalText $txtaksv -Numberformat '0' -Style $Style
+                }
 
             }
 
@@ -4637,52 +4599,50 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelContainer = $AzCompute.CON
             
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelContainer | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Instance Name',
-                        'Location',
-                        'Instance OS Type',
-                        'Container Name',
-                        'Container State',
-                        'Container Image',
-                        'Restart Count',
-                        'Start Time',
-                        'Command',
-                        'Request CPU',
-                        'Request Memory (GB)',
-                        'IP',
-                        'Protocol',
-                        'Port',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Containers' -AutoSize -TableName 'AzureContainers' -TableStyle $tableStyle -Style $Style
-                    }
-                else
-                    {
-                        $ExcelContainer | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Instance Name',
-                        'Location',
-                        'Instance OS Type',
-                        'Container Name',
-                        'Container State',
-                        'Container Image',
-                        'Restart Count',
-                        'Start Time',
-                        'Command',
-                        'Request CPU',
-                        'Request Memory (GB)',
-                        'IP',
-                        'Protocol',
-                        'Port' | 
-                        Export-Excel -Path $File -WorksheetName 'Containers' -AutoSize -TableName 'AzureContainers' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelContainer | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Instance Name',
+                    'Location',
+                    'Instance OS Type',
+                    'Container Name',
+                    'Container State',
+                    'Container Image',
+                    'Restart Count',
+                    'Start Time',
+                    'Command',
+                    'Request CPU',
+                    'Request Memory (GB)',
+                    'IP',
+                    'Protocol',
+                    'Port',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Containers' -AutoSize -TableName 'AzureContainers' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelContainer | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Instance Name',
+                    'Location',
+                    'Instance OS Type',
+                    'Container Name',
+                    'Container State',
+                    'Container Image',
+                    'Restart Count',
+                    'Start Time',
+                    'Command',
+                    'Request CPU',
+                    'Request Memory (GB)',
+                    'IP',
+                    'Protocol',
+                    'Port' | 
+                    Export-Excel -Path $File -WorksheetName 'Containers' -AutoSize -TableName 'AzureContainers' -TableStyle $tableStyle -Style $Style
+                }
 
             }
 
@@ -4697,34 +4657,32 @@ $Runtime = Measure-Command -Expression {
             
                 $ExcelAvSet = $AzInfra.AvSet
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelAvSet | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Fault Domains',
-                        'Update Domains',
-                        'Virtual Machines',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Availability Sets' -AutoSize -TableName 'AvailabilitySets' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelAvSet | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Fault Domains',
-                        'Update Domains',
-                        'Virtual Machines' | 
-                        Export-Excel -Path $File -WorksheetName 'Availability Sets' -AutoSize -TableName 'AvailabilitySets' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelAvSet | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Fault Domains',
+                    'Update Domains',
+                    'Virtual Machines',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Availability Sets' -AutoSize -TableName 'AvailabilitySets' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelAvSet | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Fault Domains',
+                    'Update Domains',
+                    'Virtual Machines' | 
+                    Export-Excel -Path $File -WorksheetName 'Availability Sets' -AutoSize -TableName 'AvailabilitySets' -TableStyle $tableStyle -Style $Style
+                }
 
             }
 
@@ -4739,64 +4697,62 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelWebSite = $AzInfra.WebSite
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelWebSite | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Kind',
-                        'Location',
-                        'Enabled',
-                        'State',
-                        'SKU',
-                        'Content Availability State',
-                        'Runtime Availability State',
-                        'Possible Inbound IP Addresses',
-                        'Repository Site Name',
-                        'AvailabilityState',
-                        'HostNames',
-                        'HostName Type',
-                        'sslState',
-                        'Default Hostname',
-                        'Client Cert Mode',
-                        'ContainerSize',
-                        'Admin Enabled',
-                        'FTPs Host Name',
-                        'HTTPS Only',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Web Sites' -AutoSize -TableName 'WebSites' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelWebSite | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Kind',
-                        'Location',
-                        'Enabled',
-                        'State',
-                        'SKU',
-                        'Content Availability State',
-                        'Runtime Availability State',
-                        'Possible Inbound IP Addresses',
-                        'Repository Site Name',
-                        'AvailabilityState',
-                        'HostNames',
-                        'HostName Type',
-                        'sslState',
-                        'Default Hostname',
-                        'Client Cert Mode',
-                        'ContainerSize',
-                        'Admin Enabled',
-                        'FTPs Host Name',
-                        'HTTPS Only' | 
-                        Export-Excel -Path $File -WorksheetName 'Web Sites' -AutoSize -TableName 'WebSites' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelWebSite | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Kind',
+                    'Location',
+                    'Enabled',
+                    'State',
+                    'SKU',
+                    'Content Availability State',
+                    'Runtime Availability State',
+                    'Possible Inbound IP Addresses',
+                    'Repository Site Name',
+                    'AvailabilityState',
+                    'HostNames',
+                    'HostName Type',
+                    'sslState',
+                    'Default Hostname',
+                    'Client Cert Mode',
+                    'ContainerSize',
+                    'Admin Enabled',
+                    'FTPs Host Name',
+                    'HTTPS Only',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Web Sites' -AutoSize -TableName 'WebSites' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelWebSite | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Kind',
+                    'Location',
+                    'Enabled',
+                    'State',
+                    'SKU',
+                    'Content Availability State',
+                    'Runtime Availability State',
+                    'Possible Inbound IP Addresses',
+                    'Repository Site Name',
+                    'AvailabilityState',
+                    'HostNames',
+                    'HostName Type',
+                    'sslState',
+                    'Default Hostname',
+                    'Client Cert Mode',
+                    'ContainerSize',
+                    'Admin Enabled',
+                    'FTPs Host Name',
+                    'HTTPS Only' | 
+                    Export-Excel -Path $File -WorksheetName 'Web Sites' -AutoSize -TableName 'WebSites' -TableStyle $tableStyle -Style $Style
+                }
 
             }
 
@@ -4810,50 +4766,48 @@ $Runtime = Measure-Command -Expression {
                         
                 $ExcelVMSS = $AzCompute.VMSS
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelVMSS | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU Tier',
-                        'Fault Domain',
-                        'Upgrade Policy',
-                        'Capacity',
-                        'VM Size',
-                        'VM OS',
-                        'Network Interface Name',
-                        'Enable Accelerated Networking',
-                        'Enable IP Forwading',
-                        'Admin Username',
-                        'VM Name Prefix',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'VMSS' -AutoSize -TableName 'AzureVMSS' -TableStyle $tableStyle -Style $Style
-                    }
-                else    
-                    {
-                        $ExcelVMSS | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU Tier',
-                        'Fault Domain',
-                        'Upgrade Policy',
-                        'Capacity',
-                        'VM Size',
-                        'VM OS',
-                        'Network Interface Name',
-                        'Enable Accelerated Networking',
-                        'Enable IP Forwading',
-                        'Admin Username',
-                        'VM Name Prefix' | 
-                        Export-Excel -Path $File -WorksheetName 'VMSS' -AutoSize -TableName 'AzureVMSS' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelVMSS | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU Tier',
+                    'Fault Domain',
+                    'Upgrade Policy',
+                    'Capacity',
+                    'VM Size',
+                    'VM OS',
+                    'Network Interface Name',
+                    'Enable Accelerated Networking',
+                    'Enable IP Forwading',
+                    'Admin Username',
+                    'VM Name Prefix',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'VMSS' -AutoSize -TableName 'AzureVMSS' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelVMSS | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU Tier',
+                    'Fault Domain',
+                    'Upgrade Policy',
+                    'Capacity',
+                    'VM Size',
+                    'VM OS',
+                    'Network Interface Name',
+                    'Enable Accelerated Networking',
+                    'Enable IP Forwading',
+                    'Admin Username',
+                    'VM Name Prefix' | 
+                    Export-Excel -Path $File -WorksheetName 'VMSS' -AutoSize -TableName 'AzureVMSS' -TableStyle $tableStyle -Style $Style
+                }
 
             }
 
@@ -4871,54 +4825,52 @@ $Runtime = Measure-Command -Expression {
                         
                 $ExcelLB = $AzNetwork.LB
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelLB | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'Frontend Name',
-                        'Frontend Target',
-                        'Frontend Type',
-                        'Frontend Subnet',
-                        'Backend Pool Name',
-                        'Backend Target',
-                        'Backend Type',
-                        'Probe Name',
-                        'Probe Interval (sec)',
-                        'Probe Protocol',
-                        'Probe Port',
-                        'Probe Unhealthy threshold',
-                        'Tag Name',
-                        'Tag Value'  | 
-                        Export-Excel -Path $File -WorksheetName 'Load Balancers' -AutoSize -TableName 'LoadBalancers' -TableStyle $tableStyle -ConditionalText $txtLB -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelLB | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'Frontend Name',
-                        'Frontend Target',
-                        'Frontend Type',
-                        'Frontend Subnet',
-                        'Backend Pool Name',
-                        'Backend Target',
-                        'Backend Type',
-                        'Probe Name',
-                        'Probe Interval (sec)',
-                        'Probe Protocol',
-                        'Probe Port',
-                        'Probe Unhealthy threshold' | 
-                        Export-Excel -Path $File -WorksheetName 'Load Balancers' -AutoSize -TableName 'LoadBalancers' -TableStyle $tableStyle -ConditionalText $txtLB -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelLB | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'Frontend Name',
+                    'Frontend Target',
+                    'Frontend Type',
+                    'Frontend Subnet',
+                    'Backend Pool Name',
+                    'Backend Target',
+                    'Backend Type',
+                    'Probe Name',
+                    'Probe Interval (sec)',
+                    'Probe Protocol',
+                    'Probe Port',
+                    'Probe Unhealthy threshold',
+                    'Tag Name',
+                    'Tag Value'  | 
+                    Export-Excel -Path $File -WorksheetName 'Load Balancers' -AutoSize -TableName 'LoadBalancers' -TableStyle $tableStyle -ConditionalText $txtLB -Style $Style
+                }
+                else {
+                    $ExcelLB | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'Frontend Name',
+                    'Frontend Target',
+                    'Frontend Type',
+                    'Frontend Subnet',
+                    'Backend Pool Name',
+                    'Backend Target',
+                    'Backend Type',
+                    'Probe Name',
+                    'Probe Interval (sec)',
+                    'Probe Protocol',
+                    'Probe Port',
+                    'Probe Unhealthy threshold' | 
+                    Export-Excel -Path $File -WorksheetName 'Load Balancers' -AutoSize -TableName 'LoadBalancers' -TableStyle $tableStyle -ConditionalText $txtLB -Style $Style
+                }
 
             }
 
@@ -4934,40 +4886,38 @@ $Runtime = Measure-Command -Expression {
                     
                 $ExcelSQLServer = $AzCompute.SQLSERVER
     
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelSQLServer | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Kind',
-                        'Admin Login',
-                        'FQDN',
-                        'Public Network Access',
-                        'State',
-                        'Version',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'SQL Servers' -AutoSize -TableName 'AzureSQLServers' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelSQLServer | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Kind',
-                        'Admin Login',
-                        'FQDN',
-                        'Public Network Access',
-                        'State',
-                        'Version' | 
-                        Export-Excel -Path $File -WorksheetName 'SQL Servers' -AutoSize -TableName 'AzureSQLServers' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelSQLServer | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Kind',
+                    'Admin Login',
+                    'FQDN',
+                    'Public Network Access',
+                    'State',
+                    'Version',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'SQL Servers' -AutoSize -TableName 'AzureSQLServers' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelSQLServer | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Kind',
+                    'Admin Login',
+                    'FQDN',
+                    'Public Network Access',
+                    'State',
+                    'Version' | 
+                    Export-Excel -Path $File -WorksheetName 'SQL Servers' -AutoSize -TableName 'AzureSQLServers' -TableStyle $tableStyle -Style $Style
+                }
       
             }
 
@@ -4985,50 +4935,48 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelPeering = $AzNetwork.Peering
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelPeering | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Location',
-                        'Zone',
-                        'Peering Name',
-                        'VNET Name',
-                        'Address Space',
-                        'Peering VNet',
-                        'Peering Address Space',
-                        'Peering State',
-                        'Peering Use Remote Gateways',
-                        'Peering Allow Gateway Transit',
-                        'Peering Allow Forwarded Traffic',
-                        'Peering Do Not Verify Remote Gateways',
-                        'Peering Allow Virtual NetworkAccess',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Peering' -AutoSize -TableName 'AzureVNETPeerings' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelPeering | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Location',
-                        'Zone',
-                        'Peering Name',
-                        'VNET Name',
-                        'Address Space',
-                        'Peering VNet',
-                        'Peering Address Space',
-                        'Peering State',
-                        'Peering Use Remote Gateways',
-                        'Peering Allow Gateway Transit',
-                        'Peering Allow Forwarded Traffic',
-                        'Peering Do Not Verify Remote Gateways',
-                        'Peering Allow Virtual NetworkAccess' | 
-                        Export-Excel -Path $File -WorksheetName 'Peering' -AutoSize -TableName 'AzureVNETPeerings' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelPeering | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Location',
+                    'Zone',
+                    'Peering Name',
+                    'VNET Name',
+                    'Address Space',
+                    'Peering VNet',
+                    'Peering Address Space',
+                    'Peering State',
+                    'Peering Use Remote Gateways',
+                    'Peering Allow Gateway Transit',
+                    'Peering Allow Forwarded Traffic',
+                    'Peering Do Not Verify Remote Gateways',
+                    'Peering Allow Virtual NetworkAccess',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Peering' -AutoSize -TableName 'AzureVNETPeerings' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelPeering | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Location',
+                    'Zone',
+                    'Peering Name',
+                    'VNET Name',
+                    'Address Space',
+                    'Peering VNet',
+                    'Peering Address Space',
+                    'Peering State',
+                    'Peering Use Remote Gateways',
+                    'Peering Allow Gateway Transit',
+                    'Peering Allow Forwarded Traffic',
+                    'Peering Do Not Verify Remote Gateways',
+                    'Peering Allow Virtual NetworkAccess' | 
+                    Export-Excel -Path $File -WorksheetName 'Peering' -AutoSize -TableName 'AzureVNETPeerings' -TableStyle $tableStyle -Style $Style
+                }
 
             }
             
@@ -5044,44 +4992,42 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelFrontDoor = $AzNetwork.FrontDoor
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelFrontDoor | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Friendly Name',
-                        'cName',
-                        'State',
-                        'Frontend',
-                        'Backend',
-                        'Health Probe',
-                        'Load Balancing',
-                        'Routing Rules',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'FrontDoor' -AutoSize -TableName 'AzureFrontDoor' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelFrontDoor | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Friendly Name',
-                        'cName',
-                        'State',
-                        'Frontend',
-                        'Backend',
-                        'Health Probe',
-                        'Load Balancing',
-                        'Routing Rules'| 
-                        Export-Excel -Path $File -WorksheetName 'FrontDoor' -AutoSize -TableName 'AzureFrontDoor' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelFrontDoor | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Friendly Name',
+                    'cName',
+                    'State',
+                    'Frontend',
+                    'Backend',
+                    'Health Probe',
+                    'Load Balancing',
+                    'Routing Rules',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'FrontDoor' -AutoSize -TableName 'AzureFrontDoor' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelFrontDoor | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Friendly Name',
+                    'cName',
+                    'State',
+                    'Frontend',
+                    'Backend',
+                    'Health Probe',
+                    'Load Balancing',
+                    'Routing Rules' | 
+                    Export-Excel -Path $File -WorksheetName 'FrontDoor' -AutoSize -TableName 'AzureFrontDoor' -TableStyle $tableStyle -Style $Style
+                }
 
             }            
 
@@ -5096,46 +5042,44 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelAppGateway = $AzNetwork.AppGateway
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelAppGateway | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'State',
-                        'SKU Name',
-                        'SKU Capacity',
-                        'Backend',
-                        'Frontend',
-                        'Frontend Ports',
-                        'Gateways',
-                        'HTTP Listeners',
-                        'Request Routing Rules',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'App Gateway' -AutoSize -TableName 'AzureAppGateway' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelAppGateway | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'State',
-                        'SKU Name',
-                        'SKU Capacity',
-                        'Backend',
-                        'Frontend',
-                        'Frontend Ports',
-                        'Gateways',
-                        'HTTP Listeners',
-                        'Request Routing Rules'| 
-                        Export-Excel -Path $File -WorksheetName 'App Gateway' -AutoSize -TableName 'AzureAppGateway' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelAppGateway | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'State',
+                    'SKU Name',
+                    'SKU Capacity',
+                    'Backend',
+                    'Frontend',
+                    'Frontend Ports',
+                    'Gateways',
+                    'HTTP Listeners',
+                    'Request Routing Rules',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'App Gateway' -AutoSize -TableName 'AzureAppGateway' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelAppGateway | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'State',
+                    'SKU Name',
+                    'SKU Capacity',
+                    'Backend',
+                    'Frontend',
+                    'Frontend Ports',
+                    'Gateways',
+                    'HTTP Listeners',
+                    'Request Routing Rules' | 
+                    Export-Excel -Path $File -WorksheetName 'App Gateway' -AutoSize -TableName 'AzureAppGateway' -TableStyle $tableStyle -Style $Style
+                }
 
             }  
 
@@ -5149,40 +5093,38 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelRouteTable = $AzNetwork.RouteTable
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelRouteTable | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Disable BGP Route Propagation',
-                        'Routes',
-                        'Routes Prefixes',
-                        'Routes BGP Override',
-                        'Routes Next Hop IP',
-                        'Routes Next Hop Type',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Route Tables' -AutoSize -TableName 'AzureRouteTables' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelRouteTable | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Disable BGP Route Propagation',
-                        'Routes',
-                        'Routes Prefixes',
-                        'Routes BGP Override',
-                        'Routes Next Hop IP',
-                        'Routes Next Hop Type'| 
-                        Export-Excel -Path $File -WorksheetName 'Route Tables' -AutoSize -TableName 'AzureRouteTables' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelRouteTable | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Disable BGP Route Propagation',
+                    'Routes',
+                    'Routes Prefixes',
+                    'Routes BGP Override',
+                    'Routes Next Hop IP',
+                    'Routes Next Hop Type',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Route Tables' -AutoSize -TableName 'AzureRouteTables' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelRouteTable | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Disable BGP Route Propagation',
+                    'Routes',
+                    'Routes Prefixes',
+                    'Routes BGP Override',
+                    'Routes Next Hop IP',
+                    'Routes Next Hop Type' | 
+                    Export-Excel -Path $File -WorksheetName 'Route Tables' -AutoSize -TableName 'AzureRouteTables' -TableStyle $tableStyle -Style $Style
+                }
 
             }  
 
@@ -5196,50 +5138,48 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelVault = $AzInfra.Vault
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelVault | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU Family',
-                        'SKU',
-                        'Vault Uri',
-                        'Enable RBAC',
-                        'Enable Soft Delete',
-                        'Enable for Disk Encryption',
-                        'Enable for Template Deploy',
-                        'Soft Delete Retention Days',
-                        'Certificate Permissions',
-                        'Key Permissions',
-                        'Secret Permissions',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Key Vaults' -AutoSize -TableName 'AzureKeyVault' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelVault | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU Family',
-                        'SKU',
-                        'Vault Uri',
-                        'Enable RBAC',
-                        'Enable Soft Delete',
-                        'Enable for Disk Encryption',
-                        'Enable for Template Deploy',
-                        'Soft Delete Retention Days',
-                        'Certificate Permissions',
-                        'Key Permissions',
-                        'Secret Permissions'| 
-                        Export-Excel -Path $File -WorksheetName 'Key Vaults' -AutoSize -TableName 'AzureKeyVault' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelVault | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU Family',
+                    'SKU',
+                    'Vault Uri',
+                    'Enable RBAC',
+                    'Enable Soft Delete',
+                    'Enable for Disk Encryption',
+                    'Enable for Template Deploy',
+                    'Soft Delete Retention Days',
+                    'Certificate Permissions',
+                    'Key Permissions',
+                    'Secret Permissions',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Key Vaults' -AutoSize -TableName 'AzureKeyVault' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelVault | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU Family',
+                    'SKU',
+                    'Vault Uri',
+                    'Enable RBAC',
+                    'Enable Soft Delete',
+                    'Enable for Disk Encryption',
+                    'Enable for Template Deploy',
+                    'Soft Delete Retention Days',
+                    'Certificate Permissions',
+                    'Key Permissions',
+                    'Secret Permissions' | 
+                    Export-Excel -Path $File -WorksheetName 'Key Vaults' -AutoSize -TableName 'AzureKeyVault' -TableStyle $tableStyle -Style $Style
+                }
 
             }  
 
@@ -5253,36 +5193,34 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelRecVault = $AzInfra.RecoveryVault
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelRecVault | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU Name',
-                        'SKU Tier',
-                        'Private Endpoint State for Backup',
-                        'Private Endpoint State for Site Recovery',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Recovery Vaults' -AutoSize -TableName 'AzureRecVault' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelRecVault | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU Name',
-                        'SKU Tier',
-                        'Private Endpoint State for Backup',
-                        'Private Endpoint State for Site Recovery'| 
-                        Export-Excel -Path $File -WorksheetName 'Recovery Vaults' -AutoSize -TableName 'AzureRecVault' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelRecVault | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU Name',
+                    'SKU Tier',
+                    'Private Endpoint State for Backup',
+                    'Private Endpoint State for Site Recovery',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Recovery Vaults' -AutoSize -TableName 'AzureRecVault' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelRecVault | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU Name',
+                    'SKU Tier',
+                    'Private Endpoint State for Backup',
+                    'Private Endpoint State for Site Recovery' | 
+                    Export-Excel -Path $File -WorksheetName 'Recovery Vaults' -AutoSize -TableName 'AzureRecVault' -TableStyle $tableStyle -Style $Style
+                }
 
             }             
 
@@ -5296,36 +5234,34 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelPubDNS = $AzNetwork.'Public DNS'
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelPubDNS | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Zone Type',
-                        'Number of Record Sets',
-                        'Max Number of Record Sets',
-                        'Name Servers',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Public DNS' -AutoSize -TableName 'AzurePubDNSZones' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelPubDNS | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Zone Type',
-                        'Number of Record Sets',
-                        'Max Number of Record Sets',
-                        'Name Servers'| 
-                        Export-Excel -Path $File -WorksheetName 'Public DNS' -AutoSize -TableName 'AzurePubDNSZones' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelPubDNS | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Zone Type',
+                    'Number of Record Sets',
+                    'Max Number of Record Sets',
+                    'Name Servers',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Public DNS' -AutoSize -TableName 'AzurePubDNSZones' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelPubDNS | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Zone Type',
+                    'Number of Record Sets',
+                    'Max Number of Record Sets',
+                    'Name Servers' | 
+                    Export-Excel -Path $File -WorksheetName 'Public DNS' -AutoSize -TableName 'AzurePubDNSZones' -TableStyle $tableStyle -Style $Style
+                }
 
             }   
 
@@ -5339,54 +5275,52 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelIot = $AzCompute.Iot
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelIot | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'HostName',
-                        'State',
-                        'SKU',
-                        'SKU Tier',
-                        'SKU Capacity',
-                        'Features',
-                        'Enable File Upload Notifications',
-                        'Default TTL As ISO8601',
-                        'Max Delivery Count',
-                        'EventHubs Endpoint',
-                        'EventHubs Partition Count',
-                        'EventHubs Path',
-                        'EventHubs Retention Days',
-                        'Locations',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'IoT Hubs' -AutoSize -TableName 'AzureIOT' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelIot | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'HostName',
-                        'State',
-                        'SKU',
-                        'SKU Tier',
-                        'SKU Capacity',
-                        'Features',
-                        'Enable File Upload Notifications',
-                        'Default TTL As ISO8601',
-                        'Max Delivery Count',
-                        'EventHubs Endpoint',
-                        'EventHubs Partition Count',
-                        'EventHubs Path',
-                        'EventHubs Retention Days',
-                        'Locations'| 
-                        Export-Excel -Path $File -WorksheetName 'IoT Hubs' -AutoSize -TableName 'AzureIOT' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelIot | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'HostName',
+                    'State',
+                    'SKU',
+                    'SKU Tier',
+                    'SKU Capacity',
+                    'Features',
+                    'Enable File Upload Notifications',
+                    'Default TTL As ISO8601',
+                    'Max Delivery Count',
+                    'EventHubs Endpoint',
+                    'EventHubs Partition Count',
+                    'EventHubs Path',
+                    'EventHubs Retention Days',
+                    'Locations',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'IoT Hubs' -AutoSize -TableName 'AzureIOT' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelIot | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'HostName',
+                    'State',
+                    'SKU',
+                    'SKU Tier',
+                    'SKU Capacity',
+                    'Features',
+                    'Enable File Upload Notifications',
+                    'Default TTL As ISO8601',
+                    'Max Delivery Count',
+                    'EventHubs Endpoint',
+                    'EventHubs Partition Count',
+                    'EventHubs Path',
+                    'EventHubs Retention Days',
+                    'Locations' | 
+                    Export-Excel -Path $File -WorksheetName 'IoT Hubs' -AutoSize -TableName 'AzureIOT' -TableStyle $tableStyle -Style $Style
+                }
 
             } 
 
@@ -5400,54 +5334,52 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelAPIM = $AzInfra.APIM
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelAPIM | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'Gateway URL',
-                        'Virtual Network Type',
-                        'Virtual Network',
-                        'Http2',
-                        'Backend SSL 3.0',
-                        'Backend TLS 1.0',
-                        'Backend TLS 1.1',
-                        'Triple DES',
-                        'Client SSL 3.0',
-                        'Client TLS 1.0',
-                        'Client TLS 1.1',
-                        'Public IP',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'APIM' -AutoSize -TableName 'AzureAPIM' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelAPIM | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'Gateway URL',
-                        'Virtual Network Type',
-                        'Virtual Network',
-                        'Http2',
-                        'Backend SSL 3.0',
-                        'Backend TLS 1.0',
-                        'Backend TLS 1.1',
-                        'Triple DES',
-                        'Client SSL 3.0',
-                        'Client TLS 1.0',
-                        'Client TLS 1.1',
-                        'Public IP'| 
-                        Export-Excel -Path $File -WorksheetName 'APIM' -AutoSize -TableName 'AzureAPIM' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelAPIM | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'Gateway URL',
+                    'Virtual Network Type',
+                    'Virtual Network',
+                    'Http2',
+                    'Backend SSL 3.0',
+                    'Backend TLS 1.0',
+                    'Backend TLS 1.1',
+                    'Triple DES',
+                    'Client SSL 3.0',
+                    'Client TLS 1.0',
+                    'Client TLS 1.1',
+                    'Public IP',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'APIM' -AutoSize -TableName 'AzureAPIM' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelAPIM | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'Gateway URL',
+                    'Virtual Network Type',
+                    'Virtual Network',
+                    'Http2',
+                    'Backend SSL 3.0',
+                    'Backend TLS 1.0',
+                    'Backend TLS 1.1',
+                    'Triple DES',
+                    'Client SSL 3.0',
+                    'Client TLS 1.0',
+                    'Client TLS 1.1',
+                    'Public IP' | 
+                    Export-Excel -Path $File -WorksheetName 'APIM' -AutoSize -TableName 'AzureAPIM' -TableStyle $tableStyle -Style $Style
+                }
 
             } 
 
@@ -5462,34 +5394,32 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelPrivDNS = $AzNetwork.'Private DNS'
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelPrivDNS | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Number of Records',
-                        'Virtual Network Links',
-                        'Network Links with Registration',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Private DNS' -AutoSize -TableName 'AzurePrivDNSZones' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelPrivDNS | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'Number of Records',
-                        'Virtual Network Links',
-                        'Network Links with Registration'| 
-                        Export-Excel -Path $File -WorksheetName 'Private DNS' -AutoSize -TableName 'AzurePrivDNSZones' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelPrivDNS | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Number of Records',
+                    'Virtual Network Links',
+                    'Network Links with Registration',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Private DNS' -AutoSize -TableName 'AzurePrivDNSZones' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelPrivDNS | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'Number of Records',
+                    'Virtual Network Links',
+                    'Network Links with Registration' | 
+                    Export-Excel -Path $File -WorksheetName 'Private DNS' -AutoSize -TableName 'AzurePrivDNSZones' -TableStyle $tableStyle -Style $Style
+                }
 
             }   
 
@@ -5504,38 +5434,36 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelBASTION = $AzInfra.'BASTION'
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelBASTION | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'DNS Name',
-                        'Virtual Network',
-                        'Public IP',
-                        'Scale Units',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Bastion Hosts' -AutoSize -TableName 'AzureBastion' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelBASTION | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'DNS Name',
-                        'Virtual Network',
-                        'Public IP',
-                        'Scale Units'| 
-                        Export-Excel -Path $File -WorksheetName 'Bastion Hosts' -AutoSize -TableName 'AzureBastion' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelBASTION | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'DNS Name',
+                    'Virtual Network',
+                    'Public IP',
+                    'Scale Units',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Bastion Hosts' -AutoSize -TableName 'AzureBastion' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelBASTION | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'DNS Name',
+                    'Virtual Network',
+                    'Public IP',
+                    'Scale Units' | 
+                    Export-Excel -Path $File -WorksheetName 'Bastion Hosts' -AutoSize -TableName 'AzureBastion' -TableStyle $tableStyle -Style $Style
+                }
 
             }   
 
@@ -5550,54 +5478,52 @@ $Runtime = Measure-Command -Expression {
 
                 $ExcelStreamanalytics = $AzDatabase.'Stream Analytics Jobs'
 
-                if ($IncludeTags.IsPresent)
-                    {
-                        $ExcelStreamanalytics | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'Compatibility Level',
-                        'Content Storage Policy',
-                        'Created Date',
-                        'Data Locale',
-                        'Late Arrival Max Delay in Seconds',
-                        'Out of Order Max Delay in Seconds',
-                        'Out of Order Policy',
-                        'Job State',
-                        'Job Type',
-                        'Last Output Event Time',
-                        'Output Start Time',
-                        'Output Error Policy',
-                        'Tag Name',
-                        'Tag Value' | 
-                        Export-Excel -Path $File -WorksheetName 'Stream Analytics Jobs' -AutoSize -TableName 'AzureStreamAnalyticsJobs' -TableStyle $tableStyle -Style $Style
-                    }
-                else 
-                    {
-                        $ExcelStreamanalytics | 
-                        ForEach-Object { [PSCustomObject]$_ } | 
-                        Select-Object -Unique 'Subscription',
-                        'Resource Group',
-                        'Name',
-                        'Location',
-                        'SKU',
-                        'Compatibility Level',
-                        'Content Storage Policy',
-                        'Created Date',
-                        'Data Locale',
-                        'Late Arrival Max Delay in Seconds',
-                        'Out of Order Max Delay in Seconds',
-                        'Out of Order Policy',
-                        'Job State',
-                        'Job Type',
-                        'Last Output Event Time',
-                        'Output Start Time',
-                        'Output Error Policy'| 
-                        Export-Excel -Path $File -WorksheetName 'Stream Analytics Jobs' -AutoSize -TableName 'AzureStreamAnalyticsJobs' -TableStyle $tableStyle -Style $Style
-                    }
+                if ($IncludeTags.IsPresent) {
+                    $ExcelStreamanalytics | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'Compatibility Level',
+                    'Content Storage Policy',
+                    'Created Date',
+                    'Data Locale',
+                    'Late Arrival Max Delay in Seconds',
+                    'Out of Order Max Delay in Seconds',
+                    'Out of Order Policy',
+                    'Job State',
+                    'Job Type',
+                    'Last Output Event Time',
+                    'Output Start Time',
+                    'Output Error Policy',
+                    'Tag Name',
+                    'Tag Value' | 
+                    Export-Excel -Path $File -WorksheetName 'Stream Analytics Jobs' -AutoSize -TableName 'AzureStreamAnalyticsJobs' -TableStyle $tableStyle -Style $Style
+                }
+                else {
+                    $ExcelStreamanalytics | 
+                    ForEach-Object { [PSCustomObject]$_ } | 
+                    Select-Object -Unique 'Subscription',
+                    'Resource Group',
+                    'Name',
+                    'Location',
+                    'SKU',
+                    'Compatibility Level',
+                    'Content Storage Policy',
+                    'Created Date',
+                    'Data Locale',
+                    'Late Arrival Max Delay in Seconds',
+                    'Out of Order Max Delay in Seconds',
+                    'Out of Order Policy',
+                    'Job State',
+                    'Job Type',
+                    'Last Output Event Time',
+                    'Output Start Time',
+                    'Output Error Policy' | 
+                    Export-Excel -Path $File -WorksheetName 'Stream Analytics Jobs' -AutoSize -TableName 'AzureStreamAnalyticsJobs' -TableStyle $tableStyle -Style $Style
+                }
 
             }               
 
@@ -5653,73 +5579,66 @@ $Runtime = Measure-Command -Expression {
         Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "1% Complete." -PercentComplete 10 -CurrentOperation "Building Excel Charts"
         $excel = Open-ExcelPackage -Path $file -KillExcel
 
-        if($ExcelVMs)
-            {
-                $null=$excel.VMs.Cells["L1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
-                $excel.VMs.Cells["L1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
-                $null=$excel.VMs.Cells["M1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
-                $excel.VMs.Cells["M1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
-                $null=$excel.VMs.Cells["N1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource’s health.", "Azure Resource Inventory")
-                $excel.VMs.Cells["N1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
-                $null=$excel.VMs.Cells["X1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
-                $excel.VMs.Cells["X1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
-                $null=$excel.VMs.Cells["Y1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
-                $excel.VMs.Cells["Y1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
-            }
-        if($ExcelVMDisks)
-            {
-                $null=$excel.Disks.Cells["K1"].AddComment("When you delete a virtual machine (VM) in Azure, by default, any disks that are attached to the VM aren't deleted. After a VM is deleted, you will continue to pay for unattached disks.", "Azure Resource Inventory")
-                $excel.Disks.Cells["K1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/windows/find-unattached-disks'
-            }
-        if($ExcelStorageAcc)
-            {
-                $null=$excel.StorageAcc.Cells["F1"].AddComment("Is recommended that you configure your storage account to accept requests from secure connections only by setting the Secure transfer required property for the storage account.", "Azure Resource Inventory")
-                $excel.StorageAcc.Cells["F1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer'
-                $null=$excel.StorageAcc.Cells["G1"].AddComment("When a container is configured for public access, any client can read data in that container. Public access presents a potential security risk, so if your scenario does not require it, Microsoft recommends that you disallow it for the storage account.", "Azure Resource Inventory")
-                $excel.StorageAcc.Cells["G1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-configure?tabs=portal'
-                $null=$excel.StorageAcc.Cells["H1"].AddComment("By default, Azure Storage accounts permit clients to send and receive data with the oldest version of TLS, TLS 1.0, and above. To enforce stricter security measures, you can configure your storage account to require that clients send and receive data with a newer version of TLS", "Azure Resource Inventory")
-                $excel.StorageAcc.Cells["H1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version?tabs=portal'
-            }
-        if($ExcelVNET)
-            {
-                $null=$excel.VNET.Cells["G1"].AddComment("Azure DDoS Protection Standard, combined with application design best practices, provides enhanced DDoS mitigation features to defend against DDoS attacks.", "Azure Resource Inventory")
-                $excel.VNET.Cells["G1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/ddos-protection/ddos-protection-overview'
-            }
-        if($ExcelEvtHub)
-            {
-                $null=$excel.'Event Hubs'.Cells["I1"].AddComment("The Auto-inflate feature of Event Hubs automatically scales up by increasing the number of throughput units, to meet usage needs. Increasing throughput units prevents throttling scenarios.", "Azure Resource Inventory")
-                $excel.'Event Hubs'.Cells["I1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-auto-inflate'
-            }
-        if($ExcelLB)
-            {
-                $null=$excel.'Load Balancers'.Cells["E1"].AddComment("No SLA is provided for Basic Load Balancer!", "Azure Resource Inventory")
-                $excel.'Load Balancers'.Cells["E1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/load-balancer/skus'
-            }
+        if ($ExcelVMs) {
+            $null = $excel.VMs.Cells["L1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
+            $excel.VMs.Cells["L1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
+            $null = $excel.VMs.Cells["M1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
+            $excel.VMs.Cells["M1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
+            $null = $excel.VMs.Cells["N1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource’s health.", "Azure Resource Inventory")
+            $excel.VMs.Cells["N1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
+            $null = $excel.VMs.Cells["X1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
+            $excel.VMs.Cells["X1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
+            $null = $excel.VMs.Cells["Y1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
+            $excel.VMs.Cells["Y1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
+        }
+        if ($ExcelVMDisks) {
+            $null = $excel.Disks.Cells["K1"].AddComment("When you delete a virtual machine (VM) in Azure, by default, any disks that are attached to the VM aren't deleted. After a VM is deleted, you will continue to pay for unattached disks.", "Azure Resource Inventory")
+            $excel.Disks.Cells["K1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/windows/find-unattached-disks'
+        }
+        if ($ExcelStorageAcc) {
+            $null = $excel.StorageAcc.Cells["F1"].AddComment("Is recommended that you configure your storage account to accept requests from secure connections only by setting the Secure transfer required property for the storage account.", "Azure Resource Inventory")
+            $excel.StorageAcc.Cells["F1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer'
+            $null = $excel.StorageAcc.Cells["G1"].AddComment("When a container is configured for public access, any client can read data in that container. Public access presents a potential security risk, so if your scenario does not require it, Microsoft recommends that you disallow it for the storage account.", "Azure Resource Inventory")
+            $excel.StorageAcc.Cells["G1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-configure?tabs=portal'
+            $null = $excel.StorageAcc.Cells["H1"].AddComment("By default, Azure Storage accounts permit clients to send and receive data with the oldest version of TLS, TLS 1.0, and above. To enforce stricter security measures, you can configure your storage account to require that clients send and receive data with a newer version of TLS", "Azure Resource Inventory")
+            $excel.StorageAcc.Cells["H1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version?tabs=portal'
+        }
+        if ($ExcelVNET) {
+            $null = $excel.VNET.Cells["G1"].AddComment("Azure DDoS Protection Standard, combined with application design best practices, provides enhanced DDoS mitigation features to defend against DDoS attacks.", "Azure Resource Inventory")
+            $excel.VNET.Cells["G1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/ddos-protection/ddos-protection-overview'
+        }
+        if ($ExcelEvtHub) {
+            $null = $excel.'Event Hubs'.Cells["I1"].AddComment("The Auto-inflate feature of Event Hubs automatically scales up by increasing the number of throughput units, to meet usage needs. Increasing throughput units prevents throttling scenarios.", "Azure Resource Inventory")
+            $excel.'Event Hubs'.Cells["I1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-auto-inflate'
+        }
+        if ($ExcelLB) {
+            $null = $excel.'Load Balancers'.Cells["E1"].AddComment("No SLA is provided for Basic Load Balancer!", "Azure Resource Inventory")
+            $excel.'Load Balancers'.Cells["E1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/load-balancer/skus'
+        }
 
 
-        if ($Adv)            
-            {
-                $PTParams = @{
-                    PivotTableName    = "P0"
-                    Address           = $excel.Overview.cells["A3"] # top-left corner of the table
-                    SourceWorkSheet   = $excel.Advisor
-                    PivotRows         = @("Category")
-                    PivotData         = @{"Category" = "Count" }
-                    PivotTableStyle   = $tableStyle
-                    IncludePivotChart = $true
-                    ChartType         = "Pie"
-                    ChartRow          = 0 # place the chart below row 22nd
-                    ChartColumn       = 3
-                    Activate          = $true
-                    PivotFilter       = 'Impact'
-                    ChartTitle        = 'Advisory'
-                    ShowPercent       = $true
-                    ChartHeight       = 300
-                    ChartWidth        = 500
-                }
-
-                Add-PivotTable @PTParams
+        if ($Adv) {
+            $PTParams = @{
+                PivotTableName    = "P0"
+                Address           = $excel.Overview.cells["A3"] # top-left corner of the table
+                SourceWorkSheet   = $excel.Advisor
+                PivotRows         = @("Category")
+                PivotData         = @{"Category" = "Count" }
+                PivotTableStyle   = $tableStyle
+                IncludePivotChart = $true
+                ChartType         = "Pie"
+                ChartRow          = 0 # place the chart below row 22nd
+                ChartColumn       = 3
+                Activate          = $true
+                PivotFilter       = 'Impact'
+                ChartTitle        = 'Advisory'
+                ShowPercent       = $true
+                ChartHeight       = 300
+                ChartWidth        = 500
             }
+
+            Add-PivotTable @PTParams
+        }
 
 
         $PTParams = @{
@@ -5744,77 +5663,74 @@ $Runtime = Measure-Command -Expression {
 
         Add-PivotTable @PTParams
 
-        if ($AzCompute.AKS)
-            {
-                $PTParams = @{
-                    PivotTableName    = "P2"
-                    Address           = $excel.Overview.cells["M3"] # top-left corner of the table
-                    SourceWorkSheet   = $excel.AKS
-                    PivotRows         = @("Kubernetes Version")
-                    PivotData         = @{"Clusters" = "Count" }
-                    PivotTableStyle   = $tableStyle
-                    IncludePivotChart = $true
-                    ChartType         = "Pie"
-                    ChartRow          = 0 # place the chart below row 22nd
-                    ChartColumn       = 15
-                    Activate          = $true
-                    ChartTitle        = 'Azure Kubernetes Service'
-                    PivotFilter       = 'Node Size', 'Location'
-                    ShowPercent       = $true
-                    ChartHeight       = 300
-                    ChartWidth        = 500
-                }
-
-                Add-PivotTable @PTParams
-            }
-        elseif ($Security)
-            {
-                $PTParams = @{
-                    PivotTableName    = "P2"
-                    Address           = $excel.Overview.cells["M3"] # top-left corner of the table
-                    SourceWorkSheet   = $excel.SecurityCenter
-                    PivotRows         = @("Severity")
-                    PivotData         = @{"Resource Name" = "Count" }
-                    PivotTableStyle   = $tableStyle
-                    IncludePivotChart = $true
-                    ChartType         = "Pie"
-                    ChartRow          = 0 # place the chart below row 22nd
-                    ChartColumn       = 15
-                    Activate          = $true
-                    ChartTitle        = 'Azure Security Center'
-                    PivotFilter       = 'Categories'
-                    ShowPercent       = $true
-                    ChartHeight       = 300
-                    ChartWidth        = 500
-                }
-
-                Add-PivotTable @PTParams
+        if ($AzCompute.AKS) {
+            $PTParams = @{
+                PivotTableName    = "P2"
+                Address           = $excel.Overview.cells["M3"] # top-left corner of the table
+                SourceWorkSheet   = $excel.AKS
+                PivotRows         = @("Kubernetes Version")
+                PivotData         = @{"Clusters" = "Count" }
+                PivotTableStyle   = $tableStyle
+                IncludePivotChart = $true
+                ChartType         = "Pie"
+                ChartRow          = 0 # place the chart below row 22nd
+                ChartColumn       = 15
+                Activate          = $true
+                ChartTitle        = 'Azure Kubernetes Service'
+                PivotFilter       = 'Node Size', 'Location'
+                ShowPercent       = $true
+                ChartHeight       = 300
+                ChartWidth        = 500
             }
 
-        if ($AzCompute.VM)
-            {
-                $PTParams = @{
-                    PivotTableName  = "P3"
-                    Address         = $excel.Overview.cells["M25"] # top-left corner of the table
-                    SourceWorkSheet = $excel.VMs
-                    PivotRows       = @("VM Size")
-                    PivotData       = @{"Resource U" = "Sum" }
-                    PivotTableStyle   = $tableStyle
-                    IncludePivotChart = $true
-                    ChartType         = "BarClustered"
-                    ChartRow          = 16 # place the chart below row 22nd
-                    ChartColumn       = 15
-                    Activate          = $true
-                    NoLegend          = $true
-                    ChartTitle        = 'Azure Virtual Machine Sizes'
-                    PivotFilter       = 'OS Type', 'Location', 'Power State'
-                    ShowPercent       = $true
-                    ChartHeight       = 500
-                    ChartWidth        = 500
-                }
-
-                Add-PivotTable @PTParams
+            Add-PivotTable @PTParams
+        }
+        elseif ($Security) {
+            $PTParams = @{
+                PivotTableName    = "P2"
+                Address           = $excel.Overview.cells["M3"] # top-left corner of the table
+                SourceWorkSheet   = $excel.SecurityCenter
+                PivotRows         = @("Severity")
+                PivotData         = @{"Resource Name" = "Count" }
+                PivotTableStyle   = $tableStyle
+                IncludePivotChart = $true
+                ChartType         = "Pie"
+                ChartRow          = 0 # place the chart below row 22nd
+                ChartColumn       = 15
+                Activate          = $true
+                ChartTitle        = 'Azure Security Center'
+                PivotFilter       = 'Categories'
+                ShowPercent       = $true
+                ChartHeight       = 300
+                ChartWidth        = 500
             }
+
+            Add-PivotTable @PTParams
+        }
+
+        if ($AzCompute.VM) {
+            $PTParams = @{
+                PivotTableName    = "P3"
+                Address           = $excel.Overview.cells["M25"] # top-left corner of the table
+                SourceWorkSheet   = $excel.VMs
+                PivotRows         = @("VM Size")
+                PivotData         = @{"Resource U" = "Sum" }
+                PivotTableStyle   = $tableStyle
+                IncludePivotChart = $true
+                ChartType         = "BarClustered"
+                ChartRow          = 16 # place the chart below row 22nd
+                ChartColumn       = 15
+                Activate          = $true
+                NoLegend          = $true
+                ChartTitle        = 'Azure Virtual Machine Sizes'
+                PivotFilter       = 'OS Type', 'Location', 'Power State'
+                ShowPercent       = $true
+                ChartHeight       = 500
+                ChartWidth        = 500
+            }
+
+            Add-PivotTable @PTParams
+        }
 
         Close-ExcelPackage $excel 
 
@@ -5835,10 +5751,9 @@ $Total = $Resources.count
 Write-Host ('Report Complete. Total Runtime was: ' + $Measure + ' Minutes')
 Write-Host ('Total Resources: ' + $Total)
 Write-Host ('Total Advisories: ' + $advco )
-if ($SecurityCenter.IsPresent)
-    {
-        Write-Host ('Total Security Advisories: ' + $Secadvco)
-    }
+if ($SecurityCenter.IsPresent) {
+    Write-Host ('Total Security Advisories: ' + $Secadvco)
+}
 
 Write-Host ''
 Write-Host ('Excel file saved at: ') -NoNewline
