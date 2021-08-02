@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.15                                                                  #
+#       Version: 1.4.16                                                                  #
 #                                                                                        #
 #       Date: 08/02/2021                                                                 #
 #                                                                                        #
@@ -243,8 +243,6 @@ $Runtime = Measure-Command -Expression {
             Write-Progress -activity 'Azure Inventory' -Status "6% Complete." -PercentComplete 6 -CurrentOperation "Starting Security Advisories extraction jobs.."
             Write-Host " Azure Resource Inventory are collecting Security Center Advisories."
             Write-Host " Collecting Security Center Can increase considerably the execution time of Azure Resource Inventory and the size of final report "
-            Write-Host " "
-            Write-Host " If you want to skip Security Center report use <-SkipSecurityCenter> parameter. "
             Write-Host " "
 
             Write-Debug ('Extracting total number of Security Advisories from Tenant')
@@ -506,13 +504,13 @@ $Runtime = Measure-Command -Expression {
                         if ($data.diagnosticsProfile.bootDiagnostics.enabled -eq $true) { $bootdg = $true }else { $bootdg = $false }
                         if ($null -ne $data.storageProfile.dataDisks.managedDisk.storageAccountType) {
                             $StorAcc = if ($data.storageProfile.dataDisks.managedDisk.storageAccountType.count -ge 2) 
-                                            { ($data.storageProfile.dataDisks.managedDisk.storageAccountType.count.ToString() + ' Disks found.') }
-                                            else 
-                                            { $data.storageProfile.dataDisks.managedDisk.storageAccountType }
+                            { ($data.storageProfile.dataDisks.managedDisk.storageAccountType.count.ToString() + ' Disks found.') }
+                            else 
+                            { $data.storageProfile.dataDisks.managedDisk.storageAccountType }
                             $dataSize = if ($data.storageProfile.dataDisks.managedDisk.storageAccountType.count -ge 2) 
-                                            { ($data.storageProfile.dataDisks.diskSizeGB | Measure-Object -Sum).Sum }
-                                            else 
-                                            { $data.storageProfile.dataDisks.diskSizeGB }
+                            { ($data.storageProfile.dataDisks.diskSizeGB | Measure-Object -Sum).Sum }
+                            else 
+                            { $data.storageProfile.dataDisks.diskSizeGB }
                         }
 
                         $Tag = @{}
