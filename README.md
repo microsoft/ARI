@@ -88,7 +88,7 @@ Special Thanks for Doug Finke, the Author of Powershell [ImportExcel](https://gi
 <span style="color:red">**Important 3:**</span> If you're facing the bellow errors during your execution and your inventory aren't being generated check for updates in your Resource Graph extension in Az Cli.
 
 ``` powershell
-1.  az extension list-available --output table | grep resource-graph  ## Check if upgrade is available
+1.  az extension list-available --output table  ## Check if resource-graph extension upgrade is available
 2. az extension update --name resource-graph
 ```
 
