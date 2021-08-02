@@ -90,6 +90,7 @@ Special Thanks for Doug Finke, the Author of Powershell [ImportExcel](https://gi
 ``` powershell
 1.  az extension list-available --output table | grep resource-graph  ## Check if upgrade is available
 2. az extension update --name resource-graph
+```
 
 ![Resource Graph Error](images/cloudshell-warning-lib.png)
 
