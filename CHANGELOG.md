@@ -1,5 +1,10 @@
 # Version Control
 
+## Version 1.4.16 - 08/02/2021
+
+### **Azure Resource Inventory:**
+        1. Fixes SecurityCenter function
+
 ## Version 1.4.15 - 08/02/2021
 
 ### **Azure Resource Inventory:**
