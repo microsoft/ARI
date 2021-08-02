@@ -92,7 +92,7 @@ Special Thanks for Doug Finke, the Author of Powershell [ImportExcel](https://gi
 2. az extension update --name resource-graph
 ```
 
-![Resource Graph Error](images/cloudshell-warning-lib.png)
+![Resource Graph Error](images/Error_resource-graph.png)
 
 ## Running the script<BR/>
 
