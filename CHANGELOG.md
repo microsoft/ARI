@@ -1,5 +1,10 @@
 # Version Control
 
+## Version 1.4.15 - 08/02/2021
+
+### **Azure Resource Inventory:**
+        1. Fixes in Public IP Inventory
+
 ## Version 1.4.14 - 07/19/2021
 
 ### **Azure Resource Inventory:**

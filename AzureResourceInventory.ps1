@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.14                                                                  #
+#       Version: 1.4.15                                                                  #
 #                                                                                        #
-#       Date: 07/15/2021                                                                 #
+#       Date: 08/02/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -505,8 +505,14 @@ $Runtime = Measure-Command -Expression {
                         if ($null -ne $data.availabilitySet) { $AVSET = 'True' }else { $AVSET = 'False' }
                         if ($data.diagnosticsProfile.bootDiagnostics.enabled -eq $true) { $bootdg = $true }else { $bootdg = $false }
                         if ($null -ne $data.storageProfile.dataDisks.managedDisk.storageAccountType) {
-                            $StorAcc = if ($data.storageProfile.dataDisks.managedDisk.storageAccountType.count -ge 2) { ($data.storageProfile.dataDisks.managedDisk.storageAccountType.count.ToString() + ' Disks found.') }else { $data.storageProfile.dataDisks.managedDisk.storageAccountType }
-                            $dataSize = if ($data.storageProfile.dataDisks.managedDisk.storageAccountType.count -ge 2) { ($data.storageProfile.dataDisks.diskSizeGB | Measure-Object -Sum).Sum }else { $data.storageProfile.dataDisks.diskSizeGB }
+                            $StorAcc = if ($data.storageProfile.dataDisks.managedDisk.storageAccountType.count -ge 2) 
+                                            { ($data.storageProfile.dataDisks.managedDisk.storageAccountType.count.ToString() + ' Disks found.') }
+                                            else 
+                                            { $data.storageProfile.dataDisks.managedDisk.storageAccountType }
+                            $dataSize = if ($data.storageProfile.dataDisks.managedDisk.storageAccountType.count -ge 2) 
+                                            { ($data.storageProfile.dataDisks.diskSizeGB | Measure-Object -Sum).Sum }
+                                            else 
+                                            { $data.storageProfile.dataDisks.diskSizeGB }
                         }
 
                         $Tag = @{}
@@ -1522,6 +1528,28 @@ $Runtime = Measure-Command -Expression {
                                     'Resource U'               = $ResUCount;
                                     'Tag Name'                 = [string]$TagKey;
                                     'Tag Value'                = [string]$Tag.$TagKey
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                            }
+                        }
+                        elseif ($null -ne $data.ipConfiguration.id -and [string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
+                            foreach ($TagKey in $Tag.Keys) {  
+                                $obj = @{
+                                    'Subscription'             = $sub1.name;
+                                    'Resource Group'           = $1.RESOURCEGROUP;
+                                    'Name'                     = $1.NAME;
+                                    'SKU'                      = $1.SKU.Name;
+                                    'Location'                 = $1.LOCATION;
+                                    'Type'                     = $data.publicIPAllocationMethod;
+                                    'Version'                  = $data.publicIPAddressVersion;
+                                    'IP Address'               = $data.ipAddress;
+                                    'Use'                      = $Use;
+                                    'Associated Resource'      = $null;
+                                    'Associated Resource Type' = $null;
+                                    'Resource U'               = $ResUCount;
+                                    'Tag Name'                 = $null;
+                                    'Tag Value'                = $null
                                 }
                                 $tmp += $obj
                                 if ($ResUCount -eq 1) { $ResUCount = 0 } 
