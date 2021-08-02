@@ -1534,26 +1534,24 @@ $Runtime = Measure-Command -Expression {
                             }
                         }
                         elseif ($null -ne $data.ipConfiguration.id -and [string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
-                            foreach ($TagKey in $Tag.Keys) {  
-                                $obj = @{
-                                    'Subscription'             = $sub1.name;
-                                    'Resource Group'           = $1.RESOURCEGROUP;
-                                    'Name'                     = $1.NAME;
-                                    'SKU'                      = $1.SKU.Name;
-                                    'Location'                 = $1.LOCATION;
-                                    'Type'                     = $data.publicIPAllocationMethod;
-                                    'Version'                  = $data.publicIPAddressVersion;
-                                    'IP Address'               = $data.ipAddress;
-                                    'Use'                      = $Use;
-                                    'Associated Resource'      = $null;
-                                    'Associated Resource Type' = $null;
-                                    'Resource U'               = $ResUCount;
-                                    'Tag Name'                 = $null;
-                                    'Tag Value'                = $null
-                                }
-                                $tmp += $obj
-                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                            $obj = @{
+                                'Subscription'             = $sub1.name;
+                                'Resource Group'           = $1.RESOURCEGROUP;
+                                'Name'                     = $1.NAME;
+                                'SKU'                      = $1.SKU.Name;
+                                'Location'                 = $1.LOCATION;
+                                'Type'                     = $data.publicIPAllocationMethod;
+                                'Version'                  = $data.publicIPAddressVersion;
+                                'IP Address'               = $data.ipAddress;
+                                'Use'                      = $Use;
+                                'Associated Resource'      = $data.ipConfiguration.id.split('/')[8];
+                                'Associated Resource Type' = $data.ipConfiguration.id.split('/')[7];
+                                'Resource U'               = $ResUCount;
+                                'Tag Name'                 = $null;
+                                'Tag Value'                = $null
                             }
+                            $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
                         }
                         elseif ($null -eq $data.ipConfiguration.id -and $InTag -ne $true) {  
                             $obj = @{
