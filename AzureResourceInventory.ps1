@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.16                                                                  #
+#       Version: 1.4.17                                                                  #
 #                                                                                        #
-#       Date: 08/02/2021                                                                 #
+#       Date: 08/12/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -228,7 +228,7 @@ $Runtime = Measure-Command -Expression {
                 while ($Looper -lt $Loop) {
                     $Looper ++
                     Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                    $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                    $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json #-AsHashTable
                     if ($Advisor.data) { $Global:Advisories += $Advisor.data } else { $Global:Advisories += $Advisor }
                     Start-Sleep 3
                     $Limit = $Limit + 1000
@@ -258,7 +258,7 @@ $Runtime = Measure-Command -Expression {
                 while ($Looper -lt $Loop) {
                     $Looper ++
                     Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                    $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                    $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json #-AsHashTable
                     if ($SecCenter.data) { $Global:Security += $SecCenter.data } else { $Global:Security += $SecCenter }
                     Start-Sleep 3
                     $Limit = $Limit + 1000
@@ -294,7 +294,8 @@ $Runtime = Measure-Command -Expression {
                 $Limit = 0
     
                 while ($Looper -lt $Loop) {
-                    $Resource = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                    $Resource = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json #-AsHashTable
+
                     if ($Resource.data) { $Global:Resources += $Resource.data } else { $Global:Resources += $Resource } 
                     Start-Sleep 3      
                     $Looper ++

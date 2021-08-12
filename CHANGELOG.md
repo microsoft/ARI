@@ -1,5 +1,10 @@
 # Version Control
 
+## Version 1.4.17 - 08/12/2021
+
+### **Azure Resource Inventory:**
+        1. Improvements in the ConvertFrom-Json
+
 ## Version 1.4.16 - 08/02/2021
 
 ### **Azure Resource Inventory:**
