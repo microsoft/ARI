@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.17                                                                  #
+#       Version: 1.4.18                                                                  #
 #                                                                                        #
-#       Date: 08/12/2021                                                                 #
+#       Date: 08/13/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -61,8 +61,6 @@ $Runtime = Measure-Command -Expression {
     }
     if ($IncludeTags.IsPresent) { $InTag = $true } else { $InTag = $false }
     $ErrorActionPreference = "silentlycontinue"
-    $DesktopPath = "C:\AzureResourceInventory"
-    $CSPath = "$HOME/AzureResourceInventory"
 
     <######################################### Help ################################################>
 
@@ -84,6 +82,7 @@ $Runtime = Measure-Command -Expression {
         $Global:Advisories = @()
         $Global:Security = @()
         $Global:Subscriptions = ''
+        $Global:jsonEx = $false
     } 
 
     <###################################################### Environment ######################################################################>
@@ -166,25 +165,27 @@ $Runtime = Measure-Command -Expression {
         }
 
         function checkPS() {
-            if ($PSVersionTable.PSEdition -eq 'Desktop') {
+
+            if($PSVersionTable.Platform -eq 'Win32NT') 
+            {
                 write-host "PowerShell Desktop Identified."
-                $Global:DefaultPath = "$DesktopPath\"
                 write-host ""
+                $Global:DefaultPath = "C:\AzureResourceInventory\"
                 LoginSession
-            }
-            elseif ($PSVersionTable.PSEdition -eq 'Core') {
-                write-host "PowerShell Core Identified."
-                $Global:DefaultPath = "$CSPath/"
-                write-host ""
-                LoginSession
-            }
-            else {
-                $Global:PSEnvironment = "CloudShell"
+            }             
+            elseif((Get-CloudDrive).ResourceGroupName -like 'cloud-shell-storage-*')
+            {
                 write-host 'Azure CloudShell Identified.'
                 write-host ""
-                <#### For Azure CloudShell change your StorageAccount Name, Container and SAS for Grid Extractor transfer. ####>
-                $Global:DefaultPath = "$CSPath/"
+                $Global:DefaultPath = "$HOME/AzureResourceInventory/"
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
+            }
+            else
+            {
+                write-host "PowerShell Unix Identified."
+                write-host ""
+                $Global:DefaultPath = "$HOME/AzureResourceInventory/"
+                LoginSession
             }
         }
 
@@ -228,7 +229,15 @@ $Runtime = Measure-Command -Expression {
                 while ($Looper -lt $Loop) {
                     $Looper ++
                     Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                    $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json #-AsHashTable
+                    if($jsonEx -eq $false)
+                        {
+                            $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                        }
+                    else 
+                        {
+                            $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors 
+                            $Advisor = $Advisor.tolower() | ConvertFrom-Json
+                        }    
                     if ($Advisor.data) { $Global:Advisories += $Advisor.data } else { $Global:Advisories += $Advisor }
                     Start-Sleep 3
                     $Limit = $Limit + 1000
@@ -258,7 +267,15 @@ $Runtime = Measure-Command -Expression {
                 while ($Looper -lt $Loop) {
                     $Looper ++
                     Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                    $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json #-AsHashTable
+                    if($jsonEx -eq $false)
+                        {
+                            $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                        }
+                    else 
+                        {
+                            $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --skip $Limit --first 1000 --output json --only-show-errors 
+                            $SecCenter = $SecCenter.tolower() | ConvertFrom-Json
+                        }    
                     if ($SecCenter.data) { $Global:Security += $SecCenter.data } else { $Global:Security += $SecCenter }
                     Start-Sleep 3
                     $Limit = $Limit + 1000
@@ -294,7 +311,15 @@ $Runtime = Measure-Command -Expression {
                 $Limit = 0
     
                 while ($Looper -lt $Loop) {
-                    $Resource = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json #-AsHashTable
+                    if($jsonEx -eq $false)
+                        {
+                            $Resource = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                        }
+                    else 
+                        {
+                            $Resource = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors
+                            $Resource = $Resource.tolower() | ConvertFrom-Json
+                        }                                    
 
                     if ($Resource.data) { $Global:Resources += $Resource.data } else { $Global:Resources += $Resource } 
                     Start-Sleep 3      
@@ -397,7 +422,6 @@ $Runtime = Measure-Command -Expression {
             if ($Resource.TYPE -eq 'microsoft.network/privatednszones' ) { $PrivDNS += $Resource }            
             if ($Resource.TYPE -eq 'microsoft.devices/iothubs' ) { $IOT += $Resource }
             if ($Resource.TYPE -eq 'microsoft.apimanagement/service' ) { $APIM += $Resource }
-
             if ($Resource.TYPE -eq 'microsoft.network/bastionhosts' ) { $BASTION += $Resource }
             if ($Resource.TYPE -eq 'microsoft.streamanalytics/streamingjobs' ) { $STREAMJobs += $Resource }
      
