@@ -1,5 +1,11 @@
 # Version Control
 
+## Version 1.4.18 - 08/13/2021
+
+### **Azure Resource Inventory:**
+        1. Improvements in environment identification (Desktop, Unix or CloudShell)
+        2. Added the hidden variable jsonEx to workaround duplicated keys error on ConvertFrom-Json function
+
 ## Version 1.4.17 - 08/12/2021
 
 ### **Azure Resource Inventory:**
