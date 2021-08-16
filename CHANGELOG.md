@@ -1,5 +1,10 @@
 # Version Control
 
+## Version 1.4.19 - 08/16/2021
+
+### **Azure Resource Inventory:**
+        1. Fixes in environment identification
+
 ## Version 1.4.18 - 08/13/2021
 
 ### **Azure Resource Inventory:**
