@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.19                                                                  #
+#       Version: 1.4.20                                                                  #
 #                                                                                        #
 #       Date: 08/16/2021                                                                 #
 #                                                                                        #
@@ -3624,7 +3624,7 @@ $Runtime = Measure-Command -Expression {
 
             $Sec | 
             ForEach-Object { [PSCustomObject]$_ } | 
-            Select-Object 'Subscription ID',
+            Select-Object 'Subscription',
             'Resource Group',
             'Resource Type',
             'Resource Name',
