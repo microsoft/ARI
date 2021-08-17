@@ -1,5 +1,10 @@
 # Version Control
 
+## Version 1.4.21 - 08/17/2021
+
+### **Azure Resource Inventory:**
+        1. improvements in the debug outputs
+
 ## Version 1.4.20 - 08/16/2021
 
 ### **Azure Resource Inventory:**
