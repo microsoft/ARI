@@ -175,14 +175,15 @@ $Runtime = Measure-Command -Expression {
 
         function checkPS() {
             Write-Debug ('Starting checkPS function')
-            if((Get-CloudDrive).ResourceGroupName -like 'cloud-shell-storage-*')
+            $CShell = (Get-CloudDrive).ResourceGroupName -like 'cloud-shell-storage-*'
+            if($CShell)
             {
                 write-host 'Azure CloudShell Identified.'
                 write-host ""
                 $Global:DefaultPath = "$HOME/AzureResourceInventory/"
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
             }
-            elseif($PSVersionTable.Platform -eq 'Unix') 
+            if($PSVersionTable.Platform -eq 'Unix' -and !$CShell) 
             {
                 write-host "PowerShell Unix Identified."
                 write-host ""
