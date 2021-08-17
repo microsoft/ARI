@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.20                                                                  #
+#       Version: 1.4.21                                                                  #
 #                                                                                        #
-#       Date: 08/16/2021                                                                 #
+#       Date: 08/17/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -78,6 +78,7 @@ $Runtime = Measure-Command -Expression {
     }
 
     function Variables {
+        Write-Debug ('Cleaning default variables')
         $Global:Resources = @()
         $Global:Advisories = @()
         $Global:Security = @()
@@ -88,22 +89,26 @@ $Runtime = Measure-Command -Expression {
     <###################################################### Environment ######################################################################>
 
     function Extractor {
-
+        Write-Debug ('Starting Extractor function')
         function checkAzCli() {
+            Write-Debug ('Starting checkAzCli function')
             Write-Host "Validating Az Cli.."
             $azcli = az --version
+            Write-Debug ('Current az cli version: '+$azcli)
             if ($null -eq $azcli) {
                 Read-Host "Azure CLI Not Found. Press <Enter> to finish script"
                 Exit
             }
-            Write-Host "Validating Az Cli Extension.."
+            Write-Host "Validating Az Cli Extension.."            
             $azcliExt = az extension list --output json | ConvertFrom-Json
+            Write-Debug ('Current resource-graph extension version: '+$azcliExt)
             if ($azcliExt.name -notin 'resource-graph') {
                 Write-Host "Adding Az Cli Extension"
                 az extension add --name resource-graph 
             }
             Write-Host "Validating ImportExcel Module.."
             $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
+            Write-Debug ('ImportExcel module: '+$VarExcel)
             if ($null -eq $VarExcel) {
                 Write-Host "Trying to install ImportExcel Module.."
                 Install-Module -Name ImportExcel -Force
@@ -116,16 +121,19 @@ $Runtime = Measure-Command -Expression {
         }
 
         function LoginSession() {
+            Write-Debug ('Starting LoginSession function')
             if ($TenantID -eq '' -or $null -eq $TenantID) {
                 write-host "Tenant ID not specified. Use -TenantID parameter if you want to specify directly. "        
                 write-host "Authenticating Azure"
                 write-host ""
+                Write-Debug ('Cleaning az account cache')
                 az account clear | Out-Null
+                Write-Debug ('Calling az login')
                 az login --only-show-errors | Out-Null
                 write-host ""
                 write-host ""
                 $Tenants = az account list --query [].homeTenantId -o tsv --only-show-errors | Sort-Object -Unique
-                    
+                Write-Debug ('Checking number of Tenants')
                 if ($Tenants.Count -eq 1) {
                     write-host "You have privileges only in One Tenant "
                     write-host ""
@@ -146,6 +154,7 @@ $Runtime = Measure-Command -Expression {
                 }
         
                 write-host "Extracting from Tenant $TenantID"
+                Write-Debug ('Extracting Subscription details')
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
                 if ($SubscriptionID) {
@@ -165,7 +174,7 @@ $Runtime = Measure-Command -Expression {
         }
 
         function checkPS() {
-
+            Write-Debug ('Starting checkPS function')
             if((Get-CloudDrive).ResourceGroupName -like 'cloud-shell-storage-*')
             {
                 write-host 'Azure CloudShell Identified.'
@@ -203,6 +212,7 @@ $Runtime = Measure-Command -Expression {
         Write-Debug ('Number of Subscriptions Found: ' + $SubCount)
         Write-Progress -activity 'Azure Inventory' -Status "3% Complete." -PercentComplete 3 -CurrentOperation "$SubCount Subscriptions found.."
 
+        Write-Debug ('Checking report folder: '+$DefaultPath )
         if ((Test-Path -Path $DefaultPath -PathType Container) -eq $false) {
             New-Item -Type Directory -Force -Path $DefaultPath | Out-Null
         }
