@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.21                                                                  #
+#       Version: 1.4.22                                                                  #
 #                                                                                        #
-#       Date: 08/17/2021                                                                 #
+#       Date: 08/31/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -52,7 +52,7 @@
     Please note that while being developed by a Microsoft employee, Azure inventory Scripts is not a Microsoft service or product. Azure Inventory Scripts are a personal driven project, there are none implicit or explicit obligations related to this project, it is provided 'as is' with no warranties and confer no rights.
 #>
 
-param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, [switch]$SkipAdvisory, [switch]$IncludeTags) 
+param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags) 
 
 $Runtime = Measure-Command -Expression {
 
@@ -226,8 +226,16 @@ $Runtime = Measure-Command -Expression {
 
         if (!($SkipAdvisory.IsPresent)) {
             Write-Debug ('Extracting total number of Advisories from Tenant')
-            $AdvSize = az graph query -q  "advisorresources | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-            if ($AdvSize.data) { $AdvSizeNum = $AdvSize.data.'count_' }else { $AdvSizeNum = $AdvSize.'count_' }
+            if([string]::IsNullOrEmpty($ResourceGroup))
+                {
+                    $AdvSize = az graph query -q  "advisorresources | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+                    if ($AdvSize.data) { $AdvSizeNum = $AdvSize.data.'count_' }else { $AdvSizeNum = $AdvSize.'count_' }
+                }
+            else 
+                {
+                    $AdvSize = az graph query -q  "advisorresources | where resourceGroup == '$ResourceGroup' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+                    if ($AdvSize.data) { $AdvSizeNum = $AdvSize.data.'count_' }else { $AdvSizeNum = $AdvSize.'count_' }
+                }
 
             Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Advisories extraction jobs.."
 
@@ -242,12 +250,27 @@ $Runtime = Measure-Command -Expression {
                     Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                     if($jsonEx -eq $false)
                         {
-                            $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                            if([string]::IsNullOrEmpty($ResourceGroup))
+                                {
+                                    $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                                }
+                            else 
+                                {
+                                    $Advisor = az graph query -q "advisorresources | where resourceGroup == '$ResourceGroup' | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                                }
                         }
                     else 
                         {
-                            $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors 
-                            $Advisor = $Advisor.tolower() | ConvertFrom-Json
+                            if([string]::IsNullOrEmpty($ResourceGroup))
+                                {
+                                    $Advisor = az graph query -q "advisorresources | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors 
+                                    $Advisor = $Advisor.tolower() | ConvertFrom-Json
+                                }
+                            else 
+                                {
+                                    $Advisor = az graph query -q "advisorresources | where resourceGroup == '$ResourceGroup' | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors 
+                                    $Advisor = $Advisor.tolower() | ConvertFrom-Json
+                                }
                         }    
                     if ($Advisor.data) { $Global:Advisories += $Advisor.data } else { $Global:Advisories += $Advisor }
                     Start-Sleep 3
@@ -304,15 +327,17 @@ $Runtime = Measure-Command -Expression {
 
         Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "100% Complete." -Completed
  
-        Foreach ($Subscription in $Subscriptions) {
-
-            Write-Debug ('Extracting total number of Resources from Subscription: ' + $Subscription.Name)
-                          
-            $SUBID = $Subscription.id
-            $SubName = $Subscription.name
-            az account set --subscription $SUBID
-                    
-            $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+        if([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
+            {
+                Write-Host ''
+                Write-Host 'If Using the -ResourceGroup Parameter, the Subscription ID must be informed'
+                Write-Host ''
+                Exit
+            }
+        if(![string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID)) 
+        {
+            $SUBID = $SubscriptionID
+            $EnvSize = az graph query -q "resources | where resourceGroup == '$ResourceGroup' and subscriptionId == '$SUBID' and strlen(properties) < 123000 | summarize count()" --output json --only-show-errors | ConvertFrom-Json
             if ($EnvSize.data) { $EnvSizeNum = $EnvSize.data.'count_' } else { $EnvSizeNum = $EnvSize.'count_' }
                         
             if ($EnvSizeNum -ge 1) {
@@ -324,11 +349,11 @@ $Runtime = Measure-Command -Expression {
                 while ($Looper -lt $Loop) {
                     if($jsonEx -eq $false)
                         {
-                            $Resource = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                            $Resource = az graph query -q "resources | where resourceGroup == '$ResourceGroup' and subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
                         }
                     else 
                         {
-                            $Resource = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors
+                            $Resource = az graph query -q "resources | where resourceGroup == '$ResourceGroup' and subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors
                             $Resource = $Resource.tolower() | ConvertFrom-Json
                         }                                    
 
@@ -339,9 +364,47 @@ $Runtime = Measure-Command -Expression {
                     $Limit = $Limit + 1000
                 }
             }
-            Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs ($SubName)" -PercentComplete (($Looper / $Loop) * 100)
-        }   
-    
+        }        
+        else
+            {
+                Foreach ($Subscription in $Subscriptions) {
+
+                    Write-Debug ('Extracting total number of Resources from Subscription: ' + $Subscription.Name)
+                                
+                    $SUBID = $Subscription.id
+                    $SubName = $Subscription.name
+                    az account set --subscription $SUBID
+                            
+                    $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+                    if ($EnvSize.data) { $EnvSizeNum = $EnvSize.data.'count_' } else { $EnvSizeNum = $EnvSize.'count_' }
+                                
+                    if ($EnvSizeNum -ge 1) {
+                        $Loop = $EnvSizeNum / 1000
+                        $Loop = [math]::ceiling($Loop)
+                        $Looper = 0
+                        $Limit = 0
+            
+                        while ($Looper -lt $Loop) {
+                            if($jsonEx -eq $false)
+                                {
+                                    $Resource = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                                }
+                            else 
+                                {
+                                    $Resource = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors
+                                    $Resource = $Resource.tolower() | ConvertFrom-Json
+                                }                                    
+
+                            if ($Resource.data) { $Global:Resources += $Resource.data } else { $Global:Resources += $Resource } 
+                            Start-Sleep 3      
+                            $Looper ++
+                            Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs ($SubName)" -PercentComplete (($Looper / $Loop) * 100)
+                            $Limit = $Limit + 1000
+                        }
+                    }
+                    Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs ($SubName)" -PercentComplete (($Looper / $Loop) * 100)
+                }
+            }
     }
 
     <######################################################### END Extractor Function ######################################################################>

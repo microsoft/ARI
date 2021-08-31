@@ -1,5 +1,10 @@
 # Version Control
 
+## Version 1.4.22 - 08/31/2021
+
+### **Azure Resource Inventory:**
+        1. Added Resource Group filter in the script
+
 ## Version 1.4.21 - 08/17/2021
 
 ### **Azure Resource Inventory:**
