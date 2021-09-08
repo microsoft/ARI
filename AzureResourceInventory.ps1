@@ -183,7 +183,7 @@ $Runtime = Measure-Command -Expression {
                 $Global:DefaultPath = "$HOME/AzureResourceInventory/"
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
             }
-            if($PSVersionTable.Platform -eq 'Unix' -and !$CShell) 
+            elseif($PSVersionTable.Platform -eq 'Unix' -and !$CShell) 
             {
                 write-host "PowerShell Unix Identified."
                 write-host ""
