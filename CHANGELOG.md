@@ -1,5 +1,10 @@
 # Version Control
 
+## Version 1.4.23 - 09/08/2021
+
+### **Azure Resource Inventory:**
+        1. Improved the Cloud Shell identification process
+
 ## Version 1.4.22 - 08/31/2021
 
 ### **Azure Resource Inventory:**
