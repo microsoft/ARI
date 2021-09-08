@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.22                                                                  #
+#       Version: 1.4.23                                                                  #
 #                                                                                        #
-#       Date: 08/31/2021                                                                 #
+#       Date: 09/08/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -175,7 +175,7 @@ $Runtime = Measure-Command -Expression {
 
         function checkPS() {
             Write-Debug ('Starting checkPS function')
-            $CShell = (Get-CloudDrive).ResourceGroupName -like 'cloud-shell-storage-*'
+            $CShell = Get-CloudDrive
             if($CShell)
             {
                 write-host 'Azure CloudShell Identified.'
