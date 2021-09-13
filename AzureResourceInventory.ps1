@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 1.4.23                                                                  #
+#       Version: 1.4.24                                                                  #
 #                                                                                        #
-#       Date: 09/08/2021                                                                 #
+#       Date: 09/13/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -153,6 +153,7 @@ $Runtime = Measure-Command -Expression {
                     $TenantID = $Tenants[$defaultTenant]
                 }
         
+                az login -t $TenantID | Out-Null
                 write-host "Extracting from Tenant $TenantID"
                 Write-Debug ('Extracting Subscription details')
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json

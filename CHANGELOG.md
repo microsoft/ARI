@@ -1,5 +1,10 @@
 # Version Control
 
+## Version 1.4.24 - 09/13/2021
+
+### **Azure Resource Inventory:**
+        1. Addes 2nd logon to fix Advisory inventory bugs when there is more than 1 tenant.
+
 ## Version 1.4.23 - 09/08/2021
 
 ### **Azure Resource Inventory:**
