@@ -151,9 +151,9 @@ $Runtime = Measure-Command -Expression {
                     [int]$SelectTenant = read-host "Select Tenant ( default 1 )"
                     $defaultTenant = --$SelectTenant
                     $TenantID = $Tenants[$defaultTenant]
+                    az login -t $TenantID | Out-Null
                 }
-        
-                az login -t $TenantID | Out-Null
+                        
                 write-host "Extracting from Tenant $TenantID"
                 Write-Debug ('Extracting Subscription details')
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
