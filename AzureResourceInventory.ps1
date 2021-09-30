@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.0.47                                                                  #
+#       Version: 2.0.48                                                                  #
 #                                                                                        #
-#       Date: 09/29/2021                                                                 #
+#       Date: 09/30/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -54,13 +54,15 @@
 
 param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help) 
 
-    if ($Debug.IsPresent) { $DebugPreference = 'Continue' }
+    if ($Debug.IsPresent) {$DebugPreference = 'Continue'}
 
-    if ($Debug.IsPresent) { $ErrorActionPreference = "Continue" }Else { $ErrorActionPreference = "silentlycontinue" }
+    if ($Debug.IsPresent) {$ErrorActionPreference = "Continue" }Else {$ErrorActionPreference = "silentlycontinue" }
 
     Write-Debug ('Debbuging Mode: On. ErrorActionPreference was set to "Continue", every error will be presented.')
 
-    if ($IncludeTags.IsPresent) { $Global:InTag = $true } else { $Global:InTag = $false }        
+    if ($IncludeTags.IsPresent) { $Global:InTag = $true } else { $Global:InTag = $false }
+
+    $Global:SRuntime = Measure-Command -Expression {
 
     <#########################################################          Help          ######################################################################>
 
@@ -140,9 +142,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
     <#########################################################       Environment      ######################################################################>
 
-    Function Extractor {
-
-        $Global:ExtractionRuntime = Measure-Command -Expression {
+    Function Extractor {        
 
         Write-Debug ('Starting Extractor function')
         function checkAzCli() {
@@ -215,16 +215,24 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 Write-Debug ('Extracting Subscription details')
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
-                if ($SubscriptionID) {
-                    $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
-                }
+                if ($SubscriptionID) 
+                    {
+                        if($SubscriptionID.count -gt 1)
+                            {
+                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -in $SubscriptionID }
+                            }
+                        else 
+                            {
+                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
+                            }
+                    }
             }
             else {
                 az account clear | Out-Null
                 if (!$appid) {
                     az login -t $TenantID | Out-Null
                     }
-                elseif ( $appid -and $secret -and $tenantid ) {
+                elseif ($appid -and $secret -and $tenantid) {
                     write-host "Using Service Principal Authentication Method"
                     az login --service-principal -u $appid -p $secret -t $TenantID | Out-Null
                 }
@@ -237,9 +245,17 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 }
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
-                if ($SubscriptionID) {
-                    $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
-                }
+                if ($SubscriptionID) 
+                    {
+                        if($SubscriptionID.count -gt 1)
+                            {
+                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -in $SubscriptionID }
+                            }
+                        else
+                            {
+                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
+                            }
+                    }
             }         
         }
 
@@ -294,7 +310,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
         <######################################################### ADVISOR ######################################################################>
 
-        $Subscri = $Global:Subscriptions.id
+        $Global:ExtractionRuntime = Measure-Command -Expression {
+
+        $Global:Subscri = $Global:Subscriptions.id
 
         if (!($SkipAdvisory.IsPresent)) {
             
@@ -443,7 +461,14 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             {
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'.')
                 $SUBID = $SubscriptionID
-                $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties.definition.actions) < 123000 | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+                if($SubscriptionID.count -gt 1)
+                    {
+                        $EnvSize = az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | summarize count()" --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
+                    }
+                else 
+                    {
+                        $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties.definition.actions) < 123000 | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+                    }
                 $EnvSizeNum = $EnvSize.data.'count_'
                             
                 if ($EnvSizeNum -ge 1) {
@@ -456,11 +481,26 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
                         if($IncludeTags.IsPresent)
                             {
-                                $Resource = (az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation,tags | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                                if($SubscriptionID.count -gt 1)
+                                    {
+                                        $Resource = (az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation,tags | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                                    }
+                                else 
+                                    {
+                                        $Resource = (az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation,tags | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                                    }
+                                
                             }
                         else
                             {
-                                $Resource = (az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                                if($SubscriptionID.count -gt 1)
+                                    {
+                                        $Resource = (az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                                    }
+                                else 
+                                    {
+                                        $Resource = (az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                                    }                                
                             }                                   
 
                         $Global:Resources += $Resource.data 
@@ -1499,8 +1539,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         RunMain
     }
 
+}
 
-$Measure = ($ExtractionRuntime.Totalminutes + $ReportingRuntime.Totalminutes).ToString('#######.##')
+$Measure = $Global:SRuntime.Totalminutes.ToString('#######.##')
 
 Write-Host ('Report Complete. Total Runtime was: ' + $Measure + ' Minutes')
 Write-Host ('Total Resources: ') -NoNewline

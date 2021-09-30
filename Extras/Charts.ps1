@@ -415,7 +415,7 @@ if ($P2Name -eq 'Security Center') {
 
     Add-PivotTable @PTParams -NoLegend
 }
-elseif ($P2Name -eq 'Advisories') {
+elseif ($P2Name -eq 'Annual Savings') {
     $PTParams = @{
         PivotTableName          = "P2"
         Address                 = $excel.Overview.cells["BG5"] # top-left corner of the table
