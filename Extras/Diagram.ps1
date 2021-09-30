@@ -1,4 +1,4 @@
-﻿<######## Default Parameters. Don't modify this ########>
+<######## Default Parameters. Don't modify this ########>
 <######## Ver 0.3.25 ########>
 
 param($Subscriptions, $Resources, $Advisories, $DFile)

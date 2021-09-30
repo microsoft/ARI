@@ -1,8 +1,8 @@
-﻿##########################################################################################
+##########################################################################################
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.0.48                                                                  #
+#       Version: 2.0.49                                                                  #
 #                                                                                        #
 #       Date: 09/30/2021                                                                 #
 #                                                                                        #
@@ -428,8 +428,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         if(![string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID)) 
             {
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'. And from Resource Group: '+$ResourceGroup)
-                $SUBID = $SubscriptionID
-                $EnvSize = az graph query -q "resources | where resourceGroup == '$ResourceGroup' and subscriptionId == '$SUBID' and strlen(properties.definition.actions) < 123000 | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+
+                $EnvSize = az graph query -q "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
                             
                 if ($EnvSizeNum -ge 1) {
@@ -442,11 +442,11 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
                         if($IncludeTags.IsPresent)
                             {
-                                $Resource = (az graph query -q "resources | where resourceGroup == '$ResourceGroup' and subscriptionId == '$SUBID' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation,tags | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                                $Resource = (az graph query -q "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation,tags | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
                             }
                         else 
                             {
-                                $Resource = (az graph query -q "resources | where resourceGroup == '$ResourceGroup' and subscriptionId == '$SUBID' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                                $Resource = (az graph query -q "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
                             }                                                              
 
                         $Global:Resources += $Resource.data
@@ -460,15 +460,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         elseif([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID)) 
             {
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'.')
-                $SUBID = $SubscriptionID
-                if($SubscriptionID.count -gt 1)
-                    {
-                        $EnvSize = az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | summarize count()" --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
-                    }
-                else 
-                    {
-                        $EnvSize = az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties.definition.actions) < 123000 | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-                    }
+                $EnvSize = az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | summarize count()" --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
                             
                 if ($EnvSizeNum -ge 1) {
@@ -481,26 +473,11 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
                         if($IncludeTags.IsPresent)
                             {
-                                if($SubscriptionID.count -gt 1)
-                                    {
-                                        $Resource = (az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation,tags | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-                                    }
-                                else 
-                                    {
-                                        $Resource = (az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation,tags | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-                                    }
-                                
+                                $Resource = (az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation,tags | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json                                
                             }
                         else
                             {
-                                if($SubscriptionID.count -gt 1)
-                                    {
-                                        $Resource = (az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-                                    }
-                                else 
-                                    {
-                                        $Resource = (az graph query -q "resources | where subscriptionId == '$SUBID' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation | order by id asc" --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-                                    }                                
+                                $Resource = (az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json                            
                             }                                   
 
                         $Global:Resources += $Resource.data 
