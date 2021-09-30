@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.0.49                                                                  #
+#       Version: 2.0.50                                                                  #
 #                                                                                        #
 #       Date: 09/30/2021                                                                 #
 #                                                                                        #
