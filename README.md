@@ -113,7 +113,7 @@ These instructions will get you a copy of the project up and running on your loc
 |Az CLI|2.24.0|  
 |Resource-Graph|2.1.0|
 |ImportExcel|7.1.3|
-|Microsoft Visio|2018|
+|Microsoft Visio|Visio Plan 2|
 
 
 ### Prerequisites
