@@ -22,8 +22,6 @@ param($Subscriptions, $Resources, $Advisories, $DFile)
 
 
 
-
-
 <# Function to populate the variables that are going to be used in the drawing #>
 Function Variables0 
 {

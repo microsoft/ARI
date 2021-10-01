@@ -1,3 +1,22 @@
+<#
+.Synopsis
+Module for Main Dashboard
+
+.DESCRIPTION
+This script process and creates the Overview sheet. 
+
+.Link
+https://github.com/azureinventory/ARI/Extras/Charts.ps1
+
+.COMPONENT
+   This powershell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 2.0.1
+First Release Date: 19th November, 2020
+Authors: Claudio Merola and Renato Gregio 
+
+#>
 param($File, $TableStyle, $PlatOS, $Subscriptions, $Resources, $ExtractionRunTime, $ReportingRunTime)
 
 $Excel = New-Object -TypeName OfficeOpenXml.ExcelPackage $File
