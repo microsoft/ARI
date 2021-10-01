@@ -24,7 +24,8 @@ This project is intend to help Cloud Admins and anyone that might need an easy a
 
 <br/><br/>
 > Azure Diagram Inventory
-- The BIG Improvement for this version is Azure Diagram Inventory, a Extra Module that create your MS Visio Diagram environment. 
+- The BIG Improvement for this version is Azure Diagram Inventory, an Extra Module that creates a Microsoft Visio Diagram of the Azure Network Environment. 
+Since this is an additional module. you must use the __-Diagram__ parameter.
 ![Overview](images/ADI-DEMO.png)
 
 <br/><br/>
