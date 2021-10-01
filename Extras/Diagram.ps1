@@ -1,6 +1,22 @@
-<######## Default Parameters. Don't modify this ########>
-<######## Ver 0.3.25 ########>
+<#
+.Synopsis
+Diagram Module for Microsoft Visio
 
+.DESCRIPTION
+This script process and creates a Visio Diagram based on resources present in the extraction variable $Resources. 
+
+.Link
+https://github.com/azureinventory/ARI/Extras/Diagram.ps1
+
+.COMPONENT
+   This powershell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 2.0.1
+First Release Date: 19th November, 2020
+Authors: Claudio Merola and Renato Gregio 
+
+#>
 param($Subscriptions, $Resources, $Advisories, $DFile)
 
 
@@ -63,7 +79,7 @@ Function Visio
             $Global:application = New-Object -ComObject Visio.Application
 
             <# Variable to hide Visio #>
-            #$Global:application.Visible=$false
+            $Global:application.Visible=$false
 
             $Global:documents = $Global:application.Documents
             $Global:document = $Global:documents.Add("")
