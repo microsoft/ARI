@@ -12,7 +12,7 @@ https://github.com/azureinventory/ARI/Extras/Diagram.ps1
    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.1
+Version: 2.0.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -335,10 +335,10 @@ foreach ($Con2 in $Con1)
                         $Global:Alt0 = $Global:Alt
                         if(($VNET2.name + "`n" + $VNET2.properties.addressSpace.addressPrefixes) -notin $VNETsD.text)
                             {
-                                $vpnnet = $page.Drop($IconVNET, 10, $Global:Alt)
+                                $Global:vpnnet = $page.Drop($IconVNET, 10, $Global:Alt)
                                 if($VNET2.properties.addressSpace.addressPrefixes.count -ge 10){$AddSpace = ($VNET2.properties.addressSpace.addressPrefixes | Select-Object -First 20)+ "`n" +'...'}Else{$AddSpace = $VNET2.properties.addressSpace.addressPrefixes}
-                                $vpnnet.Characters.Text = ([string]$VNET2.Name + "`n" + $AddSpace)
-                                $vpnnet.Characters.CharProps(7) = $charsize
+                                $Global:vpnnet.Characters.Text = ([string]$VNET2.Name + "`n" + $AddSpace)
+                                $Global:vpnnet.Characters.CharProps(7) = $charsize
                                 if($VNET2.properties.enableDdosProtection -eq $true)
                                     {
                                         $ddos = $page.Drop($IconDDOS, 9.9, $Global:Alt)
@@ -347,12 +347,12 @@ foreach ($Con2 in $Con1)
                                     }
                                 if($VNET2.properties.dhcpoptions.dnsServers)
                                     {
-                                        $vpnnet.Comments.Add('Custom DNS Servers: '+[string]$VNET2.properties.dhcpoptions.dnsServers + "`n" +
+                                        $Global:vpnnet.Comments.Add('Custom DNS Servers: '+[string]$VNET2.properties.dhcpoptions.dnsServers + "`n" +
                                                             'DDOS Protection: '+[string]$VNET2.properties.enableDdosProtection) | Out-Null
                                     }
                                 else
                                     {
-                                        $vpnnet.Comments.Add('DDOS Protection: '+[string]$VNET2.properties.enableDdosProtection) | Out-Null
+                                        $Global:vpnnet.Comments.Add('DDOS Protection: '+[string]$VNET2.properties.enableDdosProtection) | Out-Null
                                     }
 
                                 $vpngt.AutoConnect($vpnnet,0)
@@ -380,9 +380,6 @@ foreach ($Con2 in $Con1)
         }
 
 }
-
-
-
 
 
 
@@ -436,9 +433,6 @@ $charsize = "11"
     $Background.SendToBack()
 
 }
-
-
-
 
 
 Function FullEnvironment 
@@ -495,15 +489,6 @@ $charsize = "11"
             $OnPrem.Characters.CharProps(7) = "60"
 
 }
-
-
-
-
-
-
-
-
-
 
 
 <# Function for create peered VNETs #>
@@ -656,132 +641,137 @@ Param($VNET2)
 }
 
 
-
-
 <# Function for VNET creation #>
 Function VNETCreator
 {
 Param($VNET2)
         $charsize = "10"
         $Global:sizeL =  $VNET2.properties.subnets.properties.addressPrefix.count
-        if ($Global:sizeL -gt 5)
-        {
-            $Global:sizeL = $Global:sizeL / 2
-            $Global:sizeL = [math]::ceiling($Global:sizeL)
-            $Global:sizeC = $Global:sizeL
-            $Global:sizeL = ($Global:sizeL*1.5)+($Global:vnetLoc + 0.7)
-            $vnetbox = $page.DrawRectangle(($Global:vnetLoc+0.5), ($Global:Alt0 - 0.5), $Global:sizeL, ($Global:Alt0 + 3.3))
-
-            $SubIcon = $page.Drop($IconSubscription, ($Global:sizeL), ($Global:Alt0-0.6))
-            $SubName = $Subscriptions | Where-Object {$_.id -eq $VNET2.subscriptionId}
-            $SubIcon.Characters.Text = $SubName.name
-            $SubIcon.Characters.CharProps(7) = $charsize
-
-            $ADVS = ''
-            $ADVS = $Advisories | Where-Object {$_.Properties.Category -eq 'Cost' -and $_.Properties.resourceMetadata.resourceId -eq ('/subscriptions/'+$SubName.id)}
-            If($ADVS)
-                {
-                    $SubIcon = $page.Drop($IconCostMGMT, ($Global:sizeL+0.5), ($Global:Alt0-0.6))
-                    $SubIcon.Resize(1,-0.25,-0.25)
-                    $SubIcon.Characters.Text = ''
-                    foreach ($ADV in $ADVS)
-                        {
-                            $SubIcon.Comments.Add('Recommendation: '+ [string]$ADV.Properties.shortDescription.solution + "`n" + 
-                                                  'Resources: '+ [string]$ADV.Properties.extendedProperties.targetResourceCount + "`n" + 
-                                                  'Currency: '+ [string]$ADV.properties.extendedProperties.savingsCurrency+ "`n" + 
-                                                  'Annual Savings: '+[string]$ADV.properties.extendedProperties.annualSavingsAmount) | Out-Null
-                        } 
-                }
-
-            $Global:subloc = ($Global:vnetLoc+0.6)
-            $Global:SubC = 0
-            $Global:VNETPIP = @()
-            foreach($Sub in $VNET2.properties.subnets)
+        $Global:VNETsD = $page.Shapes | Where-Object {$_.name -like 'Virtual Networks*'}
+        if(($VNET2.name + "`n" + $VNET2.properties.addressSpace.addressPrefixes) -in $VNETsD.text)
             {
-                if ($Global:SubC -eq $Global:sizeC) 
+                $VNETDID = $VNETsD | Where-Object {$_.Characters.Text -eq ($VNET2.name + "`n" + $VNET2.properties.addressSpace.addressPrefixes)}
+                $Global:vpnnet.AutoConnect($VNETDID,0)
+                $ConnTemp = $page.Shapes | Where-Object {$_.name -like 'Dynamic connector*'} | select-object -Last 1
+                $ConnTemp.Characters.Text = $Peer.name
+                $ConnTemp.Characters.CharProps(7) = $charsize
+                $ConnTemp.Characters.CharProps(17) = "50"
+                $ConnTemp.Cells('BeginArrow')=4
+                $ConnTemp.Cells('EndArrow')=4
+            }
+            else 
+            {                            
+                if ($Global:sizeL -gt 5)
                 {
-                    $Global:Alt0 = $Global:Alt0 + 1.7
+                    $Global:sizeL = $Global:sizeL / 2
+                    $Global:sizeL = [math]::ceiling($Global:sizeL)
+                    $Global:sizeC = $Global:sizeL
+                    $Global:sizeL = ($Global:sizeL*1.5)+($Global:vnetLoc + 0.7)
+                    $vnetbox = $page.DrawRectangle(($Global:vnetLoc+0.5), ($Global:Alt0 - 0.5), $Global:sizeL, ($Global:Alt0 + 3.3))
+
+                    $SubIcon = $page.Drop($IconSubscription, ($Global:sizeL), ($Global:Alt0-0.6))
+                    $SubName = $Subscriptions | Where-Object {$_.id -eq $VNET2.subscriptionId}
+                    $SubIcon.Characters.Text = $SubName.name
+                    $SubIcon.Characters.CharProps(7) = $charsize
+
+                    $ADVS = ''
+                    $ADVS = $Advisories | Where-Object {$_.Properties.Category -eq 'Cost' -and $_.Properties.resourceMetadata.resourceId -eq ('/subscriptions/'+$SubName.id)}
+                    If($ADVS)
+                        {
+                            $SubIcon = $page.Drop($IconCostMGMT, ($Global:sizeL+0.5), ($Global:Alt0-0.6))
+                            $SubIcon.Resize(1,-0.25,-0.25)
+                            $SubIcon.Characters.Text = ''
+                            foreach ($ADV in $ADVS)
+                                {
+                                    $SubIcon.Comments.Add('Recommendation: '+ [string]$ADV.Properties.shortDescription.solution + "`n" + 
+                                                        'Resources: '+ [string]$ADV.Properties.extendedProperties.targetResourceCount + "`n" + 
+                                                        'Currency: '+ [string]$ADV.properties.extendedProperties.savingsCurrency+ "`n" + 
+                                                        'Annual Savings: '+[string]$ADV.properties.extendedProperties.annualSavingsAmount) | Out-Null
+                                } 
+                        }
+
                     $Global:subloc = ($Global:vnetLoc+0.6)
                     $Global:SubC = 0
-                }
-                $vsubnetbox = $page.DrawRectangle($Global:subloc, ($Global:Alt0 - 0.3), ($Global:subloc + 1.5), ($Global:Alt0 + 1.3))
-                $vsubnetbox.Characters.Text = ("`n" + "`n" + "`n" + "`n" + "`n" + "`n" + "`n" + [string]$sub.Name + "`n" + [string]$sub.properties.addressPrefix)
-                $vsubnetbox.Characters.CharProps(7) = $charsize
-                
-                ProcType $sub $Global:subloc $Global:Alt0                
-
-                $Global:subloc = $Global:subloc + 1.5
-                $Global:SubC ++
-            }
-
-            if($Global:VNETPIP)
-                {
-                    $SubIcon = $page.Drop($IconDet, ($subloc+5), ($Alt0-0.5))
-                    $SubIcon.Characters.Text = ''
-                    $SubIcon.Comments.Add('Public IPs: '+([string]$Global:VNETPIP.Name | ForEach-Object {$_ + ', '})) | Out-Null
-                    $SubIcon.AutoConnect($vnetbox,0)
-                }
-
-        }
-    else
-        {
-            $Global:sizeL = ($Global:sizeL*1.5)+($Global:vnetLoc + 0.7)
-            $vnetbox = $page.DrawRectangle(($Global:vnetLoc+0.5), ($Global:Alt0 - 0.5), $Global:sizeL, ($Global:Alt0 + 1.6))
-
-            $SubIcon = $page.Drop($IconSubscription, ($Global:sizeL), ($Global:Alt0-0.6))
-            $SubName = $Subscriptions | Where-Object {$_.id -eq $VNET2.subscriptionId}
-            $SubIcon.Characters.Text = $SubName.name
-            $SubIcon.Characters.CharProps(7) = $charsize
-
-            $ADVS = ''
-            $ADVS = $Advisories | Where-Object {$_.Properties.Category -eq 'Cost' -and $_.Properties.resourceMetadata.resourceId -eq ('/subscriptions/'+$SubName.id)}
-            If($ADVS)
-                {
-                    $SubIcon = $page.Drop($IconCostMGMT, ($Global:sizeL+0.5), ($Global:Alt0-0.6))
-                    $SubIcon.Resize(1,-0.25,-0.25)
-                    $SubIcon.Characters.Text = ''
-                    foreach ($ADV in $ADVS)
+                    $Global:VNETPIP = @()
+                    foreach($Sub in $VNET2.properties.subnets)
+                    {
+                        if ($Global:SubC -eq $Global:sizeC) 
                         {
-                            $SubIcon.Comments.Add('Recommendation: '+ [string]$ADV.Properties.shortDescription.solution + "`n" + 
-                                                  'Resources: '+ [string]$ADV.Properties.extendedProperties.targetResourceCount + "`n" + 
-                                                  'Currency: '+ [string]$ADV.properties.extendedProperties.savingsCurrency+ "`n" + 
-                                                  'Annual Savings: '+[string]$ADV.properties.extendedProperties.annualSavingsAmount) | Out-Null
-                        } 
+                            $Global:Alt0 = $Global:Alt0 + 1.7
+                            $Global:subloc = ($Global:vnetLoc+0.6)
+                            $Global:SubC = 0
+                        }
+                        $vsubnetbox = $page.DrawRectangle($Global:subloc, ($Global:Alt0 - 0.3), ($Global:subloc + 1.5), ($Global:Alt0 + 1.3))
+                        $vsubnetbox.Characters.Text = ("`n" + "`n" + "`n" + "`n" + "`n" + "`n" + "`n" + [string]$sub.Name + "`n" + [string]$sub.properties.addressPrefix)
+                        $vsubnetbox.Characters.CharProps(7) = $charsize
+                        
+                        ProcType $sub $Global:subloc $Global:Alt0                
+
+                        $Global:subloc = $Global:subloc + 1.5
+                        $Global:SubC ++
+                    }
+
+                    if($Global:VNETPIP)
+                        {
+                            $SubIcon = $page.Drop($IconDet, ($subloc+5), ($Alt0-0.5))
+                            $SubIcon.Characters.Text = ''
+                            $SubIcon.Comments.Add('Public IPs: '+([string]$Global:VNETPIP.Name | ForEach-Object {$_ + ', '})) | Out-Null
+                            $SubIcon.AutoConnect($vnetbox,0)
+                        }
+
                 }
-
-            $Global:subloc = ($Global:vnetLoc+0.6)
-            $Global:VNETPIP = @()
-            foreach($Sub in $VNET2.properties.subnets)
-            {
-                $vsubnetbox = $page.DrawRectangle($Global:subloc, ($Global:Alt0 - 0.3), ($Global:subloc + 1.5), ($Global:Alt0 + 1.3))
-                $vsubnetbox.Characters.Text = ("`n" + "`n" + "`n" + "`n" + "`n" + "`n" + "`n" +[string]$sub.Name + "`n" + [string]$sub.properties.addressPrefix)
-                $vsubnetbox.Characters.CharProps(7) = $charsize
-                
-                ProcType $sub $Global:subloc $Global:Alt0                
-
-                $Global:subloc = $Global:subloc + 1.5
-            }
-
-            if($Global:VNETPIP)
+                else
                 {
-                    $SubIcon = $page.Drop($IconDet, ($subloc+5), ($Alt0+0.7))
-                    $SubIcon.Characters.Text = ''
-                    $SubIcon.Comments.Add('Public IPs: '+([string]$Global:VNETPIP.Name | ForEach-Object {$_ + ', '})) | Out-Null
-                    $SubIcon.AutoConnect($vnetbox,0)
+                    $Global:sizeL = ($Global:sizeL*1.5)+($Global:vnetLoc + 0.7)
+                    $vnetbox = $page.DrawRectangle(($Global:vnetLoc+0.5), ($Global:Alt0 - 0.5), $Global:sizeL, ($Global:Alt0 + 1.6))
+
+                    $SubIcon = $page.Drop($IconSubscription, ($Global:sizeL), ($Global:Alt0-0.6))
+                    $SubName = $Subscriptions | Where-Object {$_.id -eq $VNET2.subscriptionId}
+                    $SubIcon.Characters.Text = $SubName.name
+                    $SubIcon.Characters.CharProps(7) = $charsize
+
+                    $ADVS = ''
+                    $ADVS = $Advisories | Where-Object {$_.Properties.Category -eq 'Cost' -and $_.Properties.resourceMetadata.resourceId -eq ('/subscriptions/'+$SubName.id)}
+                    If($ADVS)
+                        {
+                            $SubIcon = $page.Drop($IconCostMGMT, ($Global:sizeL+0.5), ($Global:Alt0-0.6))
+                            $SubIcon.Resize(1,-0.25,-0.25)
+                            $SubIcon.Characters.Text = ''
+                            foreach ($ADV in $ADVS)
+                                {
+                                    $SubIcon.Comments.Add('Recommendation: '+ [string]$ADV.Properties.shortDescription.solution + "`n" + 
+                                                        'Resources: '+ [string]$ADV.Properties.extendedProperties.targetResourceCount + "`n" + 
+                                                        'Currency: '+ [string]$ADV.properties.extendedProperties.savingsCurrency+ "`n" + 
+                                                        'Annual Savings: '+[string]$ADV.properties.extendedProperties.annualSavingsAmount) | Out-Null
+                                } 
+                        }
+
+                    $Global:subloc = ($Global:vnetLoc+0.6)
+                    $Global:VNETPIP = @()
+                    foreach($Sub in $VNET2.properties.subnets)
+                    {
+                        $vsubnetbox = $page.DrawRectangle($Global:subloc, ($Global:Alt0 - 0.3), ($Global:subloc + 1.5), ($Global:Alt0 + 1.3))
+                        $vsubnetbox.Characters.Text = ("`n" + "`n" + "`n" + "`n" + "`n" + "`n" + "`n" +[string]$sub.Name + "`n" + [string]$sub.properties.addressPrefix)
+                        $vsubnetbox.Characters.CharProps(7) = $charsize
+                        
+                        ProcType $sub $Global:subloc $Global:Alt0                
+
+                        $Global:subloc = $Global:subloc + 1.5
+                    }
+
+                    if($Global:VNETPIP)
+                        {
+                            $SubIcon = $page.Drop($IconDet, ($subloc+5), ($Alt0+0.7))
+                            $SubIcon.Characters.Text = ''
+                            $SubIcon.Comments.Add('Public IPs: '+([string]$Global:VNETPIP.Name | ForEach-Object {$_ + ', '})) | Out-Null
+                            $SubIcon.AutoConnect($vnetbox,0)
+                        }
                 }
-        }
+            }
         $Global:Alt ++
 }
 
 
-<#
-$VNET2 = $AZVNETs | where {$_.Name -eq 'RG-BNBot-vnet'}
-$VNET2.properties.subnets
-$sub = $VNET2.properties.subnets | where {$_.name -eq 'default'}
-$sub.id
-$AKSNAmes.properties.agentPoolProfiles.vnetSubnetID
-
-<# Function for drawing the resources inside the subnets #>
 Function ProcType 
 {
 Param($sub,$subloc,$Alt0)
