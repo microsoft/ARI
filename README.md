@@ -29,7 +29,7 @@ Since this is an additional module. you must use the __-Diagram__ parameter.
 ![Overview](images/ADI-DEMO.png)
 
 <br/><br/>
-> To much Resources extraction 
+> Many new resource types 
 
 For ARI V2 we added much more native modules ( and the possibility to create your own module ;)
 ### Resources and Resource Providers:
