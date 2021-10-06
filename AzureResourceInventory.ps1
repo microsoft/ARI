@@ -290,6 +290,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         checkAzCli
         checkPS
 
+        #Field for tags
+        if ($IncludeTags.IsPresent) {
+            $GraphQueryTags = ",tags "
+        } else {
+            $GraphQueryTags = ""
+        }
+
         <###################################################### Subscriptions ######################################################################>
 
         Write-Progress -activity 'Azure Inventory' -Status "1% Complete." -PercentComplete 2 -CurrentOperation 'Discovering Subscriptions..'
@@ -317,18 +324,14 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         if (!($SkipAdvisory.IsPresent)) {
             
             Write-Debug ('Subscriptions To be Gather in Advisories: '+$Subscri.Count)
-            if([string]::IsNullOrEmpty($ResourceGroup))
-                {
+                if ([string]::IsNullOrEmpty($ResourceGroup)) {
                     Write-Debug ('Resource Group name is not present, extracting advisories for all Resource Groups')
-                    $AdvSize = az graph query -q "advisorresources | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
-                    if ($AdvSize.data) { $AdvSizeNum = $AdvSize.data.'count_' }else { $AdvSizeNum = $AdvSize.'count_' }
+                    $GraphQuery = "advisorresources | summarize count()"
+                } else {
+                    $GraphQuery = "advisorresources | where resourceGroup == '$ResourceGroup' | summarize count()"
                 }
-            else 
-                {
-                    $AdvSize = az graph query -q "advisorresources | where resourceGroup == '$ResourceGroup' | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
+                $AdvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
                     if ($AdvSize.data) { $AdvSizeNum = $AdvSize.data.'count_' }else { $AdvSizeNum = $AdvSize.'count_' }
-                }
-            if ($AdvSize.data) { $AdvSizeNum = $AdvSize.data.'count_' }else { $AdvSizeNum = $AdvSize.'count_' }
 
             Write-Debug ('Advisories: '+$AdvSizeNum)
             Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Advisories extraction jobs.."
@@ -342,28 +345,18 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 while ($Looper -lt $Loop) {
                     $Looper ++
                     Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                    try {
-                        if([string]::IsNullOrEmpty($ResourceGroup))
-                                {
-                                    $Advisor = az graph query -q "advisorresources | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                        if ([string]::IsNullOrEmpty($ResourceGroup)) {
+                            $GraphQuery = "advisorresources | order by id asc"
+                        } else {
+                            $GraphQuery = "advisorresources | where resourceGroup == '$ResourceGroup' | order by id asc"
                                 }
-                            else 
-                                {
-                                    $Advisor = az graph query -q "advisorresources | where resourceGroup == '$ResourceGroup' | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                                }
-                    }
-                    catch {
-                        if([string]::IsNullOrEmpty($ResourceGroup))
-                                {
-                                    $Advisor = az graph query -q "advisorresources | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors 
+                        try {
+                            $Advisor = az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                        } catch {
+                            $Advisor = az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors
                                     $Advisor = $Advisor.tolower() | ConvertFrom-Json
                                 }
-                            else 
-                                {
-                                    $Advisor = az graph query -q "advisorresources | where resourceGroup == '$ResourceGroup' | order by id asc" --subscriptions $Subscri --skip $Limit --first 3000 --output json --only-show-errors 
-                                    $Advisor = $Advisor.tolower() | ConvertFrom-Json
-                                }
-                    }    
+
                     if ($Advisor.data) { $Global:Advisories += $Advisor.data } else { $Global:Advisories += $Advisor }
                     Start-Sleep 3
                     $Limit = $Limit + 1000
@@ -393,11 +386,11 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 while ($Looper -lt $Loop) {
                     $Looper ++
                     Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                        $GraphQuery = "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'"
                     try {
-                        $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                    }
-                    catch {
-                        $SecCenter = az graph query -q "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors 
+                            $SecCenter = az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                        } catch {
+                            $SecCenter = az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors
                         $SecCenter = $SecCenter.tolower() | ConvertFrom-Json
                     }    
                     if ($SecCenter.data) { $Global:Security += $SecCenter.data } else { $Global:Security += $SecCenter }
@@ -429,7 +422,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             {
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'. And from Resource Group: '+$ResourceGroup)
 
-                $EnvSize = az graph query -q "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
+                $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | summarize count()"
+                $EnvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
                             
                 if ($EnvSizeNum -ge 1) {
@@ -439,15 +433,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     $Limit = 0
         
                     while ($Looper -lt $Loop) {
-
-                        if($IncludeTags.IsPresent)
-                            {
-                                $Resource = (az graph query -q "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation,tags | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-                            }
-                        else 
-                            {
-                                $Resource = (az graph query -q "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-                            }                                                              
+                        $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data
                         Start-Sleep 2      
@@ -460,7 +447,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         elseif([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID)) 
             {
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'.')
-                $EnvSize = az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | summarize count()" --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
+                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
+                $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
                             
                 if ($EnvSizeNum -ge 1) {
@@ -470,15 +458,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     $Limit = 0
         
                     while ($Looper -lt $Loop) {
-
-                        if($IncludeTags.IsPresent)
-                            {
-                                $Resource = (az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation,tags | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json                                
-                            }
-                        else
-                            {
-                                $Resource = (az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json                            
-                            }                                   
+                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data 
                         Start-Sleep 2      
@@ -487,10 +468,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                         $Limit = $Limit + 1000
                     }
                 }
-            }             
-        else
-            {                                                            
-                $EnvSize = az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
+            } else {
+                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
+                $EnvSize = az graph query -q  $GraphQuery  --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
                             
                 if ($EnvSizeNum -ge 1) {
@@ -500,15 +480,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     $Limit = 0
         
                     while ($Looper -lt $Loop) {
-
-                        if($IncludeTags.IsPresent)
-                        {
-                            $Resource = (az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation,tags | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-                        }
-                    else 
-                        {
-                            $Resource = (az graph query -q "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-                        }  
+                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data 
                         Start-Sleep 2
@@ -532,31 +505,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     $Limit = 0
         
                     while ($Looper -lt $Loop) {
-                        try
-                            {
-                                if($IncludeTags.IsPresent)
-                                    {
-                                        $AVD = az graph query -q "desktopvirtualizationresources | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation,tags | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                                    }
-                                else 
-                                    {
-                                        $AVD = az graph query -q "desktopvirtualizationresources | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                                    }                               
-                            }
-                        catch 
-                            {
-                                if($IncludeTags.IsPresent)
-                                    {
-                                        $AVD = az graph query -q "desktopvirtualizationresources | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation,tags | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                    try {
+                        $GraphQuery = "desktopvirtualizationresources | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $AVD = az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
+                    } catch {
+                        $AVD = az graph query -q $GraphQuery  --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
                                         $AVD = $AVD.tolower() | ConvertFrom-Json
                                     }
-                                else 
-                                    {
-                                        $AVD = az graph query -q "desktopvirtualizationresources | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation | order by id asc" --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                                        $AVD = $AVD.tolower() | ConvertFrom-Json
-                                    }  
-                            }                                    
-                            
 
                         $Global:Resources += $AVD.data
                         Start-Sleep 2
@@ -833,11 +788,10 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             foreach ($Module in $Modules) {
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
-                    $ModName = $Modul[7].Trim(".ps1")
+                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                     $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[10]) + '/Modules/' + $Modul[6] + '/' + $Modul[7])
-                }
-                Else {
-                    $ModName = $Module.Name.Trim(".ps1")
+                    } Else {
+                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                     $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
                     $ModuSeq = $ModuSeq0.ReadToEnd()
                     $ModuSeq0.Dispose()  
@@ -861,10 +815,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             foreach ($Module in $Modules) {     
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
-                    $ModName = $Modul[7].Trim(".ps1")
-                }
-                Else {
-                    $ModName = $Module.Name.Trim(".ps1")
+                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
+                    } Else {
+                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                 } 
 
                 New-Variable -Name ('ModValue' + $ModName)
@@ -877,10 +830,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             foreach ($Module in $Modules) {     
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
-                    $ModName = $Modul[7].Trim(".ps1")
-                }
-                Else {
-                    $ModName = $Module.Name.Trim(".ps1") 
+                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
+                    } Else {
+                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                 } 
                 $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
             }
@@ -914,11 +866,10 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             foreach ($Module in $Modules) {
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
-                    $ModName = $Modul[7].Trim(".ps1")
+                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                     $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[10]) + '/Modules/' + $Modul[6] + '/' + $Modul[7])
-                }
-                Else {
-                    $ModName = $Module.Name.Trim(".ps1")
+                    } Else {
+                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                     $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
                     $ModuSeq = $ModuSeq0.ReadToEnd()
                     $ModuSeq0.Dispose()  
@@ -941,10 +892,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             foreach ($Module in $Modules) {     
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
-                    $ModName = $Modul[7].Trim(".ps1")
-                }
-                Else {
-                    $ModName = $Module.Name.Trim(".ps1")
+                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
+                    } Else {
+                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                 } 
 
                 New-Variable -Name ('ModValue' + $ModName)
@@ -957,10 +907,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             foreach ($Module in $Modules) {     
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
-                    $ModName = $Modul[7].Trim(".ps1")
-                }
-                Else {
-                    $ModName = $Module.Name.Trim(".ps1") 
+                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
+                    } Else {
+                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                 } 
                 $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
             }
@@ -994,11 +943,10 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             foreach ($Module in $Modules) {
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
-                    $ModName = $Modul[7].Trim(".ps1")
+                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                     $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[10]) + '/Modules/' + $Modul[6] + '/' + $Modul[7])
-                }
-                Else {
-                    $ModName = $Module.Name.Trim(".ps1")
+                    } Else {
+                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                     $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
                     $ModuSeq = $ModuSeq0.ReadToEnd()
                     $ModuSeq0.Dispose()  
@@ -1022,10 +970,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             foreach ($Module in $Modules) {     
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
-                    $ModName = $Modul[7].Trim(".ps1")
-                }
-                Else {
-                    $ModName = $Module.Name.Trim(".ps1")
+                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
+                    } Else {
+                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                 } 
 
                 New-Variable -Name ('ModValue' + $ModName)
@@ -1038,10 +985,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             foreach ($Module in $Modules) {     
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
-                    $ModName = $Modul[7].Trim(".ps1")
-                }
-                Else {
-                    $ModName = $Module.Name.Trim(".ps1") 
+                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
+                    } Else {
+                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                 } 
                 $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
             }
@@ -1075,11 +1021,10 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             foreach ($Module in $Modules) {
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
-                    $ModName = $Modul[7].Trim(".ps1")
+                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                     $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[10]) + '/Modules/' + $Modul[6] + '/' + $Modul[7])
-                }
-                Else {
-                    $ModName = $Module.Name.Trim(".ps1")
+                    } Else {
+                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                     $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
                     $ModuSeq = $ModuSeq0.ReadToEnd()
                     $ModuSeq0.Dispose()  
@@ -1102,10 +1047,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             foreach ($Module in $Modules) {     
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
-                    $ModName = $Modul[7].Trim(".ps1")
-                }
-                Else {
-                    $ModName = $Module.Name.Trim(".ps1")
+                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
+                    } Else {
+                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                 } 
 
                 New-Variable -Name ('ModValue' + $ModName)
@@ -1118,10 +1062,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             foreach ($Module in $Modules) {     
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
-                    $ModName = $Modul[7].Trim(".ps1")
-                }
-                Else {
-                    $ModName = $Module.Name.Trim(".ps1") 
+                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
+                    } Else {
+                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                 } 
                 $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
             }
@@ -1243,16 +1186,15 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
             If ($RunOnline -eq $true) {
                 $Modul = $Module.split('/')
-                $ModName = $Modul[7].Trim(".ps1")
+                    $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                 $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Modules/' + $Modul[6] + '/' + $Modul[7])
-            }
-            Else {
+                } Else {
                 $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
                 $ModuSeq = $ModuSeq0.ReadToEnd()
                 $ModuSeq0.Dispose()
             }
 
-            Write-Debug ('Running Module: ' + $Module)
+                Write-Debug "Running Module: '$Module'"
 
             $ScriptBlock = [Scriptblock]::Create($ModuSeq)
                 
