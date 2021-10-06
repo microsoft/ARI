@@ -75,9 +75,16 @@ If ($Task -eq 'Processing') {
         $tmp
     }
 } Else {
-    if ($SmaResources.NetworkSecurityGroup) {
+    # --------------------------------------------------------------------------------
+    # the $SmaResources object for a module should be the same as the name of the file.
+    #  In this case the file name is "NetworkSecurityGroup.ps1" so the SMA object
+    #  is $SmaResources.NetworkSecurityGroup
+    # --------------------------------------------------------------------------------
+    $ExcelVar = $SmaResources.NetworkSecurityGroup
+    if ($ExcelVar) {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
+        #Conditional formats.  Note that this can be $() for none
         $condtxt = $(
             New-ConditionalText true -Range T:T
         )
@@ -109,15 +116,12 @@ If ($Task -eq 'Processing') {
             $Exc.Add('Tag Value')
         }
 
-        $ExcelVar = $SmaResources.NetworkSecurityGroup
-
         $ExcelVar |
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc |
         Export-Excel -Path $File -WorksheetName 'Network Security Groups' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureNetworkSecurityGroups' -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
 
-        <######## Insert Column comments and documentations here following this model #########>
-
+        <######## Insert Column comments and documentations here following this model.  See StoraceAcc.ps1 for samples #########>
 
 
     }
