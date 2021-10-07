@@ -13,7 +13,7 @@ https://github.com/azureinventory/ARI/Modules/Compute/AKS.ps1
    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -110,6 +110,7 @@ Else
             {
                 $cond += New-ConditionalText $UnSupOS -Range E:E
             }
+        $cond += New-ConditionalText FALSE -Range K:K
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
