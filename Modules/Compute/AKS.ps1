@@ -111,6 +111,7 @@ Else
                 $cond += New-ConditionalText $UnSupOS -Range E:E
             }
         $cond += New-ConditionalText FALSE -Range K:K
+        $cond += New-ConditionalText FALSE -Range AA:AA
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
