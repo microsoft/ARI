@@ -8,17 +8,17 @@
 #                                                                                        #
 ##########################################################################################
 <#
-.SYNOPSIS  
+.SYNOPSIS
     This script creates Excel file to Analyze Azure Resources inside a Tenant
-  
-.DESCRIPTION  
+
+.DESCRIPTION
     Do you want to analyze your Azure Advisories in a table format? Document it in xlsx format.
- 
+
 .PARAMETER TenantID
     Specify the tenant ID you want to create a Resource Inventory.
-    
-    >>> IMPORTANT: YOU NEED TO USE THIS PARAMETER FOR TENANTS WITH MULTI-FACTOR AUTHENTICATION. <<< 
-    
+
+    >>> IMPORTANT: YOU NEED TO USE THIS PARAMETER FOR TENANTS WITH MULTI-FACTOR AUTHENTICATION. <<<
+
 .PARAMETER SubscriptionID
     Use this parameter to collect a specific Subscription in a Tenant
 
@@ -32,7 +32,7 @@
     Use this parameter to include Tags of every Azure Resources
 
 .PARAMETER Debug
-    Execute ASCI in debug mode. 
+    Execute ASCI in debug mode.
 
 .EXAMPLE
     Default utilization. Read all tenants you have privileges, select a tenant in menu and collect from all subscriptions:
@@ -52,7 +52,7 @@
     Please note that while being developed by a Microsoft employee, Azure inventory Scripts is not a Microsoft service or product. Azure Inventory Scripts are a personal driven project, there are none implicit or explicit obligations related to this project, it is provided 'as is' with no warranties and confer no rights.
 #>
 
-param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help) 
+param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help)
 
     if ($Debug.IsPresent) {$DebugPreference = 'Continue'}
 
@@ -67,63 +67,63 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
     <#########################################################          Help          ######################################################################>
 
     Function usageMode() {
-        Write-Host "" 
-        Write-Host "Parameters" 
         Write-Host ""
-        Write-Host " -TenantID <ID>        :  Specifies the Tenant to be inventoried. " 
-        Write-Host " -SubscriptionID <ID>  :  Specifies one unique Subscription to be inventoried. " 
-        Write-Host " -ResourceGroup <NAME> :  Specifies one unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. " 
-        Write-Host " -SkipAdvisory         :  Do not collect Azure Advisory. " 
-        Write-Host " -SecurityCenter       :  Include Security Center Data. " 
-        Write-Host " -IncludeTags          :  Include Resource Tags. " 
+        Write-Host "Parameters"
+        Write-Host ""
+        Write-Host " -TenantID <ID>        :  Specifies the Tenant to be inventoried. "
+        Write-Host " -SubscriptionID <ID>  :  Specifies one unique Subscription to be inventoried. "
+        Write-Host " -ResourceGroup <NAME> :  Specifies one unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. "
+        Write-Host " -SkipAdvisory         :  Do not collect Azure Advisory. "
+        Write-Host " -SecurityCenter       :  Include Security Center Data. "
+        Write-Host " -IncludeTags          :  Include Resource Tags. "
         Write-Host " -Diagram              :  Create a Visio Diagram. "
-        Write-Host " -Online               :  Use Online Modules. "  
+        Write-Host " -Online               :  Use Online Modules. "
         Write-Host " -Debug                :  Run in a Debug mode. "
         Write-Host ""
         Write-Host ""
-        Write-Host "" 
+        Write-Host ""
         Write-Host "Usage Mode and Examples: "
         Write-Host "For CloudShell:"
-        Write-Host "e.g. />./AzureResourceInventory.ps1"      
+        Write-Host "e.g. />./AzureResourceInventory.ps1"
         Write-Host ""
-        Write-Host "For PowerShell Desktop:"      
+        Write-Host "For PowerShell Desktop:"
         Write-Host ""
         Write-Host "If you do not specify Resource Inventory will be performed on all subscriptions for the selected tenant. "
-        Write-Host "e.g. />./AzureResourceInventory.ps1"      
-        Write-Host "" 
-        Write-Host "To perform the inventory in a specific Tenant and subscription use <-TenantID> and <-SubscriptionID> parameter " 
+        Write-Host "e.g. />./AzureResourceInventory.ps1"
+        Write-Host ""
+        Write-Host "To perform the inventory in a specific Tenant and subscription use <-TenantID> and <-SubscriptionID> parameter "
         Write-Host "e.g. />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID>"
         Write-Host ""
-        Write-Host "Including Tags:"      
+        Write-Host "Including Tags:"
         Write-Host " By Default Azure Resource inventory do not include Resource Tags."
-        Write-Host " To include Tags at the inventory use <-IncludeTags> parameter. " 
+        Write-Host " To include Tags at the inventory use <-IncludeTags> parameter. "
         Write-Host "e.g. />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> --IncludeTags"
-        Write-Host ""         
-        Write-Host "Collecting Security Center Data :"      
+        Write-Host ""
+        Write-Host "Collecting Security Center Data :"
         Write-Host " By Default Azure Resource inventory do not collect Security Center Data."
-        Write-Host " To include Security Center details in the report, use <-SecurityCenter> parameter. " 
+        Write-Host " To include Security Center details in the report, use <-SecurityCenter> parameter. "
         Write-Host "e.g. />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SecurityCenter"
-        Write-Host "" 
-        Write-Host "Skipping Azure Advisor:"      
+        Write-Host ""
+        Write-Host "Skipping Azure Advisor:"
         Write-Host " By Default Azure Resource inventory collects Azure Advisor Data."
-        Write-Host " To ignore this  use <-SkipAdvisory> parameter. " 
+        Write-Host " To ignore this  use <-SkipAdvisory> parameter. "
         Write-Host "e.g. />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SkipAdvisory"
         Write-Host ""
-        Write-Host "Creating Visio Diagram :"      
+        Write-Host "Creating Visio Diagram :"
         Write-Host "If you Want to create a Visio Diagram you need to use <-Diagram> parameter."
         Write-Host "It's a pre-requisite to run in a Windows with Microsoft Visio Installed"
-        Write-Host " To include Security Center details in the report, use <-SecurityCenter> parameter. " 
+        Write-Host " To include Security Center details in the report, use <-SecurityCenter> parameter. "
         Write-Host "e.g. />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -Diagram"
-        Write-Host "" 
-        Write-Host "Using the latest modules :"      
+        Write-Host ""
+        Write-Host "Using the latest modules :"
         Write-Host " You can use the latest modules. For this use <-Online> parameter."
         Write-Host "It's a pre-requisite to have internet access for ARI GitHub repo"
         Write-Host "e.g. />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -Online"
         Write-Host ""
-        Write-Host "Running in Debug Mode :"      
+        Write-Host "Running in Debug Mode :"
         Write-Host "To run in a Debug Mode use <-Debug> parameter."
         Write-Host ".e.g. />/AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -Debug"
-        Write-Host "" 
+        Write-Host ""
     }
 
     Function Variables {
@@ -138,11 +138,11 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         $Global:Repo = 'https://github.com/azureinventory/ARI/tree/main/Modules'
         $Global:RawRepo = 'https://raw.githubusercontent.com/azureinventory/ARI/main'
 
-    } 
+    }
 
     <#########################################################       Environment      ######################################################################>
 
-    Function Extractor {        
+    Function Extractor {
 
         Write-Debug ('Starting Extractor function')
         function checkAzCli() {
@@ -154,14 +154,14 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 Read-Host "Azure CLI Not Found. Press <Enter> to finish script"
                 Exit
             }
-            Write-Host "Validating Az Cli Extension.."            
+            Write-Host "Validating Az Cli Extension.."
             $azcliExt = az extension list --output json | ConvertFrom-Json
             $azcliExt = $azcliExt | Where-Object {$_.name -eq 'resource-graph'}
             Write-Debug ('Current Resource-Graph Extension Version: ' + $azcliExt.version)
             $AzcliExtV = $azcliExt | Where-Object {$_.name -eq 'resource-graph'}
             if (!$AzcliExtV) {
                 Write-Host "Adding Az Cli Extension"
-                az extension add --name resource-graph 
+                az extension add --name resource-graph
             }
             Write-Host "Validating ImportExcel Module.."
             $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
@@ -180,7 +180,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         function LoginSession() {
             Write-Debug ('Starting LoginSession function')
             if (!$TenantID) {
-                write-host "Tenant ID not specified. Use -TenantID parameter if you want to specify directly. "        
+                write-host "Tenant ID not specified. Use -TenantID parameter if you want to specify directly. "
                 write-host "Authenticating Azure"
                 write-host ""
                 Write-Debug ('Cleaning az account cache')
@@ -196,13 +196,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     write-host ""
                     $TenantID = $Tenants
                 }
-                else { 
+                else {
                     write-host "Select the the Azure Tenant ID that you want to connect : "
                     write-host ""
                     $SequenceID = 1
                     foreach ($TenantID in $Tenants) {
                         write-host "$SequenceID)  $TenantID"
-                        $SequenceID ++ 
+                        $SequenceID ++
                     }
                     write-host ""
                     [int]$SelectTenant = read-host "Select Tenant ( default 1 )"
@@ -210,18 +210,18 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     $TenantID = $Tenants[$defaultTenant]
                     az login -t $TenantID | Out-Null
                 }
-                                
+
                 write-host "Extracting from Tenant $TenantID"
                 Write-Debug ('Extracting Subscription details')
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
-                if ($SubscriptionID) 
+                if ($SubscriptionID)
                     {
                         if($SubscriptionID.count -gt 1)
                             {
                                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -in $SubscriptionID }
                             }
-                        else 
+                        else
                             {
                                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
                             }
@@ -245,7 +245,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 }
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
-                if ($SubscriptionID) 
+                if ($SubscriptionID)
                     {
                         if($SubscriptionID.count -gt 1)
                             {
@@ -256,7 +256,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
                             }
                     }
-            }         
+            }
         }
 
         function checkPS() {
@@ -275,14 +275,14 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 write-host ""
                 $Global:DefaultPath = "$HOME/AzureResourceInventory/"
                 LoginSession
-            }                         
-            else {                
+            }
+            else {
                 write-host "PowerShell Desktop Identified."
                 $Global:PlatOS = 'PowerShell Desktop'
                 write-host ""
                 $Global:DefaultPath = "C:\AzureResourceInventory\"
                 LoginSession
-            }            
+            }
         }
 
         <###################################################### Checking PowerShell ######################################################################>
@@ -292,8 +292,10 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
         #Field for tags
         if ($IncludeTags.IsPresent) {
+            Write-Debug "Tags will be included"
             $GraphQueryTags = ",tags "
         } else {
+            Write-Debug "Tags will be excluded"
             $GraphQueryTags = ""
         }
 
@@ -322,7 +324,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         $Global:Subscri = $Global:Subscriptions.id
 
         if (!($SkipAdvisory.IsPresent)) {
-            
+
             Write-Debug ('Subscriptions To be Gather in Advisories: '+$Subscri.Count)
                 if ([string]::IsNullOrEmpty($ResourceGroup)) {
                     Write-Debug ('Resource Group name is not present, extracting advisories for all Resource Groups')
@@ -363,7 +365,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 }
                 Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "Completed" -Completed
             }
-        }   
+        }
 
         <######################################################### Security Center ######################################################################>
 
@@ -392,7 +394,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                         } catch {
                             $SecCenter = az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors
                         $SecCenter = $SecCenter.tolower() | ConvertFrom-Json
-                    }    
+                    }
                     if ($SecCenter.data) { $Global:Security += $SecCenter.data } else { $Global:Security += $SecCenter }
                     Start-Sleep 3
                     $Limit = $Limit + 1000
@@ -402,14 +404,14 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         }
         else {
             Write-Host " "
-            Write-Host " To include Security Center details in the report, use <-SecurityCenter> parameter. " 
-            Write-Host " " 
+            Write-Host " To include Security Center details in the report, use <-SecurityCenter> parameter. "
+            Write-Host " "
         }
-                
+
         Write-Progress -activity 'Azure Inventory' -PercentComplete 20
 
         Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "100% Complete." -Completed
- 
+
         if(![string]::IsNullOrEmpty($ResourceGroup) -and [string]::IsNullOrEmpty($SubscriptionID))
             {
                 Write-Debug ('Resource Group Name present, but missing Subscription ID.')
@@ -418,51 +420,51 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 Write-Host ''
                 Exit
             }
-        if(![string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID)) 
+        if(![string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
             {
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'. And from Resource Group: '+$ResourceGroup)
 
                 $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | summarize count()"
                 $EnvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
-                            
+
                 if ($EnvSizeNum -ge 1) {
                     $Loop = $EnvSizeNum / 1000
                     $Loop = [math]::ceiling($Loop)
                     $Looper = 0
                     $Limit = 0
-        
+
                     while ($Looper -lt $Loop) {
                         $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
                         $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data
-                        Start-Sleep 2      
+                        Start-Sleep 2
                         $Looper ++
                         Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                         $Limit = $Limit + 1000
                     }
                 }
-            }   
-        elseif([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID)) 
+            }
+        elseif([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
             {
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'.')
                 $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
                 $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
-                            
+
                 if ($EnvSizeNum -ge 1) {
                     $Loop = $EnvSizeNum / 1000
                     $Loop = [math]::ceiling($Loop)
                     $Looper = 0
                     $Limit = 0
-        
+
                     while ($Looper -lt $Loop) {
                         $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
                         $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
-                        $Global:Resources += $Resource.data 
-                        Start-Sleep 2      
+                        $Global:Resources += $Resource.data
+                        Start-Sleep 2
                         $Looper ++
                         Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                         $Limit = $Limit + 1000
@@ -472,18 +474,18 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
                 $EnvSize = az graph query -q  $GraphQuery  --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
-                            
+
                 if ($EnvSizeNum -ge 1) {
                     $Loop = $EnvSizeNum / 1000
                     $Loop = [math]::ceiling($Loop)
                     $Looper = 0
                     $Limit = 0
-        
+
                     while ($Looper -lt $Loop) {
                         $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
                         $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
-                        $Global:Resources += $Resource.data 
+                        $Global:Resources += $Resource.data
                         Start-Sleep 2
                         $Looper ++
                         Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
@@ -497,13 +499,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
             $AVDSize = az graph query -q "desktopvirtualizationresources | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
                 $AVDSizeNum = $AVDSize.data.'count_'
-                            
+
                 if ($AVDSizeNum -ge 1) {
                     $Loop = $AVDSizeNum / 1000
                     $Loop = [math]::ceiling($Loop)
                     $Looper = 0
                     $Limit = 0
-        
+
                     while ($Looper -lt $Loop) {
                     try {
                         $GraphQuery = "desktopvirtualizationresources | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
@@ -535,7 +537,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                         }
                         $Location += $Val
                     }
-                $Quotas = @()    
+                $Quotas = @()
                 Foreach($Loc in $Location)
                 {
                     if($Loc.Loc.count -eq 1)
@@ -564,9 +566,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     }
                 }
                     $Quotas
-                } -ArgumentList $Global:Resources, $Global:Subscriptions   
+                } -ArgumentList $Global:Resources, $Global:Subscriptions
             }
-    
+
         }
     }
 
@@ -574,8 +576,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
     <#########################################################  Creating Excel File   ######################################################################>
 
-    Function RunMain {      
-        
+    Function RunMain {
+
         $Global:ReportingRunTime = Measure-Command -Expression {
 
         #### Creating Excel file variable:
@@ -587,7 +589,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         $Global:TableStyle = "Light20"
         Write-Debug ('Excel Table Style used: ' + $TableStyle)
 
-        Write-Progress -activity 'Azure Inventory' -Status "21% Complete." -PercentComplete 21 -CurrentOperation "Starting to process extraction data.."        
+        Write-Progress -activity 'Azure Inventory' -Status "21% Complete." -PercentComplete 21 -CurrentOperation "Starting to process extraction data.."
 
 
         <######################################################### IMPORT UNSUPPORTED VERSION LIST ######################################################################>
@@ -603,7 +605,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\Support.json')
                     $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Support.json')
                 }
-            else 
+            else
                 {
                     Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/Support.json')
                     $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Support.json')
@@ -616,36 +618,36 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
         $DataActive = ('Azure Resource Inventory Reporting (' + ($resources.count) + ') Resources')
          <######################################################### DIAGRAM JOB ######################################################################>
-        
+
          Write-Debug ('Checking if Diagram Job Should be Run.')
          if ($Diagram.IsPresent) {
              Write-Debug ('Starting Diagram Processing Job.')
              Start-job -Name 'Diagram' -ScriptBlock {
- 
+
                  If ($($args[5]) -eq $true) {
                      $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[7]) + '/Extras/Diagram.ps1')
                  }
                  Else {
                      $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\Diagram.ps1')
                      $ModuSeq = $ModuSeq0.ReadToEnd()
-                     $ModuSeq0.Dispose()  
-                 }                  
-                     
+                     $ModuSeq0.Dispose()
+                 }
+
                  $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                     
+
                  $VisioRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
- 
+
                  $VisioJob = $VisioRun.BeginInvoke()
- 
+
                  while ($VisioJob.IsCompleted -contains $false) {}
- 
+
                  $VisioRun.EndInvoke($VisioJob)
- 
+
                  $VisioRun.Dispose()
- 
+
              } -ArgumentList $PSScriptRoot, $Subscriptions, $Resources, $Advisories, $DFile, $RunOnline, $Repo, $RawRepo   | Out-Null
          }
- 
+
         <######################################################### SECURITY CENTER JOB ######################################################################>
 
         Write-Debug ('Checking If Should Run Security Center Job.')
@@ -662,26 +664,26 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                         {
                             $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\SecurityCenter.ps1')
                         }
-                    else 
+                    else
                         {
                             $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '/Extras/SecurityCenter.ps1')
                         }
                     $ModuSeq = $ModuSeq0.ReadToEnd()
-                    $ModuSeq0.Dispose()  
-                }                  
-                    
+                    $ModuSeq0.Dispose()
+                }
+
                 $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                    
+
                 $SecRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3]))
-        
+
                 $SecJob = $SecRun.BeginInvoke()
-        
+
                 while ($SecJob.IsCompleted -contains $false) {}
-        
+
                 $SecResult = $SecRun.EndInvoke($SecJob)
-        
+
                 $SecRun.Dispose()
-        
+
                 $SecResult
 
             } -ArgumentList $PSScriptRoot, $Subscriptions , $Security, 'Processing' , $File, $RunOnline, $RawRepo | Out-Null
@@ -701,16 +703,16 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                         {
                             $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\Advisory.ps1')
                         }
-                        else 
+                        else
                         {
                             $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '/Extras/Advisory.ps1')
                         }
                     $ModuSeq = $ModuSeq0.ReadToEnd()
-                    $ModuSeq0.Dispose()  
-                }                  
-                    
+                    $ModuSeq0.Dispose()
+                }
+
                 $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                    
+
                 $AdvRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3]))
 
                 $AdvJob = $AdvRun.BeginInvoke()
@@ -726,7 +728,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             } -ArgumentList $PSScriptRoot, $Advisories, 'Processing' , $File, $RunOnline, $RawRepo | Out-Null
         }
 
-        <######################################################### SUBSCRIPTIONS JOB ######################################################################>   
+        <######################################################### SUBSCRIPTIONS JOB ######################################################################>
 
         Write-Debug ('Starting Subscriptions job.')
         Start-Job -Name 'Subscriptions' -ScriptBlock {
@@ -739,32 +741,32 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     {
                         $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\Subscriptions.ps1')
                     }
-                else 
+                else
                     {
                         $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '/Extras/Subscriptions.ps1')
                     }
                 $ModuSeq = $ModuSeq0.ReadToEnd()
-                $ModuSeq0.Dispose()  
-            }                  
-                
+                $ModuSeq0.Dispose()
+            }
+
             $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                
+
             $SubRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
-    
+
             $SubJob = $SubRun.BeginInvoke()
-    
+
             while ($SubJob.IsCompleted -contains $false) {}
-    
+
             $SubResult = $SubRun.EndInvoke($SubJob)
-    
+
             $SubRun.Dispose()
-    
+
             $SubResult
 
-        } -ArgumentList $PSScriptRoot, $Subscriptions, $Resources, 'Processing' , $File, $RunOnline, $RawRepo | Out-Null            
+        } -ArgumentList $PSScriptRoot, $Subscriptions, $Resources, 'Processing' , $File, $RunOnline, $RawRepo | Out-Null
 
         <######################################################### COMPUTE RESOURCE GROUP JOB ######################################################################>
-        
+
         Write-Debug ('Starting Compute Processing Job.')
         Start-job -Name 'Compute' -ScriptBlock {
 
@@ -778,7 +780,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     {
                         $Modules = Get-ChildItem -Path ($($args[0]) + '\Modules\Compute\*.ps1') -Recurse
                     }
-                else 
+                else
                     {
                         $Modules = Get-ChildItem -Path ($($args[0]) + '/Modules/Compute/*.ps1') -Recurse
                     }
@@ -794,16 +796,16 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                         $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                     $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
                     $ModuSeq = $ModuSeq0.ReadToEnd()
-                    $ModuSeq0.Dispose()  
-                }                  
+                    $ModuSeq0.Dispose()
+                }
 
 
                 $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                
+
                 New-Variable -Name ('ModRun' + $ModName)
-                New-Variable -Name ('ModJob' + $ModName)            
-  
-                Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))       
+                New-Variable -Name ('ModJob' + $ModName)
+
+                Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
 
                 Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
 
@@ -812,13 +814,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
             while ($Job.Runspace.IsCompleted -contains $false) {}
 
-            foreach ($Module in $Modules) {     
+            foreach ($Module in $Modules) {
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
                         $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                     } Else {
                         $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                } 
+                }
 
                 New-Variable -Name ('ModValue' + $ModName)
                 Set-Variable -Name ('ModValue' + $ModName) -Value (((get-variable -name ('ModRun' + $ModName)).Value).EndInvoke((get-variable -name ('ModJob' + $ModName)).Value))
@@ -827,13 +829,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
             $Hashtable = New-Object System.Collections.Hashtable
 
-            foreach ($Module in $Modules) {     
+            foreach ($Module in $Modules) {
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
                         $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                     } Else {
                         $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                } 
+                }
                 $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
             }
 
@@ -856,7 +858,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     {
                         $Modules = Get-ChildItem -Path ($($args[0]) + '\Modules\Networking\*.ps1') -Recurse
                     }
-                else 
+                else
                     {
                         $Modules = Get-ChildItem -Path ($($args[0]) + '/Modules/Networking/*.ps1') -Recurse
                     }
@@ -872,15 +874,15 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                         $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                     $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
                     $ModuSeq = $ModuSeq0.ReadToEnd()
-                    $ModuSeq0.Dispose()  
-                }                  
+                    $ModuSeq0.Dispose()
+                }
 
                 $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                
+
                 New-Variable -Name ('ModRun' + $ModName)
-                New-Variable -Name ('ModJob' + $ModName)            
-  
-                Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))       
+                New-Variable -Name ('ModJob' + $ModName)
+
+                Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
 
                 Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
 
@@ -889,13 +891,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
             while ($Job.Runspace.IsCompleted -contains $false) {}
 
-            foreach ($Module in $Modules) {     
+            foreach ($Module in $Modules) {
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
                         $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                     } Else {
                         $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                } 
+                }
 
                 New-Variable -Name ('ModValue' + $ModName)
                 Set-Variable -Name ('ModValue' + $ModName) -Value (((get-variable -name ('ModRun' + $ModName)).Value).EndInvoke((get-variable -name ('ModJob' + $ModName)).Value))
@@ -904,13 +906,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
             $Hashtable = New-Object System.Collections.Hashtable
 
-            foreach ($Module in $Modules) {     
+            foreach ($Module in $Modules) {
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
                         $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                     } Else {
                         $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                } 
+                }
                 $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
             }
 
@@ -933,7 +935,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     {
                         $Modules = Get-ChildItem -Path ($($args[0]) + '\Modules\Infrastructure\*.ps1') -Recurse
                     }
-                else 
+                else
                     {
                         $Modules = Get-ChildItem -Path ($($args[0]) + '/Modules/Infrastructure/*.ps1') -Recurse
                     }
@@ -949,16 +951,16 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                         $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                     $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
                     $ModuSeq = $ModuSeq0.ReadToEnd()
-                    $ModuSeq0.Dispose()  
-                }                  
+                    $ModuSeq0.Dispose()
+                }
 
 
                 $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                
+
                 New-Variable -Name ('ModRun' + $ModName)
-                New-Variable -Name ('ModJob' + $ModName)            
-  
-                Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))       
+                New-Variable -Name ('ModJob' + $ModName)
+
+                Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
 
                 Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
 
@@ -967,13 +969,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
             while ($Job.Runspace.IsCompleted -contains $false) {}
 
-            foreach ($Module in $Modules) {     
+            foreach ($Module in $Modules) {
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
                         $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                     } Else {
                         $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                } 
+                }
 
                 New-Variable -Name ('ModValue' + $ModName)
                 Set-Variable -Name ('ModValue' + $ModName) -Value (((get-variable -name ('ModRun' + $ModName)).Value).EndInvoke((get-variable -name ('ModJob' + $ModName)).Value))
@@ -982,13 +984,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
             $Hashtable = New-Object System.Collections.Hashtable
 
-            foreach ($Module in $Modules) {     
+            foreach ($Module in $Modules) {
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
                         $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                     } Else {
                         $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                } 
+                }
                 $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
             }
 
@@ -1011,10 +1013,10 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     {
                         $Modules = Get-ChildItem -Path ($($args[0]) + '\Modules\Data\*.ps1') -Recurse
                     }
-                else 
+                else
                     {
                         $Modules = Get-ChildItem -Path ($($args[0]) + '/Modules/Data/*.ps1') -Recurse
-                    }                    
+                    }
             }
             $job = @()
 
@@ -1027,15 +1029,15 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                         $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                     $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
                     $ModuSeq = $ModuSeq0.ReadToEnd()
-                    $ModuSeq0.Dispose()  
-                }                  
+                    $ModuSeq0.Dispose()
+                }
 
                 $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                
+
                 New-Variable -Name ('ModRun' + $ModName)
-                New-Variable -Name ('ModJob' + $ModName)            
-  
-                Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))       
+                New-Variable -Name ('ModJob' + $ModName)
+
+                Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
 
                 Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
 
@@ -1044,13 +1046,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
             while ($Job.Runspace.IsCompleted -contains $false) {}
 
-            foreach ($Module in $Modules) {     
+            foreach ($Module in $Modules) {
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
                         $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                     } Else {
                         $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                } 
+                }
 
                 New-Variable -Name ('ModValue' + $ModName)
                 Set-Variable -Name ('ModValue' + $ModName) -Value (((get-variable -name ('ModRun' + $ModName)).Value).EndInvoke((get-variable -name ('ModJob' + $ModName)).Value))
@@ -1059,13 +1061,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
             $Hashtable = New-Object System.Collections.Hashtable
 
-            foreach ($Module in $Modules) {     
+            foreach ($Module in $Modules) {
                 If ($($args[8]) -eq $true) {
                     $Modul = $Module.split('/')
                         $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                     } Else {
                         $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                } 
+                }
                 $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
             }
 
@@ -1078,10 +1080,10 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         Write-Debug ('Starting Jobs Collector.')
         Write-Progress -activity $DataActive -Status "Processing Inventory" -PercentComplete 0
         $c = 0
-        
+
         $JobNames = @()
 
-        $JobNames += 'Subscriptions' 
+        $JobNames += 'Subscriptions'
         $JobNames += 'Compute'
         $JobNames += 'Networking'
         $JobNames += 'Infrastructure'
@@ -1095,7 +1097,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         Foreach($Job in $Jobs)
             {
                 Write-Debug ('Current Status of Job:'+$Job.name+'. is: '+$Job.State)
-            }        
+            }
         while (get-job -Name $JobNames | Where-Object { $_.State -eq 'Running' }) {
             $jb = get-job -Name $JobNames
             $c = (((($jb.count - ($jb | Where-Object { $_.State -eq 'Running' }).Count)) / $jb.Count) * 100)
@@ -1128,7 +1130,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
         if($QuotaUsage.IsPresent)
             {
-                $Global:AzQuota = Receive-Job -Name 'Quota Usage' 
+                $Global:AzQuota = Receive-Job -Name 'Quota Usage'
             }
 
         $Global:SmaResources = @()
@@ -1137,7 +1139,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         $Global:SmaResources += $AzNetworking
         $Global:SmaResources += $AzInfrastructure
         $Global:SmaResources += $AzDatabase
-                
+
         <############################################################## Reporting ###################################################################>
 
         Write-Debug ('Starting Reporting Phase.')
@@ -1168,7 +1170,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 {
                     $Modules = Get-ChildItem -Path ($PSScriptRoot + '\Modules\*.ps1') -Recurse
                 }
-            else 
+            else
                 {
                     $Modules = Get-ChildItem -Path ($PSScriptRoot + '/Modules/*.ps1') -Recurse
                 }
@@ -1177,7 +1179,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         Write-Debug ('Modules Found: ' + $Modules.Count)
         $Lops = $Modules.count
         $ReportCounter = 0
-        
+
         foreach ($Module in $Modules) {
 
             $c = (($ReportCounter / $Lops) * 100)
@@ -1197,8 +1199,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 Write-Debug "Running Module: '$Module'"
 
             $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                
-            $ExcelRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($PSScriptRoot).AddArgument($null).AddArgument($InTag).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($SmaResources).AddArgument($TableStyle).AddArgument($Unsupported)      
+
+            $ExcelRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($PSScriptRoot).AddArgument($null).AddArgument($InTag).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($SmaResources).AddArgument($TableStyle).AddArgument($Unsupported)
 
             $ExcelJob = $ExcelRun.BeginInvoke()
 
@@ -1210,7 +1212,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
             $ReportCounter ++
 
-        } 
+        }
 
         Write-Debug ('Resource Reporting Phase Done.')
 
@@ -1232,7 +1234,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                             Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\QuotaUsage.ps1')
                             $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\QuotaUsage.ps1')
                         }
-                    else 
+                    else
                         {
                             Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/QuotaUsage.ps1')
                             $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/QuotaUsage.ps1')
@@ -1242,8 +1244,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 }
 
                 $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                    
-                $QuotaRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($File).AddArgument($Global:AzQuota).AddArgument($TableStyle)              
+
+                $QuotaRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($File).AddArgument($Global:AzQuota).AddArgument($TableStyle)
 
                 $QuotaJob = $QuotaRun.BeginInvoke()
 
@@ -1251,12 +1253,12 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
                 $QuotaRun.EndInvoke($QuotaJob)
 
-                $SubsRun.Dispose()       
-                
+                $SubsRun.Dispose()
+
                 Write-Progress -activity 'Azure Resource Inventory Quota Usage' -Status "100% Complete." -Completed
             }
 
- 
+
         <################################################ Security Center #######################################################>
         #### Security Center worksheet is generated apart
         Write-Debug ('Checking if Should Generate Security Center Sheet.')
@@ -1284,7 +1286,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                         Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\SecurityCenter.ps1')
                         $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\SecurityCenter.ps1')
                     }
-                else 
+                else
                     {
                         Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/SecurityCenter.ps1')
                         $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/SecurityCenter.ps1')
@@ -1292,10 +1294,10 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 $ModuSeq = $ModuSeq0.ReadToEnd()
                 $ModuSeq0.Dispose()
             }
-                
+
             $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                    
-            $SecExcelRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($null).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($Sec).AddArgument($TableStyle)              
+
+            $SecExcelRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($null).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($Sec).AddArgument($TableStyle)
 
             $SecExcelJob = $SecExcelRun.BeginInvoke()
 
@@ -1304,17 +1306,17 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             $SecExcelRun.EndInvoke($SecExcelJob)
 
             $SecExcelRun.Dispose()
-        }            
+        }
 
         <################################################ ADVISOR #######################################################>
-        #### Advisor worksheet is generated apart from the resources          
+        #### Advisor worksheet is generated apart from the resources
         Write-Debug ('Checking if Should Generate Advisory Sheet.')
-        if (!$SkipAdvisory.IsPresent) {        
+        if (!$SkipAdvisory.IsPresent) {
             Write-Debug ('Generating Advisor Sheet.')
-            $Global:advco = $Advisories.count            
+            $Global:advco = $Advisories.count
 
             Write-Progress -activity $DataActive -Status "Building Advisories Report" -PercentComplete 0 -CurrentOperation "Considering $advco Advisories"
-            
+
             while (get-job -Name 'Advisory' | Where-Object { $_.State -eq 'Running' }) {
                 Write-Progress -Id 1 -activity 'Processing Advisories' -Status "50% Complete." -PercentComplete 50
                 Write-Debug ('Advisory Job is: '+(get-job -Name 'Advisory').State)
@@ -1332,9 +1334,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 if($PSScriptRoot -like '*\*')
                     {
                         Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\Advisory.ps1')
-                        $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Advisory.ps1')                        
+                        $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Advisory.ps1')
                     }
-                else 
+                else
                     {
                         Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/Advisory.ps1')
                         $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Advisory.ps1')
@@ -1342,10 +1344,10 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 $ModuSeq = $ModuSeq0.ReadToEnd()
                 $ModuSeq0.Dispose()
             }
-                
+
             $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                    
-            $AdvExcelRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($Adv).AddArgument($TableStyle)              
+
+            $AdvExcelRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($Adv).AddArgument($TableStyle)
 
             $AdvExcelJob = $AdvExcelRun.BeginInvoke()
 
@@ -1353,7 +1355,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
             $AdvExcelRun.EndInvoke($AdvExcelJob)
 
-            $AdvExcelRun.Dispose()            
+            $AdvExcelRun.Dispose()
         }
 
             <################################################################### Subscriptions ###################################################################>
@@ -1372,7 +1374,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\Subscriptions.ps1')
                     $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Subscriptions.ps1')
                 }
-            else 
+            else
                 {
                     Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/Subscriptions.ps1')
                     $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Subscriptions.ps1')
@@ -1382,8 +1384,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         }
 
         $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-            
-        $SubsRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($null).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($AzSubs).AddArgument($TableStyle)              
+
+        $SubsRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($null).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($AzSubs).AddArgument($TableStyle)
 
         $SubsJob = $SubsRun.BeginInvoke()
 
@@ -1391,16 +1393,16 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
         $SubsRun.EndInvoke($SubsJob)
 
-        $SubsRun.Dispose()       
-        
+        $SubsRun.Dispose()
+
         Write-Progress -activity 'Azure Resource Inventory Subscriptions' -Status "100% Complete." -Completed
 
         <################################################################### CHARTS ###################################################################>
 
         Write-Debug ('Generating Overview sheet (Charts).')
-        
+
         Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "10% Complete." -PercentComplete 10 -CurrentOperation "Starting Excel Chart's Thread."
-        
+
         If ($RunOnline -eq $true) {
             Write-Debug ('Looking for the following file: '+$RawRepo + '/Extras/Charts.ps1')
             $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Charts.ps1')
@@ -1411,7 +1413,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\Charts.ps1')
                     $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Charts.ps1')
                 }
-            else 
+            else
                 {
                     Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/Charts.ps1')
                     $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Charts.ps1')
@@ -1425,8 +1427,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         $ScriptBlock = [Scriptblock]::Create($ModuSeq)
 
         Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "15% Complete." -PercentComplete 15 -CurrentOperation "Invoking Excel Chart's Thread."
-            
-        $ChartsRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($file).AddArgument($TableStyle).AddArgument($Global:PlatOS).AddArgument($Global:Subscriptions).AddArgument($Global:Resources.Count).AddArgument($ExtractionRunTime).AddArgument($ReportingRunTime)                  
+
+        $ChartsRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($file).AddArgument($TableStyle).AddArgument($Global:PlatOS).AddArgument($Global:Subscriptions).AddArgument($Global:Resources.Count).AddArgument($ExtractionRunTime).AddArgument($ReportingRunTime)
 
         $ChartsJob = $ChartsRun.BeginInvoke()
 
@@ -1447,7 +1449,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
 
     <#########################################################    END OF FUNCTIONS    ######################################################################>
-    
+
     if ($Help.IsPresent) {
         usageMode
         Exit
