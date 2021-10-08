@@ -34,7 +34,7 @@ If ($Task -eq 'Processing') {
             $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
             $data = $1.PROPERTIES
             $Tags = if (![string]::IsNullOrEmpty($1.tags.psobject.properties)) { $1.tags.psobject.properties }else { '0' }
-            foreach ($TagKey in $Tags) {
+            foreach ($Tag in $Tags) {
                 if ($data.networkInterfaces.count -EQ 0 -and
                     $data.subnets.count -EQ 0) {
                     $Orphaned = $True;
