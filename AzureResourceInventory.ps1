@@ -268,8 +268,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 write-host ""
                 $Global:DefaultPath = "$HOME/AzureResourceInventory/"
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
-            }
-            if ($PSVersionTable.Platform -eq 'Unix' -and !$CShell) {
+            } elseif ($PSVersionTable.Platform -eq 'Unix') {
                 write-host "PowerShell Unix Identified."
                 $Global:PlatOS = 'PowerShell Unix'
                 write-host ""
