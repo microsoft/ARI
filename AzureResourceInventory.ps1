@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.0.50                                                                  #
+#       Version: 2.0.51                                                                  #
 #                                                                                        #
-#       Date: 09/30/2021                                                                 #
+#       Date: 10/13/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -1460,6 +1460,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         RunMain
     }
 
+    $Global:VisioCheck = Get-ChildItem -Path $DFile -ErrorAction SilentlyContinue
 }
 
 $Measure = $Global:SRuntime.Totalminutes.ToString('#######.##')
@@ -1478,7 +1479,7 @@ Write-Host ('Excel file saved at: ') -NoNewline
 write-host $File -ForegroundColor Cyan
 Write-Host ''
 
-if ($Diagram.IsPresent) {
+if ($Diagram.IsPresent -and $Global:VisioCheck) {
     Write-Host ('Visio file saved at: ') -NoNewline
     write-host $DFile -ForegroundColor Cyan
     Write-Host ''
