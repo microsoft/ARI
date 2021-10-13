@@ -12,7 +12,7 @@ https://github.com/azureinventory/ARI/Extras/Charts.ps1
    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.1
+Version: 2.0.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -59,7 +59,7 @@ $Excel.Save()
 $Excel.Dispose()
 
 $TableStyleEx = if($PlatOS -eq 'PowerShell Desktop'){'Medium1'}else{$TableStyle}
-$TableStyle = if($PlatOS -eq 'PowerShell Desktop'){'Medium15'}
+$TableStyle = if($PlatOS -eq 'PowerShell Desktop'){'Medium15'}else{$TableStyle}
 #$TableStyle = 'Medium22'
 $Font = 'Segoe UI'
 
