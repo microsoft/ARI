@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.0.51                                                                  #
+#       Version: 2.1.00                                                                  #
 #                                                                                        #
-#       Date: 10/13/2021                                                                 #
+#       Date: 10/18/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -52,7 +52,7 @@
     Please note that while being developed by a Microsoft employee, Azure inventory Scripts is not a Microsoft service or product. Azure Inventory Scripts are a personal driven project, there are none implicit or explicit obligations related to this project, it is provided 'as is' with no warranties and confer no rights.
 #>
 
-param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help)
+param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help, [switch]$DeviceLogin)
 
     if ($Debug.IsPresent) {$DebugPreference = 'Continue'}
 
@@ -186,7 +186,14 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                 Write-Debug ('Cleaning az account cache')
                 az account clear | Out-Null
                 Write-Debug ('Calling az login')
-                az login --only-show-errors | Out-Null
+                if($DeviceLogin.IsPresent)
+                    {
+                        az login --use-device-code
+                    }
+                else 
+                    {
+                        az login --only-show-errors | Out-Null
+                    }
                 write-host ""
                 write-host ""
                 $Tenants = az account list --query [].homeTenantId -o tsv --only-show-errors | Sort-Object -Unique
@@ -208,7 +215,14 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                     [int]$SelectTenant = read-host "Select Tenant ( default 1 )"
                     $defaultTenant = --$SelectTenant
                     $TenantID = $Tenants[$defaultTenant]
-                    az login -t $TenantID | Out-Null
+                    if($DeviceLogin.IsPresent)
+                        {
+                            az login --use-device-code -t $TenantID
+                        }
+                    else 
+                        {
+                            az login -t $TenantID --only-show-errors | Out-Null
+                        }
                 }
 
                 write-host "Extracting from Tenant $TenantID"
@@ -229,10 +243,17 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
             }
             else {
                 az account clear | Out-Null
-                if (!$appid) {
-                    az login -t $TenantID | Out-Null
+                if (!$Appid) {
+                    if($DeviceLogin.IsPresent)
+                        {
+                            az login --use-device-code -t $TenantID
+                        }
+                    else 
+                        {
+                            az login -t $TenantID --only-show-errors | Out-Null
+                        }
                     }
-                elseif ($appid -and $secret -and $tenantid) {
+                elseif ($Appid -and $Secret -and $tenantid) {
                     write-host "Using Service Principal Authentication Method"
                     az login --service-principal -u $appid -p $secret -t $TenantID | Out-Null
                 }
@@ -261,7 +282,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
         function checkPS() {
             Write-Debug ('Starting checkPS function')
-            $CShell = Get-CloudDrive
+            $CShell = try{Get-CloudDrive}catch{}
             if ($CShell) {
                 write-host 'Azure CloudShell Identified.'
                 $Global:PlatOS = 'Azure CloudShell'
@@ -352,15 +373,10 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
                         } else {
                             $GraphQuery = "advisorresources | where resourceGroup == '$ResourceGroup' | order by id asc"
                                 }
-                        try {
-                            $Advisor = az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                        } catch {
-                            $Advisor = az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors
-                                    $Advisor = $Advisor.tolower() | ConvertFrom-Json
-                                }
+                            $Advisor = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
-                    if ($Advisor.data) { $Global:Advisories += $Advisor.data } else { $Global:Advisories += $Advisor }
-                    Start-Sleep 3
+                    $Global:Advisories += $Advisor.data
+                    Start-Sleep 2
                     $Limit = $Limit + 1000
                 }
                 Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "Completed" -Completed
@@ -582,7 +598,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
         #### Creating Excel file variable:
         $Global:File = ($DefaultPath + "AzureResourceInventory_Report_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xlsx")
-        $Global:DFile = ($DefaultPath + "AzureDiagramInventory_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".vsdx")
+        $Global:DFile = ($DefaultPath + "AzureResourceInventory_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".vsdx")
+        $Global:DDFile = ($DefaultPath + "AzureResourceInventory_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xml")
         Write-Debug ('Excel file:' + $File)
 
         #### Generic Conditional Text rules, Excel style specifications for the spreadsheets and tables:
@@ -617,34 +634,65 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
         $Unsupported = $ModuSeq | ConvertFrom-Json
 
         $DataActive = ('Azure Resource Inventory Reporting (' + ($resources.count) + ') Resources')
+
+        <######################################################### DIAGRAM JOB ######################################################################>
+                
+        Write-Debug ('Checking if Draw.io Diagram Job Should be Run.')
+        if ($Diagram.IsPresent) {
+            Write-Debug ('Starting Draw.io Diagram Processing Job.')
+            Start-job -Name 'DrawDiagram' -ScriptBlock {
+
+                If ($($args[5]) -eq $true) {
+                    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[7]) + '/Extras/DrawIODiagram.ps1')
+                }
+                Else {
+                    $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\DrawIODiagram.ps1')
+                    $ModuSeq = $ModuSeq0.ReadToEnd()
+                    $ModuSeq0.Dispose()  
+                }                  
+                    
+                $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+                    
+                $DrawRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
+
+                $DrawJob = $DrawRun.BeginInvoke()
+
+                while ($DrawJob.IsCompleted -contains $false) {}
+
+                $DrawRun.EndInvoke($DrawJob)
+
+                $DrawRun.Dispose()
+
+            } -ArgumentList $PSScriptRoot, $Subscriptions, $Resources, $Advisories, $DDFile, $RunOnline, $Repo, $RawRepo   | Out-Null
+        }
          <######################################################### DIAGRAM JOB ######################################################################>
-
-         Write-Debug ('Checking if Diagram Job Should be Run.')
+        
+         Write-Debug ('Checking if Visio Diagram Job Should be Run.')
          if ($Diagram.IsPresent) {
-             Write-Debug ('Starting Diagram Processing Job.')
-             Start-job -Name 'Diagram' -ScriptBlock {
-
+             Write-Debug ('Starting Visio Diagram Processing Job.')
+             Start-job -Name 'VisioDiagram' -ScriptBlock {
+ 
                  If ($($args[5]) -eq $true) {
-                     $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[7]) + '/Extras/Diagram.ps1')
+                     $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[7]) + '/Extras/VisioDiagram.ps1')
                  }
                  Else {
-                     $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\Diagram.ps1')
+                     $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\VisioDiagram.ps1')
                      $ModuSeq = $ModuSeq0.ReadToEnd()
-                     $ModuSeq0.Dispose()
-                 }
-
+                     $ModuSeq0.Dispose()  
+                 }                  
+                     
                  $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
+                     
                  $VisioRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
-
+ 
                  $VisioJob = $VisioRun.BeginInvoke()
-
+ 
                  while ($VisioJob.IsCompleted -contains $false) {}
-
+ 
                  $VisioRun.EndInvoke($VisioJob)
-
+ 
                  $VisioRun.Dispose()
-
+ 
              } -ArgumentList $PSScriptRoot, $Subscriptions, $Resources, $Advisories, $DFile, $RunOnline, $Repo, $RawRepo   | Out-Null
          }
 
@@ -1444,6 +1492,19 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $appid, $secret, $Re
 
         Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "100% Complete." -Completed
 
+        if($Diagram.IsPresent)
+        {
+        Write-Progress -activity 'Diagrams' -Status "Completing Diagram" -PercentComplete 70 -CurrentOperation "Consolidating Diagram"
+
+            while (get-job -Name 'DrawDiagram','VisioDiagram' | Where-Object { $_.State -eq 'Running' }) {
+                Write-Progress -Id 1 -activity 'Processing Diagrams' -Status "50% Complete." -PercentComplete 50
+                Start-Sleep -Seconds 2
+            }
+            Write-Progress -Id 1 -activity 'Processing Diagrams'  -Status "100% Complete." -Completed
+
+        Write-Progress -activity 'Diagrams' -Status "Closing Diagram File" -Completed
+        }
+
         Get-Job | Wait-Job | Remove-Job
     }
 
@@ -1478,6 +1539,12 @@ Write-Host ''
 Write-Host ('Excel file saved at: ') -NoNewline
 write-host $File -ForegroundColor Cyan
 Write-Host ''
+
+if($Global:PlatOS -eq 'PowerShell Desktop' -and $Diagram.IsPresent) {
+    Write-Host ('Draw.io Diagram file saved at: ') -NoNewline
+    write-host $DDFile -ForegroundColor Cyan
+    Write-Host ''
+    }
 
 if ($Diagram.IsPresent -and $Global:VisioCheck) {
     Write-Host ('Visio file saved at: ') -NoNewline
