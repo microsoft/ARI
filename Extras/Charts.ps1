@@ -12,7 +12,7 @@ https://github.com/azureinventory/ARI/Extras/Charts.ps1
    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.2
+Version: 2.1.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
