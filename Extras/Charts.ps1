@@ -721,7 +721,7 @@ if ($P9Name -eq 'Virtual Machines') {
 Close-ExcelPackage $excel
 
 
-
+$File = "C:\AzureResourceInventory\AzureResourceInventory_Report_2021-10-21_18_40.xlsx"
 
 $application = New-Object -ComObject Excel.Application
 if ($application) {
