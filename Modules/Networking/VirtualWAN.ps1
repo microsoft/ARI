@@ -1,4 +1,4 @@
-<#
+﻿<#
 .Synopsis
 Inventory for Azure Virtual WAN
 
@@ -27,7 +27,7 @@ If ($Task -eq 'Processing') {
     $VirtualWAN = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/virtualwans' }
     $VirtualHub = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/virtualhubs' }
     $VPNSite = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/vpnsites' }
-    #$ERSite = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/expressroutegateways' }
+    #$ERSite = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/expressroutegateways'}
 
     if($VirtualWAN)
         {

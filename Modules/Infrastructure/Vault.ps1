@@ -1,4 +1,4 @@
-<#
+﻿<#
 .Synopsis
 Inventory for Azure Storage Account
 

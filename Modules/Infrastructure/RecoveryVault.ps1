@@ -1,4 +1,4 @@
-<#
+﻿<#
 .Synopsis
 Inventory for Azure Recovery Services Vault
 
