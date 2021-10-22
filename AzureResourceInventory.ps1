@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.1.00                                                                  #
+#       Version: 2.1.03                                                                  #
 #                                                                                        #
-#       Date: 10/18/2021                                                                 #
+#       Date: 10/22/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -373,7 +373,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                         } else {
                             $GraphQuery = "advisorresources | where resourceGroup == '$ResourceGroup' | order by id asc"
                                 }
-                            $Advisor = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                        
+                        $Advisor = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                     $Global:Advisories += $Advisor.data
                     Start-Sleep 2

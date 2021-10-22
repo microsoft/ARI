@@ -13,7 +13,7 @@ https://github.com/azureinventory/ARI/Modules/Networking/Networkeecuritytroupwor
    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.0.2
 First Release Date: 2021.10.05
 Authors: Christopher Lewis
 
@@ -34,43 +34,44 @@ If ($Task -eq 'Processing') {
             $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
             $data = $1.PROPERTIES
             $Tags = if (![string]::IsNullOrEmpty($1.tags.psobject.properties)) { $1.tags.psobject.properties }else { '0' }
-            foreach ($Tag in $Tags) {
-                if ($data.networkInterfaces.count -EQ 0 -and
-                    $data.subnets.count -EQ 0) {
-                    $Orphaned = $True;
-                } else {
-                    $Orphaned = $false;
+            foreach ($2 in $data.securityRules)
+            {
+                foreach ($Tag in $Tags) {
+                    if ($data.networkInterfaces.count -eq 0 -and $data.subnets.count -eq 0) 
+                    {
+                        $Orphaned = $true;
+                    } else {
+                        $Orphaned = $false;
+                    }
+
+                    $obj = @{
+                        'Subscription'                 = $sub1.name;
+                        'Resource Group'               = $1.RESOURCEGROUP;
+                        'Name'                         = $1.NAME;
+                        'Location'                     = $1.LOCATION;
+                        'Security Rules'               = [string]$2.name;
+                        'Direction'                    = [string]$2.properties.direction;
+                        'Access'                       = [string]$2.properties.Access;
+                        'Priority'                     = [string]$2.properties.priority;
+                        'Protocol'                     = [string]$2.properties.protocol;
+                        'Source Address Prefixes'      = [string]$2.properties.sourceAddressPrefixes;
+                        'Source Address Prefix'        = [string]$2.properties.sourceAddressPrefix;
+                        'Source Port Ranges'           = [string]$2.properties.sourcePortRanges;
+                        'Source Port Range'            = [string]$2.properties.sourcePortRange;
+                        'Destination Address Prefixes' = [string]$2.properties.destinationAddressPrefixes;
+                        'Destination Address Prefix'   = [string]$2.properties.destinationAddressPrefix;
+                        'Destination Port Ranges'      = [string]$2.properties.destinationPortRanges;
+                        'Destination Port Range'       = [string]$2.properties.destinationPortRange;
+                        'NICs'                         = [string]$data.networkInterfaces.id -Join ",";
+                        'Subnets'                      = [string]$data.Subnets.id;
+                        'Orphaned'                     = $Orphaned;
+                        'Tag Name'                     = [string]$Tag.Name;
+                        'Tag Value'                    = [string]$Tag.Value
+                    }
+                    $tmp += $obj
+                    if ($ResUCount -eq 1) { $ResUCount = 0 }
                 }
-
-                $obj = @{
-                    'Subscription'                 = $sub1.name;
-                    'Resource Group'               = $1.RESOURCEGROUP;
-                    'Name'                         = $1.NAME;
-                    'Location'                     = $1.LOCATION;
-
-                    'Security Rules'               = [string]$data.securityRules.name;
-                    'Direction'                    = [string]$data.securityRules.properties.direction;
-                    'Access'                       = [string]$data.securityRules.properties.Access;
-                    'Priority'                     = [string]$data.securityRules.properties.priority;
-                    'Protocol'                     = [string]$data.securityRules.properties.protocol;
-                    'Source Address Prefixes'      = [string]$data.securityRules.properties.sourceAddressPrefixes;
-                    'Source Address Prefix'        = [string]$data.securityRules.properties.sourceAddressPrefix;
-                    'Source Port Ranges'           = [string]$data.securityRules.properties.sourcePortRanges;
-                    'Source Port Range'            = [string]$data.securityRules.properties.sourcePortRange;
-                    'Destination Address Prefixes' = [string]$data.securityRules.properties.destinationAddressPrefixes;
-                    'Destination Address Prefix'   = [string]$data.securityRules.properties.destinationAddressPrefix;
-                    'Destination Port Ranges'      = [string]$data.securityRules.properties.destinationPortRanges;
-                    'Destination Port Range'       = [string]$data.securityRules.properties.destinationPortRange;
-                    'NICs'                         = [string]$data.networkInterfaces.id -Join ",";
-                    'Subnets'                      = [string]$data.Subnets.id;
-                    'Orphaned'                     = $Orphaned
-
-                    'Tag Name'                     = [string]$Tag.Name;
-                    'Tag Value'                    = [string]$Tag.Value
-                }
-                $tmp += $obj
-                if ($ResUCount -eq 1) { $ResUCount = 0 }
-            }
+            }    
         }
         $tmp
     }
