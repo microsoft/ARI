@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.1.03                                                                  #
+#       Version: 2.1.04                                                                  #
 #                                                                                        #
-#       Date: 10/22/2021                                                                 #
+#       Date: 11/04/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -524,13 +524,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     $Limit = 0
 
                     while ($Looper -lt $Loop) {
-                    try {
                         $GraphQuery = "desktopvirtualizationresources | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $AVD = az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                    } catch {
-                        $AVD = az graph query -q $GraphQuery  --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                                        $AVD = $AVD.tolower() | ConvertFrom-Json
-                                    }
+                        $AVD = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $AVD.data
                         Start-Sleep 2
