@@ -48,6 +48,7 @@ If ($Task -eq 'Processing') {
                                             'SKU'                   = $1.sku.name;
                                             'Idle Timeout (Min)'    = $data.idleTimeoutInMinutes;
                                             'Public IP'             = [string]$data.publicipaddresses.id.split("/")[8];
+                                            'Public Prefixes'       = [string]$data.publicipprefixes.id.split("/")[8];
                                             'VNET'                  = [string]$2.id.split("/")[8];
                                             'Subnet'                = [string]$2.id.split("/")[10];
                                             'Resource U'            = $ResUCount;
@@ -76,6 +77,7 @@ Else {
         $Exc.Add('SKU')
         $Exc.Add('Idle Timeout (Min)')
         $Exc.Add('Public IP')
+        $Exc.Add('Public Prefixes')
         $Exc.Add('VNET')
         $Exc.Add('Subnet')
         if($InTag)
