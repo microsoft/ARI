@@ -13,7 +13,7 @@ https://github.com/azureinventory/ARI/Modules/Networking/PublicIP.ps1
    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -88,7 +88,7 @@ If ($Task -eq 'Processing') {
 }
 Else {
     if ($SmaResources.PublicIP) {
-        $condtxtpip = New-ConditionalText Underutilized -Range I:I
+        $condtxtpip = New-ConditionalText Underutilized -Range J:J
         Write-Debug ('Generating Public IP sheet for: ' + $pubip.count + ' Public IPs.')
 
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
