@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.1.06                                                                  #
+#       Version: 2.1.07                                                                  #
 #                                                                                        #
-#       Date: 11/12/2021                                                                 #
+#       Date: 11/15/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -290,19 +290,22 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 $Global:DefaultPath = "$HOME/AzureResourceInventory/"
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
             }
-            if ($PSVersionTable.Platform -eq 'Unix' -and !$CShell) {
-                write-host "PowerShell Unix Identified."
-                $Global:PlatOS = 'PowerShell Unix'
-                write-host ""
-                $Global:DefaultPath = "$HOME/AzureResourceInventory/"
-                LoginSession
-            }
-            else {
-                write-host "PowerShell Desktop Identified."
-                $Global:PlatOS = 'PowerShell Desktop'
-                write-host ""
-                $Global:DefaultPath = "C:\AzureResourceInventory\"
-                LoginSession
+            else
+            {
+                if ($PSVersionTable.Platform -eq 'Unix') {
+                    write-host "PowerShell Unix Identified."
+                    $Global:PlatOS = 'PowerShell Unix'
+                    write-host ""
+                    $Global:DefaultPath = "$HOME/AzureResourceInventory/"
+                    LoginSession
+                }
+                else {
+                    write-host "PowerShell Desktop Identified."
+                    $Global:PlatOS = 'PowerShell Desktop'
+                    write-host ""
+                    $Global:DefaultPath = "C:\AzureResourceInventory\"
+                    LoginSession
+                }
             }
         }
 
