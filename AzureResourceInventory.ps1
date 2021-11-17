@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.1.07                                                                  #
+#       Version: 2.1.8                                                                   #
 #                                                                                        #
-#       Date: 11/15/2021                                                                 #
+#       Date: 11/17/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -897,7 +897,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
             If ($($args[8]) -eq $true) {
                 $OnlineRepo = Invoke-WebRequest -Uri ($($args[9]) + '/Networking')
-                $Modules = $OnlineRepo.Links | Where-Object-Object { $_.href -like '*.ps1' }
+                $Modules = $OnlineRepo.Links | Where-Object { $_.href -like '*.ps1' }
                 $Modules = $Modules.href
             }
             Else {
