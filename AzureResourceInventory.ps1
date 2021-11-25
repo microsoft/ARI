@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.1.8                                                                   #
+#       Version: 2.1.9                                                                   #
 #                                                                                        #
-#       Date: 11/17/2021                                                                 #
+#       Date: 11/25/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -397,7 +397,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
             Write-Debug ('Extracting total number of Security Advisories from Tenant')
             $SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
-            if ($SecSize.data) { $SecSizeNum = $SecSize.data.'count_' } else { $SecSizeNum = $SecSize.'count_' }
+            $SecSizeNum = $SecSize.data.'count_'
 
 
             if ($SecSizeNum -ge 1) {
@@ -408,14 +408,11 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 while ($Looper -lt $Loop) {
                     $Looper ++
                     Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $GraphQuery = "securityresources | order by id asc | where properties['status']['code'] == 'Unhealthy'"
-                    try {
-                            $SecCenter = az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors | ConvertFrom-Json
-                        } catch {
-                            $SecCenter = az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors
-                        $SecCenter = $SecCenter.tolower() | ConvertFrom-Json
-                    }
-                    if ($SecCenter.data) { $Global:Security += $SecCenter.data } else { $Global:Security += $SecCenter }
+                        $GraphQuery = "securityresources | where properties['status']['code'] == 'Unhealthy' | order by id asc"
+                    
+                            $SecCenter = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+
+                    $Global:Security += $SecCenter.data
                     Start-Sleep 3
                     $Limit = $Limit + 1000
                 }
