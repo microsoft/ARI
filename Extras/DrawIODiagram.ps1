@@ -20,7 +20,7 @@ Authors: Claudio Merola and Renato Gregio
 param($Subscriptions, $Resources, $Advisories, $DDFile)
 
 
-$Global:FullEnvironment = $true
+$Global:FullEnvironment = $false
 
 Function Icon {
 Param($Style,$x,$y,$w,$h)
