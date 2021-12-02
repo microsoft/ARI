@@ -12,7 +12,7 @@ https://github.com/azureinventory/ARI/Extras/DrawIODiagram.ps1
    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.1.7
+Version: 2.1.8
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -20,7 +20,7 @@ Authors: Claudio Merola and Renato Gregio
 param($Subscriptions, $Resources, $Advisories, $DDFile)
 
 
-$Global:FullEnvironment = $false
+$Global:FullEnvironment = $true
 
 Function Icon {
 Param($Style,$x,$y,$w,$h)
@@ -569,6 +569,8 @@ Function FullEnvironment
     foreach($AZVNETs2 in $AZVNETs)
         {             
             $Global:VNET2 = $AZVNETs2
+
+            $Global:Alt0 = $Global:Alt
 
             if($VNET2.id -notin $VNETHistory.vnet)
                 {
