@@ -12,14 +12,15 @@ https://github.com/azureinventory/ARI/Extras/DrawIODiagram.ps1
    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.1.8
+Version: 2.1.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
 #>
 param($Subscriptions, $Resources, $Advisories, $DDFile)
 
-
+<# Change this variable to $true to draw the full environment #>
+#$Global:FullEnvironment = $true
 $Global:FullEnvironment = $false
 
 Function Icon {

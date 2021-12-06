@@ -12,15 +12,16 @@ https://github.com/azureinventory/ARI/Extras/VisioDiagram.ps1
    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.3
+Version: 2.0.4
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
 #>
 param($Subscriptions, $Resources, $Advisories, $DFile)
 
-
-
+<# Change this variable to $true to draw the full environment #>
+#$Global:FullEnvironment = $true
+$Global:FullEnvironment = $false
 
 <# Function to populate the variables that are going to be used in the drawing #>
 Function Variables0 
@@ -69,9 +70,7 @@ Function Variables0
 Function Visio 
 {
     try
-        {
-
-            $Global:FullEnvironment = $false
+        {            
             <########################## Openning Visio and Creating Page #############################>
 
             $Global:application = New-Object -ComObject Visio.Application

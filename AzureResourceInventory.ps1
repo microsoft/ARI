@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.1.9                                                                   #
+#       Version: 2.1.10                                                                  #
 #                                                                                        #
-#       Date: 11/25/2021                                                                 #
+#       Date: 12/03/2021                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -1297,7 +1297,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
                 $QuotaRun.EndInvoke($QuotaJob)
 
-                $SubsRun.Dispose()
+                $QuotaRun.Dispose()
 
                 Write-Progress -activity 'Azure Resource Inventory Quota Usage' -Status "100% Complete." -Completed
             }
