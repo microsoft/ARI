@@ -10,7 +10,7 @@ Excel Sheet Name: VM
 https://github.com/azureinventory/ARI/Modules/Compute/VM.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
 Version: 2.0.0

@@ -10,10 +10,10 @@ Excel Sheet Name: StorageAcc
 https://github.com/azureinventory/ARI/Modules/Infrastructure/StorageAcc.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -63,6 +63,7 @@ If ($Task -eq 'Processing') {
                             'Table Address'                         = [string]$data.primaryEndpoints.table;
                             'Queue Address'                         = [string]$data.primaryEndpoints.queue;
                             'Network Acls'                          = $data.networkAcls.defaultAction;
+                            'Hierarchical namespace'                = $data.isHnsEnabled;
                             'Resource U'                            = $ResUCount;
                             'Tag Name'                              = [string]$Tag.Name;
                             'Tag Value'                             = [string]$Tag.Value
@@ -105,6 +106,7 @@ Else {
         $Exc.Add('Primary Location')
         $Exc.Add('Status Of Primary')
         $Exc.Add('Secondary Location')
+        $Exc.Add('Hierarchical namespace')
         $Exc.Add('Blob Address')
         $Exc.Add('File Address')
         $Exc.Add('Table Address')
