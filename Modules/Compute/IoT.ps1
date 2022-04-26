@@ -10,10 +10,10 @@ Excel Sheet Name: CONTAINER
 https://github.com/azureinventory/ARI/Modules/Compute/IoT.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -22,10 +22,9 @@ Authors: Claudio Merola and Renato Gregio
 <######## Default Parameters. Don't modify this ########>
 
 param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle)
- 
+
 If ($Task -eq 'Processing')
 {
- 
     <######### Insert the resource extraction here ########>
         
         $IoT = $Resources | Where-Object {$_.TYPE -eq 'microsoft.devices/iothubs'}
@@ -35,7 +34,7 @@ If ($Task -eq 'Processing')
     if($IoT)
         {
             $tmp = @()
-            
+
             foreach ($1 in $IoT) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
@@ -43,7 +42,8 @@ If ($Task -eq 'Processing')
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
-                            'Subscription'                     = $sub1.name;
+                            'ID'                               = $1.id;
+                            'Subscription'                     = $sub1.Name;
                             'Resource Group'                   = $1.RESOURCEGROUP;
                             'Name'                             = $1.NAME;
                             'HostName'                         = $data.hostname;
@@ -80,6 +80,7 @@ Else
 
     if($SmaResources.IoT)
     {
+        $TableName = ('IoTTable_'+($SmaResources.IoT.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -110,7 +111,7 @@ Else
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'IoT Hubs' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureIOT' -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'IoT Hubs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
     
     }
 }

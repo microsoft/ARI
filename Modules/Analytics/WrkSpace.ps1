@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle)
+param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported, $AzCost)
  
 If ($Task -eq 'Processing')
 {
@@ -43,10 +43,13 @@ If ($Task -eq 'Processing')
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
-                            'Subscription'     = $sub1.name;
+                            'ID'               = $1.id;
+                            'Subscription'     = $sub1.Name;
                             'Resource Group'   = $1.RESOURCEGROUP;
                             'Name'             = $1.NAME;
                             'Location'         = $1.LOCATION;
+                            'Currency'         = $Cost.Currency;
+                            'Daily Cost'       = '{0:C}' -f $Cost.Cost;
                             'SKU'              = $data.sku.name;
                             'Retention Days'   = $data.retentionInDays;
                             'Daily Quota (GB)' = [decimal]$data.workspaceCapping.dailyQuotaGb;
@@ -71,8 +74,11 @@ Else
     if($SmaResources.WrkSpace)
     {
 
+        $TableName = ('WorkSpaceTable_'+($SmaResources.WrkSpace.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0.0'
-            
+
+        $condtxt = @()
+
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
@@ -91,7 +97,7 @@ Else
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Workspaces' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureWorkspace' -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Workspaces' -AutoSize -MaxAutoSizeRows 100 -ConditionalText $condtxt -TableName $TableName -TableStyle $tableStyle -Style $Style
 
 
         <######## Insert Column comments and documentations here following this model #########>

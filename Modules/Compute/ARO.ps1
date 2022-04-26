@@ -10,10 +10,10 @@ Excel Sheet Name: ARO
 https://github.com/azureinventory/ARI/Modules/Compute/ARO.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -22,9 +22,9 @@ Authors: Claudio Merola and Renato Gregio
 <######## Default Parameters. Don't modify this ########>
 
 param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle)
- 
+
 If ($Task -eq 'Processing') {
- 
+
     <######### Insert the resource extraction here ########>
 
     $ARO = $Resources | Where-Object { $_.TYPE -eq 'microsoft.redhatopenshift/openshiftclusters' }
@@ -34,7 +34,6 @@ If ($Task -eq 'Processing') {
     if($ARO)
         {
             $tmp = @()
-
             foreach ($1 in $ARO) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
@@ -42,7 +41,8 @@ If ($Task -eq 'Processing') {
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
-                            'Subscription'         = $sub1.name;
+                            'ID'                   = $1.id;
+                            'Subscription'         = $sub1.Name;
                             'Resource Group'       = $1.RESOURCEGROUP;
                             'Clusters'             = $1.NAME;
                             'Location'             = $1.LOCATION;
@@ -85,6 +85,7 @@ Else {
 
     if ($SmaResources.ARO) {
 
+        $TableName = ('AROTable_'+($SmaResources.ARO.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -122,7 +123,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'ARO' -AutoSize -TableName 'OpenShift' -MaxAutoSizeRows 100 -TableStyle $tableStyle -Numberformat '0' -Style $Style
+        Export-Excel -Path $File -WorksheetName 'ARO' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -Numberformat '0' -Style $Style
     
     }
 }

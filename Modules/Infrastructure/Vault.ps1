@@ -10,10 +10,10 @@ Excel Sheet Name: Vault
 https://github.com/azureinventory/ARI/Modules/Infrastructure/Vault.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,11 +21,10 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle)
- 
+param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+
 If ($Task -eq 'Processing')
 {
- 
     <######### Insert the resource extraction here ########>
 
         $VAULT = $Resources | Where-Object {$_.TYPE -eq 'microsoft.keyvault/vaults'}
@@ -46,7 +45,8 @@ If ($Task -eq 'Processing')
                     {
                     foreach ($Tag in $Tags) {
                         $obj = @{
-                            'Subscription'               = $sub1.name;
+                            'ID'                         = $1.id;
+                            'Subscription'               = $sub1.Name;
                             'Resource Group'             = $1.RESOURCEGROUP;
                             'Name'                       = $1.NAME;
                             'Location'                   = $1.LOCATION;
@@ -83,10 +83,12 @@ Else
     if($SmaResources.Vault)
     {
 
+        $TableName = ('VaultTable_'+($SmaResources.Vault.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
-        $condtxt = $(New-ConditionalText false -Range I:I
-        New-ConditionalText falso -Range I:I)
+        $condtxt = @()
+        $condtxt += New-ConditionalText false -Range I:I
+        $condtxt += New-ConditionalText falso -Range I:I
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -114,7 +116,7 @@ Else
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Key Vaults' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureKeyVault' -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Key Vaults' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
         <######## Insert Column comments and documentations here following this model #########>
 

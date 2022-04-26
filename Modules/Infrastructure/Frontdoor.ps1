@@ -10,10 +10,10 @@ Excel Sheet Name: Frontdoor
 https://github.com/azureinventory/ARI/Modules/Networking/Frontdoor.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -40,7 +40,8 @@ If ($Task -eq 'Processing') {
                         foreach ($Tag in $Tags) 
                             {  
                                 $obj = @{
-                                    'Subscription'   = $sub1.name;
+                                    'ID'             = $1.id;
+                                    'Subscription'   = $sub1.Name;
                                     'Resource Group' = $1.RESOURCEGROUP;
                                     'Name'           = $1.NAME;
                                     'Location'       = $1.LOCATION;
@@ -54,6 +55,7 @@ If ($Task -eq 'Processing') {
                                     'Load Balancing' = [string]$data.loadBalancingSettings.name;
                                     'Routing Rules'  = [string]$data.routingRules.name;
                                     'Resource U'     = $ResUCount;
+                                    'Total'          = $Total;
                                     'Tag Name'       = [string]$Tag.Name;
                                     'Tag Value'      = [string]$Tag.Value
                                 }
@@ -66,9 +68,11 @@ If ($Task -eq 'Processing') {
 }
 Else {
     if ($SmaResources.FRONTDOOR) {
+
+        $TableName = ('FRONTDOORTable_'+($SmaResources.FRONTDOOR.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
-        $condtxt = @()        
+        $condtxt = @()
         $condtxt += New-ConditionalText FALSE -Range H:H
         $condtxt += New-ConditionalText FALSO -Range H:H
 
@@ -96,7 +100,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'FrontDoor' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureFrontDoor' -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'FrontDoor' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
     
     }
 }

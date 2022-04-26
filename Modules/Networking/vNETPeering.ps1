@@ -10,10 +10,10 @@ Excel Sheet Name: vNETPeering
 https://github.com/azureinventory/ARI/Modules/Networking/vNETPeering.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -34,7 +34,7 @@ If ($Task -eq 'Processing') {
 
             foreach ($1 in $VNETPeering) {
                 $ResUCount = 1
-                $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+                $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 foreach ($2 in $data.addressSpace.addressPrefixes) {
@@ -42,7 +42,8 @@ If ($Task -eq 'Processing') {
                         foreach ($5 in $4.properties.remoteAddressSpace.addressPrefixes) {
                                 foreach ($Tag in $Tags) {  
                                     $obj = @{
-                                        'Subscription'                          = $sub1.name;
+                                        'ID'                                    = $1.id;
+                                        'Subscription'                          = $sub1.Name;
                                         'Resource Group'                        = $1.RESOURCEGROUP;
                                         'VNET Name'                             = $1.NAME;
                                         'Location'                              = $1.LOCATION;
@@ -73,6 +74,8 @@ If ($Task -eq 'Processing') {
 }
 Else {
     if ($SmaResources.VNETPeering) {
+
+        $TableName = ('PeeringsTable_'+($SmaResources.VNETPeering.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -101,7 +104,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Peering' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureVNETPeerings' -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Peering' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
     
     }
 }

@@ -10,16 +10,16 @@ Excel Sheet Name: AppGW
 https://github.com/azureinventory/ARI/Modules/Networking/AppGW.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
 #>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle) 
+param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported) 
 If ($Task -eq 'Processing') {
 
     $APPGTW = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/applicationgateways' }
@@ -30,7 +30,7 @@ If ($Task -eq 'Processing') {
 
             foreach ($1 in $APPGTW) {
                 $ResUCount = 1
-                $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+                $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 if([string]::IsNullOrEmpty($data.autoscaleConfiguration.maxCapacity)){$MaxCap = 'Autoscale Disabled'}else{$MaxCap = $data.autoscaleConfiguration.maxCapacity}
                 if([string]::IsNullOrEmpty($data.autoscaleConfiguration.minCapacity)){$MinCap = 'Autoscale Disabled'}else{$MinCap = $data.autoscaleConfiguration.minCapacity}
@@ -39,7 +39,8 @@ If ($Task -eq 'Processing') {
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {        
                         $obj = @{
-                            'Subscription'          = $sub1.name;
+                            'ID'                    = $1.id;
+                            'Subscription'          = $sub1.Name;
                             'Resource Group'        = $1.RESOURCEGROUP;
                             'Name'                  = $1.NAME;
                             'Location'              = $1.LOCATION;
@@ -69,9 +70,11 @@ If ($Task -eq 'Processing') {
 }
 Else {
     if ($SmaResources.APPGW) {
+
+        $TableName = ('APPGWTable_'+($SmaResources.APPGW.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
-        $condtxt = @()       
+        $condtxt = @()
         $condtxt += New-ConditionalText FALSE -Range F:F
         $condtxt += New-ConditionalText FALSO -Range F:F
         $condtxt += New-ConditionalText Default -Range G:G
@@ -106,6 +109,6 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'App Gateway' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureAppGateway' -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'App Gateway' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
     }
 }

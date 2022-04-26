@@ -10,10 +10,10 @@ Excel Sheet Name: BASTION
 https://github.com/azureinventory/ARI/Modules/Infrastructure/BASTION.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -22,10 +22,9 @@ Authors: Claudio Merola and Renato Gregio
 <######## Default Parameters. Don't modify this ########>
 
 param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle)
- 
+
 If ($Task -eq 'Processing')
 {
- 
     <######### Insert the resource extraction here ########>
 
         $BASTION = $Resources | Where-Object {$_.TYPE -eq 'microsoft.network/bastionhosts'}
@@ -38,14 +37,15 @@ If ($Task -eq 'Processing')
 
             foreach ($1 in $BASTION) {
                 $ResUCount = 1
-                $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+                $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $BastVNET = $data.ipConfigurations.properties.subnet.id.split("/")[8]
                 $BastPIP = $data.ipConfigurations.properties.publicIPAddress.id.split("/")[8]
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
-                            'Subscription'    = $sub1.name;
+                            'ID'              = $1.id;
+                            'Subscription'    = $sub1.Name;
                             'Resource Group'  = $1.RESOURCEGROUP;
                             'Name'            = $1.NAME;
                             'Location'        = $1.LOCATION;
@@ -73,6 +73,8 @@ Else
 
     if($SmaResources.BASTION)
     {
+
+        $TableName = ('BASTIONTable_'+($SmaResources.BASTION.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -95,7 +97,7 @@ Else
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Bastion Hosts' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureBastion' -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Bastion Hosts' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
 
         <######## Insert Column comments and documentations here following this model #########>
 

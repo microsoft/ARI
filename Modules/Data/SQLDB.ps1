@@ -10,10 +10,10 @@ Excel Sheet Name: SQLDB
 https://github.com/azureinventory/ARI/Modules/Data/SQLDB.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -39,7 +39,8 @@ if ($Task -eq 'Processing') {
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
-                            'Subscription'               = $sub1.name;
+                            'ID'                         = $1.id;
+                            'Subscription'               = $sub1.Name;
                             'Resource Group'             = $1.RESOURCEGROUP;
                             'Name'                       = $1.NAME;
                             'Location'                   = $1.LOCATION;
@@ -66,6 +67,8 @@ if ($Task -eq 'Processing') {
 }
 else {
     if ($SmaResources.SQLDB) {
+
+        $TableName = ('SQLDBTable_'+($SmaResources.SQLDB.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
         
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -93,7 +96,7 @@ else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'SQL DBs' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureSQLDBs' -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'SQL DBs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
 
     }
 }

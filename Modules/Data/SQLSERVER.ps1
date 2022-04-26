@@ -10,10 +10,10 @@ Excel Sheet Name: SQLSERVER
 https://github.com/azureinventory/ARI/Modules/Data/SQLSERVER.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle) 
+param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported) 
 
 if ($Task -eq 'Processing') {
 
@@ -39,7 +39,8 @@ if ($Task -eq 'Processing') {
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
-                            'Subscription'          = $sub1.name;
+                            'ID'                    = $1.id;
+                            'Subscription'          = $sub1.Name;
                             'Resource Group'        = $1.RESOURCEGROUP;
                             'Name'                  = $1.NAME;
                             'Location'              = $1.LOCATION;
@@ -64,8 +65,10 @@ if ($Task -eq 'Processing') {
 }
 else {
     if ($SmaResources.SQLSERVER) {
+
+        $TableName = ('SQLSERVERTable_'+($SmaResources.SQLSERVER.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
-        
+
         $condtxt = @()
         $condtxt += New-ConditionalText FALSE -Range G:G
         $condtxt += New-ConditionalText FALSO -Range G:G
@@ -94,7 +97,7 @@ else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'SQL Servers' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureSQLServers' -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'SQL Servers' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }
 }

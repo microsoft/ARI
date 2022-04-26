@@ -15,17 +15,21 @@ Tags: Powershell, Azure, Inventory, Excel Report, Customer Engineer
 
 |     Modules     |     Count     |
 |-----------------|---------------|
+| Analytics | ![Analytics](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Analytics)|
 | Compute | ![Compute](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Compute)|
+| Containers | ![Containers](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Containers)|
 | Data | ![Data](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Data)|
 | Infrastructure | ![Infra](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Infrastructure)|
+| Integration | ![Integration](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Integration)|
 | Networking | ![Network](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Networking)|
+| Storage | ![Storage](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Storage)|
 
 <br/>
 
 
-# Azure Resource Inventory v2.1
+# Azure Resource Inventory v2.2
 
-Azure Resource inventory (ARI) is a powerful script writen in powershell to generate an Excel report of any Azure Environment you have read access. 
+Azure Resource inventory (ARI) is a powerful script written in powershell to generate an Excel report of any Azure Environment you have read access. 
 
 This project is intend to help Cloud Admins and anyone that might need an easy and fast way to build a full Excel Report of an Azure Environment.  
 
@@ -33,25 +37,27 @@ This project is intend to help Cloud Admins and anyone that might need an easy a
 
 <br/>
 
-The first big change in Azure Resource Inventory v2 is the modularization. This means all the files in the repository must be download for the script to work properly.
+The first big change in Azure Resource Inventory v2.2 is the Powershell modules. This means AzCLI is no longer use in the script.
 
 <br/>
 
-- In ARI V1 we have only one Script. Authentication, Extraction, Data handling and Spreadsheet creation were made in Main Script only ( AzureResourceInventory.ps1 ). 
+This way the code runs smothly and better integrated with ARI modules.
 
-- In ARI V2 the code is much more efficient. The Main Script is responsable only for Authentication and Extraction. Data management and spreadsheet creation are being performed through external modules that are scanned and executed by the Main script.
+<br/>
+
+Another change is the way the script runs through the modules. Instead of vertical align, the jobs now are organized horizontally. We expect this change to considerably increase the speed of the script in larger environments.
 
 <br/>
 
 <br/>
 
-> ### *1) New Dashboard Overview*
+> ### *1) Dashboard Overview*
 
 ---------------------
 
 <br/>
 
-- New Dashboard with much more information and resource list linking to the sheet. 
+- The main resource index in the dashboard now shows the correct number of resources and is organized accordingly. 
 
 <br/>
 
@@ -67,16 +73,13 @@ The first big change in Azure Resource Inventory v2 is the modularization. This 
 
 <br/>
 
-- The BIG Improvement for this version is Azure Diagram Inventory, two Extra Modules that creates a Microsoft Visio[^1] and a Draw.io Diagram[^2] of the Azure Network Environment. 
-Since Draw.io and Microsoft Visio Diagram are additional modules. You must use the __-Diagram__ parameter for it to be generated!
+- We disabled the Visio Diagram for now. But Draw.io diagram is still present, the two extra modules that creates a Microsoft Visio and a Draw.io Diagram[^1] of the Azure Network Environment are still present, but only the Draw.io will be genarated.
 
-#### Microsoft Visio Diagram:
-
-<p align="center">
-<img src="images/ADI-DEMO1.png">
-</p>
+- The diagram now creates the topology in environments where vWAN are used.
 
 <br/>
+
+You must use the __-Diagram__ parameter for it to be generated!
 
 #### Draw.io Diagram:
 
@@ -88,11 +91,7 @@ Since Draw.io and Microsoft Visio Diagram are additional modules. You must use t
 
 ### Note:
 
-[^1]:For the Microsoft Visio Diagram, is necessary to have Microsoft Visio installed with subscription "Visio Plan 2"
-
-[^2]:For the Draw.io Diagram, the script will create a XML file inside the "C:\AzureResourceInventory\" folder. On Draw.io you must go to File > Import from > Device... And import the XML file that was created by the ARI script.
-
-- For the __Microsoft Visio Diagram__, is necessary to have Microsoft Visio installed with subscription __Visio Plan 2__.
+[^1]:The script will create a XML file inside the "C:\AzureResourceInventory\" folder. On Draw.io you must go to File > Import from > Device... And import the XML file that was created by the ARI script.
 
 - For the __Draw.io Diagram__, the script will create a XML file inside the "C:\AzureResourceInventory\" folder. On Draw.io you must go to __File__ > __Import from__ > __Device...__ And import the XML file that was created by the script.
 
@@ -108,13 +107,13 @@ Since Draw.io and Microsoft Visio Diagram are additional modules. You must use t
 
 <br/>
 
-> ### *3) Many new resource types*
+> ### *3) New resource types*
 
 ---------------------
 
 <br/>
 
-For ARI V2 we added many more native modules ( and the possibility to create your own module ;)
+We added more native modules ( there is still the possibility to create your own modules )
 
 #### Resources and Resource Providers:
 
@@ -165,6 +164,7 @@ For ARI V2 we added many more native modules ( and the possibility to create you
 |microsoft.devices|IoT Hubs|
 |microsoft.apimanagement|API Management|
 |microsoft.streamanalytics|Streaming Analytics Jobs|
+|microsoft.hybridcompute|machines|
 
 <br/>
 
@@ -180,9 +180,9 @@ For ARI V2 we added many more native modules ( and the possibility to create you
 :heavy_check_mark: Service Principal Authentication (__-appid__)  
 :heavy_check_mark: Scan Modules diretly in GitHub ARI Repository (__-Online__)  
 :heavy_check_mark: Code Review: reduce and simplify of code, Less Loopings, Bug fix, modularization  
-  
+
 <br/>
-  
+
 # Getting Started
 
 <br/>
@@ -207,10 +207,9 @@ These instructions will get you a copy of the project up and running on your loc
 |-----------------|-------------|
 |Windows|10 21H1| 
 |Powershell|5.1.19041.1237|  
-|Az CLI|2.24.0|  
-|Resource-Graph|2.1.0|
 |ImportExcel|7.1.3|
-|Microsoft Visio|Visio Plan 2|
+|Az.Accounts|2.7.0|
+|Az.ResourceGraph|0.11.0|
 
 <br/>
 
@@ -222,12 +221,11 @@ What things you need to run the script
 
 ``` powershell
 1. Install-Module ImportExcel
-2. az cli
-3. az extension add --name resource-graph
+2. Install-Module Az.Accounts
+3. Install-Module Az.ResourceGraph
 ```
-To install Azure CLI go to [Microsoft Docs](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) and follow the instructions to install.   
 
-By default Azure Resource Inventory will call to install both ImportExcel module and resource-graph extension but you need to have the right privileges during the script execution. 
+By default Azure Resource Inventory will call to install the required Powershell modules but you must have administrator privileges during the script execution. 
 
 Special Thanks for __Doug Finke__, the Author of Powershell [ImportExcel](https://github.com/dfinke/ImportExcel) Module.    
 
@@ -239,18 +237,7 @@ Special Thanks for __Doug Finke__, the Author of Powershell [ImportExcel](https:
 
 <br/>
 
-<span style="color:red">**Very Important:**</span> If you alread have Resource-Graph and ImplortExcel Azure Resource Inventory will not upgrade it even if your version isn't supported.
-
-<br/>
-
-If you're facing the bellow errors during your execution and your inventory aren't being generated check for updates in your Resource Graph extension in Az Cli.
-
-![Resource Graph Error](images/Error_resource-graph.png)
-
-``` powershell
-1. az extension list-available --output table  ## Check if resource-graph extension upgrade is available
-2. az extension update --name resource-graph
-```
+<span style="color:red">**Very Important:**</span> Azure Resource Inventory will not upgrade the current version of the Powershell modules.
 
 <br/>
 
@@ -305,8 +292,12 @@ We also keep the `CHANGELOG.md` file in repository to Document version changes a
 
 The main authors of this project are:
 
-1. Claudio Merola (clvieira@Microsoft.com).
-2. Renato Gregio (Renato.Gregio@Microsoft.com)
+1. Claudio Merola (claudio.merola@Microsoft.com).
+2. Renato Gregio (renato.gregio@Microsoft.com)
+
+<br/>
+
+Please note that while being developed by Microsoft employees, Azure Inventory script's are not a Microsoft service or product. This is a personal driven project, there are no implicit or explicit obligations by any company or goverment related to this project, it is provided 'as is' with no warranties and legal no rights.
 
 <br/>
 

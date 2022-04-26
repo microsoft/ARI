@@ -10,10 +10,10 @@ Excel Sheet Name: VirtualWAN
 https://github.com/azureinventory/ARI/Modules/Networking/VirtualWAN.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -35,7 +35,7 @@ If ($Task -eq 'Processing') {
 
             foreach ($1 in $VirtualWAN) {
                 $ResUCount = 1
-                $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+                $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $vhub = $VirtualHub | Where-Object { $_.ID -in $data.virtualHubs.id }
                 $vpn = $VPNSite | Where-Object { $_.ID -in $data.vpnSites.id }
@@ -44,7 +44,8 @@ If ($Task -eq 'Processing') {
                     foreach ($3 in $vpn) {                        
                             foreach ($Tag in $Tags) {  
                                 $obj = @{
-                                    'Subscription'                       = $sub1.name;
+                                    'ID'                                 = $1.id;
+                                    'Subscription'                       = $sub1.Name;
                                     'Resource Group'                     = $1.RESOURCEGROUP;
                                     'Name'                               = $1.NAME;
                                     'Location'                           = $1.LOCATION;
@@ -78,6 +79,8 @@ If ($Task -eq 'Processing') {
 }
 Else {
     if ($SmaResources.VirtualWAN) {
+
+        $TableName = ('VWANTable_'+($SmaResources.VirtualWAN.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -110,7 +113,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Virtual WAN' -AutoSize -MaxAutoSizeRows 100 -TableName 'VirtualWAN' -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Virtual WAN' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
     
     }
 }

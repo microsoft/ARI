@@ -10,10 +10,10 @@ Excel Sheet Name: AVD
 https://github.com/azureinventory/ARI/Modules/Compute/AVD.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -34,7 +34,6 @@ If ($Task -eq 'Processing') {
     if($AVD)
         {
             $tmp = @()
-
             foreach ($1 in $AVD) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
@@ -55,15 +54,16 @@ If ($Task -eq 'Processing') {
                 foreach ($2 in $sessionhosts)
                 {
                     $domain = $2.name.replace(($2.name.split(".")[0]),'')
-                    $vmsessionhosts = $VM | where { $_.ID -eq $2.properties.resourceId}
+                    $vmsessionhosts = $VM | Where-Object { $_.ID -eq $2.properties.resourceId}
                     foreach ($Tag in $Tags) {
                         $obj = @{
-                            'Subscription'       = $sub1.name;
+                            'ID'                 = $1.id;
+                            'Subscription'       = $sub1.Name;
                             'Resource Group'     = $1.RESOURCEGROUP;
-                            'Hostpool Name'               = $1.NAME;
+                            'Hostpool Name'      = $1.NAME;
                             'Location'           = $1.LOCATION;
                             'Zone'               = $Zones;
-                            'HostPool Type'           = $data.hostPoolType;
+                            'HostPool Type'      = $data.hostPoolType;
                             'LoadBalancer'       = $data.loadBalancerType;
                             'maxSessionLimit'    = $data.maxSessionLimit;
                             'preferred AppGroup' = $data.preferredAppGroupType;
@@ -98,6 +98,8 @@ Else {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
     if ($SmaResources.AVD) {
+
+        $TableName = ('AVD_'+($SmaResources.AVD.id | Select-Object -Unique).count)
         $condtxtzone = New-ConditionalText "Not Configured" -Range E:E
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
@@ -133,7 +135,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'AVD' -AutoSize -TableName 'AVD' -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $condtxtzone -Style $Style
+        Export-Excel -Path $File -WorksheetName 'AVD' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $condtxtzone -Style $Style
       
     }
 }

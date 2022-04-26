@@ -10,10 +10,10 @@ Excel Sheet Name: AutomationAcc
 https://github.com/azureinventory/ARI/Modules/Infrastructure/AutomationAcc.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,11 +21,10 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle)
- 
+param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+
 If ($Task -eq 'Processing')
 {
- 
     <######### Insert the resource extraction here ########>
 
         $runbook = $Resources | Where-Object {$_.TYPE -eq 'microsoft.automation/automationaccounts/runbooks'}
@@ -39,8 +38,7 @@ If ($Task -eq 'Processing')
 
             foreach ($0 in $autacc) {
                 $ResUCount = 1
-                $sub1 = $SUB | Where-Object { $_.id -eq $0.subscriptionId }
-                                    
+                $sub1 = $SUB | Where-Object { $_.Id -eq $0.subscriptionId }
                 $rbs = $runbook | Where-Object { $_.id.split('/')[8] -eq $0.name }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 if ($null -ne $rbs) {
@@ -48,7 +46,8 @@ If ($Task -eq 'Processing')
                             foreach ($Tag in $Tags) {    
                                 $data = $1.PROPERTIES
                                 $obj = @{
-                                    'Subscription'             = $sub1.name;
+                                    'ID'                       = $1.id;
+                                    'Subscription'             = $sub1.Name;
                                     'Resource Group'           = $0.RESOURCEGROUP;
                                     'Automation Account Name'  = $0.NAME;
                                     'Automation Account State' = $0.properties.State;
@@ -72,6 +71,7 @@ If ($Task -eq 'Processing')
                 else {
                         foreach ($Tag in $Tags) {  
                             $obj = @{
+                                'ID'                       = $1.id;
                                 'Subscription'             = $sub1.name;
                                 'Resource Group'           = $0.RESOURCEGROUP;
                                 'Automation Account Name'  = $0.NAME;
@@ -106,8 +106,11 @@ Else
     if($SmaResources.AutomationAcc)
     {
 
+        $TableName = ('AutAccTable_'+($SmaResources.AutomationAcc.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
         $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range K:K -Width 80 -WrapText 
+
+        $condtxt = @()
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -132,7 +135,7 @@ Else
             
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Runbooks' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureRunbooks' -TableStyle $tableStyle -Style $Style, $StyleExt
+        Export-Excel -Path $File -WorksheetName 'Runbooks' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style, $StyleExt
 
         <######## Insert Column comments and documentations here following this model #########>
 

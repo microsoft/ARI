@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.1.11                                                                  #
+#       Version: 2.2.0                                                                   #
 #                                                                                        #
-#       Date: 04/13/2022                                                                 #
+#       Date: 04/26/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -45,11 +45,11 @@
     PS C:\>.\AzureResourceInventory.ps1 -TenantID <your-Tenant-Id> -SubscriptionID <your-Subscription-Id>
 
 .NOTES
-    AUTHORS: Claudio Merola and Renato Gregio - Customer Engineer - Customer Success Unit | Azure Infrastucture/Automation/Devops/Governance | Microsoft
+    AUTHORS: Claudio Merola and Renato Gregio | Azure Infrastucture/Automation/Devops/Governance 
 
 .LINK
     https://github.com/azureinventory
-    Please note that while being developed by a Microsoft employee, Azure inventory Scripts is not a Microsoft service or product. Azure Inventory Scripts are a personal driven project, there are none implicit or explicit obligations related to this project, it is provided 'as is' with no warranties and confer no rights.
+    Please note that while being developed by Microsoft employees, Azure Inventory scrip's are not a Microsoft service or product. This is a personal driven project, there are no implicit or explicit obligations by any company or goverment related to this project, it is provided 'as is' with no warranties and/or legal rights.
 #>
 
 param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help, [switch]$DeviceLogin)
@@ -146,135 +146,194 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         Write-Debug ('Starting Extractor function')
         function checkAzCli() {
-            Write-Debug ('Starting checkAzCli function')
-            Write-Host "Validating Az Cli.."
-            $azcli = az --version
-            Write-Debug ('Current az cli version: ' + $azcli[0])
-            if ($null -eq $azcli) {
-                Read-Host "Azure CLI Not Found. Press <Enter> to finish script"
-                Exit
-            }
-            Write-Host "Validating Az Cli Extension.."
-            $azcliExt = az extension list --output json | ConvertFrom-Json
-            $azcliExt = $azcliExt | Where-Object {$_.name -eq 'resource-graph'}
-            Write-Debug ('Current Resource-Graph Extension Version: ' + $azcliExt.version)
-            $AzcliExtV = $azcliExt | Where-Object {$_.name -eq 'resource-graph'}
-            if (!$AzcliExtV) {
-                Write-Host "Adding Az Cli Extension"
-                az extension add --name resource-graph
-            }
-            Write-Host "Validating ImportExcel Module.."
-            $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
-            Write-Debug ('ImportExcel Module Version: ' + ([string]$VarExcel.Version.Major + '.' + [string]$VarExcel.Version.Minor + '.' + [string]$VarExcel.Version.Build))
-            if ($null -eq $VarExcel) {
-                Write-Host "Trying to install ImportExcel Module.."
-                Install-Module -Name ImportExcel -Force
-            }
-            $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
-            if ($null -eq $VarExcel) {
-                Read-Host 'Admininstrator rights required to install ImportExcel Module. Press <Enter> to finish script'
-                Exit
-            }
+            Write-Debug ('Starting checkAzCli function')            
+            Write-Host "Validating Powershell Az Module.."
+            $Modz = Get-InstalledModule
+            $ModAzAcc = $Modz | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.7.*'}
+            $ModAzGraph = $Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph' -and $_.Version -like '0.1*.*'}
+            $ModExcel = $Modz | Where-Object {$_.Name -eq 'ImportExcel'}
+
+            if(![string]::IsNullOrEmpty($ModExcel))
+                {                    
+                    Write-Host "ImportExcel Module Found."
+                    #Import-Module -Name 'ImportExcel'
+                    Write-Debug ('ImportExcel Module Version: ' + ([string]$ModExcel.Version.Major + '.' + [string]$ModExcel.Version.Minor + '.' + [string]$ModExcel.Version.Build))
+                }
+            else 
+                {
+                    Write-Host "Adding ImportExcel Module"
+                    try{
+                        Install-Module -Name ImportExcel -Force
+                        }
+                    catch{
+                        Read-Host 'Admininstrator rights required to install ImportExcel Module. Press <Enter> to finish script'
+                        Exit
+                    }
+                }                               
+            if(![string]::IsNullOrEmpty($ModAzAcc))
+                {
+                    Write-Host "Az.Accounts Module Found."
+                    #Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2 -WarningAction SilentlyContinue
+                    Write-Debug ('Az.Accounts Module Version: ' + ([string]$ModAzAcc.Version.Major + '.' + [string]$ModAzAcc.Version.Minor + '.' + [string]$ModAzAcc.Version.Build))
+                }
+            else 
+                {
+                    Write-Host "Adding Az.Accounts Module"
+                    try{
+                        Install-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2 -Force | Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2
+                        }
+                    catch{
+                        Read-Host 'Admininstrator rights required to install Az.Accounts Module. Press <Enter> to finish script'
+                        Exit
+                    }
+                }
+            if(![string]::IsNullOrEmpty($ModAzGraph))
+                {
+                    Write-Host "Az.ResourceGraph Module Found."
+                    #Import-Module -Name 'Az.ResourceGraph' -MinimumVersion 0.11.0 -WarningAction SilentlyContinue
+                    Write-Debug ('Az.ResourceGraph Module Version: ' + ([string]$ModAzGraph.Version.Major + '.' + [string]$ModAzGraph.Version.Minor + '.' + [string]$ModAzGraph.Version.Build))
+                }
+            else 
+                {
+                    Write-Host "Adding Az.ResourceGraph Module"
+                    try{
+                        Install-Module -Name Az.ResourceGraph -MinimumVersion 0.11.0 -Force | Import-Module -Name 'Az.ResourceGraph' -MinimumVersion 0.11.0
+                        }
+                    catch{
+                        Read-Host 'Admininstrator rights required to install Az.ResourceGraph Module. Press <Enter> to finish script'
+                        Exit
+                    }
+                }
+            if($QuotaUsage.IsPresent)
+                {
+                    $ModAzCompute = $Modz | Where-Object {$_.Name -eq 'Az.Compute' -and $_.Version -eq '4.17.1'}
+                    if (![string]::IsNullOrEmpty($ModAzCompute)) 
+                        {
+                            Write-Host "Az.Compute Module Found."
+                            #Import-Module -Name 'Az.Compute' -MinimumVersion 4.17.1 -WarningAction SilentlyContinue
+                            Write-Debug ('Az.Compute Module Version: ' + ([string]$ModAzCompute.Version.Major + '.' + [string]$ModAzCompute.Version.Minor + '.' + [string]$ModAzCompute.Version.Build))                
+                        }
+                    else 
+                        {
+                            Write-Host "Adding Az.Compute Module"
+                            try{
+                                Install-Module -Name Az.Compute -MinimumVersion 4.17.1 -Force | Import-Module -Name 'Az.Compute' -MinimumVersion 4.17.1
+                                }
+                            catch{
+                                Read-Host 'Admininstrator rights required to install Az.Compute Module. Press <Enter> to finish script'
+                                Exit
+                            }
+                        }
+                }
         }
 
         function LoginSession() {
             Write-Debug ('Starting LoginSession function')
+            Clear-AzContext -Force -ErrorAction SilentlyContinue
             if (!$TenantID) {
                 write-host "Tenant ID not specified. Use -TenantID parameter if you want to specify directly. "
                 write-host "Authenticating Azure"
                 write-host ""
                 Write-Debug ('Cleaning az account cache')
-                az account clear | Out-Null
-                Write-Debug ('Calling az login')
-                if($DeviceLogin.IsPresent)
+                $Tenants = Get-AzTenant -ErrorAction SilentlyContinue -InformationAction SilentlyContinue -Debug:$false
+                if([string]::IsNullOrEmpty($Tenants))
                     {
-                        az login --use-device-code
+                        if($DeviceLogin.IsPresent)
+                            {
+                                Connect-AzAccount -UseDeviceAuthentication -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
+                            }
+                        else 
+                            {
+                                Connect-AzAccount -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
+                            }                        
                     }
-                else 
-                    {
-                        az login --only-show-errors | Out-Null
-                    }
+                $Tenants = Get-AzTenant -ErrorAction SilentlyContinue -InformationAction SilentlyContinue -Debug:$false | Sort-Object -Unique
                 write-host ""
                 write-host ""
-                $Tenants = az account list --query [].homeTenantId -o tsv --only-show-errors | Sort-Object -Unique
                 Write-Debug ('Checking number of Tenants')
                 if ($Tenants.Count -eq 1) {
                     write-host "You have privileges only in One Tenant "
                     write-host ""
-                    $TenantID = $Tenants
+                    $TenantID = $Tenants.id
                 }
                 else {
                     write-host "Select the the Azure Tenant ID that you want to connect : "
                     write-host ""
                     $SequenceID = 1
                     foreach ($TenantID in $Tenants) {
-                        write-host "$SequenceID)  $TenantID"
+                        $TenantName = $TenantID.Name
+                        write-host "$SequenceID)  $TenantName"
                         $SequenceID ++
                     }
                     write-host ""
                     [int]$SelectTenant = read-host "Select Tenant ( default 1 )"
                     $defaultTenant = --$SelectTenant
-                    $TenantID = $Tenants[$defaultTenant]
-                    if($DeviceLogin.IsPresent)
-                        {
-                            az login --use-device-code -t $TenantID
-                        }
-                    else 
-                        {
-                            az login -t $TenantID --only-show-errors | Out-Null
-                        }
+                    $TenantID = $Tenants[$defaultTenant].Id                    
                 }
 
-                write-host "Extracting from Tenant $TenantID"
+                Connect-AzAccount -TenantId $TenantID -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
+                $Global:Subscriptions = Get-AzSubscription -TenantId $TenantID -Debug:$false | Where-Object {$_.State -ne 'Disabled'} 
+                Set-AzContext -Tenant $TenantID -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false               
+                $TenantName = $Tenants[$defaultTenant].Name
+                write-host "Extracting from Tenant $TenantName"
                 Write-Debug ('Extracting Subscription details')
-                $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
-                $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
                 if ($SubscriptionID)
                     {
                         if($SubscriptionID.count -gt 1)
                             {
-                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -in $SubscriptionID }
+                                $Global:Subscriptions = $Global:Subscriptions | Where-Object { $_.Id -in $SubscriptionID }
                             }
                         else
                             {
-                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
+                                $Global:Subscriptions = $Global:Subscriptions | Where-Object { $_.id -eq $SubscriptionID }
                             }
                     }
             }
             else {
-                az account clear | Out-Null
-                if (!$Appid) {
-                    if($DeviceLogin.IsPresent)
-                        {
-                            az login --use-device-code -t $TenantID
-                        }
-                    else 
-                        {
-                            az login -t $TenantID --only-show-errors | Out-Null
-                        }
+                $Tenants = Get-AzTenant -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+                if([string]::IsNullOrEmpty($Tenants))
+                    {
+                        if (!$Appid) 
+                            {
+                                if($DeviceLogin.IsPresent)
+                                    {
+                                        Connect-AzAccount -UseDeviceAuthentication -Tenant $TenantID -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
+                                    }
+                                else 
+                                    {
+                                        Connect-AzAccount -Tenant $TenantID -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
+                                    }
+                            }
+                        elseif ($Appid -and $Secret -and $tenantid) 
+                            {
+                                write-host "Using Service Principal Authentication Method"
+                                $SecuredPassword = ConvertTo-SecureString -AsPlainText $secret
+                                $AppCred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $appid, $SecuredPassword
+                                Connect-AzAccount -Tenant $TenantID -ServicePrincipal -Credential $AppCred -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+                            }
+                        else{
+                            write-host "You are trying to use Service Principal Authentication Method in a wrong way."
+                            write-host "It's Mandatory to specify Application ID, Secret and Tenant ID in Azure Resource Inventory"
+                            write-host ""
+                            write-host ".\AzureResourceInventory.ps1 -appid <SP AppID> -secret <SP Secret> -tenant <TenantID>"
+                            Exit
+                        }              
                     }
-                elseif ($Appid -and $Secret -and $tenantid) {
-                    write-host "Using Service Principal Authentication Method"
-                    az login --service-principal -u $appid -p $secret -t $TenantID | Out-Null
-                }
-                else{
-                    write-host "You are trying to use Service Principal Authentication Method in a wrong way."
-                    write-host "It's Mandatory to specify Application ID, Secret and Tenant ID in Azure Resource Inventory"
-                    write-host ""
-                    write-host ".\AzureResourceInventory.ps1 -appid <SP AppID> -secret <SP Secret> -tenant <TenantID>"
-                    Exit
-                }
-                $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
-                $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
+                else 
+                    {
+                        Set-AzContext -Tenant $TenantID -Debug:$false
+                    }
+                
+                $Global:Subscriptions = Get-AzSubscription -TenantId $TenantID -ErrorAction SilentlyContinue -Debug:$false | Where-Object {$_.State -ne 'Disabled'}
                 if ($SubscriptionID)
                     {
                         if($SubscriptionID.count -gt 1)
                             {
-                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -in $SubscriptionID }
+                                $Global:Subscriptions = $Global:Subscriptions | Where-Object { $_.Id -in $SubscriptionID }
                             }
                         else
                             {
-                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
+                                $Global:Subscriptions = $Global:Subscriptions | Where-Object { $_.Id -eq $SubscriptionID }
                             }
                     }
             }
@@ -288,7 +347,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 $Global:PlatOS = 'Azure CloudShell'
                 write-host ""
                 $Global:DefaultPath = "$HOME/AzureResourceInventory/"
-                $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
+                $Global:Subscriptions = Get-AzSubscription -ErrorAction SilentlyContinue | Where-Object {$_.State -ne 'Disabled'}
             }
             else
             {
@@ -319,7 +378,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             Write-Debug "Tags will be included"
             $GraphQueryTags = ",tags "
         } else {
-            Write-Debug "Tags will be excluded"
+            Write-Debug "Tags will be ignored"
             $GraphQueryTags = ""
         }
 
@@ -339,7 +398,135 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         <######################################################## INVENTORY LOOPs #######################################################################>
 
-        Write-Progress -activity 'Azure Inventory' -Status "4% Complete." -PercentComplete 4 -CurrentOperation "Starting Resources extraction jobs.."
+        Write-Progress -activity 'Azure Inventory' -Status "4% Complete." -PercentComplete 4 -CurrentOperation "Starting Resources extraction jobs.."        
+
+        if(![string]::IsNullOrEmpty($ResourceGroup) -and [string]::IsNullOrEmpty($SubscriptionID))
+            {
+                Write-Debug ('Resource Group Name present, but missing Subscription ID.')
+                Write-Host ''
+                Write-Host 'If Using the -ResourceGroup Parameter, the Subscription ID must be informed'
+                Write-Host ''
+                Exit
+            }
+        if(![string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
+            {
+                Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'. And from Resource Group: '+$ResourceGroup)
+
+                $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | summarize count()"
+                $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -Debug:$false
+                $EnvSizeNum = $EnvSize.data.'count_'
+
+                if ($EnvSizeNum -ge 1) {
+                    $Loop = $EnvSizeNum / 1000
+                    $Loop = [math]::ceiling($Loop)
+                    $Looper = 0
+                    $Limit = 1
+
+                    while ($Looper -lt $Loop) {
+                        $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+
+                        $Global:Resources += $Resource.data
+                        Start-Sleep 2
+                        $Looper ++
+                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                        $Limit = $Limit + 1000
+                    }
+                }
+                Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
+            }
+        elseif([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
+            {
+                Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'.')
+                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
+                $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -Debug:$false
+                $EnvSizeNum = $EnvSize.data.'count_'
+
+                if ($EnvSizeNum -ge 1) {
+                    $Loop = $EnvSizeNum / 1000
+                    $Loop = [math]::ceiling($Loop)
+                    $Looper = 0
+                    $Limit = 1
+
+                    while ($Looper -lt $Loop) {
+                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+
+                        $Global:Resources += $Resource.data
+                        Start-Sleep 2
+                        $Looper ++
+                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                        $Limit = $Limit + 1000
+                    }
+                }
+                Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
+            } 
+        else 
+            {
+                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
+                $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -Debug:$false
+                $EnvSizeNum = $EnvSize.data.'count_'
+
+                if ($EnvSizeNum -ge 1) {
+                    $Loop = $EnvSizeNum / 1000
+                    $Loop = [math]::ceiling($Loop)
+                    $Looper = 0
+                    $Limit = 1
+
+                    while ($Looper -lt $Loop) {
+                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+
+                        $Global:Resources += $Resource.data
+                        Start-Sleep 2
+                        $Looper ++
+                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                        $Limit = $Limit + 1000
+                    }
+                }
+                Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
+            }
+
+
+        <######################################################### QUOTA JOB ######################################################################>
+
+            if($QuotaUsage.isPresent)
+            {
+                Write-Progress -Id 1 -activity "Running Quota Usage Inventory" -Status "Looping Quota Usage Inventory" -PercentComplete 20
+                $Global:AzQuota = @()
+                Foreach($Sub in $Global:Subscriptions)
+                    {          
+                        $Temp = Get-AzSubscription -SubscriptionId $Sub.id -Debug:$false -WarningAction SilentlyContinue | Where-Object {$_.State -ne 'Disabled'} | Set-AzContext -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -InformationAction SilentlyContinue -Debug:$false    
+                        $Locs = ($Resources | Where-Object {$_.subscriptionId -eq $Sub.Id -and $_.Type -in 'microsoft.compute/virtualmachines','microsoft.compute/virtualmachinescalesets'} | Group-Object -Property Location).name                        
+                        if($Locs.count -eq 1)
+                            {                            
+                                #$Quota = az vm list-usage --location $Loc.Loc --subscription $Loc.Sub -o json | ConvertFrom-Json
+                                $Quota = Get-AzVMUsage -Location $Locs -Debug:$false
+                                $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
+                                $Q = @{
+                                    'Location' = $Locs;
+                                    'Subscription' = $Sub.Name.split(' (')[0];
+                                    'Data' = $Quota
+                                }
+                                $Global:AzQuota += $Q
+                            }
+                        else {
+                                foreach($Loc1 in $Locs)
+                                    {
+                                        #$Quota = az vm list-usage --location $Loc1 --subscription $Loc.Sub -o json | ConvertFrom-Json
+                                        $Quota = Get-AzVMUsage -Location $Loc1 -Debug:$false
+                                        $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
+                                        $Q = @{
+                                            'Location' = $Loc1;
+                                            'Subscription' = $Sub.Name.split(' (')[0];
+                                            'Data' = $Quota
+                                        }
+                                        $Global:AzQuota += $Q
+                                    }
+                            }   
+                    }
+                Write-Progress -Id 1 -activity "Running Quota Usage Inventory" -Status "Looping Quota Usage Inventory" -Completed
+            }
 
         <######################################################### ADVISOR ######################################################################>
 
@@ -356,8 +543,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 } else {
                     $GraphQuery = "advisorresources | where resourceGroup == '$ResourceGroup' | summarize count()"
                 }
-                $AdvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
-                $AdvSizeNum = $AdvSize.data.'count_'
+                $AdvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -Debug:$false
+                $AdvSizeNum = $AdvSize.'count_'
 
             Write-Debug ('Advisories: '+$AdvSizeNum)
             Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Advisories extraction jobs.."
@@ -366,7 +553,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 $Loop = $AdvSizeNum / 1000
                 $Loop = [math]::ceiling($Loop)
                 $Looper = 0
-                $Limit = 0
+                $Limit = 1
 
                 while ($Looper -lt $Loop) {
                     $Looper ++
@@ -377,7 +564,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                             $GraphQuery = "advisorresources | where resourceGroup == '$ResourceGroup' | order by id asc"
                                 }
                         
-                    $Advisor = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                    $Advisor = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
 
                     $Global:Advisories += $Advisor.data
                     Start-Sleep 2
@@ -396,7 +583,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             Write-Host " "
 
             Write-Debug ('Extracting total number of Security Advisories from Tenant')
-            $SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
+            $SecSize = Search-AzGraph -Query "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" -Subscription $Subscri -Debug:$false
             $SecSizeNum = $SecSize.data.'count_'
 
 
@@ -404,13 +591,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 $Loop = $SecSizeNum / 1000
                 $Loop = [math]::ceiling($Loop)
                 $Looper = 0
-                $Limit = 0
+                $Limit = 1
                 while ($Looper -lt $Loop) {
                     $Looper ++
                     Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                         $GraphQuery = "securityresources | where properties['status']['code'] == 'Unhealthy' | order by id asc"
                     
-                            $SecCenter = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                        $SecCenter = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
 
                     $Global:Security += $SecCenter.data
                     Start-Sleep 3
@@ -429,162 +616,32 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "100% Complete." -Completed
 
-        if(![string]::IsNullOrEmpty($ResourceGroup) -and [string]::IsNullOrEmpty($SubscriptionID))
-            {
-                Write-Debug ('Resource Group Name present, but missing Subscription ID.')
-                Write-Host ''
-                Write-Host 'If Using the -ResourceGroup Parameter, the Subscription ID must be informed'
-                Write-Host ''
-                Exit
+        <######################################################### AVD ######################################################################>
+
+        $AVDSize = Search-AzGraph -Query "desktopvirtualizationresources | summarize count()" -Subscription $Subscri -Debug:$false
+        $AVDSizeNum = $AVDSize.data.'count_'
+
+        if ($AVDSizeNum -ge 1) {
+            $Loop = $AVDSizeNum / 1000
+            $Loop = [math]::ceiling($Loop)
+            $Looper = 0
+            $Limit = 1
+
+            while ($Looper -lt $Loop) {
+                $GraphQuery = "desktopvirtualizationresources | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                $AVD = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+
+                $Global:Resources += $AVD.data
+                Start-Sleep 2
+                $Looper ++
+                $Limit = $Limit + 1000
             }
-        if(![string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
-            {
-                Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'. And from Resource Group: '+$ResourceGroup)
+        }
 
-                $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | summarize count()"
-                $EnvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
-                $EnvSizeNum = $EnvSize.data.'count_'
-
-                if ($EnvSizeNum -ge 1) {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                        $Global:Resources += $Resource.data
-                        Start-Sleep 2
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $Limit = $Limit + 1000
-                    }
-                }
-            }
-        elseif([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
-            {
-                Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'.')
-                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
-                $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
-                $EnvSizeNum = $EnvSize.data.'count_'
-
-                if ($EnvSizeNum -ge 1) {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                        $Global:Resources += $Resource.data
-                        Start-Sleep 2
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $Limit = $Limit + 1000
-                    }
-                }
-            } else {
-                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
-                $EnvSize = az graph query -q  $GraphQuery  --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
-                $EnvSizeNum = $EnvSize.data.'count_'
-
-                if ($EnvSizeNum -ge 1) {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                        $Global:Resources += $Resource.data
-                        Start-Sleep 2
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $Limit = $Limit + 1000
-                    }
-                }
-                Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-            }
-
-            #AVD Details
-
-            $AVDSize = az graph query -q "desktopvirtualizationresources | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
-                $AVDSizeNum = $AVDSize.data.'count_'
-
-                if ($AVDSizeNum -ge 1) {
-                    $Loop = $AVDSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $GraphQuery = "desktopvirtualizationresources | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $AVD = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                        $Global:Resources += $AVD.data
-                        Start-Sleep 2
-                        $Looper ++
-                        $Limit = $Limit + 1000
-                    }
-                }
-
-
-        if($QuotaUsage.isPresent)
-            {
-                Start-Job -Name 'Quota Usage' -ScriptBlock {
-
-                $Location = @()
-                Foreach($Sub in $($args[1]))
-                    {
-                        $Locs = ($($args[0]) | Where-Object {$_.subscriptionId -eq $Sub.id -and $_.Type -in 'microsoft.compute/virtualmachines','microsoft.compute/virtualmachinescalesets'} | Group-Object -Property Location).name
-                        $Val = @{
-                            'Loc' = $Locs;
-                            'Sub' = $Sub.name
-                        }
-                        $Location += $Val
-                    }
-                $Quotas = @()
-                Foreach($Loc in $Location)
-                {
-                    if($Loc.Loc.count -eq 1)
-                        {
-                            $Quota = az vm list-usage --location $Loc.Loc --subscription $Loc.Sub -o json | ConvertFrom-Json
-                            $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
-                            $Q = @{
-                                'Location' = $Loc.Loc;
-                                'Subscription' = $Loc.Sub;
-                                'Data' = $Quota
-                            }
-                            $Quotas += $Q
-                        }
-                    else {
-                            foreach($Loc1 in $Loc.loc)
-                                {
-                                    $Quota = az vm list-usage --location $Loc1 --subscription $Loc.Sub -o json | ConvertFrom-Json
-                                    $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
-                                    $Q = @{
-                                        'Location' = $Loc1;
-                                        'Subscription' = $Loc.Sub;
-                                        'Data' = $Quota
-                                    }
-                                    $Quotas += $Q
-                                }
-                    }
-                }
-                    $Quotas
-                } -ArgumentList $Global:Resources, $Global:Subscriptions
-            }
 
         }
     }
 
-    <######################################################### END Extractor Function ######################################################################>
 
     <#########################################################  Creating Excel File   ######################################################################>
 
@@ -631,8 +688,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         $DataActive = ('Azure Resource Inventory Reporting (' + ($resources.count) + ') Resources')
 
-        <######################################################### DIAGRAM JOB ######################################################################>
-                
+        <######################################################### DRAW.IO DIAGRAM JOB ######################################################################>
+
         Write-Debug ('Checking if Draw.io Diagram Job Should be Run.')
         if ($Diagram.IsPresent) {
             Write-Debug ('Starting Draw.io Diagram Processing Job.')
@@ -661,36 +718,38 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
             } -ArgumentList $PSScriptRoot, $Subscriptions, $Resources, $Advisories, $DDFile, $RunOnline, $Repo, $RawRepo   | Out-Null
         }
-         <######################################################### DIAGRAM JOB ######################################################################>
-        
-         Write-Debug ('Checking if Visio Diagram Job Should be Run.')
-         if ($Diagram.IsPresent) {
-             Write-Debug ('Starting Visio Diagram Processing Job.')
-             Start-job -Name 'VisioDiagram' -ScriptBlock {
- 
-                 If ($($args[5]) -eq $true) {
-                     $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[7]) + '/Extras/VisioDiagram.ps1')
-                 }
-                 Else {
-                     $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\VisioDiagram.ps1')
-                     $ModuSeq = $ModuSeq0.ReadToEnd()
-                     $ModuSeq0.Dispose()  
-                 }                  
-                     
-                 $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                     
-                 $VisioRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
- 
-                 $VisioJob = $VisioRun.BeginInvoke()
- 
-                 while ($VisioJob.IsCompleted -contains $false) {}
- 
-                 $VisioRun.EndInvoke($VisioJob)
- 
-                 $VisioRun.Dispose()
- 
-             } -ArgumentList $PSScriptRoot, $Subscriptions, $Resources, $Advisories, $DFile, $RunOnline, $Repo, $RawRepo   | Out-Null
-         }
+
+        <######################################################### VISIO DIAGRAM JOB ######################################################################>
+        <#
+        Write-Debug ('Checking if Visio Diagram Job Should be Run.')
+        if ($Diagram.IsPresent) {
+            Write-Debug ('Starting Visio Diagram Processing Job.')
+            Start-job -Name 'VisioDiagram' -ScriptBlock {
+
+                If ($($args[5]) -eq $true) {
+                    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[7]) + '/Extras/VisioDiagram.ps1')
+                }
+                Else {
+                    $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\VisioDiagram.ps1')
+                    $ModuSeq = $ModuSeq0.ReadToEnd()
+                    $ModuSeq0.Dispose()  
+                }                  
+
+                $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+
+                $VisioRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
+
+                $VisioJob = $VisioRun.BeginInvoke()
+
+                while ($VisioJob.IsCompleted -contains $false) {}
+
+                $VisioRun.EndInvoke($VisioJob)
+
+                $VisioRun.Dispose()
+
+            } -ArgumentList $PSScriptRoot, $Subscriptions, $Resources, $Advisories, $DFile, $RunOnline, $Repo, $RawRepo   | Out-Null
+        }
+        #>
 
         <######################################################### SECURITY CENTER JOB ######################################################################>
 
@@ -734,6 +793,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         }
 
         <######################################################### ADVISORY JOB ######################################################################>
+
         Write-Debug ('Checking If Should Run Advisory Job.')
         if (!$SkipAdvisory.IsPresent) {
             Write-Debug ('Starting Advisory Processing Job.')
@@ -809,315 +869,100 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         } -ArgumentList $PSScriptRoot, $Subscriptions, $Resources, 'Processing' , $File, $RunOnline, $RawRepo | Out-Null
 
-        <######################################################### COMPUTE RESOURCE GROUP JOB ######################################################################>
+        <######################################################### RESOURCE GROUP JOB ######################################################################>
 
-        Write-Debug ('Starting Compute Processing Job.')
-        Start-job -Name 'Compute' -ScriptBlock {
+        Write-Debug ('Starting Processing Jobs.')
 
-            If ($($args[8]) -eq $true) {
-                $OnlineRepo = Invoke-WebRequest -Uri ($($args[9]) + '/Compute')
-                $Modules = $OnlineRepo.Links | Where-Object { $_.href -like '*.ps1' }
-                $Modules = $Modules.href
-            }
-            Else {
-                if($($args[0]) -like '*\*')
-                    {
-                        $Modules = Get-ChildItem -Path ($($args[0]) + '\Modules\Compute\*.ps1') -Recurse
+        $Loop = $resources.count / 5000
+        $Loop = [math]::ceiling($Loop)
+        $Looper = 0
+        $Limit = 0                    
+
+        while ($Looper -lt $Loop) {
+            $Looper ++            
+
+            $Resource = $resources | Select-Object -First 5000 -Skip $Limit
+
+            Start-Job -Name ('ResourceJob_'+$Looper) -ScriptBlock {
+
+                    $Job = @()
+
+                    If ($($args[9]) -eq $true) {
+                        $ResourceJobs = 'Compute', 'Analytics', 'Containers', 'Data', 'Infrastructure', 'Integration', 'Networking', 'Storage'
+                        $Modules = @()
+                        Foreach ($Jobs in $ResourceJobs)
+                            {
+                                $OnlineRepo = Invoke-WebRequest -Uri ($($args[10]) + '/' + $Jobs)
+                                $Modu = $OnlineRepo.Links | Where-Object { $_.href -like '*.ps1' }
+                                $Modules += $Modu.href
+                            }
                     }
-                else
-                    {
-                        $Modules = Get-ChildItem -Path ($($args[0]) + '/Modules/Compute/*.ps1') -Recurse
+                    Else {
+                        if($($args[1]) -like '*\*')
+                            {
+                                $Modules = Get-ChildItem -Path ($($args[1]) + '\Modules\*.ps1') -Recurse
+                            }
+                        else
+                            {
+                                $Modules = Get-ChildItem -Path ($($args[1]) + '/Modules/*.ps1') -Recurse
+                            }
                     }
-            }
-            $job = @()
+                    $job = @()
 
-            foreach ($Module in $Modules) {
-                If ($($args[8]) -eq $true) {
-                    $Modul = $Module.split('/')
-                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[10]) + '/Modules/' + $Modul[6] + '/' + $Modul[7])
-                    } Else {
-                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                    $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
-                    $ModuSeq = $ModuSeq0.ReadToEnd()
-                    $ModuSeq0.Dispose()
-                }
+                    foreach ($Module in $Modules) {
+                        If ($($args[9]) -eq $true) {
+                            $Modul = $Module.split('/')
+                                $ModName = $Modul[8].Substring(0, $Modul[8].length - ".ps1".length)
+                            $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[11]) + '/Modules/' + $Modul[7] + '/' + $Modul[8])
+                            } Else {
+                                $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
+                            $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
+                            $ModuSeq = $ModuSeq0.ReadToEnd()
+                            $ModuSeq0.Dispose()
+                        }
 
+                        $ScriptBlock = [Scriptblock]::Create($ModuSeq)
 
-                $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+                        New-Variable -Name ('ModRun' + $ModName)
+                        New-Variable -Name ('ModJob' + $ModName)
 
-                New-Variable -Name ('ModRun' + $ModName)
-                New-Variable -Name ('ModJob' + $ModName)
+                        Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4])).AddArgument($($args[5])).AddArgument($null).AddArgument($null).AddArgument($null).AddArgument($null)
 
-                Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
+                        Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
 
-                Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
-
-                $job += (get-variable -name ('ModJob' + $ModName)).Value
-            }
-
-            while ($Job.Runspace.IsCompleted -contains $false) {}
-
-            foreach ($Module in $Modules) {
-                If ($($args[8]) -eq $true) {
-                    $Modul = $Module.split('/')
-                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                    } Else {
-                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                }
-
-                New-Variable -Name ('ModValue' + $ModName)
-                Set-Variable -Name ('ModValue' + $ModName) -Value (((get-variable -name ('ModRun' + $ModName)).Value).EndInvoke((get-variable -name ('ModJob' + $ModName)).Value))
-
-            }
-
-            $Hashtable = New-Object System.Collections.Hashtable
-
-            foreach ($Module in $Modules) {
-                If ($($args[8]) -eq $true) {
-                    $Modul = $Module.split('/')
-                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                    } Else {
-                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                }
-                $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
-            }
-
-            $Hashtable
-
-        } -ArgumentList $PSScriptRoot, $Subscriptions, $InTag, $Resources, 'Processing' , $null, $null, $null, $RunOnline, $Repo, $RawRepo   | Out-Null
-
-        <######################################################### NETWORK RESOURCE GROUP JOB ######################################################################>
-
-        Write-Debug ('Starting Networking Processing Job.')
-        Start-job -Name 'Networking' -ScriptBlock {
-
-            If ($($args[8]) -eq $true) {
-                $OnlineRepo = Invoke-WebRequest -Uri ($($args[9]) + '/Networking')
-                $Modules = $OnlineRepo.Links | Where-Object { $_.href -like '*.ps1' }
-                $Modules = $Modules.href
-            }
-            Else {
-                if($($args[0]) -like '*\*')
-                    {
-                        $Modules = Get-ChildItem -Path ($($args[0]) + '\Modules\Networking\*.ps1') -Recurse
+                        $job += (get-variable -name ('ModJob' + $ModName)).Value
                     }
-                else
-                    {
-                        $Modules = Get-ChildItem -Path ($($args[0]) + '/Modules/Networking/*.ps1') -Recurse
+
+                    while ($Job.Runspace.IsCompleted -contains $false) {}
+
+                    foreach ($Module in $Modules) {
+                        If ($($args[9]) -eq $true) {
+                            $Modul = $Module.split('/')
+                                $ModName = $Modul[8].Substring(0, $Modul[8].length - ".ps1".length)
+                            } Else {
+                                $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
+                        }
+
+                        New-Variable -Name ('ModValue' + $ModName)
+                        Set-Variable -Name ('ModValue' + $ModName) -Value (((get-variable -name ('ModRun' + $ModName)).Value).EndInvoke((get-variable -name ('ModJob' + $ModName)).Value))
                     }
-            }
-            $job = @()
 
-            foreach ($Module in $Modules) {
-                If ($($args[8]) -eq $true) {
-                    $Modul = $Module.split('/')
-                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[10]) + '/Modules/' + $Modul[6] + '/' + $Modul[7])
-                    } Else {
-                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                    $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
-                    $ModuSeq = $ModuSeq0.ReadToEnd()
-                    $ModuSeq0.Dispose()
-                }
+                    $Hashtable = New-Object System.Collections.Hashtable
 
-                $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-                New-Variable -Name ('ModRun' + $ModName)
-                New-Variable -Name ('ModJob' + $ModName)
-
-                Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
-
-                Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
-
-                $job += (get-variable -name ('ModJob' + $ModName)).Value
-            }
-
-            while ($Job.Runspace.IsCompleted -contains $false) {}
-
-            foreach ($Module in $Modules) {
-                If ($($args[8]) -eq $true) {
-                    $Modul = $Module.split('/')
-                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                    } Else {
-                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                }
-
-                New-Variable -Name ('ModValue' + $ModName)
-                Set-Variable -Name ('ModValue' + $ModName) -Value (((get-variable -name ('ModRun' + $ModName)).Value).EndInvoke((get-variable -name ('ModJob' + $ModName)).Value))
-
-            }
-
-            $Hashtable = New-Object System.Collections.Hashtable
-
-            foreach ($Module in $Modules) {
-                If ($($args[8]) -eq $true) {
-                    $Modul = $Module.split('/')
-                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                    } Else {
-                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                }
-                $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
-            }
-
-            $Hashtable
-
-        } -ArgumentList $PSScriptRoot, $Subscriptions, $InTag, $Resources, 'Processing' , $null, $null, $null, $RunOnline, $Repo, $RawRepo   | Out-Null
-
-        <######################################################### INFRASTRUCTURE RESOURCE GROUP JOB ######################################################################>
-
-        Write-Debug ('Starting Infrastructure Processing Job.')
-        Start-job -Name 'Infrastructure' -ScriptBlock {
-
-            If ($($args[8]) -eq $true) {
-                $OnlineRepo = Invoke-WebRequest -Uri ($($args[9]) + '/Infrastructure')
-                $Modules = $OnlineRepo.Links | Where-Object { $_.href -like '*.ps1' }
-                $Modules = $Modules.href
-            }
-            Else {
-                if($($args[0]) -like '*\*')
-                    {
-                        $Modules = Get-ChildItem -Path ($($args[0]) + '\Modules\Infrastructure\*.ps1') -Recurse
+                    foreach ($Module in $Modules) {
+                        If ($($args[9]) -eq $true) {
+                            $Modul = $Module.split('/')
+                                $ModName = $Modul[8].Substring(0, $Modul[8].length - ".ps1".length)
+                            } Else {
+                                $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
+                        }
+                        $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
                     }
-                else
-                    {
-                        $Modules = Get-ChildItem -Path ($($args[0]) + '/Modules/Infrastructure/*.ps1') -Recurse
-                    }
+
+                $Hashtable
+                } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, $Resource, 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo| Out-Null                    
+                $Limit = $Limit + 5000   
             }
-            $job = @()
-
-            foreach ($Module in $Modules) {
-                If ($($args[8]) -eq $true) {
-                    $Modul = $Module.split('/')
-                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[10]) + '/Modules/' + $Modul[6] + '/' + $Modul[7])
-                    } Else {
-                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                    $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
-                    $ModuSeq = $ModuSeq0.ReadToEnd()
-                    $ModuSeq0.Dispose()
-                }
-
-
-                $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-                New-Variable -Name ('ModRun' + $ModName)
-                New-Variable -Name ('ModJob' + $ModName)
-
-                Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
-
-                Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
-
-                $job += (get-variable -name ('ModJob' + $ModName)).Value
-            }
-
-            while ($Job.Runspace.IsCompleted -contains $false) {}
-
-            foreach ($Module in $Modules) {
-                If ($($args[8]) -eq $true) {
-                    $Modul = $Module.split('/')
-                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                    } Else {
-                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                }
-
-                New-Variable -Name ('ModValue' + $ModName)
-                Set-Variable -Name ('ModValue' + $ModName) -Value (((get-variable -name ('ModRun' + $ModName)).Value).EndInvoke((get-variable -name ('ModJob' + $ModName)).Value))
-
-            }
-
-            $Hashtable = New-Object System.Collections.Hashtable
-
-            foreach ($Module in $Modules) {
-                If ($($args[8]) -eq $true) {
-                    $Modul = $Module.split('/')
-                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                    } Else {
-                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                }
-                $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
-            }
-
-            $Hashtable
-
-        } -ArgumentList $PSScriptRoot, $Subscriptions, $InTag, $Resources, 'Processing' , $null, $null, $null, $RunOnline, $Repo, $RawRepo   | Out-Null
-
-        <######################################################### DATABASES RESOURCE GROUP JOB ######################################################################>
-
-        Write-Debug ('Starting Database Processing Job.')
-        Start-job -Name 'Database' -ScriptBlock {
-
-            If ($($args[8]) -eq $true) {
-                $OnlineRepo = Invoke-WebRequest -Uri ($($args[9]) + '/Data')
-                $Modules = $OnlineRepo.Links | Where-Object { $_.href -like '*.ps1' }
-                $Modules = $Modules.href
-            }
-            Else {
-                if($($args[0]) -like '*\*')
-                    {
-                        $Modules = Get-ChildItem -Path ($($args[0]) + '\Modules\Data\*.ps1') -Recurse
-                    }
-                else
-                    {
-                        $Modules = Get-ChildItem -Path ($($args[0]) + '/Modules/Data/*.ps1') -Recurse
-                    }
-            }
-            $job = @()
-
-            foreach ($Module in $Modules) {
-                If ($($args[8]) -eq $true) {
-                    $Modul = $Module.split('/')
-                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[10]) + '/Modules/' + $Modul[6] + '/' + $Modul[7])
-                    } Else {
-                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                    $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
-                    $ModuSeq = $ModuSeq0.ReadToEnd()
-                    $ModuSeq0.Dispose()
-                }
-
-                $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-                New-Variable -Name ('ModRun' + $ModName)
-                New-Variable -Name ('ModJob' + $ModName)
-
-                Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[0])).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
-
-                Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
-
-                $job += (get-variable -name ('ModJob' + $ModName)).Value
-            }
-
-            while ($Job.Runspace.IsCompleted -contains $false) {}
-
-            foreach ($Module in $Modules) {
-                If ($($args[8]) -eq $true) {
-                    $Modul = $Module.split('/')
-                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                    } Else {
-                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                }
-
-                New-Variable -Name ('ModValue' + $ModName)
-                Set-Variable -Name ('ModValue' + $ModName) -Value (((get-variable -name ('ModRun' + $ModName)).Value).EndInvoke((get-variable -name ('ModJob' + $ModName)).Value))
-
-            }
-
-            $Hashtable = New-Object System.Collections.Hashtable
-
-            foreach ($Module in $Modules) {
-                If ($($args[8]) -eq $true) {
-                    $Modul = $Module.split('/')
-                        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                    } Else {
-                        $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                }
-                $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
-            }
-
-            $Hashtable
-
-        } -ArgumentList $PSScriptRoot, $Subscriptions, $InTag, $Resources, 'Processing' , $null, $null, $null, $RunOnline, $Repo, $RawRepo   | Out-Null
 
         <############################################################## RESOURCES LOOP CREATION #############################################################>
 
@@ -1127,25 +972,15 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         $JobNames = @()
 
-        $JobNames += 'Subscriptions'
-        $JobNames += 'Compute'
-        $JobNames += 'Networking'
-        $JobNames += 'Infrastructure'
-        $JobNames += 'Database'
-
-        if ($QuotaUsage.IsPresent) {
-            $JobNames += 'Quota Usage'
-        }
-
-        $Jobs = get-job
-        Foreach($Job in $Jobs)
+        Foreach($Job in (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}))
             {
-                Write-Debug ('Current Status of Job:'+$Job.name+'. is: '+$Job.State)
-            }
+                $JobNames += $Job.Name 
+            }                  
+
         while (get-job -Name $JobNames | Where-Object { $_.State -eq 'Running' }) {
             $jb = get-job -Name $JobNames
             $c = (((($jb.count - ($jb | Where-Object { $_.State -eq 'Running' }).Count)) / $jb.Count) * 100)
-            Write-Debug ('Jobs Still Running: '+[string]($jb | Where-Object { $_.State -eq 'Running' }).Name)
+            Write-Debug ('Jobs Still Running: '+[string]($jb | Where-Object { $_.State -eq 'Running' }).count)
             $c = [math]::Round($c)
             Write-Progress -Id 1 -activity "Processing Resource Jobs" -Status "$c% Complete." -PercentComplete $c
             Start-Sleep -Seconds 2
@@ -1156,57 +991,32 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         $AzSubs = Receive-Job -Name 'Subscriptions'
 
-        $AzCompute = Receive-Job -Name 'Compute'
-
-        Write-Debug ('Compute Job Returned: ' + ($AzCompute.values | Where-Object {$_ -ne $null}).Count + ' Resource Types.')
-
-        $AzNetworking = Receive-Job -Name 'Networking'
-
-        Write-Debug ('Networking Job Returned: ' + ($AzNetworking.values | Where-Object {$_ -ne $null}).Count + ' Resource Types.')
-
-        $AzInfrastructure = Receive-Job -Name 'Infrastructure'
-
-        Write-Debug ('Infrastructure Job Returned: ' + ($AzInfrastructure.values | Where-Object {$_ -ne $null}).Count + ' Resource Types.')
-
-        $AzDatabase = Receive-Job -Name 'Database'
-
-        Write-Debug ('Database Job Returned: ' + ($AzDatabase.values | Where-Object {$_ -ne $null}).Count + ' Resource Types.')
-
-        if($QuotaUsage.IsPresent)
-            {
-                $Global:AzQuota = Receive-Job -Name 'Quota Usage'
-            }
-
         $Global:SmaResources = @()
 
-        $Global:SmaResources += $AzCompute
-        $Global:SmaResources += $AzNetworking
-        $Global:SmaResources += $AzInfrastructure
-        $Global:SmaResources += $AzDatabase
+        Foreach ($Job in $JobNames)
+            {
+                $TempJob = Receive-Job -Name $Job
+                Write-Debug ('Job '+ $Job +' Returned: ' + ($TempJob.values | Where-Object {$_ -ne $null}).Count + ' Resource Types.')
+                $Global:SmaResources += $TempJob
+            }        
 
-        <############################################################## Reporting ###################################################################>
+            
+        <############################################################## REPORTING ###################################################################>
 
         Write-Debug ('Starting Reporting Phase.')
         Write-Progress -activity $DataActive -Status "Processing Inventory" -PercentComplete 50
 
+        $ResourceJobs = 'Compute', 'Analytics', 'Containers', 'Data', 'Infrastructure', 'Integration', 'Networking', 'Storage'
+
         If ($RunOnline -eq $true) {
             $Modules = @()
-            Write-Debug ('Running Online, Gethering List Of Modules for Compute.')
-            $OnlineRepoComp = Invoke-WebRequest -Uri ($Repo + '/Compute')
-            $RepoComp = $OnlineRepoComp.Links | Where-Object { $_.href -like '*.ps1' }
-            $Modules += $RepoComp.href
-            Write-Debug ('Running Online, Gethering List Of Modules for Networking.')
-            $OnlineRepoNetworking = Invoke-WebRequest -Uri ($Repo + '/Networking')
-            $RepoNetwork = $OnlineRepoNetworking.Links | Where-Object { $_.href -like '*.ps1' }
-            $Modules += $RepoNetwork.href
-            Write-Debug ('Running Online, Gethering List Of Modules for Database.')
-            $OnlineRepoDB = Invoke-WebRequest -Uri ($Repo + '/Data')
-            $RepoData = $OnlineRepoDB.Links | Where-Object { $_.href -like '*.ps1' }
-            $Modules += $RepoData.href
-            Write-Debug ('Running Online, Gethering List Of Modules for Infrastructure.')
-            $OnlineRepoInfra = Invoke-WebRequest -Uri ($Repo + '/Infrastructure')
-            $RepoInfra = $OnlineRepoInfra.Links | Where-Object { $_.href -like '*.ps1' }
-            $Modules += $RepoInfra.href
+            Foreach ($Module in $ResourceJobs)
+                {
+                    Write-Debug ('Running Online, Gethering List Of Modules for '+$Module+'.')
+                    $OnlineRepo = Invoke-WebRequest -Uri ($Repo + '/' + $Module)
+                    $RepoFolder = $OnlineRepo.Links | Where-Object { $_.href -like '*.ps1' }
+                    $Modules += $RepoFolder.href
+                }
         }
         Else {
             Write-Debug ('Running Offline, Gathering List Of Modules.')
@@ -1260,7 +1070,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         Write-Debug ('Resource Reporting Phase Done.')
 
-        <################################################################### Quotas ###################################################################>
+        <################################################################### QUOTAS ###################################################################>
 
         if($QuotaUsage.IsPresent)
             {
@@ -1303,8 +1113,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             }
 
 
-        <################################################ Security Center #######################################################>
+        <################################################ SECURITY CENTER #######################################################>
         #### Security Center worksheet is generated apart
+
         Write-Debug ('Checking if Should Generate Security Center Sheet.')
         if ($SecurityCenter.IsPresent) {
             Write-Debug ('Generating Security Center Sheet.')
@@ -1402,7 +1213,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             $AdvExcelRun.Dispose()
         }
 
-            <################################################################### Subscriptions ###################################################################>
+        <################################################################### SUBSCRIPTIONS ###################################################################>
 
         Write-Debug ('Generating Subscription sheet for: ' + $Subscriptions.count + ' Subscriptions.')
 
@@ -1492,7 +1303,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         {
         Write-Progress -activity 'Diagrams' -Status "Completing Diagram" -PercentComplete 70 -CurrentOperation "Consolidating Diagram"
 
-            while (get-job -Name 'DrawDiagram','VisioDiagram' | Where-Object { $_.State -eq 'Running' }) {
+            while (get-job -Name 'DrawDiagram' | Where-Object { $_.State -eq 'Running' }) {
                 Write-Progress -Id 1 -activity 'Processing Diagrams' -Status "50% Complete." -PercentComplete 50
                 Start-Sleep -Seconds 2
             }
@@ -1525,8 +1336,10 @@ $Measure = $Global:SRuntime.Totalminutes.ToString('#######.##')
 Write-Host ('Report Complete. Total Runtime was: ' + $Measure + ' Minutes')
 Write-Host ('Total Resources: ') -NoNewline
 write-host $Resources.count -ForegroundColor Cyan
+if (!$SkipAdvisory.IsPresent) {
 Write-Host ('Total Advisories: ') -NoNewline
 write-host $advco -ForegroundColor Cyan
+}
 if ($SecurityCenter.IsPresent) {
     Write-Host ('Total Security Advisories: ' + $Secadvco)
 }

@@ -10,10 +10,10 @@ Excel Sheet Name: AvSet
 https://github.com/azureinventory/ARI/Modules/Infrastructure/AvSet.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -22,10 +22,9 @@ Authors: Claudio Merola and Renato Gregio
 <######## Default Parameters. Don't modify this ########>
 
 param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle)
- 
+
 If ($Task -eq 'Processing')
 {
- 
     <######### Insert the resource extraction here ########>
 
         $AvSet = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/availabilitysets'}
@@ -37,14 +36,15 @@ If ($Task -eq 'Processing')
             $tmp = @()
 
             foreach ($1 in $AvSet) {
-                $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+                $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 Foreach ($vmid in $data.virtualMachines.id) {
                     $vmIds = $vmid.split('/')[8]
                         foreach ($Tag in $Tags) {
                             $obj = @{
-                                'Subscription'     = $sub1.name;
+                                'ID'               = $1.id;
+                                'Subscription'     = $sub1.Name;
                                 'Resource Group'   = $1.RESOURCEGROUP;
                                 'Name'             = $1.NAME;
                                 'Location'         = $1.LOCATION;
@@ -71,6 +71,7 @@ Else
     if($SmaResources.AvSet)
     {
 
+        $TableName = ('AvSetTable_'+($SmaResources.AvSet.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
             
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -91,7 +92,7 @@ Else
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Availability Sets' -AutoSize -MaxAutoSizeRows 100 -TableName 'AvailabilitySets' -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Availability Sets' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
 
         <######## Insert Column comments and documentations here following this model #########>
 

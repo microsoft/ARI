@@ -10,10 +10,10 @@ Excel Sheet Name: NAT Gateway
 https://github.com/azureinventory/ARI/Modules/Networking/NATGateway.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -33,7 +33,7 @@ If ($Task -eq 'Processing') {
             foreach ($1 in $NATGAT) 
                 {
                     $ResUCount = 1
-                    $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+                    $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                     $data = $1.PROPERTIES
                     $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                         foreach ($2 in $data.subnets)
@@ -41,7 +41,8 @@ If ($Task -eq 'Processing') {
                                 foreach ($Tag in $Tags) 
                                     {  
                                         $obj = @{
-                                            'Subscription'          = $sub1.name;
+                                            'ID'                    = $1.id;
+                                            'Subscription'          = $sub1.Name;
                                             'Resource Group'        = $1.RESOURCEGROUP;
                                             'Name'                  = $1.NAME;
                                             'Location'              = $1.LOCATION;
@@ -65,6 +66,8 @@ If ($Task -eq 'Processing') {
 }
 Else {
     if ($SmaResources.NATGateway) {
+
+        $TableName = ('NATGatewayTable_'+($SmaResources.NATGateway.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -90,7 +93,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'NAT Gateway' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureNATGateway' -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'NAT Gateway' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
     
     }
 }

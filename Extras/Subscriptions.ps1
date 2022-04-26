@@ -12,7 +12,7 @@ https://github.com/azureinventory/ARI/Extras/Subscriptions.ps1
    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -29,10 +29,10 @@ If ($Task -eq 'Processing')
 
             foreach ($ResourcesSUB in $ResTable3) {
                 $ResourceDetails = $ResourcesSUB.name -split ","
-                $SubName = $Subscriptions | Where-Object { $_.id -eq ($ResourceDetails[3] -replace (" ", "")) }
+                $SubName = $Subscriptions | Where-Object { $_.Subscription.Id -eq ($ResourceDetails[3] -replace (" ", "")) }
 
                 $obj = @{
-                    'Subscription'   = $SubName.Name;
+                    'Subscription'   = $SubName.Subscription.Name;
                     'Resource Group' = $ResourceDetails[2];
                     'Location'       = $ResourceDetails[1];
                     'Resource Type'  = $ResourceDetails[0];

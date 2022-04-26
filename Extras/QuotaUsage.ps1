@@ -9,10 +9,10 @@ This script process and creates the Quota sheet based on Quotas Used.
 https://github.com/azureinventory/ARI/Extras/QuotaUsage.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.1.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -20,19 +20,21 @@ Authors: Claudio Merola and Renato Gregio
 param($File, $AzQuota, $TableStyle)
 
 $tmp = @()
+$Total = ($AzQuota.Data).count
 foreach($Quota in $AzQuota)
 {
     foreach($Data in $Quota.Data)
-        {
+        {            
             $FreevCPU = ''
-            if($Data.localName -like '*vCPUs'){$FreevCPU = $Data.limit - $Data.currentValue}
+            if($Data.Name.LocalizedValue -like '*vCPUs'){$FreevCPU = $Data.limit - $Data.CurrentValue}
             $obj = @{
                 'Subscription' = $Quota.Subscription;
                 'Region' = $Quota.Location;
                 'Current Usage' = $Data.currentValue;
                 'Limit' = $Data.limit;
-                'Quota' = $Data.localName;
+                'Quota' = $Data.Name.LocalizedValue;
                 'vCPUs Available' = $FreevCPU;
+                'Total' = $Total
             }
             $tmp += $obj
         }
@@ -40,6 +42,7 @@ foreach($Quota in $AzQuota)
 
         $ExcelVar = $tmp
 
+            $TableName = ('QuotaTable_'+$ExcelVar[0].Total)
             $ExcelVar | 
             ForEach-Object { [PSCustomObject]$_ } | 
             Select-Object -Unique 'Subscription',         
@@ -48,7 +51,7 @@ foreach($Quota in $AzQuota)
             'Limit',
             'Quota',
             'vCPUs Available' | 
-            Export-Excel -Path $File -WorksheetName 'Quota Usage' -AutoSize -MaxAutoSizeRows 100 -TableName 'Quota' -TableStyle $tableStyle -Numberformat '0' -MoveToEnd
+            Export-Excel -Path $File -WorksheetName 'Quota Usage' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Numberformat '0' -MoveToEnd
 
 
 

@@ -10,10 +10,10 @@ Excel Sheet Name: LoadBalancer
 https://github.com/azureinventory/ARI/Modules/Networking/LoadBalancer.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle) 
+param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported) 
 If ($Task -eq 'Processing') {
 
     $LoadBalancer = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/loadbalancers' }
@@ -32,7 +32,7 @@ If ($Task -eq 'Processing') {
 
             foreach ($1 in $LoadBalancer) {
                 $ResUCount = 1
-                $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+                $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 if ($null -ne $data.frontendIPConfigurations -and $null -ne $data.backendAddressPools -and $null -ne $data.probes) {
@@ -60,7 +60,8 @@ If ($Task -eq 'Processing') {
                             foreach ($4 in $data.probes) {
                                     foreach ($Tag in $Tags) {
                                         $obj = @{
-                                            'Subscription'              = $sub1.name;
+                                            'ID'                        = $1.id;
+                                            'Subscription'              = $sub1.Name;
                                             'Resource Group'            = $1.RESOURCEGROUP;
                                             'Name'                      = $1.NAME;
                                             'Location'                  = $1.LOCATION;
@@ -111,7 +112,8 @@ If ($Task -eq 'Processing') {
                             }
                                 foreach ($Tag in $Tags) {  
                                     $obj = @{
-                                        'Subscription'              = $sub1.name;
+                                        'ID'                        = $1.id;
+                                        'Subscription'              = $sub1.Name;
                                         'Resource Group'            = $1.RESOURCEGROUP;
                                         'Name'                      = $1.NAME;
                                         'Location'                  = $1.LOCATION;
@@ -154,7 +156,8 @@ If ($Task -eq 'Processing') {
                         }         
                             foreach ($Tag in $Tags) {
                                 $obj = @{
-                                    'Subscription'              = $sub1.name;
+                                    'ID'                        = $1.id;
+                                    'Subscription'              = $sub1.Name;
                                     'Resource Group'            = $1.RESOURCEGROUP;
                                     'Name'                      = $1.NAME;
                                     'Location'                  = $1.LOCATION;
@@ -197,7 +200,8 @@ If ($Task -eq 'Processing') {
                         foreach ($3 in $data.probes) {
                                 foreach ($Tag in $Tags) {
                                     $obj = @{
-                                        'Subscription'              = $sub1.name;
+                                        'ID'                        = $1.id;
+                                        'Subscription'              = $sub1.Name;
                                         'Resource Group'            = $1.RESOURCEGROUP;
                                         'Name'                      = $1.NAME;
                                         'Location'                  = $1.LOCATION;
@@ -236,7 +240,8 @@ If ($Task -eq 'Processing') {
                             if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
                                 foreach ($TagKey in $Tag.Keys) {
                                     $obj = @{
-                                        'Subscription'              = $sub1.name;
+                                        'ID'                        = $1.id;
+                                        'Subscription'              = $sub1.Name;
                                         'Resource Group'            = $1.RESOURCEGROUP;
                                         'Name'                      = $1.NAME;
                                         'Location'                  = $1.LOCATION;
@@ -263,7 +268,8 @@ If ($Task -eq 'Processing') {
                             }
                             else { 
                                 $obj = @{
-                                    'Subscription'              = $sub1.name;
+                                    'ID'                        = $1.id;
+                                    'Subscription'              = $sub1.Name;
                                     'Resource Group'            = $1.RESOURCEGROUP;
                                     'Name'                      = $1.NAME;
                                     'Location'                  = $1.LOCATION;
@@ -294,7 +300,8 @@ If ($Task -eq 'Processing') {
                     foreach ($2 in $data.probes) {
                             foreach ($Tag in $Tags) {
                                 $obj = @{
-                                    'Subscription'              = $sub1.name;
+                                    'ID'                        = $1.id;
+                                    'Subscription'              = $sub1.Name;
                                     'Resource Group'            = $1.RESOURCEGROUP;
                                     'Name'                      = $1.NAME;
                                     'Location'                  = $1.LOCATION;
@@ -326,6 +333,8 @@ If ($Task -eq 'Processing') {
 }
 Else {
     if ($SmaResources.LoadBalancer) {
+
+        $TableName = ('LBTable_'+($SmaResources.LoadBalancer.id | Select-Object -Unique).count)
         $txtLB = New-ConditionalText Basic -Range E:E
                         
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
@@ -358,7 +367,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Load Balancers' -AutoSize -MaxAutoSizeRows 100 -TableName 'LoadBalancers' -TableStyle $tableStyle -ConditionalText $txtLB -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Load Balancers' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $txtLB -Style $Style
     
         <######## Insert Column comments and documentations here following this model #########>
 

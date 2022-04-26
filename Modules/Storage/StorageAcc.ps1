@@ -13,7 +13,7 @@ https://github.com/azureinventory/ARI/Modules/Infrastructure/StorageAcc.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.1
+Version: 2.2.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,10 +21,9 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle)
- 
+param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
+
 If ($Task -eq 'Processing') {
- 
     <######### Insert the resource extraction here ########>
 
     $storageacc = $Resources | Where-Object { $_.TYPE -eq 'microsoft.storage/storageaccounts' }
@@ -37,13 +36,14 @@ If ($Task -eq 'Processing') {
 
             foreach ($1 in $storageacc) {
                 $ResUCount = 1
-                $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+                $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $TLSv = if ($data.minimumTlsVersion -eq 'TLS1_2') { "TLS 1.2" }elseif ($data.minimumTlsVersion -eq 'TLS1_1') { "TLS 1.1" }else { "TLS 1.0" }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {   
                         $obj = @{
-                            'Subscription'                          = $sub1.name;
+                            'ID'                                    = $1.id;
+                            'Subscription'                          = $sub1.Name;
                             'Resource Group'                        = $1.RESOURCEGROUP;
                             'Name'                                  = $1.NAME;
                             'Location'                              = $1.LOCATION;
@@ -82,13 +82,16 @@ Else {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
     if ($SmaResources.StorageAcc) {
+
+        $TableName = ('StorAccTable_'+($SmaResources.StorageAcc.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
-        $condtxt = $(New-ConditionalText false -Range H:H
-            New-ConditionalText falso -Range H:H
-            New-ConditionalText true -Range I:I
-            New-ConditionalText verdadeiro -Range I:I
-            New-ConditionalText 1.0 -Range J:J)
+        $condtxt = @()
+        $condtxt += New-ConditionalText false -Range H:H
+        $condtxt += New-ConditionalText falso -Range H:H
+        $condtxt += New-ConditionalText true -Range I:I
+        $condtxt += New-ConditionalText verdadeiro -Range I:I
+        $condtxt += New-ConditionalText 1.0 -Range J:J
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -122,7 +125,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Storage Acc' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureStorageAccs' -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Storage Acc' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
     
         <######## Insert Column comments and documentations here following this model #########>
 

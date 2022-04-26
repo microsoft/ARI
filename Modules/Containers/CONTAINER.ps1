@@ -10,10 +10,10 @@ Excel Sheet Name: CONTAINER
 https://github.com/azureinventory/ARI/Modules/Compute/CONTAINER.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -22,10 +22,10 @@ Authors: Claudio Merola and Renato Gregio
 <######## Default Parameters. Don't modify this ########>
 
 param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle)
- 
+
 If ($Task -eq 'Processing')
 {
- 
+
     <######### Insert the resource extraction here ########>
 
         $CONTAINER = $Resources | Where-Object {$_.TYPE -eq 'microsoft.containerinstance/containergroups'}
@@ -44,7 +44,8 @@ If ($Task -eq 'Processing')
                 foreach ($2 in $data.containers) {
                         foreach ($Tag in $Tags) {
                             $obj = @{
-                                'Subscription'        = $sub1.name;
+                                'ID'                  = $1.id;
+                                'Subscription'        = $sub1.Name;
                                 'Resource Group'      = $1.RESOURCEGROUP;
                                 'Instance Name'       = $1.NAME;
                                 'Location'            = $1.LOCATION;
@@ -61,6 +62,7 @@ If ($Task -eq 'Processing')
                                 'Protocol'            = [string]$2.properties.ports.protocol;
                                 'Port'                = [string]$2.properties.ports.port;
                                 'Resource U'          = $ResUCount;
+                                'Total'               = $Total;
                                 'Tag Name'            = [string]$Tag.Name;
                                 'Tag Value'           = [string]$Tag.Value
                             }
@@ -81,7 +83,7 @@ Else
 
     if($SmaResources.CONTAINER)
     {
-
+        $TableName = ('ContsTable_'+($SmaResources.CONTAINER.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -111,7 +113,7 @@ Else
             
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Containers' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureContainers' -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Containers' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
 
     }
 }

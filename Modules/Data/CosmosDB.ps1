@@ -10,10 +10,10 @@ Excel Sheet Name: CosmosDB
 https://github.com/azureinventory/ARI/Modules/Data/CosmosDB.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle)
+param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -48,7 +48,8 @@ If ($Task -eq 'Processing') {
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
-                            'Subscription'              = $sub1.name;
+                            'ID'                        = $1.id;
+                            'Subscription'              = $sub1.Name;
                             'Resource Group'            = $1.RESOURCEGROUP;
                             'Name'                      = $1.NAME;
                             'Location'                  = $1.LOCATION;
@@ -84,10 +85,11 @@ Else {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
     if ($SmaResources.CosmosDB) {
+
+        $TableName = ('CosmosTable_'+($SmaResources.CosmosDB.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
-        
+
         $condtxt = @()
-        
         $condtxt += New-ConditionalText FALSE -Range J:J
         $condtxt += New-ConditionalText FALSO -Range J:J
         $condtxt += New-ConditionalText Enabled -Range M:M
@@ -124,7 +126,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Cosmos DB' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureCosmosDB' -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Cosmos DB' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }
     <######## Insert Column comments and documentations here following this model #########>

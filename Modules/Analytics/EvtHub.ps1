@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle)
+param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
  
 If ($Task -eq 'Processing')
 {
@@ -35,7 +35,6 @@ If ($Task -eq 'Processing')
     if($evthub)
         {
             $tmp = @()
-
             foreach ($1 in $evthub) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
@@ -44,7 +43,8 @@ If ($Task -eq 'Processing')
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) { 
                         $obj = @{
-                            'Subscription'         = $sub1.name;
+                            'ID'                   = $1.id;
+                            'Subscription'         = $sub1.Name;
                             'Resource Group'       = $1.RESOURCEGROUP;
                             'Name'                 = $1.NAME;
                             'Location'             = $1.LOCATION;
@@ -76,10 +76,12 @@ Else
 
     if($SmaResources.EvtHub)
     {
+        $TableName = ('EvtHubTable_'+($SmaResources.EvtHub.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
-        $txtEvt = $(New-ConditionalText false -Range I:I
-            New-ConditionalText falso -Range I:I)
+        $condtxt = @()
+        $condtxt += New-ConditionalText false -Range I:I
+        $condtxt += New-ConditionalText falso -Range I:I
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -104,7 +106,7 @@ Else
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Event Hubs' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureEventHubs' -TableStyle $tableStyle -ConditionalText $txtEvt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Event Hubs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style, $StyleCost
 
         <######## Insert Column comments and documentations here following this model #########>
 

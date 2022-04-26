@@ -10,10 +10,10 @@ Excel Sheet Name: Networkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecu
 https://github.com/azureinventory/ARI/Modules/Networking/NetworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkeecuritytroupworkSecurityGroup.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.2
+Version: 2.2.0
 First Release Date: 2021.10.05
 Authors: Christopher Lewis
 
@@ -31,7 +31,7 @@ If ($Task -eq 'Processing') {
 
         foreach ($1 in $NSGs) {
             $ResUCount = 1
-            $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+            $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
             $data = $1.PROPERTIES
             $Tags = if (![string]::IsNullOrEmpty($1.tags.psobject.properties)) { $1.tags.psobject.properties }else { '0' }
             foreach ($2 in $data.securityRules)
@@ -45,7 +45,8 @@ If ($Task -eq 'Processing') {
                     }
 
                     $obj = @{
-                        'Subscription'                 = $sub1.name;
+                        'ID'                           = $1.id;
+                        'Subscription'                 = $sub1.Name;
                         'Resource Group'               = $1.RESOURCEGROUP;
                         'Name'                         = $1.NAME;
                         'Location'                     = $1.LOCATION;
@@ -83,6 +84,8 @@ If ($Task -eq 'Processing') {
     # --------------------------------------------------------------------------------
     $ExcelVar = $SmaResources.NetworkSecurityGroup
     if ($ExcelVar) {
+
+        $TableName = ('NSGTable_'+($SmaResources.NetworkSecurityGroup.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         #Conditional formats.  Note that this can be $() for none
@@ -119,7 +122,7 @@ If ($Task -eq 'Processing') {
 
         $ExcelVar |
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc |
-        Export-Excel -Path $File -WorksheetName 'Network Security Groups' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureNetworkSecurityGroups' -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Network Security Groups' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
 
         <######## Insert Column comments and documentations here following this model.  See StoraceAcc.ps1 for samples #########>

@@ -13,7 +13,7 @@ https://github.com/azureinventory/ARI/Modules/Compute/VM.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,14 +21,15 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle,$Unsupported) 
+param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+
 If ($Task -eq 'Processing')
 {
 
         $vm =  $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachines'}
         $nic = $Resources | Where-Object {$_.TYPE -eq 'microsoft.network/networkinterfaces'}
         $vmexp = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachines/extensions'}
-        $disk = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/disks'}    
+        $disk = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/disks'}
 
 
     if($vm)
@@ -107,7 +108,8 @@ If ($Task -eq 'Processing')
                         foreach ($Tag in $Tags) 
                             {
                                 $obj = @{
-                                'Subscription'                  = $sub1.name;
+                                'ID'                            = $1.id;
+                                'Subscription'                  = $sub1.Name;
                                 'Resource Group'                = $1.RESOURCEGROUP;
                                 'VM Name'                       = $1.NAME;
                                 'Location'                      = $1.LOCATION;
@@ -146,7 +148,8 @@ If ($Task -eq 'Processing')
                                 }
                                 $tmp += $obj
                                 if ($ResUCount -eq 1) { $ResUCount = 0 } 
-                            }                        
+                            }
+                            Remove-Variable PIP, vmnic, vmnsg, VNET, Subnet                        
                         }
                     }
                     $tmp
@@ -156,92 +159,92 @@ else
 {
     If($SmaResources.VM)
         {
+            $TableName = ('VMTable_'+($SmaResources.VM.id | Select-Object -Unique).count)
             $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
             $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AF:AF -Width 60 -WrapText 
 
-            $cond = @()
-            Foreach ($UnSupOS in $Unsupported.Linux)
+                $cond = @()
+                Foreach ($UnSupOS in $Unsupported.Linux)
+                    {
+                        #ImageVersion
+                        $cond += New-ConditionalText $UnSupOS -Range H:H
+                    }
+    
+                #Hybrid Benefit
+                $cond += New-ConditionalText None -Range I:I
+                #NSG
+                $cond += New-ConditionalText None -Range Y:Y
+                #Boot Diagnostics
+                $cond += New-ConditionalText falso -Range L:L
+                $cond += New-ConditionalText false -Range L:L
+                #Performance Agent
+                $cond += New-ConditionalText falso -Range M:M
+                $cond += New-ConditionalText false -Range M:M
+                #Azure Monitor
+                $cond += New-ConditionalText falso -Range N:N
+                $cond += New-ConditionalText false -Range N:N
+                #Acelerated Network
+                $cond += New-ConditionalText false -Range AA:AA
+                $cond += New-ConditionalText falso -Range AA:AA  
+    
+                $Exc = New-Object System.Collections.Generic.List[System.Object]
+                $Exc.Add('Subscription')
+                $Exc.Add('Resource Group')
+                $Exc.Add('VM Name')
+                $Exc.Add('VM Size')
+                $Exc.Add('OS Type')
+                $Exc.Add('Location')
+                $Exc.Add('Image Reference')
+                $Exc.Add('Image Version')
+                $Exc.Add('Hybrid Benefit')
+                $Exc.Add('Admin Username')
+                $Exc.Add('Update Management')
+                $Exc.Add('Boot Diagnostics')
+                $Exc.Add('Performance Agent')
+                $Exc.Add('Azure Monitor')
+                $Exc.Add('OS Disk Storage Type')
+                $Exc.Add('OS Disk Size (GB)')
+                $Exc.Add('Data Disk Storage Type')
+                $Exc.Add('Data Disk Size (GB)')
+                $Exc.Add('Power State')
+                $Exc.Add('Availability Set')
+                $Exc.Add('Zone')    
+                $Exc.Add('Virtual Network')
+                $Exc.Add('Subnet')
+                $Exc.Add('DNS Servers')
+                $Exc.Add('NSG')
+                $Exc.Add('NIC Name')
+                $Exc.Add('Accelerated Networking')
+                $Exc.Add('IP Forwarding')
+                $Exc.Add('Private IP Address')
+                $Exc.Add('Private IP Allocation')
+                $Exc.Add('Public IP')
+                $Exc.Add('VM Extensions')
+                $Exc.Add('Resource U')
+                if($InTag)
                 {
-                    #ImageVersion
-                    $cond += New-ConditionalText $UnSupOS -Range H:H
+                    $Exc.Add('Tag Name')
+                    $Exc.Add('Tag Value') 
                 }
-
-            #Hybrid Benefit
-            $cond += New-ConditionalText None -Range I:I
-            #NSG
-            $cond += New-ConditionalText None -Range Y:Y
-            #Boot Diagnostics
-            $cond += New-ConditionalText falso -Range L:L
-            $cond += New-ConditionalText false -Range L:L
-            #Performance Agent
-            $cond += New-ConditionalText falso -Range M:M
-            $cond += New-ConditionalText false -Range M:M
-            #Azure Monitor
-            $cond += New-ConditionalText falso -Range N:N
-            $cond += New-ConditionalText false -Range N:N
-            #Acelerated Network
-            $cond += New-ConditionalText false -Range AA:AA
-            $cond += New-ConditionalText falso -Range AA:AA
-
-
-            $Exc = New-Object System.Collections.Generic.List[System.Object]
-            $Exc.Add('Subscription')
-            $Exc.Add('Resource Group')
-            $Exc.Add('VM Name')
-            $Exc.Add('VM Size')
-            $Exc.Add('OS Type')
-            $Exc.Add('Location')
-            $Exc.Add('Image Reference')
-            $Exc.Add('Image Version')
-            $Exc.Add('Hybrid Benefit')
-            $Exc.Add('Admin Username')
-            $Exc.Add('Update Management')
-            $Exc.Add('Boot Diagnostics')
-            $Exc.Add('Performance Agent')
-            $Exc.Add('Azure Monitor')
-            $Exc.Add('OS Disk Storage Type')
-            $Exc.Add('OS Disk Size (GB)')
-            $Exc.Add('Data Disk Storage Type')
-            $Exc.Add('Data Disk Size (GB)')
-            $Exc.Add('Power State')
-            $Exc.Add('Availability Set')
-            $Exc.Add('Zone')    
-            $Exc.Add('Virtual Network')
-            $Exc.Add('Subnet')
-            $Exc.Add('DNS Servers')
-            $Exc.Add('NSG')
-            $Exc.Add('NIC Name')
-            $Exc.Add('Accelerated Networking')
-            $Exc.Add('IP Forwarding')
-            $Exc.Add('Private IP Address')
-            $Exc.Add('Private IP Allocation')
-            $Exc.Add('Public IP')
-            $Exc.Add('VM Extensions')
-            $Exc.Add('Resource U')
-            if($InTag)
-            {
-                $Exc.Add('Tag Name')
-                $Exc.Add('Tag Value') 
-            }
-
-            $ExcelVar = $SmaResources.VM
-                        
-            $ExcelVar | 
-            ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-            Export-Excel -Path $File -WorksheetName 'Virtual Machines' -TableName 'AzureVMs' -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $cond -Style $Style, $StyleExt
-         
-            $excel = Open-ExcelPackage -Path $File -KillExcel
-
-            $null = $excel.'Virtual Machines'.Cells["L1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
-            $excel.'Virtual Machines'.Cells["L1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
-            $null = $excel.'Virtual Machines'.Cells["M1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
-            $excel.'Virtual Machines'.Cells["M1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
-            $null = $excel.'Virtual Machines'.Cells["N1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource’s health.", "Azure Resource Inventory")
-            $excel.'Virtual Machines'.Cells["N1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
-            $null = $excel.'Virtual Machines'.Cells["Y1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
-            $excel.'Virtual Machines'.Cells["Y1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
-            $null = $excel.'Virtual Machines'.Cells["AA1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
-            $excel.'Virtual Machines'.Cells["AA1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
+    
+                $ExcelVar = $SmaResources.VM
+                            
+                $ExcelVar | 
+                ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+                Export-Excel -Path $File -WorksheetName 'Virtual Machines' -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $cond -Style $Style, $StyleExt
+             
+                $excel = Open-ExcelPackage -Path $File -KillExcel
+    
+                $null = $excel.'Virtual Machines'.Cells["L1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["L1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
+                $null = $excel.'Virtual Machines'.Cells["M1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["M1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
+                $null = $excel.'Virtual Machines'.Cells["N1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource’s health.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["N1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
+                $null = $excel.'Virtual Machines'.Cells["Y1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["Y1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
+                $null = $excel.'Virtual Machines'.Cells["AA1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["AA1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
 
             Close-ExcelPackage $excel
         }             

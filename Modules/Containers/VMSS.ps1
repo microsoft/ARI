@@ -10,10 +10,10 @@ Excel Sheet Name: VMSS
 https://github.com/azureinventory/ARI/Modules/Compute/VMSS.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,11 +21,10 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle)
- 
+param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+
 If ($Task -eq 'Processing')
 {
- 
     <######### Insert the resource extraction here ########>
 
         $vmss = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachinescalesets'}
@@ -58,7 +57,8 @@ If ($Task -eq 'Processing')
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 foreach ($Tag in $Tags) {
                     $obj = @{
-                        'Subscription'                  = $sub1.name;
+                        'ID'                            = $1.id;
+                        'Subscription'                  = $sub1.Name;
                         'Resource Group'                = $1.RESOURCEGROUP;
                         'Name'                          = $1.NAME;
                         'Location'                      = $1.LOCATION;
@@ -104,17 +104,19 @@ Else
     if($SmaResources.VMSS)
     {
 
-        $Style = @()
+        $TableName = ('VMSSTable_'+($SmaResources.VMSS.id | Select-Object -Unique).count)
+        $Style = @()        
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -Range A:V
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0.0' -Range X:Z
-        $Style += New-ExcelStyle -HorizontalAlignment Left -Range W:W -Width 60 -WrapText 
-                   
-        $condtxt = @()       
+        $Style += New-ExcelStyle -HorizontalAlignment Left -Range W:W -Width 60 -WrapText
+
+        $condtxt = @()
         $condtxt += New-ConditionalText FALSE -Range K:K
         $condtxt += New-ConditionalText FALSO -Range K:K
         $condtxt += New-ConditionalText Disabled -Range H:H
         $condtxt += New-ConditionalText FALSE -Range U:U
         $condtxt += New-ConditionalText FALSO -Range U:U
+
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -152,7 +154,7 @@ Else
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'VM Scale Sets' -AutoSize -MaxAutoSizeRows 50 -TableName 'AzureVMSS' -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'VM Scale Sets' -AutoSize -MaxAutoSizeRows 50 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }
 }

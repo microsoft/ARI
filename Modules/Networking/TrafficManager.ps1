@@ -10,10 +10,10 @@ Excel Sheet Name: TrafficManager
 https://github.com/azureinventory/ARI/Modules/Networking/TrafficManager.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -34,12 +34,13 @@ If ($Task -eq 'Processing') {
 
             foreach ($1 in $TrafficManager) {
                 $ResUCount = 1
-                $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+                $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
-                            'Subscription'                      = $sub1.name;
+                            'ID'                                = $1.id;
+                            'Subscription'                      = $sub1.Name;
                             'Resource Group'                    = $1.RESOURCEGROUP;
                             'Name'                              = $1.NAME;
                             'Status'                            = $data.profilestatus;
@@ -62,8 +63,9 @@ If ($Task -eq 'Processing') {
 Else {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if ($SmaResources.AzureFirewall) {
+    if ($SmaResources.TrafficManager) {
 
+        $TableName = ('TrafficManagerTable_'+($SmaResources.TrafficManager.id | Select-Object -Unique).count)
         $condtxt = New-ConditionalText inactive -Range G:G
 
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
@@ -82,11 +84,11 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.AzureFirewall 
+        $ExcelVar = $SmaResources.TrafficManager
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Traffic Manager' -AutoSize -MaxAutoSizeRows 100 -TableName 'TrafficManager' -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Traffic Manager' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }
     <######## Insert Column comments and documentations here following this model #########>

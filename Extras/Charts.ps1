@@ -9,10 +9,10 @@ This script process and creates the Overview sheet.
 https://github.com/azureinventory/ARI/Extras/Charts.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.1.1
+Version: 2.2.5
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -73,11 +73,13 @@ $TabDraw.SetSize(130 , 78)
 $TabDraw.SetPosition(1, 0, 0, 0)
 $TabDraw.TextAlignment = 'Center'
 
+
 $Table = @()
 Foreach ($WorkS in $Worksheets) {
+    $Number = $WorkS.Tables.Name.split('_')
     $tmp = @{
         'Name' = $WorkS.name;
-        'Size' = ($WorkS.Dimension.Rows - 1)
+        'Size' = [int]$Number[1]
     }
     $Table += $tmp
 }
@@ -88,7 +90,7 @@ $Excel.Dispose()
 $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
 $Table | 
-ForEach-Object { [PSCustomObject]$_ } | 
+ForEach-Object { [PSCustomObject]$_ } | Sort-Object -Property 'Size' -Descending |
 Select-Object -Unique 'Name',
 'Size' | Export-Excel -Path $File -WorksheetName 'Overview' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureTabs' -TableStyle $TableStyleEx -Style $Style -StartRow 6 -StartColumn 1
 
@@ -98,7 +100,7 @@ $Date = (get-date -Format "MM/dd/yyyy")
 $ExtractTime = ($ExtractionRunTime.Totalminutes.ToString('#######.##')+' Minutes')
 $ReportTime = ($ReportingRunTime.Totalminutes.ToString('#######.##')+' Minutes')
 
-$User = $Subscriptions[0].user.name
+$User = $Subscriptions[0].ExtendedProperties.Account
 $TotalRes = $Resources
 
 $Excel = New-Object -TypeName OfficeOpenXml.ExcelPackage $File
@@ -176,7 +178,7 @@ $Draw.SetSize(445, 240)
 $Draw.SetPosition(1, 0, 2, 5)
 
 
-$txt = $Draw.RichText.Add('Azure Resource Inventory v2' + "`n")
+$txt = $Draw.RichText.Add('Azure Resource Inventory v2.2' + "`n")
 $txt.Size = 14
 $txt.ComplexFont = $Font
 $txt.LatinFont = $Font

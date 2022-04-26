@@ -10,10 +10,10 @@ Excel Sheet Name: AKS
 https://github.com/azureinventory/ARI/Modules/Compute/AKS.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -22,10 +22,9 @@ Authors: Claudio Merola and Renato Gregio
 <######## Default Parameters. Don't modify this ########>
 
 param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle,$Unsupported)
- 
+
 If ($Task -eq 'Processing')
 {
- 
     <######### Insert the resource extraction here ########>
 
         $AKS = $Resources | Where-Object {$_.TYPE -eq 'microsoft.containerservice/managedclusters'}
@@ -36,8 +35,6 @@ If ($Task -eq 'Processing')
         {
             $tmp = @()
 
-            $AKS = $AKS
-
             foreach ($1 in $AKS) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
@@ -47,7 +44,8 @@ If ($Task -eq 'Processing')
                 foreach ($2 in $data.agentPoolProfiles) {
                         foreach ($Tag in $Tags) {
                             $obj = @{
-                                'Subscription'               = $sub1.name;
+                                'ID'                         = $1.id;
+                                'Subscription'               = $sub1.Name;
                                 'Resource Group'             = $1.RESOURCEGROUP;
                                 'Clusters'                   = $1.NAME;
                                 'Location'                   = $1.LOCATION;
@@ -103,13 +101,15 @@ Else
     if($SmaResources.AKS)
     {
 
-        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'    
+        $TableName = ('AKSTable_'+($SmaResources.AKS.id | Select-Object -Unique).count)
+        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'   
 
         $cond = @()
         Foreach ($UnSupOS in $Unsupported.AKS)
             {
                 $cond += New-ConditionalText $UnSupOS -Range E:E
             }
+
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -156,6 +156,6 @@ Else
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName 'AzureKubernetes' -MaxAutoSizeRows 50 -TableStyle $tableStyle -ConditionalText $cond -Numberformat '0' -Style $Style               
+        Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName $TableName -MaxAutoSizeRows 50 -TableStyle $tableStyle -ConditionalText $cond -Numberformat '0' -Style $Style            
     }
 }

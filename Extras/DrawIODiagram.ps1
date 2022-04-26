@@ -9,18 +9,17 @@ This script process and creates a Draw.io Diagram based on resources present in 
 https://github.com/azureinventory/ARI/Extras/DrawIODiagram.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.1.9
+Version: 2.2.7
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
 #>
 param($Subscriptions, $Resources, $Advisories, $DDFile)
 
-<# Change this variable to $true to draw the full environment #>
-#$Global:FullEnvironment = $true
+
 $Global:FullEnvironment = $false
 
 Function Icon {
@@ -41,7 +40,6 @@ Param($Style,$x,$y,$w,$h)
     
     $Global:XmlWriter.WriteEndElement()
 }
-
 
 Function Connect {
 Param($Source,$Target)
@@ -71,9 +69,12 @@ Function Variables0
     $Global:AZLGWs = $resources | Where-Object {$_.Type -eq 'microsoft.network/localnetworkgateways'} | Select-Object -Property * -Unique
     $Global:AZVNETs = $resources | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworks'} | Select-Object -Property * -Unique
     $Global:AZCONs = $resources | Where-Object {$_.Type -eq 'microsoft.network/connections'} | Select-Object -Property * -Unique
-    $Global:AZEXPROUTEs = $resources | Where-Object {$_.Type -eq 'microsoft.network/expressroutecircuits'} | Select-Object -Property * -Unique    
+    $Global:AZEXPROUTEs = $resources | Where-Object {$_.Type -eq 'microsoft.network/expressroutecircuits'} | Select-Object -Property * -Unique  
     $Global:PIPs = $resources | Where-Object {$_.Type -eq 'microsoft.network/publicipaddresses'} | Select-Object -Property * -Unique
-    $Global:AZVWAN = $resources | Where-Object {$_.Type -eq 'microsoft.network/virtualwans'} | Select-Object -Property * -Unique     
+    $Global:AZVWAN = $resources | Where-Object {$_.Type -eq 'microsoft.network/virtualwans'} | Select-Object -Property * -Unique
+    $Global:AZVHUB = $resources | Where-Object {$_.Type -eq 'microsoft.network/virtualhubs'} | Select-Object -Property * -Unique
+    $Global:AZVPNSITES = $resources | Where-Object {$_.Type -eq 'microsoft.network/vpnsites'} | Select-Object -Property * -Unique
+    $Global:AZVERs = $resources | Where-Object {$_.Type -eq 'microsoft.network/expressroutegateways'} | Select-Object -Property * -Unique
     
     $Global:CleanPIPs = $Global:PIPs | Where-Object {$_.id -notin $Global:AZVGWs.properties.ipConfigurations.properties.publicIPAddress.id}
 
@@ -96,7 +97,8 @@ Function Stensils
             $Global:IconNSG = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Network_Security_Groups.svg;" # width="26.35" height="32"
             $Global:IconUDR =  "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Route_Tables.svg;" #width="30.97" height="30"
             $Global:IconDDOS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/DDoS_Protection_Plans.svg;" # width="23" height="28"
-            $Global:IconPIP = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Public_IP_Addresses.svg;" # width="65" height="52"          
+            $Global:IconPIP = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Public_IP_Addresses.svg;" # width="65" height="52"  
+            $Global:IconNAT = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/NAT.svg;" # width="65" height="52"            
 
             <########################## Azure Generic Stencils #############################>
 
@@ -150,166 +152,232 @@ Function OnPremNet {
 
     $Global:Alt = 0
 
-    foreach($GTW in $AZLGWs)
-        {
-            if($GTW.properties.provisioningState -ne 'Succeeded')
-            {
-                $Global:XmlWriter.WriteStartElement('object')            
-                $Global:XmlWriter.WriteAttributeString('label', '')
-                $Global:XmlWriter.WriteAttributeString('Status', 'This Local Network Gateway has Errors')
-                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-    
-                    Icon $IconError 40 ($Global:Alt+25) "25" "25"
-    
-                $Global:XmlWriter.WriteEndElement()
-            }
-        
-            $Con1 = $AZCONs | Where-Object {$_.properties.localNetworkGateway2.id -eq $GTW.id}
-            
-            if(!$Con1 -and $GTW.properties.provisioningState -eq 'Succeeded')
-            {
-                $Global:XmlWriter.WriteStartElement('object')            
-                $Global:XmlWriter.WriteAttributeString('label', '')
-                $Global:XmlWriter.WriteAttributeString('Status', 'No Connections were found in this Local Network Gateway')
-                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-    
-                    Icon $SymInfo 40 ($Global:Alt+30) "20" "20"
-    
-                $Global:XmlWriter.WriteEndElement()
-            }
-            
-            $Name = $GTW.name
-            $IP = $GTW.properties.gatewayIpAddress
+    ##################################### Local Network Gateway #############################################
 
+    foreach($GTW in $AZLGWs)
+    {
+        if($GTW.properties.provisioningState -ne 'Succeeded')
+        {
             $Global:XmlWriter.WriteStartElement('object')            
-            $Global:XmlWriter.WriteAttributeString('label', ("`n" + [string]$Name + "`n" + [string]$IP))
-            $Global:XmlWriter.WriteAttributeString('Local_Address_Space', [string]$GTW.properties.localNetworkAddressSpace.addressPrefixes)
+            $Global:XmlWriter.WriteAttributeString('label', '')
+            $Global:XmlWriter.WriteAttributeString('Status', 'This Local Network Gateway has Errors')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $IconTraffic 50 $Global:Alt "67" "40"
+                Icon $IconError 40 ($Global:Alt+25) "25" "25"
 
-            $Global:XmlWriter.WriteEndElement()            
-            #$tt = $tt + 200        
-
-            OnPrem $Con1
-
-            $Global:Alt = $Global:Alt + 150
+            $Global:XmlWriter.WriteEndElement()
         }
+    
+        $Con1 = $AZCONs | Where-Object {$_.properties.localNetworkGateway2.id -eq $GTW.id}
+        
+        if(!$Con1 -and $GTW.properties.provisioningState -eq 'Succeeded')
+        {
+            $Global:XmlWriter.WriteStartElement('object')            
+            $Global:XmlWriter.WriteAttributeString('label', '')
+            $Global:XmlWriter.WriteAttributeString('Status', 'No Connections were found in this Local Network Gateway')
+            $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
+                Icon $SymInfo 40 ($Global:Alt+30) "20" "20"
 
+            $Global:XmlWriter.WriteEndElement()
+        }
+        
+        $Name = $GTW.name
+        $IP = $GTW.properties.gatewayIpAddress
+
+        $Global:XmlWriter.WriteStartElement('object')            
+        $Global:XmlWriter.WriteAttributeString('label', ("`n" + [string]$Name + "`n" + [string]$IP))
+        $Global:XmlWriter.WriteAttributeString('Local_Address_Space', [string]$GTW.properties.localNetworkAddressSpace.addressPrefixes)
+        $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+            Icon $IconTraffic 50 $Global:Alt "67" "40"
+
+        $Global:XmlWriter.WriteEndElement()            
+        #$tt = $tt + 200        
+
+        OnPrem $Con1
+
+        $Global:Alt = $Global:Alt + 150
+    }
 
     ##################################### ERS #############################################
 
-
-
     Foreach($ERs in $AZEXPROUTEs)
+    {
+        if($ERs.properties.provisioningState -ne 'Succeeded')
         {
-            if($ERs.properties.provisioningState -ne 'Succeeded')
-            {
-                $Global:XmlWriter.WriteStartElement('object')            
-                $Global:XmlWriter.WriteAttributeString('label', '')
-                $Global:XmlWriter.WriteAttributeString('Status', 'This Express Route has Errors')
-                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-    
-                    Icon $IconError 51 ($Global:Alt+25) "25" "25"
-    
-                $Global:XmlWriter.WriteEndElement()
-            }       
-
-            $Con1 = $AZCONs | Where-Object {$_.properties.peer.id -eq $ERs.id}
-            
-            if(!$Con1 -and $ERs.properties.circuitProvisioningState -eq 'Enabled')
-            {
-                $Global:XmlWriter.WriteStartElement('object')            
-                $Global:XmlWriter.WriteAttributeString('label', '')
-                $Global:XmlWriter.WriteAttributeString('Status', 'No Connections were found in this Express Route')
-                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-    
-                    Icon $SymInfo 51 ($Global:Alt+30) "20" "20"
-    
-                $Global:XmlWriter.WriteEndElement()
-            }
-
-            $Name = $ERs.name
-
             $Global:XmlWriter.WriteStartElement('object')            
-            $Global:XmlWriter.WriteAttributeString('label', ("`n" +[string]$Name))
-            $Global:XmlWriter.WriteAttributeString('Provider', [string]$ERs.properties.serviceProviderProperties.serviceProviderName)
-            $Global:XmlWriter.WriteAttributeString('Peering_location', [string]$ERs.properties.serviceProviderProperties.peeringLocation)
-            $Global:XmlWriter.WriteAttributeString('Bandwidth', [string]$ERs.properties.serviceProviderProperties.bandwidthInMbps)
-            $Global:XmlWriter.WriteAttributeString('SKU', [string]$ERs.sku.tier)
-            $Global:XmlWriter.WriteAttributeString('Billing_model', $ERs.sku.family)
+            $Global:XmlWriter.WriteAttributeString('label', '')
+            $Global:XmlWriter.WriteAttributeString('Status', 'This Express Route has Errors')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $IconExpressRoute "61.5" $Global:Alt "44" "40"
+                Icon $IconError 51 ($Global:Alt+25) "25" "25"
 
-            $Global:XmlWriter.WriteEndElement()    
+            $Global:XmlWriter.WriteEndElement()
+        }       
 
-            OnPrem $Con1
+        $Con1 = $AZCONs | Where-Object {$_.properties.peer.id -eq $ERs.id}
+        
+        if(!$Con1 -and $ERs.properties.circuitProvisioningState -eq 'Enabled')
+        {
+            $Global:XmlWriter.WriteStartElement('object')            
+            $Global:XmlWriter.WriteAttributeString('label', '')
+            $Global:XmlWriter.WriteAttributeString('Status', 'No Connections were found in this Express Route')
+            $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-            $Global:Alt = $Global:Alt + 150
-               
+                Icon $SymInfo 51 ($Global:Alt+30) "20" "20"
+
+            $Global:XmlWriter.WriteEndElement()
         }
 
+        $Name = $ERs.name
 
-        Foreach($VWANS in $AZVWAN)
+        $Global:XmlWriter.WriteStartElement('object')            
+        $Global:XmlWriter.WriteAttributeString('label', ("`n" +[string]$Name))
+        $Global:XmlWriter.WriteAttributeString('Provider', [string]$ERs.properties.serviceProviderProperties.serviceProviderName)
+        $Global:XmlWriter.WriteAttributeString('Peering_location', [string]$ERs.properties.serviceProviderProperties.peeringLocation)
+        $Global:XmlWriter.WriteAttributeString('Bandwidth', [string]$ERs.properties.serviceProviderProperties.bandwidthInMbps)
+        $Global:XmlWriter.WriteAttributeString('SKU', [string]$ERs.sku.tier)
+        $Global:XmlWriter.WriteAttributeString('Billing_model', $ERs.sku.family)
+        $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+            Icon $IconExpressRoute "61.5" $Global:Alt "44" "40"
+
+        $Global:XmlWriter.WriteEndElement()    
+
+        OnPrem $Con1
+
+        $Global:Alt = $Global:Alt + 150
+
+    }
+
+    ##################################### VWAN VPNSITES #############################################
+
+    foreach($GTW in $AZVPNSITES)
+    {
+        if($GTW.properties.provisioningState -ne 'Succeeded')
         {
-            if($VWANS.properties.provisioningState -ne 'Succeeded')
-            {
-                $Global:XmlWriter.WriteStartElement('object')            
-                $Global:XmlWriter.WriteAttributeString('label', '')
-                $Global:XmlWriter.WriteAttributeString('Status', 'This Virtual WAN has Errors')
-                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-    
-                    Icon $IconError 40 ($Global:Alt+25) "25" "25"
-    
-                $Global:XmlWriter.WriteEndElement()
-            }       
-
-            $Name = $VWANS.name
             $Global:XmlWriter.WriteStartElement('object')            
-            $Global:XmlWriter.WriteAttributeString('label', ("`n" +[string]$Name))
-            $Global:XmlWriter.WriteAttributeString('Allow_BranchToBranch_Traffic', [string]$VWANS.properties.allowBranchToBranchTraffic)
-            $Global:XmlWriter.WriteAttributeString('Allow_VnetToVnet_Traffic', [string]$VWANS.properties.allowVnetToVnetTraffic)
+            $Global:XmlWriter.WriteAttributeString('label', '')
+            $Global:XmlWriter.WriteAttributeString('Status', 'This VPN Site has Errors')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $IconVWAN 50 $Global:Alt "65" "64"
+                Icon $IconError 40 ($Global:Alt+25) "25" "25"
+
+            $Global:XmlWriter.WriteEndElement()
+        }
+    
+        $wan1 = $AZVWAN | Where-Object {$_.properties.vpnSites.id -eq $GTW.id}
+        
+        if(!$wan1 -and $GTW.properties.provisioningState -eq 'Succeeded')
+        {
+            $Global:XmlWriter.WriteStartElement('object')            
+            $Global:XmlWriter.WriteAttributeString('label', '')
+            $Global:XmlWriter.WriteAttributeString('Status', 'No vWANs were found in this VPN Site')
+            $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                Icon $SymInfo 40 ($Global:Alt+30) "20" "20"
+
+            $Global:XmlWriter.WriteEndElement()
+        }
+        
+        $Name = $GTW.name
+
+        $Global:XmlWriter.WriteStartElement('object')            
+        $Global:XmlWriter.WriteAttributeString('label', ("`n" + [string]$Name))
+        $Global:XmlWriter.WriteAttributeString('Address_Space', [string]$GTW.properties.addressSpace.addressPrefixes)
+        $Global:XmlWriter.WriteAttributeString('Link_Speed_In_Mbps', [string]$GTW.properties.deviceProperties.linkSpeedInMbps)
+        $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+            Icon $IconNAT 50 $Global:Alt "67" "40"
+
+        $Global:XmlWriter.WriteEndElement()            
+        #$tt = $tt + 200        
+
+        vWan $wan1
+
+        $Global:Alt = $Global:Alt + 150
+    }
+
+    ##################################### VWAN ERs #############################################
+
+    foreach($GTW in $AZVERs)
+    {
+        if($GTW.properties.provisioningState -ne 'Succeeded')
+        {
+            $Global:XmlWriter.WriteStartElement('object')            
+            $Global:XmlWriter.WriteAttributeString('label', '')
+            $Global:XmlWriter.WriteAttributeString('Status', 'This Express Route Circuit has Errors')
+            $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                Icon $IconError 40 ($Global:Alt+25) "25" "25"
+
+            $Global:XmlWriter.WriteEndElement()
+        }
+    
+        $wan1 = $AZVWAN | Where-Object {$_.properties.vpnSites.id -eq $GTW.id}
+        
+        if(!$wan1 -and $GTW.properties.provisioningState -eq 'Succeeded')
+        {
+            $Global:XmlWriter.WriteStartElement('object')            
+            $Global:XmlWriter.WriteAttributeString('label', '')
+            $Global:XmlWriter.WriteAttributeString('Status', 'No vWANs were found in this Express Route Circuit')
+            $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                Icon $SymInfo 40 ($Global:Alt+30) "20" "20"
+
+            $Global:XmlWriter.WriteEndElement()
+        }
+        
+        $Name = $GTW.name
+
+        $Global:XmlWriter.WriteStartElement('object')            
+        $Global:XmlWriter.WriteAttributeString('label', ("`n" + [string]$Name))
+        $Global:XmlWriter.WriteAttributeString('Address_Space', [string]$GTW.properties.addressSpace.addressPrefixes)
+        $Global:XmlWriter.WriteAttributeString('LinkSpeed_In_Mbps', [string]$GTW.properties.deviceProperties.linkSpeedInMbps)
+        $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+            Icon $IconNAT 50 $Global:Alt "67" "40"
+
+        $Global:XmlWriter.WriteEndElement()            
+        #$tt = $tt + 200        
+
+        vWan $wan1
+
+        $Global:Alt = $Global:Alt + 150
+    }
+
+    ##################################### LABELs #############################################
+
+    if(!$Global:FullEnvironment)
+        {
+
+            $Global:XmlWriter.WriteStartElement('object')            
+            $Global:XmlWriter.WriteAttributeString('label', '')
+            $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                Icon $Ret -520 -100 "500" ($Global:Alt + 100)
+
+            $Global:XmlWriter.WriteEndElement()
+
+            $Global:XmlWriter.WriteStartElement('object')            
+            $Global:XmlWriter.WriteAttributeString('label', ('On Premises'+ "`n" +'Environment'))
+            $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                Icon $OnPrem -351 (($Global:Alt + 100)/2) "168.2" "290"
 
             $Global:XmlWriter.WriteEndElement()  
 
-            $Global:Alt = $Global:Alt + 150
-                
+            $Global:XmlWriter.WriteStartElement('object')            
+            $Global:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v2.2'+ "`n" +'https://github.com/azureinventory/ARI'))
+            $Global:XmlWriter.WriteAttributeString('author1', 'Claudio Merola')
+            $Global:XmlWriter.WriteAttributeString('author2', 'Renato Gregio')
+            $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                Icon $Signature -520 ($Global:Alt + 100) "27.5" "22"
+
+            $Global:XmlWriter.WriteEndElement()  
         }
-
-        if(!$Global:FullEnvironment)
-            {
-
-                $Global:XmlWriter.WriteStartElement('object')            
-                $Global:XmlWriter.WriteAttributeString('label', '')
-                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-    
-                    Icon $Ret -520 -100 "500" ($Global:Alt + 100)
-    
-                $Global:XmlWriter.WriteEndElement()
-
-                $Global:XmlWriter.WriteStartElement('object')            
-                $Global:XmlWriter.WriteAttributeString('label', ('On Premises'+ "`n" +'Environment'))
-                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-
-                    Icon $OnPrem -351 (($Global:Alt + 100)/2) "168.2" "290"
-
-                $Global:XmlWriter.WriteEndElement()  
-
-                $Global:XmlWriter.WriteStartElement('object')            
-                $Global:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v2.1'+ "`n" +'https://github.com/azureinventory/ARI'))
-                $Global:XmlWriter.WriteAttributeString('author1', 'Claudio Merola')
-                $Global:XmlWriter.WriteAttributeString('author2', 'Renato Gregio')
-                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-
-                    Icon $Signature -520 ($Global:Alt + 100) "27.5" "22"
-
-                $Global:XmlWriter.WriteEndElement()  
-            }
 
 }
 
@@ -461,6 +529,149 @@ foreach ($Con2 in $Con1)
 }
 
 
+Function vWan 
+{
+Param($wan1)
+
+    $Global:vnetLoc = 700
+    $VWAN = $wan1    
+
+    $Name2 = $wan1.Name
+
+    $Global:XmlWriter.WriteStartElement('object')            
+    $Global:XmlWriter.WriteAttributeString('label', [string]$Name2)
+    $Global:XmlWriter.WriteAttributeString('allow_VnetToVnet_Traffic', [string]$wan1.properties.allowVnetToVnetTraffic)
+    $Global:XmlWriter.WriteAttributeString('allow_BranchToBranch_Traffic', [string]$wan1.properties.allowBranchToBranchTraffic)
+    $Global:Source = ($Global:CellID+'-'+($Global:IDNum-1))
+    $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+        Icon $IconVWAN 250 $Global:Alt "40" "40"
+
+    $Global:XmlWriter.WriteEndElement()
+
+    $Global:Target = ($Global:CellID+'-'+($Global:IDNum-1))
+
+        Connect $Global:Source $Global:Target
+
+    $Global:Source1 = $Global:Target
+
+    foreach ($Con2 in $wan1.properties.virtualHubs.id)
+        {
+            $VHUB = $AZVHUB | Where-Object {$_.id -eq $Con2}                            
+            
+            $Global:XmlWriter.WriteStartElement('object')            
+            $Global:XmlWriter.WriteAttributeString('label', ("`n" +[string]$VHUB.Name))
+            $Global:XmlWriter.WriteAttributeString('Address_Prefix', [string]$VHUB.properties.addressPrefix)
+            $Global:XmlWriter.WriteAttributeString('Preferred_Routing_Gateway', [string]$VHUB.properties.preferredRoutingGateway)
+            $Global:XmlWriter.WriteAttributeString('Virtual_Router_Asn', [string]$VHUB.properties.virtualRouterAsn)
+            $Global:XmlWriter.WriteAttributeString('Allow_BranchToBranch_Traffic', [string]$VHUB.properties.allowBranchToBranchTraffic)
+            $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                Icon $IconVWAN 425 $Global:Alt "40" "40"
+
+            $Global:XmlWriter.WriteEndElement()
+
+            $Global:Target = ($Global:CellID+'-'+($Global:IDNum-1))
+
+                Connect $Global:Source1 $Global:Target
+
+            $Global:Source = $Global:Target
+
+            foreach($AZVNETs2 in $AZVNETs)
+            {
+                foreach($VNETTEMP in $AZVNETs2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id)
+                {
+                    $VV4 = $VNETTEMP.Split("/")
+                    $VNETTEMP1 = $VV4[8]
+                    if($VNETTEMP1 -like ('HV_'+$VHUB.name+'_*'))
+                    {
+                        $Global:VNET2 = $AZVNETs2
+
+                        $Global:Alt0 = $Global:Alt
+                        if($VNET2.id -notin $VNETHistory.vnet)
+                            {
+
+                                if($VNET2.properties.addressSpace.addressPrefixes.count -ge 10)
+                                {
+                                    $AddSpace = ($VNET2.properties.addressSpace.addressPrefixes | Select-Object -First 20 |  ForEach-Object {$_ + "`n"} ) + "`n" +'...'
+                                }Else{
+                                    $AddSpace = ($VNET2.properties.addressSpace.addressPrefixes | ForEach-Object {$_ + "`n"})
+                                }
+
+                                $Global:XmlWriter.WriteStartElement('object')            
+                                $Global:XmlWriter.WriteAttributeString('label', ([string]$VNET2.Name + "`n" + $AddSpace))
+                                if($VNET2.properties.dhcpoptions.dnsServers)
+                                    {
+                                        $Global:XmlWriter.WriteAttributeString('Custom_DNS_Servers', [string]$VNET2.properties.dhcpoptions.dnsServers)
+                                        $Global:XmlWriter.WriteAttributeString('DDOS_Protection', [string]$VNET2.properties.enableDdosProtection)
+                                    }
+                                else
+                                    {
+                                        $Global:XmlWriter.WriteAttributeString('DDOS_Protection', [string]$VNET2.properties.enableDdosProtection)
+                                    }
+                                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                                    Icon $IconVNET 600 $Global:Alt "65" "39"
+
+                                $Global:XmlWriter.WriteEndElement()      
+                                
+                                $Global:VNETDrawID = ($Global:CellID+'-'+($Global:IDNum-1))
+                                                    
+                                $Global:Target = ($Global:CellID+'-'+($Global:IDNum-1))
+
+                                    Connect $Global:Source $Global:Target
+                    
+                                if($VNET2.properties.enableDdosProtection -eq $true)
+                                {
+                                    $Global:XmlWriter.WriteStartElement('object')            
+                                    $Global:XmlWriter.WriteAttributeString('label', '')
+                                    $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+                        
+                                        Icon $IconDDOS 580 ($Global:Alt + 15) "23" "28"
+                        
+                                    $Global:XmlWriter.WriteEndElement()
+                                }
+
+                                    VNETCreator $Global:VNET2
+
+                                if($VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id -and $VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id -notlike ('*/HV_'+$VHUB.name+'_*'))
+                                    {
+                                        PeerCreator $Global:VNET2
+                                    }
+
+                                    $tmp =@{
+                                        'VNETid' = $Global:VNETDrawID;
+                                        'VNET' = $AZVNETs2.id
+                                    }    
+                                    $Global:VNETHistory += $tmp 
+                                    
+                            }
+                        else
+                            {     
+
+                                $VNETDID = $VNETHistory | Where-Object {$_.VNET -eq $AZVNETs2.id}
+
+                                Connect $Global:Source $VNETDID.VNETid 
+
+                            }
+                    
+                            
+                        }
+                }
+
+
+            }
+
+            
+            if($Con1.count -gt 1)
+            {
+                $Global:Alt = $Global:Alt + 250
+            }
+        }
+
+}
+
+
 <# Function for Cloud Only Environments #>
 Function CloudOnly 
 {
@@ -552,7 +763,7 @@ $Global:Alt = 2
             $Global:XmlWriter.WriteEndElement()  
 
             $Global:XmlWriter.WriteStartElement('object')            
-            $Global:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v2.1'+ "`n" +'https://github.com/azureinventory/ARI'))
+            $Global:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v2.2'+ "`n" +'https://github.com/azureinventory/ARI'))
             $Global:XmlWriter.WriteAttributeString('author1', 'Claudio Merola')
             $Global:XmlWriter.WriteAttributeString('author2', 'Renato Gregio')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
@@ -570,8 +781,6 @@ Function FullEnvironment
     foreach($AZVNETs2 in $AZVNETs)
         {             
             $Global:VNET2 = $AZVNETs2
-
-            $Global:Alt0 = $Global:Alt
 
             if($VNET2.id -notin $VNETHistory.vnet)
                 {
@@ -627,7 +836,7 @@ Function FullEnvironment
             $Global:XmlWriter.WriteEndElement()  
 
             $Global:XmlWriter.WriteStartElement('object')            
-            $Global:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v2'+ "`n" +'https://github.com/azureinventory/ARI'))
+            $Global:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v2.2'+ "`n" +'https://github.com/azureinventory/ARI'))
             $Global:XmlWriter.WriteAttributeString('author1', 'Claudio Merola')
             $Global:XmlWriter.WriteAttributeString('author2', 'Renato Gregio')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
@@ -2225,7 +2434,7 @@ Variables0
 
 Stensils
 
-if($AZLGWs -or $AZEXPROUTEs)
+if($AZLGWs -or $AZEXPROUTEs -or $AZVERs -or $AZVPNSITES)
     {
         OnPremNet
         if($Global:FullEnvironment)

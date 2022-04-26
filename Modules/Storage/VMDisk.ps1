@@ -10,10 +10,10 @@ Excel Sheet Name: VMDISK
 https://github.com/azureinventory/ARI/Modules/Compute/VMDISK.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,11 +21,11 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle)
- 
+param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+
 If ($Task -eq 'Processing')
 {
- 
+
     <######### Insert the resource extraction here ########>
 
         $disk = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/disks'}
@@ -34,18 +34,18 @@ If ($Task -eq 'Processing')
 
     if($disk)
         {
-            $tmp = @()
-
+            $tmp = @()            
             foreach ($1 in $disk) {
                 $ResUCount = 1
-                $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+                $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $SKU = $1.SKU 
+                $SKU = $1.SKU
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
-                            'Subscription'           = $sub1.name;
-                            'Resource Group'         = $1.RESOURCEGROUP;                            
+                            'ID'                     = $1.id;
+                            'Subscription'           = $sub1.Name;
+                            'Resource Group'         = $1.RESOURCEGROUP;
                             'Disk Name'              = $1.NAME;
                             'Disk State'             = $data.diskState;
                             'Associated Resource'    = $1.MANAGEDBY.split('/')[8];
@@ -56,15 +56,15 @@ If ($Task -eq 'Processing')
                             'Encryption'             = $data.encryption.type;
                             'OS Type'                = $data.osType;
                             'Disk IOPS Read / Write' = $data.diskIOPSReadWrite;
-                            'Disk MBps Read / Write' = $data.diskMBpsReadWrite;                            
+                            'Disk MBps Read / Write' = $data.diskMBpsReadWrite;
                             'HyperV Generation'      = $data.hyperVGeneration;
                             'Resource U'             = $ResUCount;
                             'Tag Name'               = [string]$Tag.Name;
                             'Tag Value'              = [string]$Tag.Value
-                        }         
+                        }
                         $tmp += $obj
-                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
-                    }                
+                        if ($ResUCount -eq 1) { $ResUCount = 0}
+                    }
             }
             $tmp
         }
@@ -79,9 +79,12 @@ Else
     if($SmaResources.VMDisk)
     {
 
-        $condtxt = New-ConditionalText Unattached -Range D:D
+        $TableName = ('VMDiskT_'+($SmaResources.VMDisk.id | Select-Object -Unique).count)
+        $condtxt = @()
+        $condtxt += New-ConditionalText Unattached -Range D:D
+
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
-         
+
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
@@ -107,7 +110,7 @@ Else
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Disks' -TableName 'AzureDisks' -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Disks' -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
 
         <######## Insert Column comments and documentations here following this model #########>

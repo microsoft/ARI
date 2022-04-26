@@ -10,10 +10,10 @@ Excel Sheet Name: VirtualNetwork
 https://github.com/azureinventory/ARI/Modules/Networking/VirtualNetwork.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -32,14 +32,15 @@ If ($Task -eq 'Processing') {
 
             foreach ($1 in $VirtualNetwork) {
                 $ResUCount = 1
-                $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+                $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 foreach ($2 in $data.addressSpace.addressPrefixes) {
                     foreach ($3 in $data.subnets) {
                             foreach ($Tag in $Tags) {
                                 $obj = @{
-                                    'Subscription'                                 = $sub1.name;
+                                    'ID'                                           = $1.id;
+                                    'Subscription'                                 = $sub1.Name;
                                     'Resource Group'                               = $1.RESOURCEGROUP;
                                     'Name'                                         = $1.NAME;
                                     'Location'                                     = $1.LOCATION;
@@ -69,6 +70,7 @@ If ($Task -eq 'Processing') {
 Else {
     if ($SmaResources.VirtualNetwork) {
 
+        $TableName = ('VNETTable_'+($SmaResources.VirtualNetwork.id | Select-Object -Unique).count)
         $txtvnet = $(New-ConditionalText false -Range G:G
             New-ConditionalText falso -Range G:G)
 
@@ -100,7 +102,7 @@ Else {
         
         $ExcelVar | 
             ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Virtual Networks' -AutoSize -TableName 'AzureVNETs' -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Virtual Networks' -AutoSize -TableName $TableName -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
         
 
         $excel = Open-ExcelPackage -Path $File -KillExcel

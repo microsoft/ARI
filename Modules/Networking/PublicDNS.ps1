@@ -10,10 +10,10 @@ Excel Sheet Name: PublicDNS
 https://github.com/azureinventory/ARI/Modules/Networking/PublicDNS.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle) 
+param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported) 
 If ($Task -eq 'Processing') {
 
     $PublicDNS = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/dnszones' }
@@ -32,12 +32,13 @@ If ($Task -eq 'Processing') {
 
             foreach ($1 in $PublicDNS) {
                 $ResUCount = 1
-                $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+                $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {     
                         $obj = @{
-                            'Subscription'              = $sub1.name;
+                            'ID'                        = $1.id;
+                            'Subscription'              = $sub1.Name;
                             'Resource Group'            = $1.RESOURCEGROUP;
                             'Name'                      = $1.NAME;
                             'Location'                  = $1.LOCATION;
@@ -58,7 +59,11 @@ If ($Task -eq 'Processing') {
 }
 Else {
     if ($SmaResources.PublicDNS) {
+
+        $TableName = ('PubDNSTable_'+($SmaResources.PublicDNS.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
+
+        $condtxt = @()
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -79,7 +84,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Public DNS' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzurePubDNSZones' -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Public DNS' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }
 }

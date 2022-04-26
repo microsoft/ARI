@@ -13,7 +13,7 @@ https://github.com/azureinventory/ARI/Modules/Compute/APPServices.ps1
    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -48,7 +48,8 @@ If ($Task -eq 'Processing')
                 foreach ($2 in $data.hostNameSslStates) {
                         foreach ($Tag in $Tags) {
                             $obj = @{
-                                'Subscription'                  = $sub1.name;
+                                'ID'                            = $1.id;
+                                'Subscription'                  = $sub1.Name;
                                 'Resource Group'                = $1.RESOURCEGROUP;
                                 'Name'                          = $1.NAME;
                                 'App Type'                      = $1.KIND;
@@ -98,11 +99,12 @@ Else
     if($SmaResources.APPSERVICES)
     {
 
+        $TableName = ('AppSvcsTable_'+($SmaResources.APPSERVICES.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
         Foreach ($UnSupOS in $Unsupported.WebSite)
-            {
+            {                
                 $condtxt += New-ConditionalText $UnSupOS -Range U:U
             }
         
@@ -154,7 +156,7 @@ Else
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'App Services' -AutoSize -MaxAutoSizeRows 100 -TableName 'AppSvcs' -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'App Services' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }
 }
