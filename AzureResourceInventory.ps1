@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.2.0                                                                   #
+#       Version: 2.2.1                                                                   #
 #                                                                                        #
-#       Date: 04/26/2022                                                                 #
+#       Date: 04/29/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -148,9 +148,32 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         function checkAzCli() {
             Write-Debug ('Starting checkAzCli function')            
             Write-Host "Validating Powershell Az Module.."
-            $Modz = Get-InstalledModule
+            $Modz = Get-Module -ListAvailable
+
+            if(($Modz | Where-Object {$_.Name -eq 'Az.Accounts'}).count -ge 2)
+                {
+                    foreach($mod in ($Modz | Where-Object {$_.Name -eq 'Az.Accounts'}))
+                        {
+                            if($mod | Where-Object {$_.Version -notlike '2.7.*'})
+                                {
+                                    Uninstall-Module -Name $mod.Name -RequiredVersion $mod.Version
+                                }
+                        }
+                }
+            
+            if(($Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph'}).count -ge 2)
+            {
+                foreach($mod in ($Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph'}))
+                    {
+                        if($mod | Where-Object {$_.Version -notlike '0.11.*'})
+                            {
+                                Uninstall-Module -Name $mod.Name -RequiredVersion $mod.Version
+                            }
+                    }
+            }
+
             $ModAzAcc = $Modz | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.7.*'}
-            $ModAzGraph = $Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph' -and $_.Version -like '0.1*.*'}
+            $ModAzGraph = $Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph' -and $_.Version -like '0.11.*'}
             $ModExcel = $Modz | Where-Object {$_.Name -eq 'ImportExcel'}
 
             if(![string]::IsNullOrEmpty($ModExcel))
