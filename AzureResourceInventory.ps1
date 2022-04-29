@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.2.1                                                                   #
+#       Version: 2.2.2                                                                   #
 #                                                                                        #
 #       Date: 04/29/2022                                                                 #
 #                                                                                        #
@@ -165,7 +165,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             {
                 foreach($mod in ($Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph'}))
                     {
-                        if($mod | Where-Object {$_.Version -notlike '0.11.*'})
+                        if($mod | Where-Object {$_.Version -notlike '0.1*.*'})
                             {
                                 Uninstall-Module -Name $mod.Name -RequiredVersion $mod.Version
                             }
@@ -173,7 +173,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             }
 
             $ModAzAcc = $Modz | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.7.*'}
-            $ModAzGraph = $Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph' -and $_.Version -like '0.11.*'}
+            $ModAzGraph = $Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph' -and $_.Version -like '0.1*.*'}
             $ModExcel = $Modz | Where-Object {$_.Name -eq 'ImportExcel'}
 
             if(![string]::IsNullOrEmpty($ModExcel))
@@ -203,7 +203,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 {
                     Write-Host "Adding Az.Accounts Module"
                     try{
-                        Install-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2 -Force | Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2
+                        Install-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2 -SkipPublisherCheck -Force | Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2
                         }
                     catch{
                         Read-Host 'Admininstrator rights required to install Az.Accounts Module. Press <Enter> to finish script'
@@ -220,7 +220,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 {
                     Write-Host "Adding Az.ResourceGraph Module"
                     try{
-                        Install-Module -Name Az.ResourceGraph -MinimumVersion 0.11.0 -Force | Import-Module -Name 'Az.ResourceGraph' -MinimumVersion 0.11.0
+                        Install-Module -Name Az.ResourceGraph -MinimumVersion 0.11.0 -SkipPublisherCheck -Force | Import-Module -Name 'Az.ResourceGraph' -MinimumVersion 0.11.0
                         }
                     catch{
                         Read-Host 'Admininstrator rights required to install Az.ResourceGraph Module. Press <Enter> to finish script'
@@ -240,7 +240,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                         {
                             Write-Host "Adding Az.Compute Module"
                             try{
-                                Install-Module -Name Az.Compute -MinimumVersion 4.17.1 -Force | Import-Module -Name 'Az.Compute' -MinimumVersion 4.17.1
+                                Install-Module -Name Az.Compute -MinimumVersion 4.17.1 -SkipPublisherCheck -Force | Import-Module -Name 'Az.Compute' -MinimumVersion 4.17.1
                                 }
                             catch{
                                 Read-Host 'Admininstrator rights required to install Az.Compute Module. Press <Enter> to finish script'
