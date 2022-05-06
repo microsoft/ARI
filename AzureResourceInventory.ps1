@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.2.4                                                                   #
+#       Version: 2.2.5                                                                   #
 #                                                                                        #
 #       Date: 05/06/2022                                                                 #
 #                                                                                        #
@@ -154,7 +154,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 {
                     foreach($mod in ($Modz | Where-Object {$_.Name -eq 'Az.Accounts'}))
                         {
-                            if($mod | Where-Object {$_.Version -notlike '2.7.6'})
+                            if($mod | Where-Object {$_.Version -notlike '2.7.4'})
                                 {
                                     Uninstall-Module -Name $mod.Name -RequiredVersion $mod.Version
                                 }
@@ -172,7 +172,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     }
             }
 
-            $ModAzAcc = $Modz | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.7.6'}
+            $ModAzAcc = $Modz | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.7.*'}
             $ModAzGraph = $Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph' -and $_.Version -like '0.1*.*'}
             $ModExcel = $Modz | Where-Object {$_.Name -eq 'ImportExcel'}
 
@@ -203,7 +203,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 {
                     Write-Host "Adding Az.Accounts Module"
                     try{
-                        Install-Module -Name 'Az.Accounts' -MinimumVersion 2.7.6 -SkipPublisherCheck -Force | Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.6
+                        Install-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2 -SkipPublisherCheck -Force | Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2
                         }
                     catch{
                         Read-Host 'Admininstrator rights required to install Az.Accounts Module. Press <Enter> to finish script'
