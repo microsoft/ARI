@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.2.2                                                                   #
+#       Version: 2.2.3                                                                   #
 #                                                                                        #
-#       Date: 04/29/2022                                                                 #
+#       Date: 05/06/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -154,7 +154,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 {
                     foreach($mod in ($Modz | Where-Object {$_.Name -eq 'Az.Accounts'}))
                         {
-                            if($mod | Where-Object {$_.Version -notlike '2.7.*'})
+                            if($mod | Where-Object {$_.Version -notlike '2.7.6'})
                                 {
                                     Uninstall-Module -Name $mod.Name -RequiredVersion $mod.Version
                                 }
@@ -172,7 +172,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     }
             }
 
-            $ModAzAcc = $Modz | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.7.*'}
+            $ModAzAcc = $Modz | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.7.6'}
             $ModAzGraph = $Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph' -and $_.Version -like '0.1*.*'}
             $ModExcel = $Modz | Where-Object {$_.Name -eq 'ImportExcel'}
 
@@ -196,14 +196,14 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             if(![string]::IsNullOrEmpty($ModAzAcc))
                 {
                     Write-Host "Az.Accounts Module Found."
-                    #Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2 -WarningAction SilentlyContinue
+                    Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.6 -WarningAction SilentlyContinue
                     Write-Debug ('Az.Accounts Module Version: ' + ([string]$ModAzAcc.Version.Major + '.' + [string]$ModAzAcc.Version.Minor + '.' + [string]$ModAzAcc.Version.Build))
                 }
             else 
                 {
                     Write-Host "Adding Az.Accounts Module"
                     try{
-                        Install-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2 -SkipPublisherCheck -Force | Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2
+                        Install-Module -Name 'Az.Accounts' -MinimumVersion 2.7.6 -SkipPublisherCheck -Force | Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.6
                         }
                     catch{
                         Read-Host 'Admininstrator rights required to install Az.Accounts Module. Press <Enter> to finish script'
@@ -910,12 +910,15 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
                     $Job = @()
 
+                    $Repo = $($args[10])
+                    $RawRepo = $($args[11])
+
                     If ($($args[9]) -eq $true) {
                         $ResourceJobs = 'Compute', 'Analytics', 'Containers', 'Data', 'Infrastructure', 'Integration', 'Networking', 'Storage'
                         $Modules = @()
                         Foreach ($Jobs in $ResourceJobs)
                             {
-                                $OnlineRepo = Invoke-WebRequest -Uri ($($args[10]) + '/' + $Jobs)
+                                $OnlineRepo = Invoke-WebRequest -Uri ($Repo + '/' + $Jobs)
                                 $Modu = $OnlineRepo.Links | Where-Object { $_.href -like '*.ps1' }
                                 $Modules += $Modu.href
                             }
@@ -935,8 +938,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     foreach ($Module in $Modules) {
                         If ($($args[9]) -eq $true) {
                             $Modul = $Module.split('/')
-                                $ModName = $Modul[8].Substring(0, $Modul[8].length - ".ps1".length)
-                            $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[11]) + '/Modules/' + $Modul[7] + '/' + $Modul[8])
+                                $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
+                            $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Modules/' + $Modul[6] + '/' + $Modul[7])
                             } Else {
                                 $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                             $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
@@ -961,7 +964,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     foreach ($Module in $Modules) {
                         If ($($args[9]) -eq $true) {
                             $Modul = $Module.split('/')
-                                $ModName = $Modul[8].Substring(0, $Modul[8].length - ".ps1".length)
+                                $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                             } Else {
                                 $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                         }
@@ -983,7 +986,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     }
 
                 $Hashtable
-                } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, $Resource, 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo| Out-Null                    
+                } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, $Resource, 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo | Out-Null                    
                 $Limit = $Limit + 5000   
             }
 
