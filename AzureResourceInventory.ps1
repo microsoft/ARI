@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.2.3                                                                   #
+#       Version: 2.2.4                                                                   #
 #                                                                                        #
 #       Date: 05/06/2022                                                                 #
 #                                                                                        #
@@ -978,7 +978,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     foreach ($Module in $Modules) {
                         If ($($args[9]) -eq $true) {
                             $Modul = $Module.split('/')
-                                $ModName = $Modul[8].Substring(0, $Modul[8].length - ".ps1".length)
+                                $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
                             } Else {
                                 $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                         }
