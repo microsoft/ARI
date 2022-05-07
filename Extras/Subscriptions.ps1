@@ -29,10 +29,10 @@ If ($Task -eq 'Processing')
 
             foreach ($ResourcesSUB in $ResTable3) {
                 $ResourceDetails = $ResourcesSUB.name -split ","
-                $SubName = $Subscriptions | Where-Object { $_.Subscription.Id -eq ($ResourceDetails[3] -replace (" ", "")) }
+                $SubName = $Subscriptions | Where-Object { $_.Id -eq ($ResourceDetails[3] -replace (" ", "")) }
 
                 $obj = @{
-                    'Subscription'   = $SubName.Subscription.Name;
+                    'Subscription'   = $SubName.Name;
                     'Resource Group' = $ResourceDetails[2];
                     'Location'       = $ResourceDetails[1];
                     'Resource Type'  = $ResourceDetails[0];
