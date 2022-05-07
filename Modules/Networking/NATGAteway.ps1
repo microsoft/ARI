@@ -43,12 +43,12 @@ If ($Task -eq 'Processing') {
                                         $t_pip_addresses = ''
                                         $t_pip_prefixes = ''
 
-                                        if (!$data.publicipaddresses) {
+                                        if (!!$data.publicipaddresses) {
                                             $t_pip_addresses = [string]$data.publicipaddresses.id.split("/")[8]
                                         }
 
                                         
-                                        if (!$data.publicipprefixes) {
+                                        if (!!$data.publicipprefixes) {
                                             $t_pip_prefixes = [string]$data.publicipprefixes.id.split("/")[8]
                                         }
 
