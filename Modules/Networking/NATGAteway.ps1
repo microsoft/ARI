@@ -40,6 +40,18 @@ If ($Task -eq 'Processing') {
                             {
                                 foreach ($Tag in $Tags) 
                                     {  
+                                        $t_pip_addresses = ''
+                                        $t_pip_prefixes = ''
+
+                                        if (!$data.publicipaddresses) {
+                                            $t_pip_addresses = [string]$data.publicipaddresses.id.split("/")[8]
+                                        }
+
+                                        
+                                        if (!$data.publicipprefixes) {
+                                            $t_pip_prefixes = [string]$data.publicipprefixes.id.split("/")[8]
+                                        }
+
                                         $obj = @{
                                             'ID'                    = $1.id;
                                             'Subscription'          = $sub1.Name;
@@ -48,8 +60,8 @@ If ($Task -eq 'Processing') {
                                             'Location'              = $1.LOCATION;
                                             'SKU'                   = $1.sku.name;
                                             'Idle Timeout (Min)'    = $data.idleTimeoutInMinutes;
-                                            'Public IP'             = [string]$data.publicipaddresses.id.split("/")[8];
-                                            'Public Prefixes'       = [string]$data.publicipprefixes.id.split("/")[8];
+                                            'Public IP'             = $t_pip_addresses;
+                                            'Public Prefixes'       = $t_pip_prefixes;
                                             'VNET'                  = [string]$2.id.split("/")[8];
                                             'Subnet'                = [string]$2.id.split("/")[10];
                                             'Resource U'            = $ResUCount;
