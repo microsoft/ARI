@@ -35,8 +35,12 @@ if ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                if([string]::IsNullOrEmpty($data.privateEndpointConnections)){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+               
+                $Tags = if(!!($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+
+                $pvteps = if(!($data.privateEndpointConnections)) {[pscustomobject]@{id = 'NONE'}} else {$data.privateEndpointConnections | Select-Object @{Name="id";Expression={$_.id.split("/")[10]}}}
+
+                foreach ($pvtep in $pvteps) {
                     foreach ($Tag in $Tags) {
                         $obj = @{
                             'ID'                    = $1.id;
@@ -46,7 +50,7 @@ if ($Task -eq 'Processing') {
                             'Location'              = $1.LOCATION;
                             'Kind'                  = $1.kind;
                             'Admin Login'           = $data.administratorLogin;
-                            'Private Endpoint'      = $PVTENDP;
+                            'Private Endpoint'      = $pvtep.id;
                             'FQDN'                  = $data.fullyQualifiedDomainName;
                             'Public Network Access' = $data.publicNetworkAccess;
                             'State'                 = $data.state;
@@ -58,7 +62,8 @@ if ($Task -eq 'Processing') {
                         }
                         $tmp += $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
-                    }               
+                    }     
+                }          
             }
             $tmp
         }
