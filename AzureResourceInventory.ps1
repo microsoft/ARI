@@ -729,7 +729,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     
                 $ScriptBlock = [Scriptblock]::Create($ModuSeq)
                     
-                $DrawRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
+                $DrawRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2] | ConvertFrom-Json)).AddArgument($($args[3])).AddArgument($($args[4]))
 
                 $DrawJob = $DrawRun.BeginInvoke()
 
@@ -739,7 +739,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
                 $DrawRun.Dispose()
 
-            } -ArgumentList $PSScriptRoot, $Subscriptions, $Resources, $Advisories, $DDFile, $RunOnline, $Repo, $RawRepo   | Out-Null
+            } -ArgumentList $PSScriptRoot, $Subscriptions, ($Resources | ConvertTo-Json -Depth 50), $Advisories, $DDFile, $RunOnline, $Repo, $RawRepo   | Out-Null
         }
 
         <######################################################### VISIO DIAGRAM JOB ######################################################################>
