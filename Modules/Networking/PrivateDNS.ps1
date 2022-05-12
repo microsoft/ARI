@@ -25,6 +25,7 @@ param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableSty
 If ($Task -eq 'Processing') {
 
     $PrivateDNS = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/privatednszones' }
+    $VNETLinks =  $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/privatednszones/virtualnetworklinks' }
 
     if($PrivateDNS)
         {
@@ -34,7 +35,14 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+
+                $vnlks = ($VNETLinks | where {$_.id -like ($1.id + '*')})
+                $vnlks = if (!$vnlks) {[pscustomobject]@{id = 'none'}} else {$vnlks | Select-Object @{Name="id";Expression={$_.properties.virtualNetwork.id.split("/")[8]}}}
+
+                foreach ($2 in $vnlks) {
+
+                    $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                    
                     foreach ($Tag in $Tags) {     
                         $obj = @{
                             'ID'                              = $1.id;
@@ -46,11 +54,14 @@ If ($Task -eq 'Processing') {
                             'Virtual Network Links'           = $data.numberOfVirtualNetworkLinks;
                             'Network Links with Registration' = $data.numberOfVirtualNetworkLinksWithRegistration;
                             'Tag Name'                        = [string]$Tag.Name;
-                            'Tag Value'                       = [string]$Tag.Value
+                            'Tag Value'                       = [string]$Tag.Value;
+                            'Virtual Network'                 = $2.id
                         }
+             
                         $tmp += $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
-                    }               
+                    }
+                }               
             }
             $tmp
         }
@@ -70,6 +81,7 @@ Else {
         $Exc.Add('Location')
         $Exc.Add('Number of Records')
         $Exc.Add('Virtual Network Links')
+        $Exc.Add('Virtual Network')
         $Exc.Add('Network Links with Registration')
         if($InTag)
             {
