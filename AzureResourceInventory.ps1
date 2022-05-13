@@ -263,11 +263,11 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     {
                         if($DeviceLogin.IsPresent)
                             {
-                                Connect-AzAccount -UseDeviceAuthentication -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
+                                Connect-AzAccount -UseDeviceAuthentication -ErrorAction SilentlyContinue -WarningAction Continue -Confirm:$false -Debug:$false
                             }
                         else 
                             {
-                                Connect-AzAccount -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
+                                Connect-AzAccount -ErrorAction SilentlyContinue -WarningAction Continue -Confirm:$false -Debug:$false
                             }                        
                     }
                 $Tenants = Get-AzTenant -ErrorAction SilentlyContinue -InformationAction SilentlyContinue -Debug:$false | Sort-Object -Unique
@@ -320,11 +320,11 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                             {
                                 if($DeviceLogin.IsPresent)
                                     {
-                                        Connect-AzAccount -UseDeviceAuthentication -Tenant $TenantID -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
+                                        Connect-AzAccount -UseDeviceAuthentication -Tenant $TenantID -ErrorAction SilentlyContinue -WarningAction Continue -Confirm:$false -Debug:$false
                                     }
                                 else 
                                     {
-                                        Connect-AzAccount -Tenant $TenantID -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
+                                        Connect-AzAccount -Tenant $TenantID -ErrorAction SilentlyContinue -WarningAction Continue -Confirm:$false -Debug:$false
                                     }
                             }
                         elseif ($Appid -and $Secret -and $tenantid) 
