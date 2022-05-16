@@ -436,7 +436,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'. And from Resource Group: '+$ResourceGroup)
 
                 $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | summarize count()"
-                $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -Debug:$false
+                $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscriptions.Id -Debug:$false
                 $EnvSizeNum = $EnvSize.data.'count_'
 
                 if ($EnvSizeNum -ge 1) {
@@ -447,7 +447,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
                     while ($Looper -lt $Loop) {
                         $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+                        $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscriptions.Id -skip $Limit -first 1000 -Debug:$false
 
                         $Global:Resources += $Resource.data
                         Start-Sleep 2
@@ -462,7 +462,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             {
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'.')
                 $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
-                $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -Debug:$false
+                $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscriptions.Id -Debug:$false
                 $EnvSizeNum = $EnvSize.data.'count_'
 
                 if ($EnvSizeNum -ge 1) {
@@ -473,7 +473,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
                     while ($Looper -lt $Loop) {
                         $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+                        $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscriptions.Id -skip $Limit -first 1000 -Debug:$false
 
                         $Global:Resources += $Resource.data
                         Start-Sleep 2
@@ -487,7 +487,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         else 
             {
                 $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
-                $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -Debug:$false
+                $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscriptions.Id -Debug:$false
                 $EnvSizeNum = $EnvSize.data.'count_'
 
                 if ($EnvSizeNum -ge 1) {
@@ -498,7 +498,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
                     while ($Looper -lt $Loop) {
                         $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+                        $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscriptions.Id -skip $Limit -first 1000 -Debug:$false
 
                         $Global:Resources += $Resource.data
                         Start-Sleep 2
