@@ -371,6 +371,15 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 write-host ""
                 $Global:DefaultPath = "$HOME/AzureResourceInventory/"
                 $Global:Subscriptions = Get-AzSubscription -ErrorAction SilentlyContinue | Where-Object {$_.State -ne 'Disabled'}
+
+                if ($SubscriptionID) {
+                    if($SubscriptionID.count -gt 1) {
+                        $Global:Subscriptions = $Global:Subscriptions | Where-Object { $_.Id -in $SubscriptionID }
+                    }
+                    else {
+                        $Global:Subscriptions = $Global:Subscriptions | Where-Object { $_.Id -eq $SubscriptionID }
+                    }
+                }
             }
             else
             {
