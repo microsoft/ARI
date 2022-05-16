@@ -739,7 +739,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
                 $DrawRun.Dispose()
 
-            } -ArgumentList $PSScriptRoot, $Subscriptions, ($Resources | ConvertTo-Json -Depth 50), $Advisories, $DDFile, $RunOnline, $Repo, $RawRepo   | Out-Null
+            } -ArgumentList $PSScriptRoot, $Subscriptions, ($Resources | ConvertTo-Json -Depth 100), $Advisories, $DDFile, $RunOnline, $Repo, $RawRepo   | Out-Null
         }
 
         <######################################################### VISIO DIAGRAM JOB ######################################################################>
@@ -890,7 +890,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
             $SubResult
 
-        } -ArgumentList $PSScriptRoot, $Subscriptions, ($Resources | ConvertTo-Json -Depth 50), 'Processing' , $File, $RunOnline, $RawRepo | Out-Null
+        } -ArgumentList $PSScriptRoot, $Subscriptions, ($Resources | ConvertTo-Json -Depth 100), 'Processing' , $File, $RunOnline, $RawRepo | Out-Null
 
         <######################################################### RESOURCE GROUP JOB ######################################################################>
 
@@ -986,7 +986,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     }
 
                 $Hashtable
-                } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 50), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo | Out-Null                    
+                } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 100), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo | Out-Null                    
                 $Limit = $Limit + 5000   
             }
 
