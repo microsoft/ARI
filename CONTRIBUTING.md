@@ -10,7 +10,7 @@ in contributing to **Azure Resource Inventory**!
 Before contributing to this project, please review this document for policies and procedures which
 will ease the contribution and review process for everyone. 
 
-If you have questions or suggestion please fell free to contact Us by mail:  **clvieira@Microsoft.com** or **Renato.Gregio@Microsoft.com**.*
+If you have questions or suggestion please fell free to contact Us by mail:  **merola@outlook.com** or **rg83@outlook.com**.*
 
 ## Issues and Feature Requests
 
