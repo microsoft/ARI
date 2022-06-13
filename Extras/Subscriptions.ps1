@@ -9,10 +9,10 @@ This script process and creates the Subscriptions sheet based on resources and s
 https://github.com/azureinventory/ARI/Extras/Subscriptions.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 2.2.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -32,7 +32,7 @@ If ($Task -eq 'Processing')
                 $SubName = $Subscriptions | Where-Object { $_.Subscription.Id -eq ($ResourceDetails[3] -replace (" ", "")) }
 
                 $obj = @{
-                    'Subscription'   = $SubName.Subscription.Name;
+                    'Subscription'   = $SubName.Name;
                     'Resource Group' = $ResourceDetails[2];
                     'Location'       = $ResourceDetails[1];
                     'Resource Type'  = $ResourceDetails[0];
