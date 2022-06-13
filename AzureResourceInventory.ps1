@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.2.5                                                                   #
+#       Version: 2.2.6                                                                   #
 #                                                                                        #
-#       Date: 05/06/2022                                                                 #
+#       Date: 06/13/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -49,7 +49,7 @@
 
 .LINK
     https://github.com/azureinventory
-    Please note that while being developed by Microsoft employees, Azure Inventory scrip's are not a Microsoft service or product. This is a personal driven project, there are no implicit or explicit obligations by any company or goverment related to this project, it is provided 'as is' with no warranties and/or legal rights.
+    Please note that Azure Inventory scrip's are not a Microsoft service or product. This is a personal driven project, there are no implicit or explicit obligations by any company or goverment related to this project, it is provided 'as is' with no warranties and/or legal rights.
 #>
 
 param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help, [switch]$DeviceLogin)

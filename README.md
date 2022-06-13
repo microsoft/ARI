@@ -292,12 +292,12 @@ We also keep the `CHANGELOG.md` file in repository to Document version changes a
 
 The main authors of this project are:
 
-1. Claudio Merola (claudio.merola@Microsoft.com).
-2. Renato Gregio (renato.gregio@Microsoft.com)
+1. Claudio Merola (merola@outlook.com).
+2. Renato Gregio (rg83@outlook.com)
 
 <br/>
 
-Please note that while being developed by Microsoft employees, Azure Inventory script's are not a Microsoft service or product. This is a personal driven project, there are no implicit or explicit obligations by any company or goverment related to this project, it is provided 'as is' with no warranties and legal no rights.
+Please note that Azure Inventory script's are not a Microsoft service or product. This is a personal driven project, there are no implicit or explicit obligations by any company or goverment related to this project, it is provided 'as is' with no warranties and legal no rights.
 
 <br/>
 
