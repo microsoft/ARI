@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.2.6                                                                   #
+#       Version: 2.2.7                                                                   #
 #                                                                                        #
 #       Date: 06/13/2022                                                                 #
 #                                                                                        #
@@ -148,41 +148,53 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         function checkAzCli() {
             Write-Debug ('Starting checkAzCli function')            
             Write-Host "Validating Powershell Az Module.."
-            $Modz = Get-Module -ListAvailable
-
-            if(($Modz | Where-Object {$_.Name -eq 'Az.Accounts'}).count -ge 2)
-                {
-                    foreach($mod in ($Modz | Where-Object {$_.Name -eq 'Az.Accounts'}))
-                        {
-                            if($mod | Where-Object {$_.Version -notlike '2.7.4'})
-                                {
-                                    Uninstall-Module -Name $mod.Name -RequiredVersion $mod.Version
-                                }
-                        }
-                }
             
+            $Modz = Get-Module
+            
+            if(($Modz | Where-Object {$_.Name -eq 'Az.Accounts'}).count -ge 2)
+            {
+                foreach($mod in ($Modz | Where-Object {$_.Name -eq 'Az.Accounts'}))
+                    {
+                        if($mod | Where-Object {$_.Version -notlike '2.8.*'})
+                            {
+                                $mod | Where-Object {$_.Version -notlike '2.8.*'} | Remove-Module
+                            }
+                    }
+            }
+
             if(($Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph'}).count -ge 2)
             {
                 foreach($mod in ($Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph'}))
                     {
                         if($mod | Where-Object {$_.Version -notlike '0.1*.*'})
                             {
-                                Uninstall-Module -Name $mod.Name -RequiredVersion $mod.Version
+                                $mod | Where-Object {$_.Version -notlike '0.1*.*'} | Remove-Module
                             }
                     }
             }
 
-            $ModAzAcc = $Modz | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.7.*'}
+            $ModAzAcc = $Modz | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.8.*'}
             $ModAzGraph = $Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph' -and $_.Version -like '0.1*.*'}
             $ModExcel = $Modz | Where-Object {$_.Name -eq 'ImportExcel'}
 
+            
+            $Modz2 = Get-Module -ListAvailable
+
+            $ModAzAcc2 = $Modz2 | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.8.*'}
+            $ModAzGraph2 = $Modz2 | Where-Object {$_.Name -eq 'Az.ResourceGraph' -and $_.Version -like '0.1*.*'}
+            $ModExcel2 = $Modz2 | Where-Object {$_.Name -eq 'ImportExcel'}
+
             if(![string]::IsNullOrEmpty($ModExcel))
                 {                    
-                    Write-Host "ImportExcel Module Found."
-                    #Import-Module -Name 'ImportExcel'
+                    Write-Host "ImportExcel Module Found."                    
                     Write-Debug ('ImportExcel Module Version: ' + ([string]$ModExcel.Version.Major + '.' + [string]$ModExcel.Version.Minor + '.' + [string]$ModExcel.Version.Build))
                 }
-            else 
+            elseif(![string]::IsNullOrEmpty($ModExcel2))
+                {
+                    Import-Module -Name 'ImportExcel'
+                    Write-Debug ('ImportExcel Module Version: ' + ([string]$ModExcel2.Version.Major + '.' + [string]$ModExcel2.Version.Minor + '.' + [string]$ModExcel2.Version.Build))
+                }
+            else
                 {
                     Write-Host "Adding ImportExcel Module"
                     try{
@@ -192,31 +204,42 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                         Read-Host 'Admininstrator rights required to install ImportExcel Module. Press <Enter> to finish script'
                         Exit
                     }
-                }                               
+                }
+
             if(![string]::IsNullOrEmpty($ModAzAcc))
                 {
                     Write-Host "Az.Accounts Module Found."
-                    Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.6 -WarningAction SilentlyContinue
                     Write-Debug ('Az.Accounts Module Version: ' + ([string]$ModAzAcc.Version.Major + '.' + [string]$ModAzAcc.Version.Minor + '.' + [string]$ModAzAcc.Version.Build))
                 }
-            else 
+            elseif(![string]::IsNullOrEmpty($ModAzAcc2))
+                {
+                    Import-Module -Name 'Az.Accounts' -MinimumVersion 2.8.0 -WarningAction SilentlyContinue
+                    Write-Debug ('Az.Accounts Module Version: ' + ([string]$ModAzAcc2.Version.Major + '.' + [string]$ModAzAcc2.Version.Minor + '.' + [string]$ModAzAcc2.Version.Build))
+                }
+            else
                 {
                     Write-Host "Adding Az.Accounts Module"
                     try{
-                        Install-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2 -SkipPublisherCheck -Force | Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2
+                        Install-Module -Name 'Az.Accounts' -MinimumVersion 2.8.0 -SkipPublisherCheck -Force | Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2
                         }
                     catch{
                         Read-Host 'Admininstrator rights required to install Az.Accounts Module. Press <Enter> to finish script'
                         Exit
                     }
                 }
+
             if(![string]::IsNullOrEmpty($ModAzGraph))
                 {
                     Write-Host "Az.ResourceGraph Module Found."
                     #Import-Module -Name 'Az.ResourceGraph' -MinimumVersion 0.11.0 -WarningAction SilentlyContinue
                     Write-Debug ('Az.ResourceGraph Module Version: ' + ([string]$ModAzGraph.Version.Major + '.' + [string]$ModAzGraph.Version.Minor + '.' + [string]$ModAzGraph.Version.Build))
                 }
-            else 
+            elseif(![string]::IsNullOrEmpty($ModAzGraph2))
+                {
+                    Import-Module -Name 'Az.ResourceGraph' -MinimumVersion 0.11.0 -WarningAction SilentlyContinue
+                    Write-Debug ('Az.ResourceGraph Module Version: ' + ([string]$ModAzGraph2.Version.Major + '.' + [string]$ModAzGraph2.Version.Minor + '.' + [string]$ModAzGraph2.Version.Build))
+                }
+            else
                 {
                     Write-Host "Adding Az.ResourceGraph Module"
                     try{
@@ -227,6 +250,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                         Exit
                     }
                 }
+
             if($QuotaUsage.IsPresent)
                 {
                     $ModAzCompute = $Modz | Where-Object {$_.Name -eq 'Az.Compute' -and $_.Version -eq '4.17.1'}
@@ -435,6 +459,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             {
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'. And from Resource Group: '+$ResourceGroup)
 
+                $Subscri = $SubscriptionID
+
                 $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | summarize count()"
                 $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -Debug:$false
                 $EnvSizeNum = $EnvSize.data.'count_'
@@ -460,6 +486,9 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             }
         elseif([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
             {
+
+                $Subscri = $SubscriptionID
+
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'.')
                 $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
                 $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -Debug:$false
