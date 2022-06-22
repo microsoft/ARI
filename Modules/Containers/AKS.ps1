@@ -71,6 +71,7 @@ If ($Task -eq 'Processing')
                                 'Node Size'                  = $2.vmSize;
                                 'OS Disk Size (GB)'          = $2.osDiskSizeGB;
                                 'Nodes'                      = $2.count;
+                                'Zones'                      = [string]$2.availabilityZones;
                                 'Autoscale'                  = $2.enableAutoScaling;
                                 'Autoscale Max'              = $2.maxCount;
                                 'Autoscale Min'              = $2.minCount;
@@ -138,6 +139,7 @@ Else
         $Exc.Add('Node Size')
         $Exc.Add('OS Disk Size (GB)')
         $Exc.Add('Nodes')
+        $Exc.Add('Zones')
         $Exc.Add('Autoscale')
         $Exc.Add('Autoscale Max')
         $Exc.Add('Autoscale Min')
