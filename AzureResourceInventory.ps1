@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.2.7                                                                   #
+#       Version: 2.2.8                                                                   #
 #                                                                                        #
-#       Date: 06/13/2022                                                                 #
+#       Date: 07/06/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -151,13 +151,14 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             
             $Modz = Get-Module
             
+            <#
             if(($Modz | Where-Object {$_.Name -eq 'Az.Accounts'}).count -ge 2)
             {
                 foreach($mod in ($Modz | Where-Object {$_.Name -eq 'Az.Accounts'}))
                     {
-                        if($mod | Where-Object {$_.Version -notlike '2.8.*'})
+                        if($mod | Where-Object {$_.Version -notlike '2.*.*'})
                             {
-                                $mod | Where-Object {$_.Version -notlike '2.8.*'} | Remove-Module
+                                $mod | Where-Object {$_.Version -notlike '2.*.*'} | Remove-Module
                             }
                     }
             }
@@ -173,14 +174,15 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     }
             }
 
-            $ModAzAcc = $Modz | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.8.*'}
+            #>
+            $ModAzAcc = $Modz | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.*.*'}
             $ModAzGraph = $Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph' -and $_.Version -like '0.1*.*'}
             $ModExcel = $Modz | Where-Object {$_.Name -eq 'ImportExcel'}
 
             
             $Modz2 = Get-Module -ListAvailable
 
-            $ModAzAcc2 = $Modz2 | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.8.*'}
+            $ModAzAcc2 = $Modz2 | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.*.*'}
             $ModAzGraph2 = $Modz2 | Where-Object {$_.Name -eq 'Az.ResourceGraph' -and $_.Version -like '0.1*.*'}
             $ModExcel2 = $Modz2 | Where-Object {$_.Name -eq 'ImportExcel'}
 
@@ -213,14 +215,14 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 }
             elseif(![string]::IsNullOrEmpty($ModAzAcc2))
                 {
-                    Import-Module -Name 'Az.Accounts' -MinimumVersion 2.8.0 -WarningAction SilentlyContinue
+                    Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.0 -WarningAction SilentlyContinue
                     Write-Debug ('Az.Accounts Module Version: ' + ([string]$ModAzAcc2.Version.Major + '.' + [string]$ModAzAcc2.Version.Minor + '.' + [string]$ModAzAcc2.Version.Build))
                 }
             else
                 {
                     Write-Host "Adding Az.Accounts Module"
                     try{
-                        Install-Module -Name 'Az.Accounts' -MinimumVersion 2.8.0 -SkipPublisherCheck -Force | Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2
+                        Install-Module -Name 'Az.Accounts' -MinimumVersion 2.7.0 -SkipPublisherCheck -Force | Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2
                         }
                     catch{
                         Read-Host 'Admininstrator rights required to install Az.Accounts Module. Press <Enter> to finish script'

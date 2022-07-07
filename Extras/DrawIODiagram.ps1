@@ -431,7 +431,7 @@ foreach ($Con2 in $Con1)
                 Connect $Global:Source $Global:Target
 
             $Global:Source = $Global:Target
-           
+
             foreach($AZVNETs2 in $AZVNETs)
             {
                 foreach($VNETTEMP in $AZVNETs2.properties.subnets.properties.ipconfigurations.id)
@@ -557,7 +557,7 @@ Param($wan1)
 
     foreach ($Con2 in $wan1.properties.virtualHubs.id)
         {
-            $VHUB = $AZVHUB | Where-Object {$_.id -eq $Con2}                            
+            $VHUB = $AZVHUB | Where-Object {$_.id -eq $Con2}           
             
             $Global:XmlWriter.WriteStartElement('object')            
             $Global:XmlWriter.WriteAttributeString('label', ("`n" +[string]$VHUB.Name))
