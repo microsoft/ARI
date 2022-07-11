@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.2.8                                                                   #
+#       Version: 2.2.9                                                                   #
 #                                                                                        #
-#       Date: 07/06/2022                                                                 #
+#       Date: 07/11/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -471,11 +471,19 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     $Loop = $EnvSizeNum / 1000
                     $Loop = [math]::ceiling($Loop)
                     $Looper = 0
-                    $Limit = 1
+                    $Limit = 0
 
                     while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+                        if($Looper -eq 0)
+                            {
+                                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                                $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -first 1000 -Debug:$false
+                            }
+                        if($Looper -gt 0)
+                            {
+                                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                                $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+                            }
 
                         $Global:Resources += $Resource.data
                         Start-Sleep 2
@@ -500,11 +508,19 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     $Loop = $EnvSizeNum / 1000
                     $Loop = [math]::ceiling($Loop)
                     $Looper = 0
-                    $Limit = 1
+                    $Limit = 0
 
                     while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+                        if($Looper -eq 0)
+                            {
+                                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                                $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -first 1000 -Debug:$false
+                            }
+                        if($Looper -gt 0)
+                            {
+                                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                                $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+                            }
 
                         $Global:Resources += $Resource.data
                         Start-Sleep 2
@@ -525,11 +541,20 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     $Loop = $EnvSizeNum / 1000
                     $Loop = [math]::ceiling($Loop)
                     $Looper = 0
-                    $Limit = 1
+                    $Limit = 0
 
                     while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+                        if($Looper -eq 0)
+                            {
+                                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                                $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -first 1000 -Debug:$false
+                            }
+                        if($Looper -gt 0)
+                            {
+                                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                                $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+                            }
+                        
 
                         $Global:Resources += $Resource.data
                         Start-Sleep 2
