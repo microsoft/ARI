@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.2.9                                                                   #
+#       Version: 2.2.10                                                                  #
 #                                                                                        #
-#       Date: 07/11/2022                                                                 #
+#       Date: 07/27/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -48,8 +48,15 @@
     AUTHORS: Claudio Merola and Renato Gregio | Azure Infrastucture/Automation/Devops/Governance 
 
 .LINK
-    https://github.com/azureinventory
-    Please note that Azure Inventory scrip's are not a Microsoft service or product. This is a personal driven project, there are no implicit or explicit obligations by any company or goverment related to this project, it is provided 'as is' with no warranties and/or legal rights.
+    Copyright (c) 2018 Microsoft Corporation. All rights reserved.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
 #>
 
 param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help, [switch]$DeviceLogin)
