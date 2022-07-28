@@ -6,13 +6,13 @@ Diagram Module for Draw.io
 This script process and creates a Draw.io Diagram based on resources present in the extraction variable $Resources. 
 
 .Link
-https://github.com/azureinventory/ARI/Extras/DrawIODiagram.ps1
+https://github.com/microsoft/ARI/Extras/DrawIODiagram.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.7
+Version: 2.2.8
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -369,7 +369,7 @@ Function OnPremNet {
             $Global:XmlWriter.WriteEndElement()  
 
             $Global:XmlWriter.WriteStartElement('object')            
-            $Global:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v2.2'+ "`n" +'https://github.com/azureinventory/ARI'))
+            $Global:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v2.3'+ "`n" +'https://github.com/microsoft/ARI'))
             $Global:XmlWriter.WriteAttributeString('author1', 'Claudio Merola')
             $Global:XmlWriter.WriteAttributeString('author2', 'Renato Gregio')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))

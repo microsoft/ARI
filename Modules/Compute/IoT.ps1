@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.devices/iothubs resource 
 Excel Sheet Name: CONTAINER
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Compute/IoT.ps1
+https://github.com/microsoft/ARI/Modules/Compute/IoT.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

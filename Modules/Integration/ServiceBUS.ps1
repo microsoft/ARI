@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.servicebus/namespaces and
 Excel Sheet Name: ServiceBUS
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Infrastructure/ServiceBUS.ps1
+https://github.com/microsoft/ARI/Modules/Infrastructure/ServiceBUS.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

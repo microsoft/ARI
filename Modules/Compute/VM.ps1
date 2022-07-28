@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.compute/virtualmachines r
 Excel Sheet Name: VM
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Compute/VM.ps1
+https://github.com/microsoft/ARI/Modules/Compute/VM.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

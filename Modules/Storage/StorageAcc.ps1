@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.storage/storageaccounts a
 Excel Sheet Name: StorageAcc
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Infrastructure/StorageAcc.ps1
+https://github.com/microsoft/ARI/Modules/Infrastructure/StorageAcc.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

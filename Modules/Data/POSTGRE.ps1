@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.dbforpostgresql/servers r
 Excel Sheet Name: POSTGRE
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Data/POSTGRE.ps1
+https://github.com/microsoft/ARI/Modules/Data/POSTGRE.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

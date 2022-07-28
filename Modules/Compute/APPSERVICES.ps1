@@ -7,10 +7,10 @@ This script consolidates information for all microsoft.web/sites resource provid
 Excel Sheet Name: APPServices
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Compute/APPServices.ps1
+https://github.com/microsoft/ARI/Modules/Compute/APPServices.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
 Version: 2.2.1
@@ -22,10 +22,10 @@ Authors: Claudio Merola and Renato Gregio
 <######## Default Parameters. Don't modify this ########>
 
 param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
- 
+
 If ($Task -eq 'Processing')
 {
- 
+
     <######### Insert the resource extraction here ########>
 
         $AppSvc = $Resources | Where-Object {$_.TYPE -eq 'microsoft.web/sites'}

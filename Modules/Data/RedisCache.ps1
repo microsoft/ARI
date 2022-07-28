@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.cache/redis resource prov
 Excel Sheet Name: RedisCache
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Data/RedisCache.ps1
+https://github.com/microsoft/ARI/Modules/Data/RedisCache.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

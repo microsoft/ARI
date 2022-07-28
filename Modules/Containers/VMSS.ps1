@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.compute/virtualmachinesca
 Excel Sheet Name: VMSS
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Compute/VMSS.ps1
+https://github.com/microsoft/ARI/Modules/Compute/VMSS.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

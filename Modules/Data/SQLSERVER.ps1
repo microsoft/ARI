@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.sql/servers resource prov
 Excel Sheet Name: SQLSERVER
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Data/SQLSERVER.ps1
+https://github.com/microsoft/ARI/Modules/Data/SQLSERVER.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.network/expressroutecircu
 Excel Sheet Name: EvHub
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Networking/ExpressRoute.ps1
+https://github.com/microsoft/ARI/Modules/Networking/ExpressRoute.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

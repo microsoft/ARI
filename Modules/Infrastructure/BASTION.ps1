@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.network/bastionhosts and 
 Excel Sheet Name: BASTION
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Infrastructure/BASTION.ps1
+https://github.com/microsoft/ARI/Modules/Infrastructure/BASTION.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.recoveryservices/vaults a
 Excel Sheet Name: RecoveryVault
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Infrastructure/RecoveryVault.ps1
+https://github.com/microsoft/ARI/Modules/Infrastructure/RecoveryVault.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

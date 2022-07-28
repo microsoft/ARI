@@ -5,47 +5,42 @@ Platform: Windows / Linux / Mac
 Tags: Powershell, Azure, Inventory, Excel Report, Customer Engineer
 ---
 
-![GitHub](https://img.shields.io/github/license/azureinventory/ARI) ![GitHub repo size](https://img.shields.io/github/repo-size/azureinventory/ARI) [![Azure](https://badgen.net/badge/icon/azure?icon=azure&label)](https://azure.microsoft.com)
+![GitHub](https://img.shields.io/github/license/microsoft/ARI) ![GitHub repo size](https://img.shields.io/github/repo-size/microsoft/ARI) [![Azure](https://badgen.net/badge/icon/azure?icon=azure&label)](https://azure.microsoft.com)
 
-![GitHub last commit](https://img.shields.io/github/last-commit/azureinventory/ARI)
-![GitHub top language](https://img.shields.io/github/languages/top/azureinventory/ARI)
+![GitHub last commit](https://img.shields.io/github/last-commit/microsoft/ARI)
+![GitHub top language](https://img.shields.io/github/languages/top/microsoft/ARI)
 
 <br/>
 
 
 |     Modules     |     Count     |
 |-----------------|---------------|
-| Analytics | ![Analytics](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Analytics)|
-| Compute | ![Compute](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Compute)|
-| Containers | ![Containers](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Containers)|
-| Data | ![Data](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Data)|
-| Infrastructure | ![Infra](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Infrastructure)|
-| Integration | ![Integration](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Integration)|
-| Networking | ![Network](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Networking)|
-| Storage | ![Storage](https://shields-staging.herokuapp.com:/github/directory-file-count/azureinventory/ari/Modules/Storage)|
+| Analytics | ![Analytics](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Analytics)|
+| Compute | ![Compute](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Compute)|
+| Containers | ![Containers](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Containers)|
+| Data | ![Data](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Data)|
+| Infrastructure | ![Infra](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Infrastructure)|
+| Integration | ![Integration](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Integration)|
+| Networking | ![Network](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Networking)|
+| Storage | ![Storage](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Storage)|
 
 <br/>
 
 
-# Azure Resource Inventory v2.2
+# Azure Resource Inventory v2.3
 
 Azure Resource inventory (ARI) is a powerful script written in powershell to generate an Excel report of any Azure Environment you have read access. 
 
 This project is intend to help Cloud Admins and anyone that might need an easy and fast way to build a full Excel Report of an Azure Environment.  
 
+<br/>
+
 ## What's new ?
 
 <br/>
 
-The first big change in Azure Resource Inventory v2.2 is the Powershell modules. This means AzCLI is no longer use in the script.
+In Azure Resource Inventory v2.3 we rollback the use of Azure CLI as changing to 100% Powershell based apparently caused more problems than solutions. One of ours initial and main goal was to keep the script as simple and easy to run as possible, and we believe that rollback make sense in that point.
 
-<br/>
-
-This way the code runs smothly and better integrated with ARI modules.
-
-<br/>
-
-Another change is the way the script runs through the modules. Instead of vertical align, the jobs now are organized horizontally. We expect this change to considerably increase the speed of the script in larger environments.
 
 <br/>
 
@@ -76,6 +71,8 @@ Another change is the way the script runs through the modules. Instead of vertic
 - We disabled the Visio Diagram for now. But Draw.io diagram is still present, the two extra modules that creates a Microsoft Visio and a Draw.io Diagram[^1] of the Azure Network Environment are still present, but only the Draw.io will be genarated.
 
 - The diagram now creates the topology in environments where vWAN are used.
+
+We are preparing more improvements in the diagrams, but for now there is no due date yet.
 
 <br/>
 
@@ -208,8 +205,9 @@ These instructions will get you a copy of the project up and running on your loc
 |Windows|10 21H1| 
 |Powershell|5.1.19041.1237|  
 |ImportExcel|7.1.3|
-|Az.Accounts|2.7.0|
-|Az.ResourceGraph|0.11.0|
+|azure-cli|2.38.0|
+|AzCLI account|0.2.3|
+|AzCLI resource-graph|2.1.0|
 
 <br/>
 
@@ -221,11 +219,11 @@ What things you need to run the script
 
 ``` powershell
 1. Install-Module ImportExcel
-2. Install-Module Az.Accounts
-3. Install-Module Az.ResourceGraph
+2. Install Azure CLI (https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+3. Install Azure CLI Extensions (Account and Resource-Graph)
 ```
 
-By default Azure Resource Inventory will call to install the required Powershell modules but you must have administrator privileges during the script execution. 
+By default Azure Resource Inventory will call to install the required Powershell modules and Azure CLI components but you must have administrator privileges during the script execution. 
 
 Special Thanks for __Doug Finke__, the Author of Powershell [ImportExcel](https://github.com/dfinke/ImportExcel) Module.    
 
@@ -292,12 +290,10 @@ We also keep the `CHANGELOG.md` file in repository to Document version changes a
 
 The main authors of this project are:
 
-1. Claudio Merola (merola@outlook.com).
+1. Claudio Merola (claudio.merola@microsoft.com).
 2. Renato Gregio (rg83@outlook.com)
 
 <br/>
-
-Please note that Azure Inventory script's are not a Microsoft service or product. This is a personal driven project, there are no implicit or explicit obligations by any company or goverment related to this project, it is provided 'as is' with no warranties and legal no rights.
 
 <br/>
 
@@ -308,5 +304,32 @@ Please read our [CONTRIBUTING.md](CONTRIBUTING.md) which outlines all of our pol
 <br/>
 
 <br/>
+
+----------------------------------------------------------------------
+
+<br/>
+
+## About the tool
+
+<br/>
+
+Copyright (c) 2018 Microsoft Corporation. All rights reserved.
+
+<br/>
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+
+THE SOFTWARE.
+
 
 <br/>

@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.dbformysql/servers resour
 Excel Sheet Name: MySQL
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Data/MySQL.ps1
+https://github.com/microsoft/ARI/Modules/Data/MySQL.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

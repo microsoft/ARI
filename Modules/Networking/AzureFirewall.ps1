@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.network/azurefirewalls an
 Excel Sheet Name: AzureFirewall
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Networking/AzureFirewall.ps1
+https://github.com/microsoft/ARI/Modules/Networking/AzureFirewall.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

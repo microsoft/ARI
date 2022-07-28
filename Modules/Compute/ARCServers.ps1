@@ -7,10 +7,10 @@ This script consolidates information for all microsoft.eventhub/namespaces and  
 Excel Sheet Name: EvHub
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Compute/ARCServers.ps1
+https://github.com/microsoft/ARI/Modules/Compute/ARCServers.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
 Version: 2.0.0
@@ -22,10 +22,10 @@ Authors: Claudio Merola and Renato Gregio
 <######## Default Parameters. Don't modify this ########>
 
 param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle)
- 
+
 If ($Task -eq 'Processing')
 {
- 
+
     <######### Insert the resource extraction here ########>
 
         $arcservers = $Resources | Where-Object {$_.TYPE -eq 'microsoft.hybridcompute/machines'}

@@ -7,10 +7,10 @@ This script consolidates information for all microsoft.web/serverfarms resource 
 Excel Sheet Name: APPSERVICEPLAN
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Compute/APPSERVICEPLAN.ps1
+https://github.com/microsoft/ARI/Modules/Compute/APPSERVICEPLAN.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
 Version: 2.2.0

@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.sqlvirtualmachine/sqlvirt
 Excel Sheet Name: SQLVM
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Data/SQLVM.ps1
+https://github.com/microsoft/ARI/Modules/Data/SQLVM.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

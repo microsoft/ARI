@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.network/trafficmanagerpro
 Excel Sheet Name: TrafficManager
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Networking/TrafficManager.ps1
+https://github.com/microsoft/ARI/Modules/Networking/TrafficManager.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

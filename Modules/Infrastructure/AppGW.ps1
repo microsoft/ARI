@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.network/applicationgatewa
 Excel Sheet Name: AppGW
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Networking/AppGW.ps1
+https://github.com/microsoft/ARI/Modules/Networking/AppGW.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

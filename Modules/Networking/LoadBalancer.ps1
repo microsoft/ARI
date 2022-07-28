@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.network/loadbalancers and
 Excel Sheet Name: LoadBalancer
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Networking/LoadBalancer.ps1
+https://github.com/microsoft/ARI/Modules/Networking/LoadBalancer.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

@@ -6,10 +6,10 @@ Security Center Module
 This script process and creates the Security Center sheet based on securityresources. 
 
 .Link
-https://github.com/azureinventory/ARI/Extras/SecurityCenter.ps1
+https://github.com/microsoft/ARI/Extras/SecurityCenter.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
 Version: 2.0.0
@@ -18,7 +18,7 @@ Authors: Claudio Merola and Renato Gregio
 
 #>
 param($Subscriptions,$Security, $Task ,$File, $Sec, $TableStyle)
- 
+
 If ($Task -eq 'Processing')
 {
     $obj = ''

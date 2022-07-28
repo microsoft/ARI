@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.2.10                                                                  #
+#       Version: 2.3.0                                                                   #
 #                                                                                        #
-#       Date: 07/27/2022                                                                 #
+#       Date: 07/28/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -142,8 +142,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         if ($Online.IsPresent) { $Global:RunOnline = $true }else { $Global:RunOnline = $false }
 
-        $Global:Repo = 'https://github.com/azureinventory/ARI/tree/main/Modules'
-        $Global:RawRepo = 'https://raw.githubusercontent.com/azureinventory/ARI/main'
+        $Global:Repo = 'https://github.com/microsoft/ARI/tree/main/Modules'
+        $Global:RawRepo = 'https://raw.githubusercontent.com/microsoft/ARI/main'
 
     }
 
@@ -152,244 +152,137 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
     Function Extractor {
 
         Write-Debug ('Starting Extractor function')
+        Write-Debug ('Starting Extractor function')
         function checkAzCli() {
-            Write-Debug ('Starting checkAzCli function')            
-            Write-Host "Validating Powershell Az Module.."
-            
-            $Modz = Get-Module
-            
-            <#
-            if(($Modz | Where-Object {$_.Name -eq 'Az.Accounts'}).count -ge 2)
-            {
-                foreach($mod in ($Modz | Where-Object {$_.Name -eq 'Az.Accounts'}))
-                    {
-                        if($mod | Where-Object {$_.Version -notlike '2.*.*'})
-                            {
-                                $mod | Where-Object {$_.Version -notlike '2.*.*'} | Remove-Module
-                            }
-                    }
+            Write-Debug ('Starting checkAzCli function')
+            Write-Host "Validating Az Cli.."
+            $azcli = az --version
+            Write-Debug ('Current az cli version: ' + $azcli[0])
+            if ($null -eq $azcli) {
+                Read-Host "Azure CLI Not Found. Press <Enter> to finish script"
+                Exit
             }
-
-            if(($Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph'}).count -ge 2)
-            {
-                foreach($mod in ($Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph'}))
-                    {
-                        if($mod | Where-Object {$_.Version -notlike '0.1*.*'})
-                            {
-                                $mod | Where-Object {$_.Version -notlike '0.1*.*'} | Remove-Module
-                            }
-                    }
+            Write-Host "Validating Az Cli Extension.."
+            $azcliExt = az extension list --output json | ConvertFrom-Json
+            $azcliExt = $azcliExt | Where-Object {$_.name -eq 'resource-graph'}
+            Write-Debug ('Current Resource-Graph Extension Version: ' + $azcliExt.version)
+            $AzcliExtV = $azcliExt | Where-Object {$_.name -eq 'resource-graph'}
+            if (!$AzcliExtV) {
+                Write-Host "Adding Az Cli Extension"
+                az extension add --name resource-graph
             }
-
-            #>
-            $ModAzAcc = $Modz | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.*.*'}
-            $ModAzGraph = $Modz | Where-Object {$_.Name -eq 'Az.ResourceGraph' -and $_.Version -like '0.1*.*'}
-            $ModExcel = $Modz | Where-Object {$_.Name -eq 'ImportExcel'}
-
-            
-            $Modz2 = Get-Module -ListAvailable
-
-            $ModAzAcc2 = $Modz2 | Where-Object {$_.Name -eq 'Az.Accounts' -and $_.Version -like '2.*.*'}
-            $ModAzGraph2 = $Modz2 | Where-Object {$_.Name -eq 'Az.ResourceGraph' -and $_.Version -like '0.1*.*'}
-            $ModExcel2 = $Modz2 | Where-Object {$_.Name -eq 'ImportExcel'}
-
-            if(![string]::IsNullOrEmpty($ModExcel))
-                {                    
-                    Write-Host "ImportExcel Module Found."                    
-                    Write-Debug ('ImportExcel Module Version: ' + ([string]$ModExcel.Version.Major + '.' + [string]$ModExcel.Version.Minor + '.' + [string]$ModExcel.Version.Build))
-                }
-            elseif(![string]::IsNullOrEmpty($ModExcel2))
-                {
-                    Import-Module -Name 'ImportExcel'
-                    Write-Debug ('ImportExcel Module Version: ' + ([string]$ModExcel2.Version.Major + '.' + [string]$ModExcel2.Version.Minor + '.' + [string]$ModExcel2.Version.Build))
-                }
-            else
-                {
-                    Write-Host "Adding ImportExcel Module"
-                    try{
-                        Install-Module -Name ImportExcel -Force
-                        }
-                    catch{
-                        Read-Host 'Admininstrator rights required to install ImportExcel Module. Press <Enter> to finish script'
-                        Exit
-                    }
-                }
-
-            if(![string]::IsNullOrEmpty($ModAzAcc))
-                {
-                    Write-Host "Az.Accounts Module Found."
-                    Write-Debug ('Az.Accounts Module Version: ' + ([string]$ModAzAcc.Version.Major + '.' + [string]$ModAzAcc.Version.Minor + '.' + [string]$ModAzAcc.Version.Build))
-                }
-            elseif(![string]::IsNullOrEmpty($ModAzAcc2))
-                {
-                    Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.0 -WarningAction SilentlyContinue
-                    Write-Debug ('Az.Accounts Module Version: ' + ([string]$ModAzAcc2.Version.Major + '.' + [string]$ModAzAcc2.Version.Minor + '.' + [string]$ModAzAcc2.Version.Build))
-                }
-            else
-                {
-                    Write-Host "Adding Az.Accounts Module"
-                    try{
-                        Install-Module -Name 'Az.Accounts' -MinimumVersion 2.7.0 -SkipPublisherCheck -Force | Import-Module -Name 'Az.Accounts' -MinimumVersion 2.7.2
-                        }
-                    catch{
-                        Read-Host 'Admininstrator rights required to install Az.Accounts Module. Press <Enter> to finish script'
-                        Exit
-                    }
-                }
-
-            if(![string]::IsNullOrEmpty($ModAzGraph))
-                {
-                    Write-Host "Az.ResourceGraph Module Found."
-                    #Import-Module -Name 'Az.ResourceGraph' -MinimumVersion 0.11.0 -WarningAction SilentlyContinue
-                    Write-Debug ('Az.ResourceGraph Module Version: ' + ([string]$ModAzGraph.Version.Major + '.' + [string]$ModAzGraph.Version.Minor + '.' + [string]$ModAzGraph.Version.Build))
-                }
-            elseif(![string]::IsNullOrEmpty($ModAzGraph2))
-                {
-                    Import-Module -Name 'Az.ResourceGraph' -MinimumVersion 0.11.0 -WarningAction SilentlyContinue
-                    Write-Debug ('Az.ResourceGraph Module Version: ' + ([string]$ModAzGraph2.Version.Major + '.' + [string]$ModAzGraph2.Version.Minor + '.' + [string]$ModAzGraph2.Version.Build))
-                }
-            else
-                {
-                    Write-Host "Adding Az.ResourceGraph Module"
-                    try{
-                        Install-Module -Name Az.ResourceGraph -MinimumVersion 0.11.0 -SkipPublisherCheck -Force | Import-Module -Name 'Az.ResourceGraph' -MinimumVersion 0.11.0
-                        }
-                    catch{
-                        Read-Host 'Admininstrator rights required to install Az.ResourceGraph Module. Press <Enter> to finish script'
-                        Exit
-                    }
-                }
-
-            if($QuotaUsage.IsPresent)
-                {
-                    $ModAzCompute = $Modz | Where-Object {$_.Name -eq 'Az.Compute' -and $_.Version -eq '4.17.1'}
-                    if (![string]::IsNullOrEmpty($ModAzCompute)) 
-                        {
-                            Write-Host "Az.Compute Module Found."
-                            #Import-Module -Name 'Az.Compute' -MinimumVersion 4.17.1 -WarningAction SilentlyContinue
-                            Write-Debug ('Az.Compute Module Version: ' + ([string]$ModAzCompute.Version.Major + '.' + [string]$ModAzCompute.Version.Minor + '.' + [string]$ModAzCompute.Version.Build))                
-                        }
-                    else 
-                        {
-                            Write-Host "Adding Az.Compute Module"
-                            try{
-                                Install-Module -Name Az.Compute -MinimumVersion 4.17.1 -SkipPublisherCheck -Force | Import-Module -Name 'Az.Compute' -MinimumVersion 4.17.1
-                                }
-                            catch{
-                                Read-Host 'Admininstrator rights required to install Az.Compute Module. Press <Enter> to finish script'
-                                Exit
-                            }
-                        }
-                }
+            Write-Host "Validating ImportExcel Module.."
+            $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
+            Write-Debug ('ImportExcel Module Version: ' + ([string]$VarExcel.Version.Major + '.' + [string]$VarExcel.Version.Minor + '.' + [string]$VarExcel.Version.Build))
+            if ($null -eq $VarExcel) {
+                Write-Host "Trying to install ImportExcel Module.."
+                Install-Module -Name ImportExcel -Force
+            }
+            $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
+            if ($null -eq $VarExcel) {
+                Read-Host 'Admininstrator rights required to install ImportExcel Module. Press <Enter> to finish script'
+                Exit
+            }
         }
 
         function LoginSession() {
             Write-Debug ('Starting LoginSession function')
-            Clear-AzContext -Force -ErrorAction SilentlyContinue
             if (!$TenantID) {
                 write-host "Tenant ID not specified. Use -TenantID parameter if you want to specify directly. "
                 write-host "Authenticating Azure"
                 write-host ""
                 Write-Debug ('Cleaning az account cache')
-                $Tenants = Get-AzTenant -ErrorAction SilentlyContinue -InformationAction SilentlyContinue -Debug:$false
-                if([string]::IsNullOrEmpty($Tenants))
+                az account clear | Out-Null
+                Write-Debug ('Calling az login')
+                if($DeviceLogin.IsPresent)
                     {
-                        if($DeviceLogin.IsPresent)
-                            {
-                                Connect-AzAccount -UseDeviceAuthentication -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
-                            }
-                        else 
-                            {
-                                Connect-AzAccount -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
-                            }                        
+                        az login --use-device-code
                     }
-                $Tenants = Get-AzTenant -ErrorAction SilentlyContinue -InformationAction SilentlyContinue -Debug:$false | Sort-Object -Unique
+                else 
+                    {
+                        az login --only-show-errors | Out-Null
+                    }
                 write-host ""
                 write-host ""
+                $Tenants = az account list --query [].homeTenantId -o tsv --only-show-errors | Sort-Object -Unique
                 Write-Debug ('Checking number of Tenants')
                 if ($Tenants.Count -eq 1) {
                     write-host "You have privileges only in One Tenant "
                     write-host ""
-                    $TenantID = $Tenants.id
+                    $TenantID = $Tenants
                 }
                 else {
                     write-host "Select the the Azure Tenant ID that you want to connect : "
                     write-host ""
                     $SequenceID = 1
                     foreach ($TenantID in $Tenants) {
-                        $TenantName = $TenantID.Name
-                        write-host "$SequenceID)  $TenantName"
+                        write-host "$SequenceID)  $TenantID"
                         $SequenceID ++
                     }
                     write-host ""
                     [int]$SelectTenant = read-host "Select Tenant ( default 1 )"
                     $defaultTenant = --$SelectTenant
-                    $TenantID = $Tenants[$defaultTenant].Id                    
+                    $TenantID = $Tenants[$defaultTenant]
+                    if($DeviceLogin.IsPresent)
+                        {
+                            az login --use-device-code -t $TenantID
+                        }
+                    else 
+                        {
+                            az login -t $TenantID --only-show-errors | Out-Null
+                        }
                 }
 
-                Connect-AzAccount -TenantId $TenantID -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
-                $Global:Subscriptions = Get-AzSubscription -TenantId $TenantID -Debug:$false | Where-Object {$_.State -ne 'Disabled'} 
-                Set-AzContext -Tenant $TenantID -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false               
-                $TenantName = $Tenants[$defaultTenant].Name
-                write-host "Extracting from Tenant $TenantName"
+                write-host "Extracting from Tenant $TenantID"
                 Write-Debug ('Extracting Subscription details')
+                $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
+                $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
                 if ($SubscriptionID)
                     {
                         if($SubscriptionID.count -gt 1)
                             {
-                                $Global:Subscriptions = $Global:Subscriptions | Where-Object { $_.Id -in $SubscriptionID }
+                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -in $SubscriptionID }
                             }
                         else
                             {
-                                $Global:Subscriptions = $Global:Subscriptions | Where-Object { $_.id -eq $SubscriptionID }
+                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
                             }
                     }
             }
             else {
-                $Tenants = Get-AzTenant -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-                if([string]::IsNullOrEmpty($Tenants))
-                    {
-                        if (!$Appid) 
-                            {
-                                if($DeviceLogin.IsPresent)
-                                    {
-                                        Connect-AzAccount -UseDeviceAuthentication -Tenant $TenantID -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
-                                    }
-                                else 
-                                    {
-                                        Connect-AzAccount -Tenant $TenantID -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
-                                    }
-                            }
-                        elseif ($Appid -and $Secret -and $tenantid) 
-                            {
-                                write-host "Using Service Principal Authentication Method"
-                                $SecuredPassword = ConvertTo-SecureString -AsPlainText $secret
-                                $AppCred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $appid, $SecuredPassword
-                                Connect-AzAccount -Tenant $TenantID -ServicePrincipal -Credential $AppCred -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-                            }
-                        else{
-                            write-host "You are trying to use Service Principal Authentication Method in a wrong way."
-                            write-host "It's Mandatory to specify Application ID, Secret and Tenant ID in Azure Resource Inventory"
-                            write-host ""
-                            write-host ".\AzureResourceInventory.ps1 -appid <SP AppID> -secret <SP Secret> -tenant <TenantID>"
-                            Exit
-                        }              
+                az account clear | Out-Null
+                if (!$Appid) {
+                    if($DeviceLogin.IsPresent)
+                        {
+                            az login --use-device-code -t $TenantID
+                        }
+                    else 
+                        {
+                            az login -t $TenantID --only-show-errors | Out-Null
+                        }
                     }
-                else 
-                    {
-                        Set-AzContext -Tenant $TenantID -Debug:$false
-                    }
-                
-                $Global:Subscriptions = Get-AzSubscription -TenantId $TenantID -ErrorAction SilentlyContinue -Debug:$false | Where-Object {$_.State -ne 'Disabled'}
+                elseif ($Appid -and $Secret -and $tenantid) {
+                    write-host "Using Service Principal Authentication Method"
+                    az login --service-principal -u $appid -p $secret -t $TenantID | Out-Null
+                }
+                else{
+                    write-host "You are trying to use Service Principal Authentication Method in a wrong way."
+                    write-host "It's Mandatory to specify Application ID, Secret and Tenant ID in Azure Resource Inventory"
+                    write-host ""
+                    write-host ".\AzureResourceInventory.ps1 -appid <SP AppID> -secret <SP Secret> -tenant <TenantID>"
+                    Exit
+                }
+                $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
+                $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
                 if ($SubscriptionID)
                     {
                         if($SubscriptionID.count -gt 1)
                             {
-                                $Global:Subscriptions = $Global:Subscriptions | Where-Object { $_.Id -in $SubscriptionID }
+                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -in $SubscriptionID }
                             }
                         else
                             {
-                                $Global:Subscriptions = $Global:Subscriptions | Where-Object { $_.Id -eq $SubscriptionID }
+                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
                             }
                     }
             }
@@ -403,7 +296,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 $Global:PlatOS = 'Azure CloudShell'
                 write-host ""
                 $Global:DefaultPath = "$HOME/AzureResourceInventory/"
-                $Global:Subscriptions = Get-AzSubscription -ErrorAction SilentlyContinue | Where-Object {$_.State -ne 'Disabled'}
+                $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
             }
             else
             {
@@ -471,7 +364,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 $Subscri = $SubscriptionID
 
                 $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | summarize count()"
-                $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -Debug:$false
+                $EnvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
 
                 if ($EnvSizeNum -ge 1) {
@@ -481,16 +374,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     $Limit = 0
 
                     while ($Looper -lt $Loop) {
-                        if($Looper -eq 0)
-                            {
-                                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                                $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -first 1000 -Debug:$false
-                            }
-                        if($Looper -gt 0)
-                            {
-                                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                                $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
-                            }
+                        $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data
                         Start-Sleep 2
@@ -503,12 +388,11 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             }
         elseif([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
             {
-
                 $Subscri = $SubscriptionID
 
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'.')
                 $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
-                $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -Debug:$false
+                $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
 
                 if ($EnvSizeNum -ge 1) {
@@ -518,16 +402,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     $Limit = 0
 
                     while ($Looper -lt $Loop) {
-                        if($Looper -eq 0)
-                            {
-                                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                                $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -first 1000 -Debug:$false
-                            }
-                        if($Looper -gt 0)
-                            {
-                                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                                $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
-                            }
+                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data
                         Start-Sleep 2
@@ -541,7 +417,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         else 
             {
                 $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
-                $EnvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -Debug:$false
+                $EnvSize = az graph query -q  $GraphQuery  --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
 
                 if ($EnvSizeNum -ge 1) {
@@ -551,17 +427,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     $Limit = 0
 
                     while ($Looper -lt $Loop) {
-                        if($Looper -eq 0)
-                            {
-                                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                                $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -first 1000 -Debug:$false
-                            }
-                        if($Looper -gt 0)
-                            {
-                                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                                $Resource = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
-                            }
-                        
+                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data
                         Start-Sleep 2
@@ -576,42 +443,50 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         <######################################################### QUOTA JOB ######################################################################>
 
-            if($QuotaUsage.isPresent)
+        if($QuotaUsage.isPresent)
             {
-                Write-Progress -Id 1 -activity "Running Quota Usage Inventory" -Status "Looping Quota Usage Inventory" -PercentComplete 20
-                $Global:AzQuota = @()
-                Foreach($Sub in $Global:Subscriptions)
-                    {          
-                        $Temp = Get-AzSubscription -SubscriptionId $Sub.id -Debug:$false -WarningAction SilentlyContinue | Where-Object {$_.State -ne 'Disabled'} | Set-AzContext -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -InformationAction SilentlyContinue -Debug:$false    
-                        $Locs = ($Resources | Where-Object {$_.subscriptionId -eq $Sub.Id -and $_.Type -in 'microsoft.compute/virtualmachines','microsoft.compute/virtualmachinescalesets'} | Group-Object -Property Location).name                        
-                        if($Locs.count -eq 1)
-                            {                            
-                                #$Quota = az vm list-usage --location $Loc.Loc --subscription $Loc.Sub -o json | ConvertFrom-Json
-                                $Quota = Get-AzVMUsage -Location $Locs -Debug:$false
-                                $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
-                                $Q = @{
-                                    'Location' = $Locs;
-                                    'Subscription' = $Sub.Name.split(' (')[0];
-                                    'Data' = $Quota
-                                }
-                                $Global:AzQuota += $Q
-                            }
-                        else {
-                                foreach($Loc1 in $Locs)
-                                    {
-                                        #$Quota = az vm list-usage --location $Loc1 --subscription $Loc.Sub -o json | ConvertFrom-Json
-                                        $Quota = Get-AzVMUsage -Location $Loc1 -Debug:$false
-                                        $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
-                                        $Q = @{
-                                            'Location' = $Loc1;
-                                            'Subscription' = $Sub.Name.split(' (')[0];
-                                            'Data' = $Quota
-                                        }
-                                        $Global:AzQuota += $Q
-                                    }
-                            }   
+                Start-Job -Name 'Quota Usage' -ScriptBlock {
+
+                $Location = @()
+                Foreach($Sub in $($args[1]))
+                    {
+                        $Locs = ($($args[0]) | Where-Object {$_.subscriptionId -eq $Sub.id -and $_.Type -in 'microsoft.compute/virtualmachines','microsoft.compute/virtualmachinescalesets'} | Group-Object -Property Location).name
+                        $Val = @{
+                            'Loc' = $Locs;
+                            'Sub' = $Sub.name
+                        }
+                        $Location += $Val
                     }
-                Write-Progress -Id 1 -activity "Running Quota Usage Inventory" -Status "Looping Quota Usage Inventory" -Completed
+                $Quotas = @()
+                Foreach($Loc in $Location)
+                {
+                    if($Loc.Loc.count -eq 1)
+                        {
+                            $Quota = az vm list-usage --location $Loc.Loc --subscription $Loc.Sub -o json | ConvertFrom-Json
+                            $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
+                            $Q = @{
+                                'Location' = $Loc.Loc;
+                                'Subscription' = $Loc.Sub;
+                                'Data' = $Quota
+                            }
+                            $Quotas += $Q
+                        }
+                    else {
+                            foreach($Loc1 in $Loc.loc)
+                                {
+                                    $Quota = az vm list-usage --location $Loc1 --subscription $Loc.Sub -o json | ConvertFrom-Json
+                                    $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
+                                    $Q = @{
+                                        'Location' = $Loc1;
+                                        'Subscription' = $Loc.Sub;
+                                        'Data' = $Quota
+                                    }
+                                    $Quotas += $Q
+                                }
+                    }
+                }
+                    $Quotas
+                } -ArgumentList $Global:Resources, $Global:Subscriptions
             }
 
         <######################################################### ADVISOR ######################################################################>
@@ -629,8 +504,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 } else {
                     $GraphQuery = "advisorresources | where resourceGroup == '$ResourceGroup' | summarize count()"
                 }
-                $AdvSize = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -Debug:$false
-                $AdvSizeNum = $AdvSize.'count_'
+                $AdvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
+                $AdvSizeNum = $AdvSize.data.'count_'
 
             Write-Debug ('Advisories: '+$AdvSizeNum)
             Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Advisories extraction jobs.."
@@ -639,7 +514,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 $Loop = $AdvSizeNum / 1000
                 $Loop = [math]::ceiling($Loop)
                 $Looper = 0
-                $Limit = 1
+                $Limit = 0
 
                 while ($Looper -lt $Loop) {
                     $Looper ++
@@ -650,7 +525,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                             $GraphQuery = "advisorresources | where resourceGroup == '$ResourceGroup' | order by id asc"
                                 }
                         
-                    $Advisor = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+                $Advisor = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                     $Global:Advisories += $Advisor.data
                     Start-Sleep 2
@@ -669,7 +544,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             Write-Host " "
 
             Write-Debug ('Extracting total number of Security Advisories from Tenant')
-            $SecSize = Search-AzGraph -Query "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" -Subscription $Subscri -Debug:$false
+            $SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
             $SecSizeNum = $SecSize.data.'count_'
 
 
@@ -677,13 +552,13 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 $Loop = $SecSizeNum / 1000
                 $Loop = [math]::ceiling($Loop)
                 $Looper = 0
-                $Limit = 1
+                $Limit = 0
                 while ($Looper -lt $Loop) {
                     $Looper ++
                     Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $GraphQuery = "securityresources | where properties['status']['code'] == 'Unhealthy' | order by id asc"
-                    
-                        $SecCenter = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+                    $GraphQuery = "securityresources | where properties['status']['code'] == 'Unhealthy' | order by id asc"
+                
+                    $SecCenter = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                     $Global:Security += $SecCenter.data
                     Start-Sleep 3
@@ -704,18 +579,18 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         <######################################################### AVD ######################################################################>
 
-        $AVDSize = Search-AzGraph -Query "desktopvirtualizationresources | summarize count()" -Subscription $Subscri -Debug:$false
+        $AVDSize = az graph query -q "desktopvirtualizationresources | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
         $AVDSizeNum = $AVDSize.data.'count_'
 
         if ($AVDSizeNum -ge 1) {
             $Loop = $AVDSizeNum / 1000
             $Loop = [math]::ceiling($Loop)
             $Looper = 0
-            $Limit = 1
+            $Limit = 0
 
             while ($Looper -lt $Loop) {
                 $GraphQuery = "desktopvirtualizationresources | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                $AVD = Search-AzGraph -Query $GraphQuery -Subscription $Subscri -skip $Limit -first 1000 -Debug:$false
+                $AVD = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                 $Global:Resources += $AVD.data
                 Start-Sleep 2

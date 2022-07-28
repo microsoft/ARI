@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.network/virtualnetworks a
 Excel Sheet Name: VirtualNetwork
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Networking/VirtualNetwork.ps1
+https://github.com/microsoft/ARI/Modules/Networking/VirtualNetwork.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

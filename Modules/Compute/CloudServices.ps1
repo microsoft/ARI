@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.compute/cloudservices res
 Excel Sheet Name: CloudService
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Compute/CloudServices.ps1
+https://github.com/microsoft/ARI/Modules/Compute/CloudServices.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

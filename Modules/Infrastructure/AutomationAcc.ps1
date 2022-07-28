@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.automation/automationacco
 Excel Sheet Name: AutomationAcc
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Infrastructure/AutomationAcc.ps1
+https://github.com/microsoft/ARI/Modules/Infrastructure/AutomationAcc.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

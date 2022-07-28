@@ -6,10 +6,10 @@ Automation Account Script
 This script process and creates the Azure Resource Inventory Excel sheet running on an Azure Automation Account and saving the file to a StorageAccount. 
 
 .Link
-https://github.com/azureinventory/ARI/Automation/ARI_Automation.ps1
+https://github.com/microsoft/ARI/Automation/ARI_Automation.ps1
 
 .COMPONENT
-   This powershell Script is part of Azure Resource Inventory (ARI)
+This powershell Script is part of Azure Resource Inventory (ARI)
 
 .NOTES
 Version: 2.0.0

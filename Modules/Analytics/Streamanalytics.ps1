@@ -7,10 +7,10 @@ This script consolidates information for all microsoft.streamanalytics/streaming
 Excel Sheet Name: Streamanalytics
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Data/Streamanalytics.ps1
+https://github.com/microsoft/ARI/Modules/Data/Streamanalytics.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
 Version: 2.0.0

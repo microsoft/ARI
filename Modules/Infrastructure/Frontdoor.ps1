@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.network/frontdoors and  r
 Excel Sheet Name: Frontdoor
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Networking/Frontdoor.ps1
+https://github.com/microsoft/ARI/Modules/Networking/Frontdoor.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

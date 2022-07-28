@@ -6,7 +6,7 @@ vCPU Quotas Module
 This script process and creates the Quota sheet based on Quotas Used. 
 
 .Link
-https://github.com/azureinventory/ARI/Extras/QuotaUsage.ps1
+https://github.com/microsoft/ARI/Extras/QuotaUsage.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.containerinstance/contain
 Excel Sheet Name: CONTAINER
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Compute/CONTAINER.ps1
+https://github.com/microsoft/ARI/Modules/Compute/CONTAINER.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

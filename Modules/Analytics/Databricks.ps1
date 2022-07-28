@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.databricks/workspaces res
 Excel Sheet Name: Databricks
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Data/Databricks.ps1
+https://github.com/microsoft/ARI/Modules/Data/Databricks.ps1
 
 .COMPONENT
     This powershell Module is part of Azure Resource Inventory (ARI)

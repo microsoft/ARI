@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.apimanagement/service res
 Excel Sheet Name: APIM
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Infrastructure/APIM.ps1
+https://github.com/microsoft/ARI/Modules/Infrastructure/APIM.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

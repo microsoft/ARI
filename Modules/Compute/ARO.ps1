@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.redhatopenshift/openshift
 Excel Sheet Name: ARO
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Compute/ARO.ps1
+https://github.com/microsoft/ARI/Modules/Compute/ARO.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

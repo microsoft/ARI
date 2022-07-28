@@ -7,7 +7,7 @@ This script consolidates information for all microsoft.compute/availabilitysets 
 Excel Sheet Name: AvSet
 
 .Link
-https://github.com/azureinventory/ARI/Modules/Infrastructure/AvSet.ps1
+https://github.com/microsoft/ARI/Modules/Infrastructure/AvSet.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
