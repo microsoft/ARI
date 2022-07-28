@@ -10,10 +10,10 @@ Excel Sheet Name: Databricks
 https://github.com/azureinventory/ARI/Modules/Data/Databricks.ps1
 
 .COMPONENT
-   This powershell Module is part of Azure Resource Inventory (ARI)
+    This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 2.2.10
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
