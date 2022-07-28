@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Extras/Charts.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.5
+Version: 2.3.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -100,7 +100,7 @@ $Date = (get-date -Format "MM/dd/yyyy")
 $ExtractTime = ($ExtractionRunTime.Totalminutes.ToString('#######.##')+' Minutes')
 $ReportTime = ($ReportingRunTime.Totalminutes.ToString('#######.##')+' Minutes')
 
-$User = $Subscriptions[0].ExtendedProperties.Account
+$User = $Subscriptions[0].user.name
 $TotalRes = $Resources
 
 $Excel = New-Object -TypeName OfficeOpenXml.ExcelPackage $File

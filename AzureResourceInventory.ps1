@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.3.0                                                                   #
+#       Version: 2.3.1                                                                   #
 #                                                                                        #
 #       Date: 07/28/2022                                                                 #
 #                                                                                        #
@@ -59,7 +59,7 @@
     THE SOFTWARE.
 #>
 
-param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help, [switch]$DeviceLogin)
+param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help, [switch]$DeviceLogin, $AzureEnvironment)
 
     if ($Debug.IsPresent) {$DebugPreference = 'Continue'}
 
@@ -86,6 +86,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         Write-Host " -Diagram              :  Create a Visio Diagram. "
         Write-Host " -Online               :  Use Online Modules. "
         Write-Host " -Debug                :  Run in a Debug mode. "
+        Write-Host " -AzureEnvironment     :  Change the Azure Cloud Environment. "
         Write-Host ""
         Write-Host ""
         Write-Host ""
@@ -186,7 +187,15 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         }
 
         function LoginSession() {
-            Write-Debug ('Starting LoginSession function')
+            Write-Debug ('Starting LoginSession function')            
+            if(![string]::IsNullOrEmpty($AzureEnvironment))
+                {
+                    az cloud set --name $AzureEnvironment
+                }
+            $CloudEnv = az cloud list | ConvertFrom-Json
+            Write-Host "Azure Cloud Environment: " -NoNewline
+            $CurrentCloudEnvName = $CloudEnv | Where-Object {$_.isActive -eq 'True'}
+            Write-Host $CurrentCloudEnvName.name -BackgroundColor Cyan
             if (!$TenantID) {
                 write-host "Tenant ID not specified. Use -TenantID parameter if you want to specify directly. "
                 write-host "Authenticating Azure"
