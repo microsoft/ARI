@@ -219,8 +219,9 @@ What things you need to run the script
 
 ``` powershell
 1. Install-Module ImportExcel
-2. Install Azure CLI (https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
-3. Install Azure CLI Extensions (Account and Resource-Graph)
+2. Install [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+3. Install Azure CLI [Account](https://docs.microsoft.com/en-us/cli/azure/azure-cli-extensions-list) Extension
+4. Install Azure CLI [Resource-Graph](https://docs.microsoft.com/en-us/cli/azure/azure-cli-extensions-list) Extension
 ```
 
 By default Azure Resource Inventory will call to install the required Powershell modules and Azure CLI components but you must have administrator privileges during the script execution. 
