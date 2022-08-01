@@ -278,7 +278,7 @@ We also keep the `CHANGELOG.md` file in repository to Document version changes a
 The main authors of this project are:
 
 1. Claudio Merola (claudio.merola@microsoft.com).
-2. Renato Gregio (rg83@outlook.com)
+2. Renato Gregio (renato.gregio@microsoft.com)
 
 <br/>
 
