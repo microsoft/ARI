@@ -13,20 +13,6 @@ Tags: Powershell, Azure, Inventory, Excel Report, Customer Engineer
 <br/>
 
 
-|     Modules     |     Count     |
-|-----------------|---------------|
-| Analytics | ![Analytics](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Analytics)|
-| Compute | ![Compute](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Compute)|
-| Containers | ![Containers](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Containers)|
-| Data | ![Data](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Data)|
-| Infrastructure | ![Infra](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Infrastructure)|
-| Integration | ![Integration](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Integration)|
-| Networking | ![Network](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Networking)|
-| Storage | ![Storage](https://shields-staging.herokuapp.com:/github/directory-file-count/microsoft/ARI/Modules/Storage)|
-
-<br/>
-
-
 # Azure Resource Inventory v2.3
 
 Azure Resource inventory (ARI) is a powerful script written in powershell to generate an Excel report of any Azure Environment you have read access. 
@@ -104,13 +90,13 @@ You must use the __-Diagram__ parameter for it to be generated!
 
 <br/>
 
-> ### *3) New resource types*
+> ### *3) Resource types*
 
 ---------------------
 
 <br/>
 
-We added more native modules ( there is still the possibility to create your own modules )
+Those are the native modules covered by the script ( there is still the possibility to create your own modules )
 
 #### Resources and Resource Providers:
 
@@ -167,7 +153,7 @@ We added more native modules ( there is still the possibility to create your own
 
 <br/>
 
-> ### *4) Other improvements*
+> ### *4) Other features*
 
 ---------------------
 
@@ -176,7 +162,7 @@ We added more native modules ( there is still the possibility to create your own
 :heavy_check_mark: Quota Usage (__-QuotaUsage__)  
 :heavy_check_mark: Service Principal Authentication (__-appid__)  
 :heavy_check_mark: Scan Modules diretly in GitHub ARI Repository (__-Online__)  
-:heavy_check_mark: Code Review: reduce and simplify of code, Less Loopings, Bug fix, modularization  
+:heavy_check_mark: Choose between Azure environments (__-AzureEnvironment__)
 
 <br/>
 
@@ -189,10 +175,10 @@ These instructions will get you a copy of the project up and running on your loc
 <br/>
 
 ### Supportability
-|Resource Provider|Results|VISIO Extension|Comments|
+|Resource Provider|Results|Draw.io Diagram|Comments|
 |-----------------|-------------|-----------------|-------------|
 |Windows|Fully successfully tested|Supported|Best Results|
-|MAC|Fully successfully tested|Not Tested||
+|MAC|Fully successfully tested|Not Supported||
 |Linux|Tested on Ubuntu Desktop|Not Supported|No Table auto-fit for columns|
 |CloudShell|Tested on Azure CloudShell|Not Supported|No Table auto-fit for columns|
 
@@ -217,12 +203,12 @@ You can use Azure Resource Inventory in both in Cloudshell and Powershell Deskto
 
 What things you need to run the script 
 
-``` powershell
-1. Install-Module ImportExcel
+
+1. Install-Module [ImportExcel](https://github.com/dfinke/ImportExcel)
 2. Install [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 3. Install Azure CLI [Account](https://docs.microsoft.com/en-us/cli/azure/azure-cli-extensions-list) Extension
 4. Install Azure CLI [Resource-Graph](https://docs.microsoft.com/en-us/cli/azure/azure-cli-extensions-list) Extension
-```
+
 
 By default Azure Resource Inventory will call to install the required Powershell modules and Azure CLI components but you must have administrator privileges during the script execution. 
 
