@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.3.2                                                                   #
+#       Version: 2.3.3                                                                   #
 #                                                                                        #
 #       Date: 08/29/2022                                                                 #
 #                                                                                        #
@@ -59,7 +59,7 @@
     THE SOFTWARE.
 #>
 
-param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help, [switch]$DeviceLogin, $AzureEnvironment, $ReportName = 'AzureResourceInventory', $ReportDir = 'AzureResourceInventory')
+param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help, [switch]$DeviceLogin, $AzureEnvironment, $ReportName = 'AzureResourceInventory', $ReportDir)
 
     if ($Debug.IsPresent) {$DebugPreference = 'Continue'}
 
@@ -87,6 +87,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         Write-Host " -Online               :  Use Online Modules. "
         Write-Host " -Debug                :  Run in a Debug mode. "
         Write-Host " -AzureEnvironment     :  Change the Azure Cloud Environment. "
+        Write-Host " -ReportName           :  Change the Default Name of the report. "
+        Write-Host " -ReportDir            :  Change the Default path of the report. "
         Write-Host ""
         Write-Host ""
         Write-Host ""
@@ -141,7 +143,6 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         $Global:Security = @()
         $Global:Subscriptions = ''
         $Global:ReportName = $ReportName
-        $Global:ReportDir = $ReportDir
 
         if ($Online.IsPresent) { $Global:RunOnline = $true }else { $Global:RunOnline = $false }
 
@@ -306,7 +307,14 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 write-host 'Azure CloudShell Identified.'
                 $Global:PlatOS = 'Azure CloudShell'
                 write-host ""
-                $Global:DefaultPath = "$HOME/$Global:ReportDir/"
+                if($ReportDir)
+                        {
+                            if($ReportDir -notlike '*/')
+                                {
+                                    $ReportDir = $ReportDir + '/'
+                                }
+                        }
+                $Global:DefaultPath = if($ReportDir) {$ReportDir} else {"$HOME/AzureResourceInventory/"}
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
             }
             else
@@ -315,14 +323,39 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     write-host "PowerShell Unix Identified."
                     $Global:PlatOS = 'PowerShell Unix'
                     write-host ""
-                    $Global:DefaultPath = "$HOME/$Global:ReportDir/"
+                    if($ReportDir)
+                        {
+                            if($ReportDir -notlike '*/')
+                                {
+                                    $ReportDir = $ReportDir + '/'
+                                }
+                        }
+                    $Global:DefaultPath = if($ReportDir) {$ReportDir} else {"$HOME/AzureResourceInventory/"}
                     LoginSession
                 }
                 else {
                     write-host "PowerShell Desktop Identified."
                     $Global:PlatOS = 'PowerShell Desktop'
                     write-host ""
-                    $Global:DefaultPath = "C:\$Global:ReportDir\"
+                    if($ReportDir)
+                        {
+                            if($ReportDir -notlike '*\')
+                                {
+                                    $ReportDir = $ReportDir + '\'
+                                }
+                            if($ReportDir -notlike '*:\*')
+                                {
+                                    Write-Host "ERROR:" -NoNewline -ForegroundColor Red
+                                    Write-Host " Wrong ReportDir Path!"
+                                    Write-Host ""
+                                    Write-Host "ReportDir Parameter must contain the full path. i.e:"
+                                    Write-Host "                C:\AzureResourceInventory\" -NoNewline
+                                    Write-Host ""
+                                    Write-Host ""
+                                    Exit
+                                }
+                        }
+                    $Global:DefaultPath = if($ReportDir) {$ReportDir} else {"C:\AzureResourceInventory\"}
                     LoginSession
                 }
             }
