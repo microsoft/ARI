@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.3.1                                                                   #
+#       Version: 2.3.2                                                                   #
 #                                                                                        #
-#       Date: 07/28/2022                                                                 #
+#       Date: 08/29/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -59,7 +59,7 @@
     THE SOFTWARE.
 #>
 
-param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help, [switch]$DeviceLogin, $AzureEnvironment)
+param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help, [switch]$DeviceLogin, $AzureEnvironment, $ReportName = 'AzureResourceInventory', $ReportDir = 'AzureResourceInventory')
 
     if ($Debug.IsPresent) {$DebugPreference = 'Continue'}
 
@@ -140,6 +140,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         $Global:Advisories = @()
         $Global:Security = @()
         $Global:Subscriptions = ''
+        $Global:ReportName = $ReportName
+        $Global:ReportDir = $ReportDir
 
         if ($Online.IsPresent) { $Global:RunOnline = $true }else { $Global:RunOnline = $false }
 
@@ -304,7 +306,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 write-host 'Azure CloudShell Identified.'
                 $Global:PlatOS = 'Azure CloudShell'
                 write-host ""
-                $Global:DefaultPath = "$HOME/AzureResourceInventory/"
+                $Global:DefaultPath = "$HOME/$Global:ReportDir/"
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
             }
             else
@@ -313,14 +315,14 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     write-host "PowerShell Unix Identified."
                     $Global:PlatOS = 'PowerShell Unix'
                     write-host ""
-                    $Global:DefaultPath = "$HOME/AzureResourceInventory/"
+                    $Global:DefaultPath = "$HOME/$Global:ReportDir/"
                     LoginSession
                 }
                 else {
                     write-host "PowerShell Desktop Identified."
                     $Global:PlatOS = 'PowerShell Desktop'
                     write-host ""
-                    $Global:DefaultPath = "C:\AzureResourceInventory\"
+                    $Global:DefaultPath = "C:\$Global:ReportDir\"
                     LoginSession
                 }
             }
@@ -619,10 +621,10 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         $Global:ReportingRunTime = Measure-Command -Expression {
 
-        #### Creating Excel file variable:
-        $Global:File = ($DefaultPath + "AzureResourceInventory_Report_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xlsx")
-        $Global:DFile = ($DefaultPath + "AzureResourceInventory_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".vsdx")
-        $Global:DDFile = ($DefaultPath + "AzureResourceInventory_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xml")
+        #### Creating Excel file variable:        
+        $Global:File = ($DefaultPath + $Global:ReportName + "_Report_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xlsx")
+        $Global:DFile = ($DefaultPath + $Global:ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".vsdx")
+        $Global:DDFile = ($DefaultPath + $Global:ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xml")
         Write-Debug ('Excel file:' + $File)
 
         #### Generic Conditional Text rules, Excel style specifications for the spreadsheets and tables:

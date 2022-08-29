@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Extras/DrawIODiagram.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.8
+Version: 2.2.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -23,12 +23,12 @@ param($Subscriptions, $Resources, $Advisories, $DDFile)
 $Global:FullEnvironment = $false
 
 Function Icon {
-Param($Style,$x,$y,$w,$h)
+Param($Style,$x,$y,$w,$h,$p)
 
     $Global:XmlWriter.WriteStartElement('mxCell')
     $Global:XmlWriter.WriteAttributeString('style', $Style)
     $Global:XmlWriter.WriteAttributeString('vertex', "1")
-    $Global:XmlWriter.WriteAttributeString('parent', "1")
+    $Global:XmlWriter.WriteAttributeString('parent', $p)
 
         $Global:XmlWriter.WriteStartElement('mxGeometry')
         $Global:XmlWriter.WriteAttributeString('x', $x)
@@ -40,6 +40,28 @@ Param($Style,$x,$y,$w,$h)
     
     $Global:XmlWriter.WriteEndElement()
 }
+
+Function Container {
+    Param($x,$y,$w,$h,$title)
+        $Global:ContID = (-join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})+'-'+1)
+
+        $Global:XmlWriter.WriteStartElement('mxCell')
+        $Global:XmlWriter.WriteAttributeString('id', $Global:ContID)
+        $Global:XmlWriter.WriteAttributeString('value', "$title")
+        $Global:XmlWriter.WriteAttributeString('style', "swimlane")
+        $Global:XmlWriter.WriteAttributeString('vertex', "1")
+        $Global:XmlWriter.WriteAttributeString('parent', "1")
+    
+            $Global:XmlWriter.WriteStartElement('mxGeometry')
+            $Global:XmlWriter.WriteAttributeString('x', $x)
+            $Global:XmlWriter.WriteAttributeString('y', $y)
+            $Global:XmlWriter.WriteAttributeString('width', $w)
+            $Global:XmlWriter.WriteAttributeString('height', $h)
+            $Global:XmlWriter.WriteAttributeString('as', "geometry")
+            $Global:XmlWriter.WriteEndElement()
+        
+        $Global:XmlWriter.WriteEndElement()
+    }
 
 Function Connect {
 Param($Source,$Target)
@@ -80,67 +102,77 @@ Function Variables0
 
 }
 
+<# Function to create the Label of Version #>
+Function label
+{
+    $Global:XmlWriter.WriteStartElement('object')            
+    $Global:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v2.3'+ "`n" +'https://github.com/microsoft/ARI'))
+    $Global:XmlWriter.WriteAttributeString('author1', 'Claudio Merola')
+    $Global:XmlWriter.WriteAttributeString('author2', 'Renato Gregio')
+    $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+}
+
 <# Function to create the Visio document and import each stencil #>
 Function Stensils
 {
-            $Global:Ret = "rounded=0;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;"
+    $Global:Ret = "rounded=0;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;"
 
-            $Global:IconConnections = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Connections.svg;" #width="68" height="68"
-            $Global:IconExpressRoute = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/ExpressRoute_Circuits.svg;" #width="70" height="64"
-            $Global:IconVGW = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Virtual_Network_Gateways.svg;" #width="52" height="69"
-            $Global:IconVGW2 = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_Network_Gateways.svg;" #width="52" height="69"
-            $Global:IconVNET = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_Networks.svg;" #width="67" height="40"
-            $Global:IconTraffic = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Local_Network_Gateways.svg;" #width="68" height="68"
-            $Global:IconNIC = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Network_Interfaces.svg;" #width="68" height="60"
-            $Global:IconLBs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Load_Balancers.svg;" #width="72" height="72"
-            $Global:IconPVTs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Private_Endpoint.svg;" #width="72" height="66"
-            $Global:IconNSG = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Network_Security_Groups.svg;" # width="26.35" height="32"
-            $Global:IconUDR =  "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Route_Tables.svg;" #width="30.97" height="30"
-            $Global:IconDDOS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/DDoS_Protection_Plans.svg;" # width="23" height="28"
-            $Global:IconPIP = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Public_IP_Addresses.svg;" # width="65" height="52"  
-            $Global:IconNAT = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/NAT.svg;" # width="65" height="52"            
+    $Global:IconConnections = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Connections.svg;" #width="68" height="68"
+    $Global:IconExpressRoute = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/ExpressRoute_Circuits.svg;" #width="70" height="64"
+    $Global:IconVGW = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Virtual_Network_Gateways.svg;" #width="52" height="69"
+    $Global:IconVGW2 = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_Network_Gateways.svg;" #width="52" height="69"
+    $Global:IconVNET = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_Networks.svg;" #width="67" height="40"
+    $Global:IconTraffic = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Local_Network_Gateways.svg;" #width="68" height="68"
+    $Global:IconNIC = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Network_Interfaces.svg;" #width="68" height="60"
+    $Global:IconLBs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Load_Balancers.svg;" #width="72" height="72"
+    $Global:IconPVTs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Private_Endpoint.svg;" #width="72" height="66"
+    $Global:IconNSG = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Network_Security_Groups.svg;" # width="26.35" height="32"
+    $Global:IconUDR =  "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Route_Tables.svg;" #width="30.97" height="30"
+    $Global:IconDDOS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/DDoS_Protection_Plans.svg;" # width="23" height="28"
+    $Global:IconPIP = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Public_IP_Addresses.svg;" # width="65" height="52"  
+    $Global:IconNAT = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/NAT.svg;" # width="65" height="52"            
 
-            <########################## Azure Generic Stencils #############################>
+    <########################## Azure Generic Stencils #############################>
 
-            $Global:SymError = "sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.mscae.enterprise.not_allowed;fillColor=#EA1C24;" #width="50" height="50"
-            $Global:SymInfo = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/general/Information.svg;" #width="64" height="64"
-            $Global:IconSubscription = "aspect=fixed;html=1;points=[];align=center;image;fontSize=20;image=img/lib/azure2/general/Subscriptions.svg;" #width="44" height="71"
-            $Global:IconBastions = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/general/Launch_Portal.svg;" #width="68" height="67"
-            $Global:IconContain = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Container_Instances.svg;" #width="64" height="68"
-            $Global:IconVWAN = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_WANs.svg;" #width="65" height="64"
-            $Global:IconCostMGMT = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/general/Cost_Analysis.svg;" #width="60" height="70"
+    $Global:SymError = "sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.mscae.enterprise.not_allowed;fillColor=#EA1C24;" #width="50" height="50"
+    $Global:SymInfo = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/general/Information.svg;" #width="64" height="64"
+    $Global:IconSubscription = "aspect=fixed;html=1;points=[];align=center;image;fontSize=20;image=img/lib/azure2/general/Subscriptions.svg;" #width="44" height="71"
+    $Global:IconBastions = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/general/Launch_Portal.svg;" #width="68" height="67"
+    $Global:IconContain = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Container_Instances.svg;" #width="64" height="68"
+    $Global:IconVWAN = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_WANs.svg;" #width="65" height="64"
+    $Global:IconCostMGMT = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/general/Cost_Analysis.svg;" #width="60" height="70"
 
-            <########################## Azure Computing Stencils #############################>
+    <########################## Azure Computing Stencils #############################>
 
-            $Global:IconVMs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Virtual_Machine.svg;" #width="69" height="64"
-            $Global:IconAKS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/containers/Kubernetes_Services.svg;" #width="68" height="60"
-            $Global:IconVMSS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/VM_Scale_Sets.svg;" # width="68" height="68"
-            $Global:IconARO = "sketch=0;aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/mscae/OpenShift.svg;" #width="50" height="46"
-            $Global:IconFunApps = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Function_Apps.svg;" # width="68" height="60"
+    $Global:IconVMs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Virtual_Machine.svg;" #width="69" height="64"
+    $Global:IconAKS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/containers/Kubernetes_Services.svg;" #width="68" height="60"
+    $Global:IconVMSS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/VM_Scale_Sets.svg;" # width="68" height="68"
+    $Global:IconARO = "sketch=0;aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/mscae/OpenShift.svg;" #width="50" height="46"
+    $Global:IconFunApps = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Function_Apps.svg;" # width="68" height="60"
 
-            <########################## Azure Service Stencils #############################>
+    <########################## Azure Service Stencils #############################>
 
-            $Global:IconAPIMs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/app_services/API_Management_Services.svg;" #width="65" height="60"
-            $Global:IconAPPs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/containers/App_Services.svg;" #width="64" height="64"                   
+    $Global:IconAPIMs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/app_services/API_Management_Services.svg;" #width="65" height="60"
+    $Global:IconAPPs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/containers/App_Services.svg;" #width="64" height="64"                   
 
-            <########################## Azure Storage Stencils #############################>
+    <########################## Azure Storage Stencils #############################>
 
-            $Global:IconNetApp = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/storage/Azure_NetApp_Files.svg;" #width="65" height="52"
+    $Global:IconNetApp = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/storage/Azure_NetApp_Files.svg;" #width="65" height="52"
 
-            <########################## Azure Storage Stencils #############################>
+    <########################## Azure Storage Stencils #############################>
 
-            $Global:IconDataExplorer = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/databases/Azure_Data_Explorer_Clusters.svg;" #width="68" height="68"
+    $Global:IconDataExplorer = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/databases/Azure_Data_Explorer_Clusters.svg;" #width="68" height="68"
 
-            <########################## Other Stencils #############################>
-            
-            $Global:IconFWs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Firewalls.svg;" #width="71" height="60"
-            $Global:IconDet =  "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/other/Detonation.svg;" #width="42.63" height="44"
-            $Global:IconAppGWs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Application_Gateways.svg;" #width="64" height="64"
-            $Global:IconBricks = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/analytics/Azure_Databricks.svg;" #width="60" height="68"   
-            $Global:IconError = "sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.mscae.enterprise.not_allowed;fillColor=#EA1C24;" #width="30" height="30"
-            $Global:OnPrem = "sketch=0;aspect=fixed;html=1;points=[];align=center;image;fontSize=56;image=img/lib/mscae/Exchange_On_premises_Access.svg;" #width="168.2" height="290"
-            $Global:Signature = "aspect=fixed;html=1;points=[];align=left;image;fontSize=22;image=img/lib/azure2/general/Dev_Console.svg;" #width="27.5" height="22"
-            $Global:CloudOnly = "aspect=fixed;html=1;points=[];align=center;image;fontSize=56;image=img/lib/azure2/compute/Cloud_Services_Classic.svg;" #width="380.77" height="275"
+    <########################## Other Stencils #############################>
+    
+    $Global:IconFWs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Firewalls.svg;" #width="71" height="60"
+    $Global:IconDet =  "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/other/Detonation.svg;" #width="42.63" height="44"
+    $Global:IconAppGWs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Application_Gateways.svg;" #width="64" height="64"
+    $Global:IconBricks = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/analytics/Azure_Databricks.svg;" #width="60" height="68"   
+    $Global:IconError = "sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.mscae.enterprise.not_allowed;fillColor=#EA1C24;" #width="30" height="30"
+    $Global:OnPrem = "sketch=0;aspect=fixed;html=1;points=[];align=center;image;fontSize=56;image=img/lib/mscae/Exchange_On_premises_Access.svg;" #width="168.2" height="290"
+    $Global:Signature = "aspect=fixed;html=1;points=[];align=left;image;fontSize=22;image=img/lib/azure2/general/Dev_Console.svg;" #width="27.5" height="22"
+    $Global:CloudOnly = "aspect=fixed;html=1;points=[];align=center;image;fontSize=56;image=img/lib/azure2/compute/Cloud_Services_Classic.svg;" #width="380.77" height="275"
 
 }
 
@@ -163,7 +195,7 @@ Function OnPremNet {
             $Global:XmlWriter.WriteAttributeString('Status', 'This Local Network Gateway has Errors')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $IconError 40 ($Global:Alt+25) "25" "25"
+                Icon $IconError 40 ($Global:Alt+25) "25" "25" 1
 
             $Global:XmlWriter.WriteEndElement()
         }
@@ -177,7 +209,7 @@ Function OnPremNet {
             $Global:XmlWriter.WriteAttributeString('Status', 'No Connections were found in this Local Network Gateway')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $SymInfo 40 ($Global:Alt+30) "20" "20"
+                Icon $SymInfo 40 ($Global:Alt+30) "20" "20" 1
 
             $Global:XmlWriter.WriteEndElement()
         }
@@ -190,7 +222,7 @@ Function OnPremNet {
         $Global:XmlWriter.WriteAttributeString('Local_Address_Space', [string]$GTW.properties.localNetworkAddressSpace.addressPrefixes)
         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-            Icon $IconTraffic 50 $Global:Alt "67" "40"
+            Icon $IconTraffic 50 $Global:Alt "67" "40" 1
 
         $Global:XmlWriter.WriteEndElement()            
         #$tt = $tt + 200        
@@ -211,7 +243,7 @@ Function OnPremNet {
             $Global:XmlWriter.WriteAttributeString('Status', 'This Express Route has Errors')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $IconError 51 ($Global:Alt+25) "25" "25"
+                Icon $IconError 51 ($Global:Alt+25) "25" "25" 1
 
             $Global:XmlWriter.WriteEndElement()
         }       
@@ -225,7 +257,7 @@ Function OnPremNet {
             $Global:XmlWriter.WriteAttributeString('Status', 'No Connections were found in this Express Route')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $SymInfo 51 ($Global:Alt+30) "20" "20"
+                Icon $SymInfo 51 ($Global:Alt+30) "20" "20" 1
 
             $Global:XmlWriter.WriteEndElement()
         }
@@ -241,7 +273,7 @@ Function OnPremNet {
         $Global:XmlWriter.WriteAttributeString('Billing_model', $ERs.sku.family)
         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-            Icon $IconExpressRoute "61.5" $Global:Alt "44" "40"
+            Icon $IconExpressRoute "61.5" $Global:Alt "44" "40" 1
 
         $Global:XmlWriter.WriteEndElement()    
 
@@ -262,7 +294,7 @@ Function OnPremNet {
             $Global:XmlWriter.WriteAttributeString('Status', 'This VPN Site has Errors')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $IconError 40 ($Global:Alt+25) "25" "25"
+                Icon $IconError 40 ($Global:Alt+25) "25" "25" 1
 
             $Global:XmlWriter.WriteEndElement()
         }
@@ -276,7 +308,7 @@ Function OnPremNet {
             $Global:XmlWriter.WriteAttributeString('Status', 'No vWANs were found in this VPN Site')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $SymInfo 40 ($Global:Alt+30) "20" "20"
+                Icon $SymInfo 40 ($Global:Alt+30) "20" "20" 1
 
             $Global:XmlWriter.WriteEndElement()
         }
@@ -289,7 +321,7 @@ Function OnPremNet {
         $Global:XmlWriter.WriteAttributeString('Link_Speed_In_Mbps', [string]$GTW.properties.deviceProperties.linkSpeedInMbps)
         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-            Icon $IconNAT 50 $Global:Alt "67" "40"
+            Icon $IconNAT 50 $Global:Alt "67" "40" 1
 
         $Global:XmlWriter.WriteEndElement()            
         #$tt = $tt + 200        
@@ -310,7 +342,7 @@ Function OnPremNet {
             $Global:XmlWriter.WriteAttributeString('Status', 'This Express Route Circuit has Errors')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $IconError 40 ($Global:Alt+25) "25" "25"
+                Icon $IconError 40 ($Global:Alt+25) "25" "25" 1
 
             $Global:XmlWriter.WriteEndElement()
         }
@@ -324,7 +356,7 @@ Function OnPremNet {
             $Global:XmlWriter.WriteAttributeString('Status', 'No vWANs were found in this Express Route Circuit')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $SymInfo 40 ($Global:Alt+30) "20" "20"
+                Icon $SymInfo 40 ($Global:Alt+30) "20" "20" 1
 
             $Global:XmlWriter.WriteEndElement()
         }
@@ -337,7 +369,7 @@ Function OnPremNet {
         $Global:XmlWriter.WriteAttributeString('LinkSpeed_In_Mbps', [string]$GTW.properties.deviceProperties.linkSpeedInMbps)
         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-            Icon $IconNAT 50 $Global:Alt "67" "40"
+            Icon $IconNAT 50 $Global:Alt "67" "40" 1
 
         $Global:XmlWriter.WriteEndElement()            
         #$tt = $tt + 200        
@@ -356,7 +388,7 @@ Function OnPremNet {
             $Global:XmlWriter.WriteAttributeString('label', '')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $Ret -520 -100 "500" ($Global:Alt + 100)
+                Icon $Ret -520 -100 "500" ($Global:Alt + 100) 1
 
             $Global:XmlWriter.WriteEndElement()
 
@@ -364,17 +396,13 @@ Function OnPremNet {
             $Global:XmlWriter.WriteAttributeString('label', ('On Premises'+ "`n" +'Environment'))
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $OnPrem -351 (($Global:Alt + 100)/2) "168.2" "290"
+                Icon $OnPrem -351 (($Global:Alt + 100)/2) "168.2" "290" 1
 
             $Global:XmlWriter.WriteEndElement()  
 
-            $Global:XmlWriter.WriteStartElement('object')            
-            $Global:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v2.3'+ "`n" +'https://github.com/microsoft/ARI'))
-            $Global:XmlWriter.WriteAttributeString('author1', 'Claudio Merola')
-            $Global:XmlWriter.WriteAttributeString('author2', 'Renato Gregio')
-            $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+            label
 
-                Icon $Signature -520 ($Global:Alt + 100) "27.5" "22"
+                Icon $Signature -520 ($Global:Alt + 100) "27.5" "22" 1
 
             $Global:XmlWriter.WriteEndElement()  
         }
@@ -402,7 +430,7 @@ foreach ($Con2 in $Con1)
             $Global:Source = ($Global:CellID+'-'+($Global:IDNum-1))
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $IconConnections 250 $Global:Alt "40" "40"
+                Icon $IconConnections 250 $Global:Alt "40" "40" 1
 
             $Global:XmlWriter.WriteEndElement()
 
@@ -422,7 +450,7 @@ foreach ($Con2 in $Con1)
             $Global:XmlWriter.WriteAttributeString('Gateway_Private_IPs', [string]$VGT.properties.enablePrivateIpAddress)
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $IconVGW2 425 ($Global:Alt-4) "31.34" "48"
+                Icon $IconVGW2 425 ($Global:Alt-4) "31.34" "48" 1
 
             $Global:XmlWriter.WriteEndElement()
 
@@ -466,7 +494,7 @@ foreach ($Con2 in $Con1)
                                     }
                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                    Icon $IconVNET 600 $Global:Alt "65" "39"
+                                    Icon $IconVNET 600 $Global:Alt "65" "39" 1
 
                                 $Global:XmlWriter.WriteEndElement()      
                                 
@@ -482,13 +510,13 @@ foreach ($Con2 in $Con1)
                                     $Global:XmlWriter.WriteAttributeString('label', '')
                                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
                         
-                                        Icon $IconDDOS 580 ($Global:Alt + 15) "23" "28"
+                                        Icon $IconDDOS 580 ($Global:Alt + 15) "23" "28" 1
                         
                                     $Global:XmlWriter.WriteEndElement()
                                 }
 
                                 $Global:Source = $Global:Target
-                                                              
+
                                     VNETCreator $Global:VNET2
 
                                 if($VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id)
@@ -505,24 +533,23 @@ foreach ($Con2 in $Con1)
                             }
                         else
                             {     
-                                                           
+
                                 $VNETDID = $VNETHistory | Where-Object {$_.VNET -eq $AZVNETs2.id}
 
                                 Connect $Global:Source $VNETDID.VNETid 
-                                                             
+
                             }
                     
                             
                         }
                 }
 
-                          
             }
 
             
             if($Con1.count -gt 1)
             {
-                 $Global:Alt = $Global:Alt + 250
+                $Global:Alt = $Global:Alt + 250
             }
         }
 
@@ -545,7 +572,7 @@ Param($wan1)
     $Global:Source = ($Global:CellID+'-'+($Global:IDNum-1))
     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-        Icon $IconVWAN 250 $Global:Alt "40" "40"
+        Icon $IconVWAN 250 $Global:Alt "40" "40" 1
 
     $Global:XmlWriter.WriteEndElement()
 
@@ -567,7 +594,7 @@ Param($wan1)
             $Global:XmlWriter.WriteAttributeString('Allow_BranchToBranch_Traffic', [string]$VHUB.properties.allowBranchToBranchTraffic)
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $IconVWAN 425 $Global:Alt "40" "40"
+                Icon $IconVWAN 425 $Global:Alt "40" "40" 1
 
             $Global:XmlWriter.WriteEndElement()
 
@@ -590,7 +617,6 @@ Param($wan1)
                         $Global:Alt0 = $Global:Alt
                         if($VNET2.id -notin $VNETHistory.vnet)
                             {
-
                                 if($VNET2.properties.addressSpace.addressPrefixes.count -ge 10)
                                 {
                                     $AddSpace = ($VNET2.properties.addressSpace.addressPrefixes | Select-Object -First 20 |  ForEach-Object {$_ + "`n"} ) + "`n" +'...'
@@ -611,7 +637,7 @@ Param($wan1)
                                     }
                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                    Icon $IconVNET 600 $Global:Alt "65" "39"
+                                    Icon $IconVNET 600 $Global:Alt "65" "39" 1
 
                                 $Global:XmlWriter.WriteEndElement()      
                                 
@@ -627,7 +653,7 @@ Param($wan1)
                                     $Global:XmlWriter.WriteAttributeString('label', '')
                                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
                         
-                                        Icon $IconDDOS 580 ($Global:Alt + 15) "23" "28"
+                                        Icon $IconDDOS 580 ($Global:Alt + 15) "23" "28" 1
                         
                                     $Global:XmlWriter.WriteEndElement()
                                 }
@@ -709,7 +735,7 @@ $Global:Alt = 2
                         }
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                        Icon $IconVNET 600 $Global:Alt "65" "39"
+                        Icon $IconVNET 600 $Global:Alt "65" "39" 1
 
                     $Global:XmlWriter.WriteEndElement()      
                     
@@ -723,13 +749,13 @@ $Global:Alt = 2
                         $Global:XmlWriter.WriteAttributeString('label', '')
                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
             
-                            Icon $IconDDOS 580 ($Global:Alt + 15) "23" "28"
+                            Icon $IconDDOS 580 ($Global:Alt + 15) "23" "28" 1
             
                         $Global:XmlWriter.WriteEndElement()
                     }
 
                     $Global:Source = $Global:Target
-                                                    
+
                         VNETCreator $Global:VNET2
 
                     if($VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id)
@@ -750,7 +776,7 @@ $Global:Alt = 2
             $Global:XmlWriter.WriteAttributeString('label', '')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $Ret -520 -100 "500" ($Global:Alt + 100)
+                Icon $Ret -520 -100 "500" ($Global:Alt + 100) 1
 
             $Global:XmlWriter.WriteEndElement()
 
@@ -758,17 +784,13 @@ $Global:Alt = 2
             $Global:XmlWriter.WriteAttributeString('label', ('Cloud Only'+ "`n" +'Environment'))
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $Global:CloudOnly -460 (($Global:Alt + 100)/2) "380" "275"
+                Icon $Global:CloudOnly -460 (($Global:Alt + 100)/2) "380" "275" 1
 
             $Global:XmlWriter.WriteEndElement()  
 
-            $Global:XmlWriter.WriteStartElement('object')            
-            $Global:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v2.2'+ "`n" +'https://github.com/azureinventory/ARI'))
-            $Global:XmlWriter.WriteAttributeString('author1', 'Claudio Merola')
-            $Global:XmlWriter.WriteAttributeString('author2', 'Renato Gregio')
-            $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+            label
 
-                Icon $Signature -520 ($Global:Alt + 100) "27.5" "22"
+                Icon $Signature -520 ($Global:Alt + 100) "27.5" "22" 1
 
             $Global:XmlWriter.WriteEndElement()  
 
@@ -804,10 +826,10 @@ Function FullEnvironment
                         }
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                        Icon $IconVNET 600 $Global:Alt "65" "39"
+                        Icon $IconVNET 600 $Global:Alt "65" "39" 1
 
                     $Global:XmlWriter.WriteEndElement()
-                                                    
+
                     VNETCreator $Global:VNET2
 
                     if($VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id)
@@ -823,7 +845,7 @@ Function FullEnvironment
             $Global:XmlWriter.WriteAttributeString('label', '')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $Ret -520 -100 "500" ($Global:Alt + 100)
+                Icon $Ret -520 -100 "500" ($Global:Alt + 100) 1
 
             $Global:XmlWriter.WriteEndElement()
 
@@ -831,20 +853,215 @@ Function FullEnvironment
             $Global:XmlWriter.WriteAttributeString('label', ('On Premises'+ "`n" +'Environment'))
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                Icon $OnPrem -351 (($Global:Alt + 100)/2) "168.2" "290"
+                Icon $OnPrem -351 (($Global:Alt + 100)/2) "168.2" "290" 1
 
             $Global:XmlWriter.WriteEndElement()  
 
-            $Global:XmlWriter.WriteStartElement('object')            
-            $Global:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v2.2'+ "`n" +'https://github.com/azureinventory/ARI'))
-            $Global:XmlWriter.WriteAttributeString('author1', 'Claudio Merola')
-            $Global:XmlWriter.WriteAttributeString('author2', 'Renato Gregio')
-            $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+            label
 
-                Icon $Signature -520 ($Global:Alt + 100) "27.5" "22"
+                Icon $Signature -520 ($Global:Alt + 100) "27.5" "22" 1
 
             $Global:XmlWriter.WriteEndElement()  
 
+}
+
+
+<# Function for VNET creation #>
+Function VNETCreator
+{
+Param($VNET2)
+        $Global:sizeL =  $VNET2.properties.subnets.properties.addressPrefix.count
+        if($VNET2.id -notin $VNETHistory.vnet)
+            {
+            if ($Global:sizeL -gt 5)
+            {            
+                $Global:sizeL = $Global:sizeL / 2
+                $Global:sizeL = [math]::ceiling($Global:sizeL)
+                $Global:sizeC = $Global:sizeL
+                $Global:sizeL = (($Global:sizeL * 210) + 30)
+
+                Container ($Global:vnetLoc) ($Global:Alt0 - 20) $Global:sizeL "490" $VNET2.Name
+                
+                $Global:VNETSquare = ($Global:CellID+'-'+($Global:IDNum-1))
+
+                $SubName = $Subscriptions | Where-Object {$_.id -eq $VNET2.subscriptionId}
+
+                $Global:XmlWriter.WriteStartElement('object')            
+                $Global:XmlWriter.WriteAttributeString('label', $SubName.name)
+                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                    Icon $IconSubscription $Global:sizeL 225 "67" "40" $Global:ContID
+
+                $Global:XmlWriter.WriteEndElement()  
+
+                $ADVS = ''
+                $ADVS = $Advisories | Where-Object {$_.Properties.Category -eq 'Cost' -and $_.Properties.resourceMetadata.resourceId -eq ('/subscriptions/'+$SubName.id)}
+                If($ADVS)
+                {
+                    $Count = 1
+                    $Global:XmlWriter.WriteStartElement('object')            
+                    $Global:XmlWriter.WriteAttributeString('label', '')
+
+                    foreach ($ADV in $ADVS)
+                        {
+                            $Attr1 = ('Recommendation'+[string]$Count)
+                            $Global:XmlWriter.WriteAttributeString($Attr1, [string]$ADV.Properties.shortDescription.solution)
+
+                            $Count ++
+                        }
+
+                    $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                        Icon $IconCostMGMT ($Global:sizeL + 150) 225 "30" "35" $Global:ContID
+
+                    $Global:XmlWriter.WriteEndElement()
+                    
+                }
+
+                $Global:subloc = ($Global:vnetLoc + 15)
+                $subloc0 = 20
+                $Global:SubC = 0
+                $alt1 = 40
+                $Global:VNETPIP = @()
+                foreach($Sub in $VNET2.properties.subnets)
+                {
+                    if ($Global:SubC -eq $Global:sizeC) 
+                    {
+                        $Alt1 = $Alt1 + 230
+                        $subloc0 = 20
+                        $Global:SubC = 0
+                    }
+
+                    $Global:XmlWriter.WriteStartElement('object')            
+                    $Global:XmlWriter.WriteAttributeString('label', ("`n" + "`n" + "`n" + "`n" + "`n" + "`n" +[string]$sub.Name + "`n" + [string]$sub.properties.addressPrefix))
+                    $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                        Icon $Global:Ret $subloc0 $Alt1 "200" "200" $Global:ContID
+
+                    $Global:XmlWriter.WriteEndElement()      
+                    
+                    ProcType $sub $subloc0 $Alt1 $Global:ContID               
+
+                    $Global:subloc = $Global:subloc + 210
+                    $subloc0 = $subloc0 + 210
+                    $Global:SubC ++
+                }
+
+                if($Global:VNETPIP)
+                    {
+                        $Global:XmlWriter.WriteStartElement('object')            
+                        $Global:XmlWriter.WriteAttributeString('label', '')
+
+                        $Count = 1
+                        Foreach ($PIPDetail in $Global:VNETPIP)
+                            {
+                                $Attr1 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-Name')
+                                $Attr2 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-IP')
+                                $Global:XmlWriter.WriteAttributeString($Attr1, [string]$PIPDetail.name)
+                                $Global:XmlWriter.WriteAttributeString($Attr2, [string]$PIPDetail.properties.ipaddress)
+
+                                $Count ++
+                            }
+
+                        $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                            Icon $IconDet ($Global:subloc + 50) ($Global:Alt0 - 107) "42.63" "44" $Global:ContID
+
+                        $Global:XmlWriter.WriteEndElement()
+                        
+                        Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:ContID 
+                    }
+
+                    $Global:Alt = $Global:Alt + 650
+            }
+        else
+            {
+                $Global:sizeL = (($Global:sizeL * 210) + 30)
+
+                Container ($Global:vnetLoc) ($Global:Alt0 - 15) $Global:sizeL "260" $VNET2.Name
+
+                $Global:VNETSquare = ($Global:CellID+'-'+($Global:IDNum-1))
+
+                $SubName = $Subscriptions | Where-Object {$_.id -eq $VNET2.subscriptionId}
+
+                $Global:XmlWriter.WriteStartElement('object')            
+                $Global:XmlWriter.WriteAttributeString('label', $SubName.name)
+                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                    Icon $IconSubscription $Global:sizeL 225 "67" "40" $Global:ContID
+
+                $Global:XmlWriter.WriteEndElement()  
+
+                $ADVS = ''
+                $ADVS = $Advisories | Where-Object {$_.Properties.Category -eq 'Cost' -and $_.Properties.resourceMetadata.resourceId -eq ('/subscriptions/'+$SubName.id)}
+                If($ADVS)
+                {
+                    $Count = 1
+                    $Global:XmlWriter.WriteStartElement('object')            
+                    $Global:XmlWriter.WriteAttributeString('label', '')
+
+                    foreach ($ADV in $ADVS)
+                        {
+                            $Attr1 = ('Recommendation'+[string]$Count)
+                            $Global:XmlWriter.WriteAttributeString($Attr1, [string]$ADV.Properties.shortDescription.solution)
+
+                            $Count ++
+                        }
+
+                    $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                        Icon $IconCostMGMT ($Global:sizeL + 150) 225 "30" "35" $Global:ContID
+
+                    $Global:XmlWriter.WriteEndElement()
+
+                }
+
+                $Global:subloc = ($Global:vnetLoc + 15)
+                $subloc0 = 20
+                $Global:VNETPIP = @()
+                foreach($Sub in $VNET2.properties.subnets)
+                {
+                    $Global:XmlWriter.WriteStartElement('object')            
+                    $Global:XmlWriter.WriteAttributeString('label', ("`n" + "`n" + "`n" + "`n" + "`n" + "`n" +[string]$sub.Name + "`n" + [string]$sub.properties.addressPrefix))
+                    $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                        Icon $Global:Ret $subloc0 40 "200" "200" $Global:ContID
+
+                    $Global:XmlWriter.WriteEndElement()  
+
+                    ProcType $sub $subloc0 40 $Global:ContID              
+
+                    $Global:subloc = $Global:subloc + 210
+                    $subloc0 = $subloc0 + 210
+                }
+
+                if($Global:VNETPIP)
+                    {
+                        $Global:XmlWriter.WriteStartElement('object')            
+                        $Global:XmlWriter.WriteAttributeString('label', '')
+
+                        $Count = 1
+                        Foreach ($PIPDetail in $Global:VNETPIP)
+                            {
+                                $Attr1 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-Name')
+                                $Attr2 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-IP')
+                                $Global:XmlWriter.WriteAttributeString($Attr1, [string]$PIPDetail.name)
+                                $Global:XmlWriter.WriteAttributeString($Attr2, [string]$PIPDetail.properties.ipaddress)
+
+                                $Count ++
+                            }
+
+                        $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
+
+                            Icon $IconDet ($Global:sizeL + 500) 107 "42.63" "44" $Global:ContID
+
+                        $Global:XmlWriter.WriteEndElement()
+                        
+                        Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:ContID                   
+                    }
+                $Global:Alt = $Global:Alt + 350 
+            }
+        }
 }
 
 
@@ -909,7 +1126,7 @@ Param($VNET2)
                     }
                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                    Icon $IconVNET $Global:vnetLoc $Global:vnetLoc1 "67" "40"
+                    Icon $IconVNET $Global:vnetLoc $Global:vnetLoc1 "67" "40" 1
 
                 $Global:XmlWriter.WriteEndElement()
 
@@ -945,7 +1162,7 @@ Param($VNET2)
                         $Global:XmlWriter.WriteAttributeString('label', '')
                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
             
-                            Icon $IconDDOS ($Global:vnetLoc - 20) ($Global:vnetLoc1 + 15) "23" "28"
+                            Icon $IconDDOS ($Global:vnetLoc - 20) ($Global:vnetLoc1 + 15) "23" "28" 1
             
                         $Global:XmlWriter.WriteEndElement()
                     }
@@ -958,14 +1175,7 @@ Param($VNET2)
                         $Global:sizeC = $Global:sizeL
                         $Global:sizeL = (($Global:sizeL * 210) + 30)
 
-
-                        $Global:XmlWriter.WriteStartElement('object')            
-                        $Global:XmlWriter.WriteAttributeString('label', '')
-                        $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-
-                            Icon $Global:Ret ($Global:vnetLoc + 100) ($Global:vnetLoc1 - 20) $Global:sizeL "470"
-
-                        $Global:XmlWriter.WriteEndElement()  
+                        Container ($Global:vnetLoc + 100) ($Global:vnetLoc1 - 20) $Global:sizeL "490" $VNETSUB.name
 
                         $Global:VNETSquare = ($Global:CellID+'-'+($Global:IDNum-1))
 
@@ -974,10 +1184,10 @@ Param($VNET2)
                         $Global:XmlWriter.WriteAttributeString('label', $SubName.name)
                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                            Icon $IconSubscription ($Global:sizeL + $Global:vnetLoc + 100) ($Global:vnetLoc1 + 420) "67" "40"
+                            Icon $IconSubscription $Global:sizeL 460 "67" "40" $Global:ContID
 
                         $Global:XmlWriter.WriteEndElement()                    
-                                  
+
                         $ADVS = ''
                         $ADVS = $Advisories | Where-Object {$_.Properties.Category -eq 'Cost' -and $_.Properties.resourceMetadata.resourceId -eq ('/subscriptions/'+$SubName.id)}
                         If($ADVS)
@@ -996,7 +1206,7 @@ Param($VNET2)
 
                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                    Icon $IconCostMGMT ($Global:sizeL + $Global:vnetLoc + 170) ($Global:vnetLoc1 + 420) "30" "35"
+                                    Icon $IconCostMGMT ($Global:sizeL + 150) 460 "30" "35" $Global:ContID
 
                                 $Global:XmlWriter.WriteEndElement()
                                 
@@ -1004,6 +1214,8 @@ Param($VNET2)
 
 
                         $Global:subloc0 = ($Global:vnetLoc + 120)
+                        $subnetloc = 20
+                        $subnetalt = 40
                         $Global:SubC = 0
                         $Global:VNETPIP = @()
                         
@@ -1013,6 +1225,8 @@ Param($VNET2)
                                     {
                                         $Global:vnetLoc1 = $Global:vnetLoc1 + 230                                        
                                         $Global:subloc0 = ($Global:vnetLoc + 120)
+                                        $subnetloc = 20
+                                        $subnetalt = $subnetalt + 230
                                         $Global:SubC = 0
                                     }
 
@@ -1020,13 +1234,14 @@ Param($VNET2)
                                 $Global:XmlWriter.WriteAttributeString('label', ("`n" + "`n" + "`n" + "`n" + "`n" + "`n" + "`n" +[string]$sub.Name + "`n" + [string]$sub.properties.addressPrefix))
                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                    Icon $Global:Ret $Global:subloc0 $Global:vnetLoc1 "200" "200"
+                                    Icon $Global:Ret $subnetloc $subnetalt "200" "200" $Global:ContID
 
                                 $Global:XmlWriter.WriteEndElement()     
-                       
-                                ProcType $sub $Global:subloc0 $Global:vnetLoc1
+
+                                ProcType $sub $subnetloc $subnetalt $Global:ContID
                                                                     
                                 $Global:subloc0 = $Global:subloc0 + 210
+                                $subnetloc = $subnetloc + 210
                                 $Global:SubC ++
 
                             }
@@ -1049,26 +1264,20 @@ Param($VNET2)
             
                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
             
-                                    Icon $IconDet ($Global:subloc0 + 500) ($vnetLoc1 - 40) "42.63" "44"
+                                    Icon $IconDet ($Global:sizeL + 500) 225 "42.63" "44" $Global:ContID
             
                                 $Global:XmlWriter.WriteEndElement()
                                 
-                                Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:VNETSquare 
+                                Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:ContID
                             }  
-                                                      
-                        $Global:Alt = $Global:Alt + 600                                                                         
+
+                        $Global:Alt = $Global:Alt + 650                                                                         
                     }
                 else
                     {
                         $Global:sizeL = (($Global:sizeL * 210) + 30)
 
-                        $Global:XmlWriter.WriteStartElement('object')            
-                        $Global:XmlWriter.WriteAttributeString('label', '')
-                        $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-            
-                            Icon $Global:Ret ($Global:vnetLoc + 100) ($Global:vnetLoc1 - 20) $Global:sizeL "230"
-            
-                        $Global:XmlWriter.WriteEndElement()  
+                        Container ($Global:vnetLoc + 100) ($Global:vnetLoc1 - 20) $Global:sizeL "260" $VNETSUB.name
 
                         $Global:VNETSquare = ($Global:CellID+'-'+($Global:IDNum-1))
 
@@ -1077,9 +1286,9 @@ Param($VNET2)
                         $Global:XmlWriter.WriteStartElement('object')            
                         $Global:XmlWriter.WriteAttributeString('label', $SubName.name)
                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-            
-                            Icon $IconSubscription ($Global:sizeL + $Global:vnetLoc + 100) ($Global:vnetLoc1 + 180) "67" "40"
-            
+
+                            Icon $IconSubscription $Global:sizeL 225 "67" "40" $Global:ContID
+
                         $Global:XmlWriter.WriteEndElement()  
 
                         $ADVS = ''
@@ -1100,13 +1309,14 @@ Param($VNET2)
 
                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                    Icon $IconCostMGMT ($Global:sizeL + $Global:vnetLoc + 170) ($Global:vnetLoc1 + 180) "30" "35"
+                                    Icon $IconCostMGMT ($Global:sizeL + 150) 225 "30" "35" $Global:ContID
 
                                 $Global:XmlWriter.WriteEndElement()
                                 
                             }
 
                         $Global:subloc0 = ($Global:vnetLoc + 120)
+                        $subnetloc = 20
                         $Global:VNETPIP = @()
                         
                         foreach($sub in $VNETSUB.properties.subnets)
@@ -1116,13 +1326,14 @@ Param($VNET2)
                                 $Global:XmlWriter.WriteAttributeString('label', ("`n" + "`n" + "`n" + "`n" + "`n" + "`n" + "`n" +[string]$sub.Name + "`n" + [string]$sub.properties.addressPrefix))
                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
                 
-                                    Icon $Global:Ret $Global:subloc0 $Global:vnetLoc1 "200" "200"
+                                    Icon $Global:Ret $subnetloc 40 "200" "200" $Global:ContID
                 
                                 $Global:XmlWriter.WriteEndElement()  
 
-                                ProcType $sub $Global:subloc0 $Global:vnetLoc1
+                                ProcType $sub $subnetloc 40 $Global:ContID
 
                                 $Global:subloc0 = $Global:subloc0 + 210
+                                $subnetloc = $subnetloc + 210
                             }
 
                         if($Global:VNETPIP)
@@ -1143,7 +1354,7 @@ Param($VNET2)
             
                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
             
-                                    Icon $IconDet ($Global:subloc0 + 500) ($vnetLoc1 + 75) "42.63" "44"
+                                    Icon $IconDet ($Global:sizeL+ 500) 107 "42.63" "44" $Global:ContID
             
                                 $Global:XmlWriter.WriteEndElement()
                                 
@@ -1159,222 +1370,15 @@ Param($VNET2)
                 }    
                 $Global:VNETHistory += $tmp 
 
-                $Global:vnetLoc1 = $Global:vnetLoc1 + 300                                         
+                $Global:vnetLoc1 = $Global:vnetLoc1 + 350                                         
             }
         }
     $Global:Alt = $Global:vnetLoc1
 }
 
-
-<# Function for VNET creation #>
-Function VNETCreator
-{
-Param($VNET2)
-        $Global:sizeL =  $VNET2.properties.subnets.properties.addressPrefix.count
-        if($VNET2.id -notin $VNETHistory.vnet)
-            {
-            if ($Global:sizeL -gt 5)
-            {            
-                $Global:sizeL = $Global:sizeL / 2
-                $Global:sizeL = [math]::ceiling($Global:sizeL)
-                $Global:sizeC = $Global:sizeL
-                $Global:sizeL = (($Global:sizeL * 210) + 30)
-
-                $Global:XmlWriter.WriteStartElement('object')            
-                $Global:XmlWriter.WriteAttributeString('label', '')
-                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-
-                    Icon $Global:Ret ($Global:vnetLoc) ($Global:Alt0 - 20) $Global:sizeL "470"
-
-                $Global:XmlWriter.WriteEndElement()  
-                
-                $Global:VNETSquare = ($Global:CellID+'-'+($Global:IDNum-1))
-
-                $SubName = $Subscriptions | Where-Object {$_.id -eq $VNET2.subscriptionId}
-
-                $Global:XmlWriter.WriteStartElement('object')            
-                $Global:XmlWriter.WriteAttributeString('label', $SubName.name)
-                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-
-                    Icon $IconSubscription ($Global:sizeL + 710) ($Global:Alt + 420) "67" "40"
-
-                $Global:XmlWriter.WriteEndElement()  
-
-                $ADVS = ''
-                $ADVS = $Advisories | Where-Object {$_.Properties.Category -eq 'Cost' -and $_.Properties.resourceMetadata.resourceId -eq ('/subscriptions/'+$SubName.id)}
-                If($ADVS)
-                {
-                    $Count = 1
-                    $Global:XmlWriter.WriteStartElement('object')            
-                    $Global:XmlWriter.WriteAttributeString('label', '')
-
-                    foreach ($ADV in $ADVS)
-                        {
-                            $Attr1 = ('Recommendation'+[string]$Count)
-                            $Global:XmlWriter.WriteAttributeString($Attr1, [string]$ADV.Properties.shortDescription.solution)
-
-                            $Count ++
-                        }
-
-                    $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-
-                        Icon $IconCostMGMT ($Global:sizeL + 780) ($Global:Alt + 420) "30" "35"
-
-                    $Global:XmlWriter.WriteEndElement()
-                    
-                }
-
-                $Global:subloc = ($Global:vnetLoc + 15)
-                $Global:SubC = 0
-                $Global:VNETPIP = @()
-                foreach($Sub in $VNET2.properties.subnets)
-                {
-                    if ($Global:SubC -eq $Global:sizeC) 
-                    {
-                        $Global:Alt0 = $Global:Alt0 + 230
-                        $Global:subloc = ($Global:vnetLoc + 15)
-                        $Global:SubC = 0
-                    }
-
-                    $Global:XmlWriter.WriteStartElement('object')            
-                    $Global:XmlWriter.WriteAttributeString('label', ("`n" + "`n" + "`n" + "`n" + "`n" + "`n" +[string]$sub.Name + "`n" + [string]$sub.properties.addressPrefix))
-                    $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-
-                        Icon $Global:Ret $Global:subloc ($Global:Alt0) "200" "200"
-
-                    $Global:XmlWriter.WriteEndElement()      
-                    
-                    ProcType $sub $Global:subloc $Global:Alt0                
-
-                    $Global:subloc = $Global:subloc + 210
-                    $Global:SubC ++
-                }
-
-                if($Global:VNETPIP)
-                    {
-                        $Global:XmlWriter.WriteStartElement('object')            
-                        $Global:XmlWriter.WriteAttributeString('label', '')
-
-                        $Count = 1
-                        Foreach ($PIPDetail in $Global:VNETPIP)
-                            {
-                                $Attr1 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-Name')
-                                $Attr2 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-IP')
-                                $Global:XmlWriter.WriteAttributeString($Attr1, [string]$PIPDetail.name)
-                                $Global:XmlWriter.WriteAttributeString($Attr2, [string]$PIPDetail.properties.ipaddress)
-
-                                $Count ++
-                            }
-
-                        $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-
-                            Icon $IconDet ($Global:subloc + 500) ($Global:Alt0 - 40) "42.63" "44"
-
-                        $Global:XmlWriter.WriteEndElement()
-                        
-                        Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:VNETSquare   
-                    }
-
-                    $Global:Alt = $Global:Alt + 600
-            }
-        else
-            {
-                $Global:sizeL = (($Global:sizeL * 210) + 30)
-
-                $Global:XmlWriter.WriteStartElement('object')            
-                $Global:XmlWriter.WriteAttributeString('label', '')
-                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-
-                    Icon $Global:Ret ($Global:vnetLoc) ($Global:Alt0 - 15) $Global:sizeL "230"
-
-                $Global:XmlWriter.WriteEndElement()
-
-                $Global:VNETSquare = ($Global:CellID+'-'+($Global:IDNum-1))
-
-                $SubName = $Subscriptions | Where-Object {$_.id -eq $VNET2.subscriptionId}
-
-                $Global:XmlWriter.WriteStartElement('object')            
-                $Global:XmlWriter.WriteAttributeString('label', $SubName.name)
-                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-
-                    Icon $IconSubscription ($Global:sizeL + 710) ($Global:Alt + 180) "67" "40"
-
-                $Global:XmlWriter.WriteEndElement()  
-
-                $ADVS = ''
-                $ADVS = $Advisories | Where-Object {$_.Properties.Category -eq 'Cost' -and $_.Properties.resourceMetadata.resourceId -eq ('/subscriptions/'+$SubName.id)}
-                If($ADVS)
-                {
-                    $Count = 1
-                    $Global:XmlWriter.WriteStartElement('object')            
-                    $Global:XmlWriter.WriteAttributeString('label', '')
-
-                    foreach ($ADV in $ADVS)
-                        {
-                            $Attr1 = ('Recommendation'+[string]$Count)
-                            $Global:XmlWriter.WriteAttributeString($Attr1, [string]$ADV.Properties.shortDescription.solution)
-
-                            $Count ++
-                        }
-
-                    $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-
-                        Icon $IconCostMGMT ($Global:sizeL + 780) ($Global:Alt + 180) "30" "35"
-
-                    $Global:XmlWriter.WriteEndElement()
-                    
-                }
-
-                $Global:subloc = ($Global:vnetLoc + 15)
-                $Global:VNETPIP = @()
-                foreach($Sub in $VNET2.properties.subnets)
-                {
-                    $Global:XmlWriter.WriteStartElement('object')            
-                    $Global:XmlWriter.WriteAttributeString('label', ("`n" + "`n" + "`n" + "`n" + "`n" + "`n" +[string]$sub.Name + "`n" + [string]$sub.properties.addressPrefix))
-                    $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-
-                        Icon $Global:Ret ($Global:subloc + 5) ($Global:Alt0) "200" "200"
-
-                    $Global:XmlWriter.WriteEndElement()  
-                    
-                    ProcType $sub $Global:subloc $Global:Alt0                
-
-                    $Global:subloc = $Global:subloc + 210
-                }
-
-                if($Global:VNETPIP)
-                    {
-                        $Global:XmlWriter.WriteStartElement('object')            
-                        $Global:XmlWriter.WriteAttributeString('label', '')
-
-                        $Count = 1
-                        Foreach ($PIPDetail in $Global:VNETPIP)
-                            {
-                                $Attr1 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-Name')
-                                $Attr2 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-IP')
-                                $Global:XmlWriter.WriteAttributeString($Attr1, [string]$PIPDetail.name)
-                                $Global:XmlWriter.WriteAttributeString($Attr2, [string]$PIPDetail.properties.ipaddress)
-
-                                $Count ++
-                            }
-
-                        $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-
-                            Icon $IconDet ($Global:subloc + 500) ($Global:Alt0 + 75) "42.63" "44"
-
-                        $Global:XmlWriter.WriteEndElement()
-                        
-                        Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:VNETSquare                    
-                    }
-                $Global:Alt = $Global:Alt + 300 
-            }
-        }
-}
-
-
 Function ProcType 
 {
-Param($sub,$subloc,$Alt0)  
+Param($sub,$subloc,$Alt0,$ContainerID)  
     $temp = ''
     remove-variable TrueTemp -ErrorAction SilentlyContinue
     remove-variable RESNames -ErrorAction SilentlyContinue
@@ -1634,7 +1638,7 @@ Param($sub,$subloc,$Alt0)
                                         }
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconVMs ($subloc+64) ($Alt0+40) "69" "64"
+                                            Icon $IconVMs ($subloc+64) ($Alt0+40) "69" "64" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()  
                                     }
@@ -1650,7 +1654,7 @@ Param($sub,$subloc,$Alt0)
                                         $Global:XmlWriter.WriteAttributeString('Image_SKU', [string]$RESNames.properties.storageProfile.imageReference.sku)
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))                        
 
-                                            Icon $IconVMs ($subloc+64) ($Alt0+40) "69" "64"
+                                            Icon $IconVMs ($subloc+64) ($Alt0+40) "69" "64" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement() 
 
@@ -1672,7 +1676,7 @@ Param($sub,$subloc,$Alt0)
                                         }
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconAKS ($subloc+65) ($Alt0+40) "68" "64"
+                                            Icon $IconAKS ($subloc+65) ($Alt0+40) "68" "64" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
 
@@ -1703,7 +1707,7 @@ Param($sub,$subloc,$Alt0)
                                         }
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconAKS ($subloc+65) ($Alt0+40) "68" "64"
+                                            Icon $IconAKS ($subloc+65) ($Alt0+40) "68" "64" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
 
@@ -1725,7 +1729,7 @@ Param($sub,$subloc,$Alt0)
                                         }
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconVMSS ($subloc+65) ($Alt0+40) "68" "68"
+                                            Icon $IconVMSS ($subloc+65) ($Alt0+40) "68" "68" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
 
@@ -1742,7 +1746,7 @@ Param($sub,$subloc,$Alt0)
 
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconVMSS ($subloc+65) ($Alt0+40) "68" "68"
+                                            Icon $IconVMSS ($subloc+65) ($Alt0+40) "68" "68" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
                                     }                                                                        
@@ -1774,7 +1778,7 @@ Param($sub,$subloc,$Alt0)
                                         }
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconLBs ($subloc+65) ($Alt0+40) "72" "72"
+                                            Icon $IconLBs ($subloc+65) ($Alt0+40) "72" "72" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
 
@@ -1793,7 +1797,7 @@ Param($sub,$subloc,$Alt0)
 
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconLBs ($subloc+65) ($Alt0+40) "72" "72"
+                                            Icon $IconLBs ($subloc+65) ($Alt0+40) "72" "72" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
                                         
@@ -1816,7 +1820,7 @@ Param($sub,$subloc,$Alt0)
                                         }
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconVGW ($subloc+80) ($Alt0+40) "52" "69"
+                                            Icon $IconVGW ($subloc+80) ($Alt0+40) "52" "69" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
 
@@ -1828,7 +1832,7 @@ Param($sub,$subloc,$Alt0)
                         
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconVGW ($subloc+80) ($Alt0+40) "52" "69"
+                                            Icon $IconVGW ($subloc+80) ($Alt0+40) "52" "69" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
                                     }                                                                                                         
@@ -1854,7 +1858,7 @@ Param($sub,$subloc,$Alt0)
                                         }
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconFWs ($subloc+65) ($Alt0+40) "71" "60"
+                                            Icon $IconFWs ($subloc+65) ($Alt0+40) "71" "60" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
                                     }
@@ -1870,7 +1874,7 @@ Param($sub,$subloc,$Alt0)
 
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconFWs ($subloc+65) ($Alt0+40) "71" "60"
+                                            Icon $IconFWs ($subloc+65) ($Alt0+40) "71" "60" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
                                     }                                                                
@@ -1892,7 +1896,7 @@ Param($sub,$subloc,$Alt0)
                                         }
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconPVTs ($subloc+65) ($Alt0+40) "72" "66"
+                                            Icon $IconPVTs ($subloc+65) ($Alt0+40) "72" "66" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
 
@@ -1903,7 +1907,7 @@ Param($sub,$subloc,$Alt0)
                                         $Global:XmlWriter.WriteAttributeString('label', [string]$RESNames.Name)                                        
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconPVTs ($subloc+65) ($Alt0+40) "72" "66"
+                                            Icon $IconPVTs ($subloc+65) ($Alt0+40) "72" "66" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
                                     }                                                                       
@@ -1931,7 +1935,7 @@ Param($sub,$subloc,$Alt0)
                                         }
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconAppGWs ($subloc+65) ($Alt0+40) "64" "64"
+                                            Icon $IconAppGWs ($subloc+65) ($Alt0+40) "64" "64" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
 
@@ -1948,7 +1952,7 @@ Param($sub,$subloc,$Alt0)
 
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconAppGWs ($subloc+65) ($Alt0+40) "64" "64"
+                                            Icon $IconAppGWs ($subloc+65) ($Alt0+40) "64" "64" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
                                     }                                                                                                                                                                             
@@ -1970,7 +1974,7 @@ Param($sub,$subloc,$Alt0)
                                         }
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconBastions ($subloc+65) ($Alt0+40) "68" "67"
+                                            Icon $IconBastions ($subloc+65) ($Alt0+40) "68" "67" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
                                     }
@@ -1980,7 +1984,7 @@ Param($sub,$subloc,$Alt0)
                                         $Global:XmlWriter.WriteAttributeString('label', [string]$RESNames.name)                                                            
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconBastions ($subloc+65) ($Alt0+40) "68" "67"
+                                            Icon $IconBastions ($subloc+65) ($Alt0+40) "68" "67" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
 
@@ -1999,7 +2003,7 @@ Param($sub,$subloc,$Alt0)
 
                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                    Icon $IconAPIMs ($subloc+65) ($Alt0+40) "65" "60"
+                                    Icon $IconAPIMs ($subloc+65) ($Alt0+40) "65" "60" $ContainerID
                 
                                 $Global:XmlWriter.WriteEndElement()
                             
@@ -2023,7 +2027,7 @@ Param($sub,$subloc,$Alt0)
                                                 }
                                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
         
-                                                    Icon $IconAPPs ($subloc+65) ($Alt0+40) "64" "64"
+                                                    Icon $IconAPPs ($subloc+65) ($Alt0+40) "64" "64" $ContainerID
                                 
                                                 $Global:XmlWriter.WriteEndElement()
                                             }
@@ -2046,7 +2050,7 @@ Param($sub,$subloc,$Alt0)
 
                                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
         
-                                                    Icon $IconAPPs ($subloc+65) ($Alt0+40) "64" "64"
+                                                    Icon $IconAPPs ($subloc+65) ($Alt0+40) "64" "64" $ContainerID
                                 
                                                 $Global:XmlWriter.WriteEndElement()
                                             }
@@ -2071,7 +2075,7 @@ Param($sub,$subloc,$Alt0)
                                                 }
                                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
         
-                                                    Icon $IconFunApps ($subloc+65) ($Alt0+40) "68" "60"
+                                                    Icon $IconFunApps ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
                                 
                                                 $Global:XmlWriter.WriteEndElement()
                                             }
@@ -2093,7 +2097,7 @@ Param($sub,$subloc,$Alt0)
 
                                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
         
-                                                    Icon $IconFunApps ($subloc+65) ($Alt0+40) "68" "60"
+                                                    Icon $IconFunApps ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
                                 
                                                 $Global:XmlWriter.WriteEndElement()
 
@@ -2119,7 +2123,7 @@ Param($sub,$subloc,$Alt0)
                                             }
                                             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
     
-                                                Icon $IconBricks ($subloc+65) ($Alt0+40) "60" "68"
+                                                Icon $IconBricks ($subloc+65) ($Alt0+40) "60" "68" $ContainerID
                             
                                             $Global:XmlWriter.WriteEndElement()
                                         }
@@ -2139,7 +2143,7 @@ Param($sub,$subloc,$Alt0)
     
                                             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
     
-                                                Icon $IconBricks ($subloc+65) ($Alt0+40) "60" "68"
+                                                Icon $IconBricks ($subloc+65) ($Alt0+40) "60" "68" $ContainerID
                             
                                             $Global:XmlWriter.WriteEndElement()
                                         }                                                                                               
@@ -2164,8 +2168,8 @@ Param($sub,$subloc,$Alt0)
                                                 }
                                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
         
-                                                    Icon $IconARO ($subloc+65) ($Alt0+40) "68" "60"
-                                
+                                                    Icon $IconARO ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
+
                                                 $Global:XmlWriter.WriteEndElement()
 
                                             }
@@ -2173,17 +2177,17 @@ Param($sub,$subloc,$Alt0)
                                             {
                                                 $Global:XmlWriter.WriteStartElement('object')            
                                                 $Global:XmlWriter.WriteAttributeString('label', [string]$RESNames.Name)                                                                    
-        
+
                                                 $Global:XmlWriter.WriteAttributeString('ARO_Name', [string]$ResNames.name)
                                                 $Global:XmlWriter.WriteAttributeString('OpenShift_Version', [string]$RESNames.properties.clusterProfile.version)
                                                 $Global:XmlWriter.WriteAttributeString('OpenShift_Console', [string]$RESNames.properties.consoleProfile.url)
                                                 $Global:XmlWriter.WriteAttributeString('Worker_VM_Count', [string]$RESNames.properties.workerprofiles.Count)
                                                 $Global:XmlWriter.WriteAttributeString('Worker_VM_Size', [string]$RESNames.properties.workerprofiles.vmSize[0])
-        
+
                                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
-                                                    Icon $IconARO ($subloc+65) ($Alt0+40) "68" "60"
-                                
+
+                                                    Icon $IconARO ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
+
                                                 $Global:XmlWriter.WriteEndElement()
                                             }
                                     }                                                                                               
@@ -2195,19 +2199,19 @@ Param($sub,$subloc,$Alt0)
                                                 {
                                                     $Global:XmlWriter.WriteStartElement('object')            
                                                     $Global:XmlWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' Container Intances'))                                        
-                                    
+
                                                     $Count = 1
                                                     foreach ($ResName in $RESNames)
                                                     {
                                                         $Attr1 = ('Container_Intance-'+[string]("{0:d3}" -f $Count)+'-Name')
-            
+
                                                         $Global:XmlWriter.WriteAttributeString($Attr1, [string]$ResName.name)
             
                                                         $Count ++
                                                     }
                                                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
             
-                                                        Icon $IconContain ($subloc+65) ($Alt0+40) "64" "68"
+                                                        Icon $IconContain ($subloc+65) ($Alt0+40) "64" "68" $ContainerID
                                     
                                                     $Global:XmlWriter.WriteEndElement()
                                                 }
@@ -2217,7 +2221,7 @@ Param($sub,$subloc,$Alt0)
                                                     $Global:XmlWriter.WriteAttributeString('label', [string]$RESNames.Name)                                        
                                                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
             
-                                                        Icon $IconContain ($subloc+65) ($Alt0+40) "64" "68"
+                                                        Icon $IconContain ($subloc+65) ($Alt0+40) "64" "68" $ContainerID
                                     
                                                     $Global:XmlWriter.WriteEndElement()
                                                 }
@@ -2242,7 +2246,7 @@ Param($sub,$subloc,$Alt0)
                                                 }
                                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
         
-                                                    Icon $IconNetApp ($subloc+65) ($Alt0+40) "65" "52"
+                                                    Icon $IconNetApp ($subloc+65) ($Alt0+40) "65" "52" $ContainerID
                                 
                                                 $Global:XmlWriter.WriteEndElement()
                                             }
@@ -2254,7 +2258,7 @@ Param($sub,$subloc,$Alt0)
 
                                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
         
-                                                    Icon $IconNetApp ($subloc+65) ($Alt0+40) "65" "52"
+                                                    Icon $IconNetApp ($subloc+65) ($Alt0+40) "65" "52" $ContainerID
                                 
                                                 $Global:XmlWriter.WriteEndElement()
                                             }
@@ -2277,7 +2281,7 @@ Param($sub,$subloc,$Alt0)
                                                 }
                                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
         
-                                                    Icon $IconDataExplorer ($subloc+65) ($Alt0+40) "68" "68"
+                                                    Icon $IconDataExplorer ($subloc+65) ($Alt0+40) "68" "68" $ContainerID
                                 
                                                 $Global:XmlWriter.WriteEndElement()
 
@@ -2294,7 +2298,7 @@ Param($sub,$subloc,$Alt0)
                                                 $Global:XmlWriter.WriteAttributeString('AutoScale_Enabled', [string]$ResNames.name)
                                                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
         
-                                                    Icon $IconDataExplorer ($subloc+65) ($Alt0+40) "68" "68"
+                                                    Icon $IconDataExplorer ($subloc+65) ($Alt0+40) "68" "68" $ContainerID
                                 
                                                 $Global:XmlWriter.WriteEndElement()
                                             }                                                               
@@ -2316,7 +2320,7 @@ Param($sub,$subloc,$Alt0)
                                         }
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconNIC ($subloc+65) ($Alt0+40) "68" "60"
+                                            Icon $IconNIC ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
 
@@ -2331,7 +2335,7 @@ Param($sub,$subloc,$Alt0)
 
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                                            Icon $IconNIC ($subloc+65) ($Alt0+40) "68" "60"
+                                            Icon $IconNIC ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
                         
                                         $Global:XmlWriter.WriteEndElement()
 
@@ -2348,7 +2352,7 @@ Param($sub,$subloc,$Alt0)
                 $Global:XmlWriter.WriteAttributeString('Network_Security_Group', [string]$NSG)
                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                    Icon $IconNSG ($subloc+160) ($Alt0+15) "26.35" "32"
+                    Icon $IconNSG ($subloc+160) ($Alt0+15) "26.35" "32" $ContainerID
 
                 $Global:XmlWriter.WriteEndElement()  
             }
@@ -2360,7 +2364,7 @@ Param($sub,$subloc,$Alt0)
                 $Global:XmlWriter.WriteAttributeString('Route_Table', [string]$UDR)
                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                    Icon $IconUDR ($subloc+15) ($Alt0+15) "30.97" "30"
+                    Icon $IconUDR ($subloc+15) ($Alt0+15) "30.97" "30" $ContainerID
 
                 $Global:XmlWriter.WriteEndElement()
 
@@ -2377,9 +2381,9 @@ Param($sub,$subloc,$Alt0)
 
 
 
-$Global:etag = -join ((65..90) + (97..122) | Get-Random -Count 20 | % {[char]$_})
-$Global:DiagID = -join ((65..90) + (97..122) | Get-Random -Count 20 | % {[char]$_})
-$Global:CellID = -join ((65..90) + (97..122) | Get-Random -Count 20 | % {[char]$_})
+$Global:etag = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
+$Global:DiagID = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
+$Global:CellID = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
 
 $Global:IDNum = 0
 
