@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.3.3                                                                   #
+#       Version: 2.3.4                                                                   #
 #                                                                                        #
-#       Date: 08/29/2022                                                                 #
+#       Date: 08/30/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -309,9 +309,22 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 write-host ""
                 if($ReportDir)
                         {
-                            if($ReportDir -notlike '*/')
+                            try 
                                 {
-                                    $ReportDir = $ReportDir + '/'
+                                    Resolve-Path $ReportDir -ErrorAction STOP
+                                    if ($ReportDir -notmatch '/$')
+                                        {
+                                            $ReportDir = $ReportDir + '/'
+                                        }
+                                } 
+                            catch 
+                                {
+                                    Write-Host "ERROR:" -NoNewline -ForegroundColor Red
+                                    Write-Host " Wrong ReportDir Path!"
+                                    Write-Host ""
+                                    Write-Host "ReportDir Parameter must contain the full path."
+                                    Write-Host ""
+                                    Exit
                                 }
                         }
                 $Global:DefaultPath = if($ReportDir) {$ReportDir} else {"$HOME/AzureResourceInventory/"}
@@ -325,9 +338,22 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     write-host ""
                     if($ReportDir)
                         {
-                            if($ReportDir -notlike '*/')
+                            try 
                                 {
-                                    $ReportDir = $ReportDir + '/'
+                                    Resolve-Path $ReportDir -ErrorAction STOP
+                                    if ($ReportDir -notmatch '/$')
+                                        {
+                                            $ReportDir = $ReportDir + '/'
+                                        }
+                                } 
+                            catch 
+                                {
+                                    Write-Host "ERROR:" -NoNewline -ForegroundColor Red
+                                    Write-Host " Wrong ReportDir Path!"
+                                    Write-Host ""
+                                    Write-Host "ReportDir Parameter must contain the full path."
+                                    Write-Host ""
+                                    Exit
                                 }
                         }
                     $Global:DefaultPath = if($ReportDir) {$ReportDir} else {"$HOME/AzureResourceInventory/"}
@@ -339,18 +365,20 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     write-host ""
                     if($ReportDir)
                         {
-                            if($ReportDir -notlike '*\')
+                            try 
                                 {
-                                    $ReportDir = $ReportDir + '\'
-                                }
-                            if($ReportDir -notlike '*:\*')
+                                    Resolve-Path $ReportDir -ErrorAction STOP
+                                    if ($ReportDir -notlike '*\')
+                                        {
+                                            $ReportDir = $ReportDir + '\'
+                                        }
+                                } 
+                            catch 
                                 {
                                     Write-Host "ERROR:" -NoNewline -ForegroundColor Red
                                     Write-Host " Wrong ReportDir Path!"
                                     Write-Host ""
-                                    Write-Host "ReportDir Parameter must contain the full path. i.e:"
-                                    Write-Host "                C:\AzureResourceInventory\" -NoNewline
-                                    Write-Host ""
+                                    Write-Host "ReportDir Parameter must contain the full path."
                                     Write-Host ""
                                     Exit
                                 }
