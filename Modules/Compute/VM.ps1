@@ -232,7 +232,7 @@ else
                 $ExcelVar | 
                 ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
                 Export-Excel -Path $File -WorksheetName 'Virtual Machines' -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $cond -Style $Style, $StyleExt
-             
+
                 $excel = Open-ExcelPackage -Path $File -KillExcel
     
                 $null = $excel.'Virtual Machines'.Cells["L1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
