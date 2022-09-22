@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.3.5                                                                   #
+#       Version: 2.3.7                                                                   #
 #                                                                                        #
-#       Date: 09/14/2022                                                                 #
+#       Date: 09/22/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -78,7 +78,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         Write-Host "Parameters"
         Write-Host ""
         Write-Host " -TenantID <ID>        :  Specifies the Tenant to be inventoried. "
-        Write-Host " -SubscriptionID <ID>  :  Specifies one unique Subscription to be inventoried. "
+        Write-Host " -SubscriptionID <ID>  :  Specifies Subscription(s) to be inventoried. "
         Write-Host " -ResourceGroup <NAME> :  Specifies one unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. "
         Write-Host " -SkipAdvisory         :  Do not collect Azure Advisory. "
         Write-Host " -SecurityCenter       :  Include Security Center Data. "
@@ -198,7 +198,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             $CloudEnv = az cloud list | ConvertFrom-Json
             Write-Host "Azure Cloud Environment: " -NoNewline
             $CurrentCloudEnvName = $CloudEnv | Where-Object {$_.isActive -eq 'True'}
-            Write-Host $CurrentCloudEnvName.name -BackgroundColor Cyan
+            Write-Host $CurrentCloudEnvName.name -BackgroundColor Green
             if (!$TenantID) {
                 write-host "Tenant ID not specified. Use -TenantID parameter if you want to specify directly. "
                 write-host "Authenticating Azure"
@@ -489,7 +489,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         else 
             {
                 $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
-                $EnvSize = az graph query -q  $GraphQuery  --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
+                $EnvSize = az graph query -q  $GraphQuery --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
 
                 if ($EnvSizeNum -ge 1) {
@@ -500,7 +500,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
                     while ($Looper -lt $Loop) {
                         $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                        $Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --subscriptions $SubscriptionID --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data
                         Start-Sleep 2
@@ -565,7 +565,7 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         $Global:ExtractionRuntime = Measure-Command -Expression {
 
-        $Global:Subscri = $Global:Subscriptions.id
+        $Subscri = $Global:Subscriptions.id
 
         if (!($SkipAdvisory.IsPresent)) {
 
