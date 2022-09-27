@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.3.7                                                                   #
+#       Version: 2.3.8                                                                   #
 #                                                                                        #
-#       Date: 09/22/2022                                                                 #
+#       Date: 09/27/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -59,7 +59,23 @@
     THE SOFTWARE.
 #>
 
-param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $ResourceGroup, [switch]$SkipAdvisory, [switch]$IncludeTags, [switch]$QuotaUsage, [switch]$Online, [switch]$Diagram , [switch]$Debug, [switch]$Help, [switch]$DeviceLogin, $AzureEnvironment, $ReportName = 'AzureResourceInventory', $ReportDir)
+param ($TenantID,
+        [switch]$SecurityCenter, 
+        #$SubscriptionID, 
+        $Appid, 
+        $Secret, 
+        #$ResourceGroup, 
+        [switch]$SkipAdvisory, 
+        [switch]$IncludeTags, 
+        [switch]$QuotaUsage, 
+        [switch]$Online, 
+        [switch]$Diagram , 
+        [switch]$Debug, 
+        [switch]$Help, 
+        [switch]$DeviceLogin, 
+        $AzureEnvironment, 
+        $ReportName = 'AzureResourceInventory', 
+        $ReportDir)
 
     if ($Debug.IsPresent) {$DebugPreference = 'Continue'}
 
@@ -78,8 +94,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         Write-Host "Parameters"
         Write-Host ""
         Write-Host " -TenantID <ID>        :  Specifies the Tenant to be inventoried. "
-        Write-Host " -SubscriptionID <ID>  :  Specifies Subscription(s) to be inventoried. "
-        Write-Host " -ResourceGroup <NAME> :  Specifies one unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. "
+        #Write-Host " -SubscriptionID <ID>  :  Specifies Subscription(s) to be inventoried. "
+        #Write-Host " -ResourceGroup <NAME> :  Specifies one unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. "
         Write-Host " -SkipAdvisory         :  Do not collect Azure Advisory. "
         Write-Host " -SecurityCenter       :  Include Security Center Data. "
         Write-Host " -IncludeTags          :  Include Resource Tags. "
@@ -489,7 +505,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
         else 
             {
                 $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
-                $EnvSize = az graph query -q  $GraphQuery --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
+                #$EnvSize = az graph query -q  $GraphQuery --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
+                $EnvSize = az graph query -q  $GraphQuery --output json --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
 
                 if ($EnvSizeNum -ge 1) {
@@ -500,7 +517,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
                     while ($Looper -lt $Loop) {
                         $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --subscriptions $SubscriptionID --only-show-errors).tolower() | ConvertFrom-Json
+                        #$Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --subscriptions $SubscriptionID --only-show-errors).tolower() | ConvertFrom-Json
+                        $Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data
                         Start-Sleep 2
@@ -576,7 +594,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                 } else {
                     $GraphQuery = "advisorresources | where resourceGroup == '$ResourceGroup' | summarize count()"
                 }
-                $AdvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
+                #$AdvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
+                $AdvSize = az graph query -q $GraphQuery --output json --only-show-errors | ConvertFrom-Json
                 $AdvSizeNum = $AdvSize.data.'count_'
 
             Write-Debug ('Advisories: '+$AdvSizeNum)
@@ -597,7 +616,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                             $GraphQuery = "advisorresources | where resourceGroup == '$ResourceGroup' | order by id asc"
                                 }
                         
-                $Advisor = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                #$Advisor = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                $Advisor = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                     $Global:Advisories += $Advisor.data
                     Start-Sleep 2
@@ -615,10 +635,12 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
             Write-Host " Collecting Security Center Can increase considerably the execution time of Azure Resource Inventory and the size of final report "
             Write-Host " "
 
-            Write-Debug ('Extracting total number of Security Advisories from Tenant')
-            $SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
-            $SecSizeNum = $SecSize.data.'count_'
+            $Subscri = $Global:Subscriptions.id
 
+            Write-Debug ('Extracting total number of Security Advisories from Tenant')
+            #$SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
+            $SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
+            $SecSizeNum = $SecSize.data.'count_'            
 
             if ($SecSizeNum -ge 1) {
                 $Loop = $SecSizeNum / 1000
@@ -630,7 +652,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
                     Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                     $GraphQuery = "securityresources | where properties['status']['code'] == 'Unhealthy' | order by id asc"
                 
-                    $SecCenter = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                    #$SecCenter = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                    $SecCenter = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                     $Global:Security += $SecCenter.data
                     Start-Sleep 3
@@ -651,7 +674,11 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
         <######################################################### AVD ######################################################################>
 
-        $AVDSize = az graph query -q "desktopvirtualizationresources | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
+
+        $Subscri = $Global:Subscriptions.id
+
+        #$AVDSize = az graph query -q "desktopvirtualizationresources | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
+        $AVDSize = az graph query -q "desktopvirtualizationresources | summarize count()" --output json --only-show-errors | ConvertFrom-Json
         $AVDSizeNum = $AVDSize.data.'count_'
 
         if ($AVDSizeNum -ge 1) {
@@ -662,7 +689,8 @@ param ($TenantID, [switch]$SecurityCenter, $SubscriptionID, $Appid, $Secret, $Re
 
             while ($Looper -lt $Loop) {
                 $GraphQuery = "desktopvirtualizationresources | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                $AVD = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                #$AVD = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                $AVD = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                 $Global:Resources += $AVD.data
                 Start-Sleep 2
