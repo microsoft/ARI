@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.3.8                                                                   #
+#       Version: 2.3.9                                                                   #
 #                                                                                        #
-#       Date: 09/27/2022                                                                 #
+#       Date: 09/28/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -712,7 +712,7 @@ param ($TenantID,
 
         #### Creating Excel file variable:        
         $Global:File = ($DefaultPath + $Global:ReportName + "_Report_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xlsx")
-        $Global:DFile = ($DefaultPath + $Global:ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".vsdx")
+        #$Global:DFile = ($DefaultPath + $Global:ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".vsdx")
         $Global:DDFile = ($DefaultPath + $Global:ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xml")
         Write-Debug ('Excel file:' + $File)
 
@@ -1138,7 +1138,12 @@ param ($TenantID,
 
         if($QuotaUsage.IsPresent)
             {
-                Write-Debug ('Generating Quota Usage sheet for: ' + $Global:AzQuota.count + ' Regions.')
+
+                get-job -Name 'Quota Usage' | Wait-Job
+
+                $Global:AzQuota = Receive-Job -Name 'Quota Usage'
+
+                Write-Debug ('Generating Quota Usage sheet for: ' + $Global:AzQuota.count + ' Subscriptions/Regions.')
 
                 Write-Progress -activity 'Azure Resource Inventory Quota Usage' -Status "50% Complete." -PercentComplete 50 -CurrentOperation "Building Quota Sheet"
 
