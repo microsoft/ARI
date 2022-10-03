@@ -449,7 +449,7 @@ elseif ($P2Name -eq 'Annual Savings') {
         ChartRow                = 21 # place the chart below row 22nd
         ChartColumn             = 11
         Activate                = $true
-        ChartTitle              = 'Potencial Savings'
+        ChartTitle              = 'Potential Savings'
         PivotFilter             = 'Savings Region'
         ShowPercent             = $true
         ChartHeight             = 255
