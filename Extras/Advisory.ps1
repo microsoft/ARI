@@ -41,7 +41,7 @@ If ($Task -eq 'Processing')
                         #'Score'                  = $data.extendedproperties.score;
                         'Problem'                = $data.shortDescription.problem;
                         'Savings Currency'       = $SavingsCurrency;
-                        'Annual Savings'         = $Savings;
+                        'Annual Savings'         = "=$Savings";
                         'Savings Region'         = $data.extendedProperties.location;   
                         'Current SKU'            = $data.extendedProperties.currentSku;
                         'Target SKU'             = $data.extendedProperties.targetSku
