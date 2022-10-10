@@ -49,7 +49,7 @@ If ($Task -eq 'Processing') {
                             'SKU Family'                = $sku.family;
                             'Tier'                      = $sku.tier;
                             'Capacity'                  = $sku.capacity;
-                            'MySQL Version'             = $data.version;
+                            'MySQL Version'             = "=$($data.version)";
                             'Private Endpoint'          = $PVTENDP;
                             'Backup Retention Days'     = $data.storageProfile.backupRetentionDays;
                             'Geo-Redundant Backup'      = $data.storageProfile.geoRedundantBackup;
@@ -58,7 +58,7 @@ If ($Task -eq 'Processing') {
                             'Public Network Access'     = $data.publicNetworkAccess;
                             'Admin Login'               = $data.administratorLogin;
                             'Infrastructure Encryption' = $data.InfrastructureEncryption;
-                            'Minimal Tls Version'       = $data.minimalTlsVersion;
+                            'Minimum TLS Version'       = "$($data.minimalTlsVersion -Replace '_', '.' -Replace 'tls', 'TLS ')";
                             'State'                     = $data.userVisibleState;
                             'Replica Capacity'          = $data.replicaCapacity;
                             'Replication Role'          = $data.replicationRole;
@@ -111,7 +111,7 @@ Else {
         $Exc.Add('Public Network Access')
         $Exc.Add('Admin Login')
         $Exc.Add('Infrastructure Encryption')
-        $Exc.Add('Minimal Tls Version')
+        $Exc.Add('Minimum TLS Version')
         $Exc.Add('State')
         $Exc.Add('Replica Capacity')
         $Exc.Add('Replication Role')

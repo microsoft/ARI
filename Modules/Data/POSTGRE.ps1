@@ -58,12 +58,12 @@ If ($Task -eq 'Processing') {
                             'Public Network Access'     = $data.publicNetworkAccess;
                             'Admin Login'               = $data.administratorLogin;
                             'Infrastructure Encryption' = $data.InfrastructureEncryption;
-                            'Minimal Tls Version'       = $data.minimalTlsVersion;
+                            'Minimum TLS Version'       = "$($data.minimalTlsVersion -Replace '_', '.' -Replace 'tls', 'TLS')";
                             'State'                     = $data.userVisibleState;
                             'Replica Capacity'          = $data.replicaCapacity;
                             'Replication Role'          = $data.replicationRole;
                             'BYOK Enforcement'          = $data.byokEnforcement;
-                            'ssl Enforcement'           = $data.sslEnforcement;
+                            'SSL Enforcement'           = $data.sslEnforcement;
                             'Resource U'                = $ResUCount;
                             'Tag Name'                  = [string]$Tag.Name;
                             'Tag Value'                 = [string]$Tag.Value
@@ -112,7 +112,7 @@ Else {
         $Exc.Add('Public Network Access')
         $Exc.Add('Admin Login')
         $Exc.Add('Infrastructure Encryption')
-        $Exc.Add('Minimal Tls Version')
+        $Exc.Add('Minimum TLS Version')
         $Exc.Add('State')
         $Exc.Add('Replica Capacity')
         $Exc.Add('Replication Role')

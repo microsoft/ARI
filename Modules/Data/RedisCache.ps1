@@ -41,7 +41,7 @@ If ($Task -eq 'Processing') {
                 $data = $1.PROPERTIES
                 $PvtEndP = $data.privateEndpointConnections.properties.privateEndpoint.id.split('/')[8]
                 if ($1.ZONES) { $Zones = $1.ZONES }else { $Zones = 'Not Configured' }
-                if ([string]::IsNullOrEmpty($data.minimumTlsVersion)){$MinTLS = 'Default'}Else{$MinTLS = $data.minimumTlsVersion}
+                if ([string]::IsNullOrEmpty($data.minimumTlsVersion)){$MinTLS = 'Default'}Else{$MinTLS = "TLS $($data.minimumTlsVersion)"}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
@@ -56,7 +56,7 @@ If ($Task -eq 'Processing') {
                             'FQDN'                  = $data.hostName;
                             'Port'                  = $data.port;
                             'Enable Non SSL Port'   = $data.enableNonSslPort;
-                            'Minimum Tls Version'   = $MinTLS;
+                            'Minimum TLS Version'   = $MinTLS;
                             'SSL Port'              = $data.sslPort;
                             'Private Endpoint'      = $PvtEndP;
                             'Sku'                   = $data.sku.name;
@@ -109,7 +109,7 @@ Else {
         $Exc.Add('FQDN')                    
         $Exc.Add('Port')                    
         $Exc.Add('Enable Non SSL Port')
-        $Exc.Add('Minimum Tls Version')         
+        $Exc.Add('Minimum TLS Version')         
         $Exc.Add('SSL Port')   
         $Exc.Add('Private Endpoint')             
         $Exc.Add('Sku')                     

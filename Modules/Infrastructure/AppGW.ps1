@@ -46,7 +46,7 @@ If ($Task -eq 'Processing') {
                             'Location'              = $1.LOCATION;
                             'State'                 = $data.OperationalState;
                             'WAF Enabled'           = $WAF;
-                            'Minimum SSL Protocol'  = $PROT;
+                            'Minimum TLS Version'   = "$($PROT -Replace '_', '.' -Replace 'v', ' ' -Replace 'tls', 'TLS')";
                             'Autoscale Min Capacity'= $MinCap;
                             'Autoscale Max Capacity'= $MaxCap;
                             'SKU Name'              = $data.sku.tier;
@@ -88,7 +88,7 @@ Else {
         $Exc.Add('Location')
         $Exc.Add('State')
         $Exc.Add('WAF Enabled')
-        $Exc.Add('Minimum SSL Protocol')
+        $Exc.Add('Minimum TLS Version')
         $Exc.Add('Autoscale Min Capacity')
         $Exc.Add('Autoscale Max Capacity')
         $Exc.Add('SKU Name')
