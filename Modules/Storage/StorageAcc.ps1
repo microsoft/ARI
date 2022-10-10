@@ -52,7 +52,7 @@ If ($Task -eq 'Processing') {
                             'Tier'                                  = $1.sku.tier;
                             'Supports HTTPs Traffic Only'           = $data.supportsHttpsTrafficOnly;
                             'Allow Blob Public Access'              = if ($data.allowBlobPublicAccess -eq $false) { $false }else { $true };
-                            'TLS Version'                           = $TLSv;
+                            'Minimum TLS Version'                   = $TLSv;
                             'Identity-based access for file shares' = if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None') { $false }elseif ($null -eq $data.azureFilesIdentityBasedAuthentication.directoryServiceOptions) { $false }else { $true };
                             'Access Tier'                           = $data.accessTier;
                             'Primary Location'                      = $data.primaryLocation;
@@ -103,7 +103,7 @@ Else {
         $Exc.Add('Tier')
         $Exc.Add('Supports HTTPS Traffic Only')
         $Exc.Add('Allow Blob Public Access')
-        $Exc.Add('TLS Version')
+        $Exc.Add('Minumum TLS Version')
         $Exc.Add('Identity-based access for file shares')
         $Exc.Add('Access Tier')
         $Exc.Add('Primary Location')

@@ -58,7 +58,7 @@ If ($Task -eq 'Processing') {
                             'Public Network Access'     = $data.publicNetworkAccess;
                             'Admin Login'               = $data.administratorLogin;
                             'Infrastructure Encryption' = $data.InfrastructureEncryption;
-                            'Minimal Tls Version'       = $data.minimalTlsVersion;
+                            'Minimal Tls Version'       = "$($data.minimalTlsVersion -Replace '_', '.' -Replace 'tls', 'TLS')";
                             'State'                     = $data.userVisibleState;
                             'Replica Capacity'          = $data.replicaCapacity;
                             'Replication Role'          = $data.replicationRole;
