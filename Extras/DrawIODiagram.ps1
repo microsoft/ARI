@@ -64,14 +64,16 @@ Function Container {
     }
 
 Function Connect {
-Param($Source,$Target)
+Param($Source,$Target,$Parent)
+
+    if($Parent){$Parent = $Parent}else{$Parent = 1}
 
     $Global:XmlWriter.WriteStartElement('mxCell')
     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
     $Global:XmlWriter.WriteAttributeString('style', "edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;")
     $Global:XmlWriter.WriteAttributeString('edge', "1")
     $Global:XmlWriter.WriteAttributeString('vertex', "1")
-    $Global:XmlWriter.WriteAttributeString('parent', "1")
+    $Global:XmlWriter.WriteAttributeString('parent', $Parent)
     $Global:XmlWriter.WriteAttributeString('source', $Source)
     $Global:XmlWriter.WriteAttributeString('target', $Target)
 
@@ -880,7 +882,7 @@ Param($VNET2)
                 $Global:sizeC = $Global:sizeL
                 $Global:sizeL = (($Global:sizeL * 210) + 30)
 
-                Container ($Global:vnetLoc) ($Global:Alt0 - 20) $Global:sizeL "490" $VNET2.Name
+                    Container ($Global:vnetLoc) ($Global:Alt0 - 20) $Global:sizeL "490" $VNET2.Name
                 
                 $Global:VNETSquare = ($Global:CellID+'-'+($Global:IDNum-1))
 
@@ -890,7 +892,7 @@ Param($VNET2)
                 $Global:XmlWriter.WriteAttributeString('label', $SubName.name)
                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                    Icon $IconSubscription $Global:sizeL 225 "67" "40" $Global:ContID
+                    Icon $IconSubscription $Global:sizeL 460 "67" "40" $Global:ContID
 
                 $Global:XmlWriter.WriteEndElement()  
 
@@ -912,7 +914,7 @@ Param($VNET2)
 
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                        Icon $IconCostMGMT ($Global:sizeL + 150) 225 "30" "35" $Global:ContID
+                        Icon $IconCostMGMT ($Global:sizeL + 150) 460 "30" "35" $Global:ContID
 
                     $Global:XmlWriter.WriteEndElement()
                     
@@ -940,7 +942,7 @@ Param($VNET2)
 
                     $Global:XmlWriter.WriteEndElement()      
                     
-                    ProcType $sub $subloc0 $Alt1 $Global:ContID               
+                        ProcType $sub $subloc0 $Alt1 $Global:ContID               
 
                     $Global:subloc = $Global:subloc + 210
                     $subloc0 = $subloc0 + 210
@@ -965,11 +967,11 @@ Param($VNET2)
 
                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
 
-                            Icon $IconDet ($Global:subloc + 50) ($Global:Alt0 - 107) "42.63" "44" $Global:ContID
+                            Icon $IconDet ($Global:sizeL + 500) 225 "42.63" "44" $Global:ContID
 
                         $Global:XmlWriter.WriteEndElement()
                         
-                        Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:ContID 
+                            Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:ContID $Global:ContID
                     }
 
                     $Global:Alt = $Global:Alt + 650
@@ -978,7 +980,7 @@ Param($VNET2)
             {
                 $Global:sizeL = (($Global:sizeL * 210) + 30)
 
-                Container ($Global:vnetLoc) ($Global:Alt0 - 15) $Global:sizeL "260" $VNET2.Name
+                    Container ($Global:vnetLoc) ($Global:Alt0 - 15) $Global:sizeL "260" $VNET2.Name
 
                 $Global:VNETSquare = ($Global:CellID+'-'+($Global:IDNum-1))
 
@@ -1029,7 +1031,7 @@ Param($VNET2)
 
                     $Global:XmlWriter.WriteEndElement()  
 
-                    ProcType $sub $subloc0 40 $Global:ContID              
+                        ProcType $sub $subloc0 40 $Global:ContID              
 
                     $Global:subloc = $Global:subloc + 210
                     $subloc0 = $subloc0 + 210
@@ -1057,7 +1059,7 @@ Param($VNET2)
 
                         $Global:XmlWriter.WriteEndElement()
                         
-                        Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:ContID                   
+                            Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:ContID $Global:ContID
                     }
                 $Global:Alt = $Global:Alt + 350 
             }
@@ -1239,7 +1241,7 @@ Param($VNET2)
                                 $Global:XmlWriter.WriteEndElement()     
 
                                 ProcType $sub $subnetloc $subnetalt $Global:ContID
-                                                                    
+
                                 $Global:subloc0 = $Global:subloc0 + 210
                                 $subnetloc = $subnetloc + 210
                                 $Global:SubC ++
@@ -1268,7 +1270,7 @@ Param($VNET2)
             
                                 $Global:XmlWriter.WriteEndElement()
                                 
-                                Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:ContID
+                                    Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:ContID $Global:ContID
                             }  
 
                         $Global:Alt = $Global:Alt + 650                                                                         
@@ -1358,7 +1360,7 @@ Param($VNET2)
             
                                 $Global:XmlWriter.WriteEndElement()
                                 
-                                Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:VNETSquare 
+                                Connect ($Global:CellID+'-'+($Global:IDNum-1)) $Global:ContID $Global:ContID
 
                             }
 

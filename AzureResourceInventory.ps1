@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.3.9                                                                   #
+#       Version: 2.3.10                                                                  #
 #                                                                                        #
-#       Date: 09/28/2022                                                                 #
+#       Date: 11/07/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -1424,8 +1424,10 @@ if($Global:PlatOS -eq 'PowerShell Desktop' -and $Diagram.IsPresent) {
     Write-Host ''
     }
 
+<#
 if ($Diagram.IsPresent -and $Global:VisioCheck) {
     Write-Host ('Visio file saved at: ') -NoNewline
     write-host $DFile -ForegroundColor Cyan
     Write-Host ''
 }
+#>
