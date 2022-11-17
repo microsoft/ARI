@@ -40,39 +40,76 @@ If ($Task -eq 'Processing') {
                 $vhub = $VirtualHub | Where-Object { $_.ID -in $data.virtualHubs.id }
                 $vpn = $VPNSite | Where-Object { $_.ID -in $data.vpnSites.id }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
-                foreach ($2 in $vhub) {
-                    foreach ($3 in $vpn) {                        
-                            foreach ($Tag in $Tags) {  
-                                $obj = @{
-                                    'ID'                                 = $1.id;
-                                    'Subscription'                       = $sub1.Name;
-                                    'Resource Group'                     = $1.RESOURCEGROUP;
-                                    'Name'                               = $1.NAME;
-                                    'Location'                           = $1.LOCATION;
-                                    'Allow BranchToBranch Traffic'       = $data.allowBranchToBranchTraffic;
-                                    'Allow VnetToVnet Traffic'           = $data.allowVnetToVnetTraffic;
-                                    'Disable Vpn Encryption'             = $data.disableVpnEncryption;
-                                    'HUB Name'                           = [string]$2.name;
-                                    'HUB Location'                       = [string]$2.location;
-                                    'HUB Address Prefix'                 = [string]$2.properties.addressPrefix;
-                                    'HUB Gateway Preference'             = [string]$2.properties.preferredRoutingGateway;
-                                    'HUB Router ASN'                     = [string]$2.properties.virtualRouterAsn;
-                                    'HUB Router IPs'                     = [string]($2.properties.virtualRouterIps | Select-Object -Unique);
-                                    'Virtual Site Name'                  = [string]$3.name;
-                                    'Device Vendor'                      = [string]$3.properties.deviceProperties.deviceVendor;
-                                    'Device Vendor IpAddress'            = [string]$3.properties.vpnSiteLinks.properties.ipAddress;
-                                    'Link Provider name'                 = [string]$3.properties.vpnSiteLinks.properties.linkProperties.linkProviderName;
-                                    'Link Speed in Mbps'                 = [string]$3.properties.vpnSiteLinks.properties.linkProperties.linkSpeedInMbps;
-                                    'Virtual Site Private Address Space' = [string]$3.properties.addressSpace.addressPrefixes;
-                                    'Resource U'                         = $ResUCount;
-                                    'Tag Name'                           = [string]$Tag.Name;
-                                    'Tag Value'                          = [string]$Tag.Value
-                                }
-                                $tmp += $obj
-                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
-                            }                       
+                if($vpn)
+                    {
+                        foreach ($2 in $vhub) {
+                            foreach ($3 in $vpn) {                        
+                                    foreach ($Tag in $Tags) {  
+                                        $obj = @{
+                                            'ID'                                 = $1.id;
+                                            'Subscription'                       = $sub1.Name;
+                                            'Resource Group'                     = $1.RESOURCEGROUP;
+                                            'Name'                               = $1.NAME;
+                                            'Location'                           = $1.LOCATION;
+                                            'Allow BranchToBranch Traffic'       = $data.allowBranchToBranchTraffic;
+                                            'Allow VnetToVnet Traffic'           = $data.allowVnetToVnetTraffic;
+                                            'Disable Vpn Encryption'             = $data.disableVpnEncryption;
+                                            'HUB Name'                           = [string]$2.name;
+                                            'HUB Location'                       = [string]$2.location;
+                                            'HUB Address Prefix'                 = [string]$2.properties.addressPrefix;
+                                            'HUB Gateway Preference'             = [string]$2.properties.preferredRoutingGateway;
+                                            'HUB Router ASN'                     = [string]$2.properties.virtualRouterAsn;
+                                            'HUB Router IPs'                     = [string]($2.properties.virtualRouterIps | Select-Object -Unique);
+                                            'Virtual Site Name'                  = [string]$3.name;
+                                            'Device Vendor'                      = [string]$3.properties.deviceProperties.deviceVendor;
+                                            'Device Vendor IpAddress'            = [string]$3.properties.vpnSiteLinks.properties.ipAddress;
+                                            'Link Provider name'                 = [string]$3.properties.vpnSiteLinks.properties.linkProperties.linkProviderName;
+                                            'Link Speed in Mbps'                 = [string]$3.properties.vpnSiteLinks.properties.linkProperties.linkSpeedInMbps;
+                                            'Virtual Site Private Address Space' = [string]$3.properties.addressSpace.addressPrefixes;
+                                            'Resource U'                         = $ResUCount;
+                                            'Tag Name'                           = [string]$Tag.Name;
+                                            'Tag Value'                          = [string]$Tag.Value
+                                        }
+                                        $tmp += $obj
+                                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                    }                       
+                            }
+                        }
                     }
-                }
+                else
+                    {
+                        foreach ($2 in $vhub) {                    
+                                    foreach ($Tag in $Tags) {  
+                                        $obj = @{
+                                            'ID'                                 = $1.id;
+                                            'Subscription'                       = $sub1.Name;
+                                            'Resource Group'                     = $1.RESOURCEGROUP;
+                                            'Name'                               = $1.NAME;
+                                            'Location'                           = $1.LOCATION;
+                                            'Allow BranchToBranch Traffic'       = $data.allowBranchToBranchTraffic;
+                                            'Allow VnetToVnet Traffic'           = $data.allowVnetToVnetTraffic;
+                                            'Disable Vpn Encryption'             = $data.disableVpnEncryption;
+                                            'HUB Name'                           = [string]$2.name;
+                                            'HUB Location'                       = [string]$2.location;
+                                            'HUB Address Prefix'                 = [string]$2.properties.addressPrefix;
+                                            'HUB Gateway Preference'             = [string]$2.properties.preferredRoutingGateway;
+                                            'HUB Router ASN'                     = [string]$2.properties.virtualRouterAsn;
+                                            'HUB Router IPs'                     = [string]($2.properties.virtualRouterIps | Select-Object -Unique);
+                                            'Virtual Site Name'                  = $null;
+                                            'Device Vendor'                      = $null;
+                                            'Device Vendor IpAddress'            = $null;
+                                            'Link Provider name'                 = $null;
+                                            'Link Speed in Mbps'                 = $null;
+                                            'Virtual Site Private Address Space' = $null;
+                                            'Resource U'                         = $ResUCount;
+                                            'Tag Name'                           = [string]$Tag.Name;
+                                            'Tag Value'                          = [string]$Tag.Value
+                                        }
+                                        $tmp += $obj
+                                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                    }                       
+                            }
+                    }
             }
             $tmp
         }

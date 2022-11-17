@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.3.10                                                                  #
+#       Version: 2.3.11                                                                  #
 #                                                                                        #
-#       Date: 11/07/2022                                                                 #
+#       Date: 11/16/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -934,7 +934,7 @@ param ($TenantID,
 
         Write-Debug ('Starting Processing Jobs.')
 
-        $Loop = $resources.count / 5000
+        $Loop = $resources.count / 1000
         $Loop = [math]::ceiling($Loop)
         $Looper = 0
         $Limit = 0                    
@@ -942,7 +942,7 @@ param ($TenantID,
         while ($Looper -lt $Loop) {
             $Looper ++            
 
-            $Resource = $resources | Select-Object -First 5000 -Skip $Limit
+            $Resource = $resources | Select-Object -First 1000 -Skip $Limit
 
             Start-Job -Name ('ResourceJob_'+$Looper) -ScriptBlock {
 
@@ -1025,7 +1025,7 @@ param ($TenantID,
 
                 $Hashtable
                 } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 50), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo | Out-Null                    
-                $Limit = $Limit + 5000   
+                $Limit = $Limit + 1000   
             }
 
         <############################################################## RESOURCES LOOP CREATION #############################################################>
