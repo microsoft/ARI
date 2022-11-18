@@ -61,7 +61,7 @@ Function Container {
             $Global:XmlWriter.WriteEndElement()
         
         $Global:XmlWriter.WriteEndElement()
-    }
+}
 
 Function Connect {
 Param($Source,$Target,$Parent)
@@ -86,27 +86,93 @@ Param($Source,$Target,$Parent)
 
 }
 
-Function Variables0 
-{
+Function Variables0 {
 
-    $Global:AZVGWs = $resources | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworkgateways'} | Select-Object -Property * -Unique
-    $Global:AZLGWs = $resources | Where-Object {$_.Type -eq 'microsoft.network/localnetworkgateways'} | Select-Object -Property * -Unique
-    $Global:AZVNETs = $resources | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworks'} | Select-Object -Property * -Unique
-    $Global:AZCONs = $resources | Where-Object {$_.Type -eq 'microsoft.network/connections'} | Select-Object -Property * -Unique
-    $Global:AZEXPROUTEs = $resources | Where-Object {$_.Type -eq 'microsoft.network/expressroutecircuits'} | Select-Object -Property * -Unique  
-    $Global:PIPs = $resources | Where-Object {$_.Type -eq 'microsoft.network/publicipaddresses'} | Select-Object -Property * -Unique
-    $Global:AZVWAN = $resources | Where-Object {$_.Type -eq 'microsoft.network/virtualwans'} | Select-Object -Property * -Unique
-    $Global:AZVHUB = $resources | Where-Object {$_.Type -eq 'microsoft.network/virtualhubs'} | Select-Object -Property * -Unique
-    $Global:AZVPNSITES = $resources | Where-Object {$_.Type -eq 'microsoft.network/vpnsites'} | Select-Object -Property * -Unique
-    $Global:AZVERs = $resources | Where-Object {$_.Type -eq 'microsoft.network/expressroutegateways'} | Select-Object -Property * -Unique
+    Start-Job -Name 'DiagramVariables' -ScriptBlock {
+
+    $job = @()
+
+    $AZVGWs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworkgateways'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+    $AZLGWs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/localnetworkgateways'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+    $AZVNETs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworks'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+    $AZCONs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/connections'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+    $AZEXPROUTEs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/expressroutecircuits'} | Select-Object -Property * -Unique }).AddArgument($($args[0]))
+    $PIPs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/publicipaddresses'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+    $AZVWAN = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualwans'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+    $AZVHUB = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualhubs'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+    $AZVPNSITES = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/vpnsites'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+    $AZVERs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/expressroutegateways'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
     
-    $Global:CleanPIPs = $Global:PIPs | Where-Object {$_.id -notin $Global:AZVGWs.properties.ipConfigurations.properties.publicIPAddress.id}
+    $jobAZVGWs = $AZVGWs.BeginInvoke()
+    $jobAZLGWs = $AZLGWs.BeginInvoke()
+    $jobAZVNETs = $AZVNETs.BeginInvoke()
+    $jobAZCONs = $AZCONs.BeginInvoke()
+    $jobAZEXPROUTEs = $AZEXPROUTEs.BeginInvoke()
+    $jobPIPs = $PIPs.BeginInvoke()
+    $jobAZVWAN = $AZVWAN.BeginInvoke()
+    $jobAZVHUB = $AZVHUB.BeginInvoke()
+    $jobAZVPNSITES = $AZVPNSITES.BeginInvoke()
+    $jobAZVERs = $AZVERs.BeginInvoke() 
+
+    $job += $jobAZVGWs
+    $job += $jobAZLGWs
+    $job += $jobAZVNETs
+    $job += $jobAZCONs
+    $job += $jobAZEXPROUTEs
+    $job += $jobPIPs
+    $job += $jobAZVWAN
+    $job += $jobAZVHUB
+    $job += $jobAZVPNSITES
+    $job += $jobAZVERs
+
+    while ($Job.Runspace.IsCompleted -contains $false) {}
+
+    $AZVGWsS = $AZVGWs.EndInvoke($jobAZVGWs)
+    $AZLGWsS = $AZLGWs.EndInvoke($jobAZLGWs)
+    $AZVNETsS = $AZVNETs.EndInvoke($jobAZVNETs)
+    $AZCONsS = $AZCONs.EndInvoke($jobAZCONs)
+    $AZEXPROUTEsS = $AZEXPROUTEs.EndInvoke($jobAZEXPROUTEs)
+    $PIPsS = $PIPs.EndInvoke($jobPIPs)
+    $AZVWANS = $AZVWAN.EndInvoke($jobAZVWAN)
+    $AZVHUBS = $AZVHUB.EndInvoke($jobAZVHUB)
+    $AZVPNSITESS = $AZVPNSITES.EndInvoke($jobAZVPNSITES)
+    $AZVERsS = $AZVERs.EndInvoke($jobAZVERs)
+
+    $AZVGWs.Dispose()
+    $AZLGWs.Dispose()
+    $AZVNETs.Dispose()
+    $AZCONs.Dispose()
+    $AZEXPROUTEs.Dispose()
+    $PIPs.Dispose()
+    $AZVWAN.Dispose()
+    $AZVHUB.Dispose()
+    $AZVPNSITES.Dispose()
+    $AZVERs.Dispose()
+
+    $CleanPIPs = $PIPsS | Where-Object {$_.id -notin $AZVGWsS.properties.ipConfigurations.properties.publicIPAddress.id}
+
+    $Variables = @{
+            'AZVGWs' = $AZVGWsS;
+            'AZLGWs' = $AZLGWsS;
+            'AZVNETs' = $AZVNETsS;
+            'AZCONs' = $AZCONsS;
+            'AZEXPROUTEs' = $AZEXPROUTEsS;
+            'PIPs' = $PIPsS;
+            'AZVWAN' = $AZVWANS;
+            'AZVHUB' = $AZVHUBS;
+            'AZVPNSITES' = $AZVPNSITESS;
+            'AZVERs' = $AZVERsS;
+            'CleanPIPs' = $CleanPIPs
+        }
+
+    $Variables
+
+    } -ArgumentList $resources, $null
 
 }
 
 <# Function to create the Label of Version #>
-Function label
-{
+Function label {
     $Global:XmlWriter.WriteStartElement('object')            
     $Global:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v2.3'+ "`n" +'https://github.com/microsoft/ARI'))
     $Global:XmlWriter.WriteAttributeString('author1', 'Claudio Merola')
@@ -115,8 +181,7 @@ Function label
 }
 
 <# Function to create the Visio document and import each stencil #>
-Function Stensils
-{
+Function Stensils {
     $Global:Ret = "rounded=0;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;"
 
     $Global:IconConnections = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Connections.svg;" #width="68" height="68"
@@ -411,9 +476,7 @@ Function OnPremNet {
 
 }
 
-
-Function OnPrem 
-{
+Function OnPrem {
 Param($Con1)
 foreach ($Con2 in $Con1)
         {
@@ -557,9 +620,7 @@ foreach ($Con2 in $Con1)
 
 }
 
-
-Function vWan 
-{
+Function vWan {
 Param($wan1)
 
     $Global:vnetLoc = 700
@@ -699,10 +760,8 @@ Param($wan1)
 
 }
 
-
 <# Function for Cloud Only Environments #>
-Function CloudOnly 
-{
+Function CloudOnly {
 $Global:RoutsW = $AZVNETs | Select-Object -Property Name, @{N="Subnets";E={$_.properties.subnets.properties.addressPrefix.count}} | Sort-Object -Property Subnets -Descending
 
 $Global:VNETHistory = @()
@@ -798,9 +857,7 @@ $Global:Alt = 2
 
 }
 
-
-Function FullEnvironment 
-{
+Function FullEnvironment {
 
     foreach($AZVNETs2 in $AZVNETs)
         {             
@@ -867,10 +924,8 @@ Function FullEnvironment
 
 }
 
-
 <# Function for VNET creation #>
-Function VNETCreator
-{
+Function VNETCreator {
 Param($VNET2)
         $Global:sizeL =  $VNET2.properties.subnets.properties.addressPrefix.count
         if($VNET2.id -notin $VNETHistory.vnet)
@@ -1066,10 +1121,8 @@ Param($VNET2)
         }
 }
 
-
 <# Function for create peered VNETs #>
-Function PeerCreator
-{
+Function PeerCreator {
 Param($VNET2)
     $PeerCount = ($VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id.count + 10.3)
     $Global:vnetLoc1 = $Global:Alt                                    
@@ -1378,8 +1431,7 @@ Param($VNET2)
     $Global:Alt = $Global:vnetLoc1
 }
 
-Function ProcType 
-{
+Function ProcType {
 Param($sub,$subloc,$Alt0,$ContainerID)  
     $temp = ''
     remove-variable TrueTemp -ErrorAction SilentlyContinue
@@ -2380,8 +2432,7 @@ Param($sub,$subloc,$Alt0,$ContainerID)
             }
 }
 
-
-
+Variables0
 
 $Global:etag = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
 $Global:DiagID = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
@@ -2436,7 +2487,23 @@ $Global:XmlWriter.WriteAttributeString('type', 'device')
                 $Global:XmlWriter.WriteAttributeString('parent', "0")
                 $Global:XmlWriter.WriteEndElement()
 
-Variables0
+Get-Job -Name 'DiagramVariables' | Wait-Job
+
+$Job = Receive-Job -Name 'DiagramVariables'
+
+Get-Job -Name 'DiagramVariables' | Remove-Job
+
+$Global:AZVGWs = $Job.AZVGWs
+$Global:AZLGWs = $Job.AZLGWs
+$Global:AZVNETs = $Job.AZVNETs
+$Global:AZCONs = $Job.AZCONs
+$Global:AZEXPROUTEs = $Job.AZEXPROUTEs
+$Global:PIPs = $Job.PIPs
+$Global:AZVWAN = $Job.AZVWAN
+$Global:AZVHUB = $Job.AZVHUB
+$Global:AZVPNSITES = $Job.AZVPNSITES
+$Global:AZVERs = $Job.AZVERs
+$Global:CleanPIPs = $Job.CleanPIPs
 
 Stensils
 
@@ -2452,7 +2519,6 @@ else
     {
         CloudOnly
     }
-
 
 
                 $Global:XmlWriter.WriteEndElement()

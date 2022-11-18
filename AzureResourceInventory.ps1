@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.3.11                                                                  #
+#       Version: 2.3.12                                                                  #
 #                                                                                        #
-#       Date: 11/16/2022                                                                 #
+#       Date: 11/18/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -710,7 +710,7 @@ param ($TenantID,
 
         $Global:ReportingRunTime = Measure-Command -Expression {
 
-        #### Creating Excel file variable:        
+        #### Creating Excel file variable:
         $Global:File = ($DefaultPath + $Global:ReportName + "_Report_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xlsx")
         #$Global:DFile = ($DefaultPath + $Global:ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".vsdx")
         $Global:DDFile = ($DefaultPath + $Global:ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xml")
@@ -898,8 +898,8 @@ param ($TenantID,
         Write-Debug ('Starting Subscriptions job.')
         Start-Job -Name 'Subscriptions' -ScriptBlock {
 
-            If ($($args[4]) -eq $true) {
-                $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[5]) + '/Extras/Subscriptions.ps1')
+            If ($($args[5]) -eq $true) {
+                $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[6]) + '/Extras/Subscriptions.ps1')
             }
             Else {
                 if($($args[0]) -like '*\*')
