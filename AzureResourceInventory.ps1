@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.3.12                                                                  #
+#       Version: 2.3.13                                                                  #
 #                                                                                        #
-#       Date: 11/18/2022                                                                 #
+#       Date: 11/30/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -61,10 +61,10 @@
 
 param ($TenantID,
         [switch]$SecurityCenter, 
-        #$SubscriptionID, 
+        $SubscriptionID, 
         $Appid, 
         $Secret, 
-        #$ResourceGroup, 
+        $ResourceGroup, 
         [switch]$SkipAdvisory, 
         [switch]$IncludeTags, 
         [switch]$QuotaUsage, 
@@ -94,8 +94,8 @@ param ($TenantID,
         Write-Host "Parameters"
         Write-Host ""
         Write-Host " -TenantID <ID>        :  Specifies the Tenant to be inventoried. "
-        #Write-Host " -SubscriptionID <ID>  :  Specifies Subscription(s) to be inventoried. "
-        #Write-Host " -ResourceGroup <NAME> :  Specifies one unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. "
+        Write-Host " -SubscriptionID <ID>  :  Specifies Subscription(s) to be inventoried. "
+        Write-Host " -ResourceGroup <NAME> :  Specifies one unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. "
         Write-Host " -SkipAdvisory         :  Do not collect Azure Advisory. "
         Write-Host " -SecurityCenter       :  Include Security Center Data. "
         Write-Host " -IncludeTags          :  Include Resource Tags. "
@@ -476,11 +476,10 @@ param ($TenantID,
             }
         elseif([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
             {
-                $Subscri = $SubscriptionID
 
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'.')
                 $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
-                $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
+                $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
 
                 if ($EnvSizeNum -ge 1) {
@@ -491,7 +490,7 @@ param ($TenantID,
 
                     while ($Looper -lt $Loop) {
                         $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                        $Resource = (az graph query -q $GraphQuery --subscriptions $SubscriptionID --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data
                         Start-Sleep 2
@@ -916,7 +915,7 @@ param ($TenantID,
 
             $ScriptBlock = [Scriptblock]::Create($ModuSeq)
 
-            $SubRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2] | ConvertFrom-Json)).AddArgument($($args[3])).AddArgument($($args[4]))
+            $SubRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
 
             $SubJob = $SubRun.BeginInvoke()
 
@@ -928,7 +927,7 @@ param ($TenantID,
 
             $SubResult
 
-        } -ArgumentList $PSScriptRoot, $Subscriptions, ($Resources | ConvertTo-Json -Depth 50), 'Processing' , $File, $RunOnline, $RawRepo | Out-Null
+        } -ArgumentList $PSScriptRoot, $Subscriptions, $Resources, 'Processing' , $File, $RunOnline, $RawRepo | Out-Null
 
         <######################################################### RESOURCE GROUP JOB ######################################################################>
 
