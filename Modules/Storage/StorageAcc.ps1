@@ -3,7 +3,7 @@
 Inventory for Azure Storage Account
 
 .DESCRIPTION
-This script consolidates information for all microsoft.storage/storageaccounts and  resource provider in $Resources variable. 
+This script consolidates information for all microsoft.storage/storageaccounts and  resource provider in $Resources variable.
 Excel Sheet Name: StorageAcc
 
 .Link
@@ -15,7 +15,7 @@ This powershell Module is part of Azure Resource Inventory (ARI)
 .NOTES
 Version: 2.2.1
 First Release Date: 19th November, 2020
-Authors: Claudio Merola and Renato Gregio 
+Authors: Claudio Merola and Renato Gregio
 
 #>
 
@@ -40,7 +40,7 @@ If ($Task -eq 'Processing') {
                 $data = $1.PROPERTIES
                 $TLSv = if ($data.minimumTlsVersion -eq 'TLS1_2') { "TLS 1.2" }elseif ($data.minimumTlsVersion -eq 'TLS1_1') { "TLS 1.1" }else { "TLS 1.0" }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
-                    foreach ($Tag in $Tags) {   
+                    foreach ($Tag in $Tags) {
                         $obj = @{
                             'ID'                                    = $1.id;
                             'Subscription'                          = $sub1.Name;
@@ -69,8 +69,8 @@ If ($Task -eq 'Processing') {
                             'Tag Value'                             = [string]$Tag.Value
                         }
                         $tmp += $obj
-                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
-                    }               
+                        if ($ResUCount -eq 1) { $ResUCount = 0 }
+                    }
             }
             $tmp
         }
@@ -103,7 +103,7 @@ Else {
         $Exc.Add('Tier')
         $Exc.Add('Supports HTTPS Traffic Only')
         $Exc.Add('Allow Blob Public Access')
-        $Exc.Add('Minumum TLS Version')
+        $Exc.Add('Minimum TLS Version')
         $Exc.Add('Identity-based access for file shares')
         $Exc.Add('Access Tier')
         $Exc.Add('Primary Location')
@@ -118,15 +118,15 @@ Else {
         if($InTag)
             {
                 $Exc.Add('Tag Name')
-                $Exc.Add('Tag Value') 
+                $Exc.Add('Tag Value')
             }
 
-        $ExcelVar = $SmaResources.StorageAcc    
+        $ExcelVar = $SmaResources.StorageAcc
 
-        $ExcelVar | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        $ExcelVar |
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc |
         Export-Excel -Path $File -WorksheetName 'Storage Acc' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
-    
+
         <######## Insert Column comments and documentations here following this model #########>
 
 
@@ -139,7 +139,7 @@ Else {
         $null = $excel.StorageAcc.Cells["J1"].AddComment("By default, Azure Storage accounts permit clients to send and receive data with the oldest version of TLS, TLS 1.0, and above. To enforce stricter security measures, you can configure your storage account to require that clients send and receive data with a newer version of TLS", "Azure Resource Inventory")
         $excel.StorageAcc.Cells["J1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version?tabs=portal'
 
-        Close-ExcelPackage $excel 
+        Close-ExcelPackage $excel
 
     }
 }
