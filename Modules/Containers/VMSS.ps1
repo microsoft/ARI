@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VMSS.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 2.3.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -29,6 +29,8 @@ If ($Task -eq 'Processing')
 
         $vmss = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachinescalesets'}
         $AutoScale = $Resources | Where-Object {$_.TYPE -eq "microsoft.insights/autoscalesettings" -and $_.Properties.enabled -eq 'true'} 
+        $AKS = $Resources | Where-Object {$_.TYPE -eq 'microsoft.containerservice/managedclusters'}
+        $SFC = $Resources | Where-Object {$_.TYPE -eq 'microsoft.servicefabric/clusters'}
 
     <######### Insert the resource Process here ########>
 
@@ -41,6 +43,8 @@ If ($Task -eq 'Processing')
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $OS = $data.virtualMachineProfile.storageProfile.osDisk.osType
+                $RelatedAKS = ($AKS | Where-Object {$_.properties.nodeResourceGroup -eq $1.resourceGroup}).Name
+                if([string]::IsNullOrEmpty($RelatedAKS)){$Related = ($SFC | Where-Object {$_.Properties.clusterEndpoint -in $1.properties.virtualMachineProfile.extensionProfile.extensions.properties.settings.clusterEndpoint}).Name}else{$Related = $RelatedAKS}
                 $Scaling = ($AutoScale | Where-Object {$_.Properties.targetResourceUri -eq $1.id})
                 if([string]::IsNullOrEmpty($Scaling)){$AutoSc = $false}else{$AutoSc = $true}
                 $Diag = if($data.virtualMachineProfile.diagnosticsProfile){'Enabled'}else{'Disabled'}
@@ -60,6 +64,7 @@ If ($Task -eq 'Processing')
                         'ID'                            = $1.id;
                         'Subscription'                  = $sub1.Name;
                         'Resource Group'                = $1.RESOURCEGROUP;
+                        'AKS / SFC'                     = $Related;
                         'Name'                          = $1.NAME;
                         'Location'                      = $1.LOCATION;
                         'SKU Tier'                      = $1.sku.tier;
@@ -106,21 +111,22 @@ Else
 
         $TableName = ('VMSSTable_'+($SmaResources.VMSS.id | Select-Object -Unique).count)
         $Style = @()        
-        $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -Range A:V
-        $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0.0' -Range X:Z
+        $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -Range A:W
+        $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0.0' -Range Y:AA
         $Style += New-ExcelStyle -HorizontalAlignment Left -Range W:W -Width 60 -WrapText
 
         $condtxt = @()
-        $condtxt += New-ConditionalText FALSE -Range K:K
-        $condtxt += New-ConditionalText FALSO -Range K:K
-        $condtxt += New-ConditionalText Disabled -Range H:H
-        $condtxt += New-ConditionalText FALSE -Range U:U
-        $condtxt += New-ConditionalText FALSO -Range U:U
+        $condtxt += New-ConditionalText FALSE -Range L:L
+        $condtxt += New-ConditionalText FALSO -Range L:L
+        $condtxt += New-ConditionalText Disabled -Range I:I
+        $condtxt += New-ConditionalText FALSE -Range V:V
+        $condtxt += New-ConditionalText FALSO -Range V:V
 
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
+        $Exc.Add('AKS / SFC')
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('SKU Tier')

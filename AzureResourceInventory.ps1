@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.3.13                                                                  #
+#       Version: 2.3.14                                                                  #
 #                                                                                        #
-#       Date: 11/30/2022                                                                 #
+#       Date: 12/07/2022                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -135,19 +135,18 @@ param ($TenantID,
         Write-Host " To ignore this  use <-SkipAdvisory> parameter. "
         Write-Host "e.g. />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SkipAdvisory"
         Write-Host ""
-        Write-Host "Creating Visio Diagram :"
-        Write-Host "If you Want to create a Visio Diagram you need to use <-Diagram> parameter."
-        Write-Host "It's a pre-requisite to run in a Windows with Microsoft Visio Installed"
-        Write-Host " To include Security Center details in the report, use <-SecurityCenter> parameter. "
+        Write-Host "Creating Network Diagram :"
+        Write-Host " If you Want to create a Draw.io Diagram you need to use <-Diagram> parameter."
+        Write-Host " This feature only works on Windows O.S. "
         Write-Host "e.g. />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -Diagram"
         Write-Host ""
         Write-Host "Using the latest modules :"
         Write-Host " You can use the latest modules. For this use <-Online> parameter."
-        Write-Host "It's a pre-requisite to have internet access for ARI GitHub repo"
+        Write-Host " It's a pre-requisite to have internet access for ARI GitHub repo"
         Write-Host "e.g. />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -Online"
         Write-Host ""
         Write-Host "Running in Debug Mode :"
-        Write-Host "To run in a Debug Mode use <-Debug> parameter."
+        Write-Host " To run in a Debug Mode use <-Debug> parameter."
         Write-Host ".e.g. />/AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -Debug"
         Write-Host ""
     }
