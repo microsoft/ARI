@@ -22,7 +22,7 @@ param($Subscriptions, $Resources, $Advisories, $DDFile)
 
 $Global:FullEnvironment = $false
 
-Function Icon {
+Function Icon {    
 Param($Style,$x,$y,$w,$h,$p)
 
     $Global:XmlWriter.WriteStartElement('mxCell')
@@ -87,7 +87,6 @@ Param($Source,$Target,$Parent)
 }
 
 Function Variables0 {
-
     Start-Job -Name 'DiagramVariables' -ScriptBlock {
 
     $job = @()
@@ -245,7 +244,6 @@ Function Stensils {
 
 <# Function to begin OnPrem environment drawing. Will begin by Local network Gateway, then Express Route.#>
 Function OnPremNet {
-
     $Global:VNETHistory = @()
     $Global:RoutsW = $AZVNETs | Select-Object -Property Name, @{N="Subnets";E={$_.properties.subnets.properties.addressPrefix.count}} | Sort-Object -Property Subnets -Descending
 
@@ -858,7 +856,6 @@ $Global:Alt = 2
 }
 
 Function FullEnvironment {
-
     foreach($AZVNETs2 in $AZVNETs)
         {             
             $Global:VNET2 = $AZVNETs2
@@ -1432,7 +1429,8 @@ Param($VNET2)
 }
 
 Function ProcType {
-Param($sub,$subloc,$Alt0,$ContainerID)  
+Param($sub,$subloc,$Alt0,$ContainerID) 
+
     $temp = ''
     remove-variable TrueTemp -ErrorAction SilentlyContinue
     remove-variable RESNames -ErrorAction SilentlyContinue
