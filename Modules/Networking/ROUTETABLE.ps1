@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/ROUTETABLE.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 2.3.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -35,25 +35,28 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
-                    foreach ($TagKey in $Tags) { 
-                        $obj = @{
-                            'ID'                            = $1.id;
-                            'Subscription'                  = $sub1.Name;
-                            'Resource Group'                = $1.RESOURCEGROUP;
-                            'Name'                          = $1.NAME;
-                            'Location'                      = $1.LOCATION;
-                            'Disable BGP Route Propagation' = $data.disableBgpRoutePropagation;
-                            'Routes'                        = [string]$data.routes.name;
-                            'Routes Prefixes'               = [string]$data.routes.properties.addressPrefix;
-                            'Routes BGP Override'           = [string]$data.routes.properties.hasBgpOverride;
-                            'Routes Next Hop IP'            = [string]$data.routes.properties.nextHopIpAddress;
-                            'Routes Next Hop Type'          = [string]$data.routes.properties.nextHopType;
-                            'Resource U'                    = $ResUCount;
-                            'Tag Name'                      = [string]$Tag.Name;
-                            'Tag Value'                     = [string]$Tag.Value
-                        }
-                        $tmp += $obj
-                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                    foreach($2 in $data.routes)
+                        {
+                            foreach ($TagKey in $Tags) { 
+                                $obj = @{
+                                    'ID'                            = $1.id;
+                                    'Subscription'                  = $sub1.Name;
+                                    'Resource Group'                = $1.RESOURCEGROUP;
+                                    'Name'                          = $1.NAME;
+                                    'Location'                      = $1.LOCATION;
+                                    'Disable BGP Route Propagation' = $data.disableBgpRoutePropagation;
+                                    'Routes'                        = [string]$2.name;
+                                    'Routes Prefixes'               = [string]$2.properties.addressPrefix;
+                                    'Routes BGP Override'           = [string]$2.properties.hasBgpOverride;
+                                    'Routes Next Hop IP'            = [string]$2.properties.nextHopIpAddress;
+                                    'Routes Next Hop Type'          = [string]$2.properties.nextHopType;
+                                    'Resource U'                    = $ResUCount;
+                                    'Tag Name'                      = [string]$Tag.Name;
+                                    'Tag Value'                     = [string]$Tag.Value
+                                }
+                                $tmp += $obj
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                            }
                     }               
             }
             $tmp
