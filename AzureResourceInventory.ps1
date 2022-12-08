@@ -759,14 +759,15 @@ param ($TenantID,
                     $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[7]) + '/Extras/DrawIODiagram.ps1')
                 }
                 Else {
-                  if($($args[0]) -like '*\*')
-                      {
-                          $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\DrawIODiagram.ps1')
-                      }
-                  else 
-                      {
-                          $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '/Extras/DrawIODiagram.ps1')
-                      }
+                    if($($args[0]) -like '*\*')
+                        {
+                            $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\DrawIODiagram.ps1')
+                        }
+                    else
+                        {
+                            $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '/Extras/DrawIODiagram.ps1')
+                        }
+                    $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '/Extras/DrawIODiagram.ps1')
                     $ModuSeq = $ModuSeq0.ReadToEnd()
                     $ModuSeq0.Dispose()  
                 }                  
