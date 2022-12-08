@@ -758,7 +758,15 @@ param ($TenantID,
                     $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[7]) + '/Extras/DrawIODiagram.ps1')
                 }
                 Else {
-                    $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\DrawIODiagram.ps1')
+                    if($($args[0]) -like '*\*')
+                        {
+                            $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\DrawIODiagram.ps1')
+                        }
+                    else
+                        {
+                            $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '/Extras/DrawIODiagram.ps1')
+                        }
+                    $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '/Extras/DrawIODiagram.ps1')
                     $ModuSeq = $ModuSeq0.ReadToEnd()
                     $ModuSeq0.Dispose()  
                 }                  
@@ -1416,7 +1424,7 @@ Write-Host ('Excel file saved at: ') -NoNewline
 write-host $File -ForegroundColor Cyan
 Write-Host ''
 
-if($Global:PlatOS -eq 'PowerShell Desktop' -and $Diagram.IsPresent) {
+if(($Global:PlatOS -eq 'PowerShell Desktop' -or $Global:PlatOS -eq 'PowerShell Unix') -and $Diagram.IsPresent) {
     Write-Host ('Draw.io Diagram file saved at: ') -NoNewline
     write-host $DDFile -ForegroundColor Cyan
     Write-Host ''
