@@ -65,6 +65,8 @@ param ($TenantID,
         $Appid, 
         $Secret, 
         $ResourceGroup, 
+        $TagKey, 
+        $TagValue,
         [switch]$SkipAdvisory, 
         [switch]$IncludeTags, 
         [switch]$QuotaUsage, 
@@ -96,6 +98,8 @@ param ($TenantID,
         Write-Host " -TenantID <ID>        :  Specifies the Tenant to be inventoried. "
         Write-Host " -SubscriptionID <ID>  :  Specifies Subscription(s) to be inventoried. "
         Write-Host " -ResourceGroup <NAME> :  Specifies one unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. "
+        Write-Host " -TagKey <NAME>        :  Specifies the tag key to be inventoried, This parameter requires the -SubscriptionID to work. "
+        Write-Host " -TagValue <NAME>      :  Specifies the tag value be inventoried, This parameter requires the -SubscriptionID to work. "
         Write-Host " -SkipAdvisory         :  Do not collect Azure Advisory. "
         Write-Host " -SecurityCenter       :  Include Security Center Data. "
         Write-Host " -IncludeTags          :  Include Resource Tags. "
@@ -473,6 +477,34 @@ param ($TenantID,
                 }
                 Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
             }
+        elseif(![string]::IsNullOrEmpty($TagKey) -and ![string]::IsNullOrEmpty($TagValue) -and ![string]::IsNullOrEmpty($SubscriptionID))
+            {
+                $Subscri = $SubscriptionID
+
+                Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'. And from Tag: '+ $TagKey+ ':'+ $TagValue)
+                $GraphQuery = "resources | where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey == '$TagKey' and tagValue == '$TagValue' | where strlen(properties.definition.actions) < 123000 | summarize count()"
+                $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
+                $EnvSizeNum = $EnvSize.data.'count_'
+
+                if ($EnvSizeNum -ge 1) {
+                    $Loop = $EnvSizeNum / 1000
+                    $Loop = [math]::ceiling($Loop)
+                    $Looper = 0
+                    $Limit = 0
+
+                    while ($Looper -lt $Loop) {
+                        $GraphQuery = "resources | where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey == '$TagKey' and tagValue == '$TagValue' | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+
+                        $Global:Resources += $Resource.data
+                        Start-Sleep 2
+                        $Looper ++
+                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                        $Limit = $Limit + 1000
+                    }
+                }
+                Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
+            } 
         elseif([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
             {
 
