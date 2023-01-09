@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Infrastructure/WrkSpace.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 2.2.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -22,10 +22,10 @@ Authors: Claudio Merola and Renato Gregio
 <######## Default Parameters. Don't modify this ########>
 
 param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported, $AzCost)
- 
+
 If ($Task -eq 'Processing')
 {
- 
+
     <######### Insert the resource extraction here ########>
 
         $wrkspace = $Resources | Where-Object {$_.TYPE -eq 'microsoft.operationalinsights/workspaces'}

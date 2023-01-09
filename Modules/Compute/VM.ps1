@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VM.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.3.0
+Version: 2.3.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -92,11 +92,8 @@ If ($Task -eq 'Processing')
                                 { 
                                     ($disk | Where-Object {$_.id -eq $data.storageProfile.dataDisks.managedDisk.id}).properties.diskSizeGB
                                 }                    
-                
                     $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
-
                     $VMNICS = if(![string]::IsNullOrEmpty($data.networkProfile.networkInterfaces.id)){$data.networkProfile.networkInterfaces.id}else{'0'}
-
                     foreach ($2 in $VMNICS) {
 
                         $vmnic = $nic | Where-Object { $_.ID -eq $2 } | Select-Object -Unique

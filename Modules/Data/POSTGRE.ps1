@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/POSTGRE.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 2.2.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -36,7 +36,7 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
-                if([string]::IsNullOrEmpty($data.privateEndpointConnections)){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
+                if(!$data.privateEndpointConnections){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{

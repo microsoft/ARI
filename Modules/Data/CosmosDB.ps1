@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/CosmosDB.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 2.2.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -41,7 +41,7 @@ If ($Task -eq 'Processing') {
                         $VNETs += $VNET.split('/')[8]
                     }
                 $VNETs = $VNETs | Select-Object -Unique
-                if([string]::IsNullOrEmpty($data.privateEndpointConnections)){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
+                if(!$data.privateEndpointConnections){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
                 $GeoReplicate = if($data.failoverPolicies.count -gt 1){'Enabled'}else{'Disabled'}
                 $Mongo = if([string]::IsNullOrEmpty($data.mongoEndpoint)){$data.documentEndpoint}else{$data.mongoEndpoint}
                 $FreeTier = if($data.enableFreeTier -eq $true){'Opted In'}else{'Opted Out'}

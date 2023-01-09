@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/SQLSERVER.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.3.1
+Version: 2.3.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -35,7 +35,7 @@ if ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-               
+
                 $Tags = if(!!($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
 
                 $pvteps = if(!($1.privateEndpointConnections)) {[pscustomobject]@{id = 'NONE'}} else {$1.privateEndpointConnections | Select-Object @{Name="id";Expression={$_.id.split("/")[8]}}}

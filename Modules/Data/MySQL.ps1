@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/MySQL.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.1
+Version: 2.2.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -35,7 +35,7 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                if([string]::IsNullOrEmpty($data.privateEndpointConnections)){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
+                if(!$data.privateEndpointConnections){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
                 $sku = $1.SKU
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {

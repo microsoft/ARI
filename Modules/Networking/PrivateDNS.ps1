@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/PrivateDNS.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 2.2.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -36,7 +36,7 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
 
-                $vnlks = ($VNETLinks | where {$_.id -like ($1.id + '*')})
+                $vnlks = ($VNETLinks | Where-Object {$_.id -like ($1.id + '*')})
                 $vnlks = if (!$vnlks) {[pscustomobject]@{id = 'none'}} else {$vnlks | Select-Object @{Name="id";Expression={$_.properties.virtualNetwork.id.split("/")[8]}}}
 
                 foreach ($2 in $vnlks) {

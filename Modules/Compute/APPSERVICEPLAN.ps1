@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/APPSERVICEPLAN.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 2.2.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -25,7 +25,7 @@ param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyl
 
 If ($Task -eq 'Processing')
 {
- 
+
     <######### Insert the resource extraction here ########>
 
         $APPSvcPlan = $Resources | Where-Object {$_.TYPE -eq 'microsoft.web/serverfarms'}
