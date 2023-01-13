@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VM.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.3.2
+Version: 2.3.3
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -30,7 +30,6 @@ If ($Task -eq 'Processing')
         $nic = $Resources | Where-Object {$_.TYPE -eq 'microsoft.network/networkinterfaces'}
         $vmexp = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachines/extensions'}
         $disk = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/disks'}
-
 
     if($vm)
         {    
@@ -63,7 +62,7 @@ If ($Task -eq 'Processing')
                             $ext = [string]$ext
                             $ext = $ext.Substring(0, $ext.Length - 2)
                         }
-                                        
+
                     if ($null -ne $data.availabilitySet) { $AVSET = 'True' }else { $AVSET = 'False' }
                     if ($data.diagnosticsProfile.bootDiagnostics.enabled -eq $true) { $bootdg = $true }else { $bootdg = $false }
                     if($data.storageProfile.osDisk.managedDisk.id) 
@@ -160,7 +159,7 @@ else
         {
             $TableName = ('VMTable_'+($SmaResources.VM.id | Select-Object -Unique).count)
             $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
-            $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AF:AF -Width 60 -WrapText 
+            $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AH:AH -Width 60 -WrapText 
 
                 $cond = @()
                 Foreach ($UnSupOS in $Unsupported.Linux)
@@ -168,7 +167,7 @@ else
                         #ImageVersion
                         $cond += New-ConditionalText $UnSupOS -Range H:H
                     }
-    
+
                 #Hybrid Benefit
                 $cond += New-ConditionalText None -Range K:K
                 #NSG
