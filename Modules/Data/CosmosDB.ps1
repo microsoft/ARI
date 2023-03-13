@@ -41,6 +41,14 @@ If ($Task -eq 'Processing') {
                         $VNETs += $VNET.split('/')[8]
                     }
                 $VNETs = $VNETs | Select-Object -Unique
+
+                $Zonals = @()
+                foreach ($Zonal in $data.locations.id)
+                {
+                    $Zonals += "*"
+                }
+                $Zonals = $Zonals | Select-Object -Unique
+
                 if(!$data.privateEndpointConnections){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
                 $GeoReplicate = if($data.failoverPolicies.count -gt 1){'Enabled'}else{'Disabled'}
                 $Mongo = if([string]::IsNullOrEmpty($data.mongoEndpoint)){$data.documentEndpoint}else{$data.mongoEndpoint}
@@ -53,6 +61,8 @@ If ($Task -eq 'Processing') {
                             'Resource Group'            = $1.RESOURCEGROUP;
                             'Name'                      = $1.NAME;
                             'Location'                  = $1.LOCATION;
+                            'Zones'                     = [string]$Zonals;
+                            'prop locations'            = [string]$data; 
                             'Enabled API Types'         = $data.EnabledApiTypes;
                             'Backup Policy'             = $data.backupPolicy.type;
                             'Backup Storage Redundancy' = $data.backupPolicy.periodicModeProperties.backupStorageRedundancy;
@@ -101,6 +111,8 @@ Else {
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
+        $Exc.Add('Zones')
+        $Exc.Add('prop locations')
         $Exc.Add('Enabled API Types')
         $Exc.Add('Backup Policy')
         $Exc.Add('Backup Storage Redundancy')
