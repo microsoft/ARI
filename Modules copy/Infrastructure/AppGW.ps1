@@ -44,7 +44,7 @@ If ($Task -eq 'Processing') {
                             'Resource Group'        = $1.RESOURCEGROUP;
                             'Name'                  = $1.NAME;
                             'Location'              = $1.LOCATION;
-                            'Zones'                 = [string]$1.ZONES;
+                            'Zones'                 = $1.ZONES;
                             'State'                 = $data.OperationalState;
                             'WAF Enabled'           = $WAF;
                             'Minimum TLS Version'   = "$($PROT -Replace '_', '.' -Replace 'v', ' ' -Replace 'tls', 'TLS')";
