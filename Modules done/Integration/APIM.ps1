@@ -48,6 +48,7 @@ If ($Task -eq 'Processing')
                             'Resource Group'       = $1.RESOURCEGROUP;
                             'Name'                 = $1.NAME;
                             'Location'             = $1.LOCATION;
+                            'Zones'                = [string]$1.zones;
                             'SKU'                  = $1.sku.name;
                             'Gateway URL'          = $data.gatewayUrl;
                             'Virtual Network Type' = $data.virtualNetworkType;
@@ -91,6 +92,7 @@ Else
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
+        $Exc.Add('Zones')
         $Exc.Add('SKU')
         $Exc.Add('Gateway URL')
         $Exc.Add('Virtual Network Type')
