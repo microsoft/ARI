@@ -48,6 +48,7 @@ If ($Task -eq 'Processing') {
                             'Resource Group'                    = $1.RESOURCEGROUP;
                             'Name'                              = $1.NAME;
                             'Location'                          = $1.LOCATION;
+                            'Zones'                             = [string]$Zones;
                             'SKU'                               = $data.sku.tier;
                             'Threat Intel Mode'                 = $Threat;
                             'Zone'                              = $Zones;
@@ -87,6 +88,7 @@ Else {
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
+        $Exc.Add('Zones')
         $Exc.Add('SKU')
         $Exc.Add('Threat Intel Mode')
         $Exc.Add('Zone')
