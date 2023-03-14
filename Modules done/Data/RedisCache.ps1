@@ -50,7 +50,7 @@ If ($Task -eq 'Processing') {
                             'ResourceGroup'         = $1.RESOURCEGROUP;
                             'Name'                  = $1.NAME;
                             'Location'              = $1.LOCATION;
-                            'Zone'                  = $Zones;
+                            'Zone'                  = [string]$Zones;
                             'Version'               = $data.redisVersion;
                             'Public Network Access' = $data.publicNetworkAccess;
                             'FQDN'                  = $data.hostName;
