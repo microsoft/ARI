@@ -1,19 +1,19 @@
 <#
 .Synopsis
-Inventory for Azure Database for Postgre
+Inventory for Azure MariaDB
 
 .DESCRIPTION
-This script consolidates information for all microsoft.dbforpostgresql/flexibleservers resource provider in $Resources variable. 
-Excel Sheet Name: POSTGRE
+This script consolidates information for all microsoft.dbformariadb/servers resource provider in $Resources variable. 
+Excel Sheet Name: MariaDB
 
 .Link
-https://github.com/microsoft/ARI/Modules/Data/POSTGRE.ps1
+https://github.com/microsoft/ARI/Modules/Data/MariaDB.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.2
+Version: 2.3.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -23,29 +23,20 @@ Authors: Claudio Merola and Renato Gregio
 
 param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
 
-
-
 If ($Task -eq 'Processing') {
 
-    $POSTGRE = $Resources | Where-Object { $_.TYPE -eq 'microsoft.dbforpostgresql/flexibleservers' }
+    $MariaDB = $Resources | Where-Object { $_.TYPE -eq 'microsoft.dbformariadb/servers' }
 
-    if($POSTGRE)
-        {          
+    if($MariaDB)
+        {
             $tmp = @()
 
-            foreach ($1 in $POSTGRE) {
+            foreach ($1 in $MariaDB) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $sku = $1.SKU
-
-                if ($data.highAvailability.mode -eq "ZoneRedundant") {
-                    $HA = "Zone Redundant"
-                } else {
-                    $HA = "No Zone"
-                }
-
                 if(!$data.privateEndpointConnections){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
+                $sku = $1.SKU
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
@@ -54,12 +45,11 @@ If ($Task -eq 'Processing') {
                             'Resource Group'            = $1.RESOURCEGROUP;
                             'Name'                      = $1.NAME;
                             'Location'                  = $1.LOCATION;
-                            'Zones'                     = $HA;
                             'SKU'                       = $sku.name;
                             'SKU Family'                = $sku.family;
                             'Tier'                      = $sku.tier;
                             'Capacity'                  = $sku.capacity;
-                            'Postgre Version'           = $data.version;
+                            'MariaDB Version'           = $data.version;
                             'Private Endpoint'          = $PVTENDP;
                             'Backup Retention Days'     = $data.storageProfile.backupRetentionDays;
                             'Geo-Redundant Backup'      = $data.storageProfile.geoRedundantBackup;
@@ -80,21 +70,20 @@ If ($Task -eq 'Processing') {
                         }
                         $tmp += $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
-                    }                
+                    }               
             }
             $tmp
         }
-
 }
 <######## Resource Excel Reporting Begins Here ########>
 
 Else {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if ($SmaResources.POSTGREFlex) {
+    if ($SmaResources.MariaDB) {
 
-        $TableName = ('POSTGRETableFlex_'+($SmaResources.POSTGREFlex.id | Select-Object -Unique).count)
-        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
+        $TableName = ('MariaDBTable_'+($SmaResources.MariaDB.id | Select-Object -Unique).count)
+        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0.0
 
         $condtxt = @()
         $condtxt += New-ConditionalText FALSE -Range J:J
@@ -104,18 +93,16 @@ Else {
         $condtxt += New-ConditionalText TLSEnforcementDisabled -Range R:R
         $condtxt += New-ConditionalText Disabled -Range W:W
 
-
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
-        $Exc.Add('Zones')
         $Exc.Add('SKU')
         $Exc.Add('SKU Family')
         $Exc.Add('Tier')
         $Exc.Add('Capacity')
-        $Exc.Add('Postgre Version')
+        $Exc.Add('MariaDB Version')
         $Exc.Add('Private Endpoint')
         $Exc.Add('Backup Retention Days')
         $Exc.Add('Geo-Redundant Backup')
@@ -136,11 +123,11 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.POSTGREFlex 
+        $ExcelVar = $SmaResources.MariaDB
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'PostgreSQLFlex' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'MariaDB' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }
     <######## Insert Column comments and documentations here following this model #########>

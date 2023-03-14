@@ -3,7 +3,7 @@
 Inventory for Azure Database for Postgre
 
 .DESCRIPTION
-This script consolidates information for all microsoft.dbforpostgresql/flexibleservers resource provider in $Resources variable. 
+This script consolidates information for all microsoft.dbforpostgresql/servers resource provider in $Resources variable. 
 Excel Sheet Name: POSTGRE
 
 .Link
@@ -23,14 +23,14 @@ Authors: Claudio Merola and Renato Gregio
 
 param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
 
-
-
 If ($Task -eq 'Processing') {
 
-    $POSTGRE = $Resources | Where-Object { $_.TYPE -eq 'microsoft.dbforpostgresql/flexibleservers' }
+    $POSTGRE = $Resources | Where-Object { $_.TYPE -eq 'microsoft.dbforpostgresql/servers' }
+
+    
 
     if($POSTGRE)
-        {          
+        {
             $tmp = @()
 
             foreach ($1 in $POSTGRE) {
@@ -38,14 +38,16 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
-
-                if ($data.highAvailability.mode -eq "ZoneRedundant") {
-                    $HA = "Zone Redundant"
-                } else {
-                    $HA = "No Zone"
-                }
-
                 if(!$data.privateEndpointConnections){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
+
+                $Zones = if($data.highAvailability.mode -eq 'ZoneRedundant') {'Zonal Enable'} else {'No Zone'}
+
+                
+                $Zones | Out-File -FilePath ./Zones.txt
+                $data.highAvailability.mode | Out-File -FilePath ./mode.txt
+                
+
+
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
@@ -54,7 +56,7 @@ If ($Task -eq 'Processing') {
                             'Resource Group'            = $1.RESOURCEGROUP;
                             'Name'                      = $1.NAME;
                             'Location'                  = $1.LOCATION;
-                            'Zones'                     = $HA;
+                            'Zones'                     = $Zones;
                             'SKU'                       = $sku.name;
                             'SKU Family'                = $sku.family;
                             'Tier'                      = $sku.tier;
@@ -84,16 +86,15 @@ If ($Task -eq 'Processing') {
             }
             $tmp
         }
-
 }
 <######## Resource Excel Reporting Begins Here ########>
 
 Else {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if ($SmaResources.POSTGREFlex) {
+    if ($SmaResources.POSTGRE) {
 
-        $TableName = ('POSTGRETableFlex_'+($SmaResources.POSTGREFlex.id | Select-Object -Unique).count)
+        $TableName = ('POSTGRETable_'+($SmaResources.POSTGRE.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -136,11 +137,11 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.POSTGREFlex 
+        $ExcelVar = $SmaResources.POSTGRE 
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'PostgreSQLFlex' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'PostgreSQL' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }
     <######## Insert Column comments and documentations here following this model #########>

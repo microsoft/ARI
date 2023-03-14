@@ -1,13 +1,13 @@
 <#
 .Synopsis
-Inventory for Azure Database for Postgre
+Inventory for Azure Database for MySQL
 
 .DESCRIPTION
-This script consolidates information for all microsoft.dbforpostgresql/flexibleservers resource provider in $Resources variable. 
-Excel Sheet Name: POSTGRE
+This script consolidates information for all microsoft.dbformysql/servers resource provider in $Resources variable. 
+Excel Sheet Name: MySQL
 
 .Link
-https://github.com/microsoft/ARI/Modules/Data/POSTGRE.ps1
+https://github.com/microsoft/ARI/Modules/Data/MySQL.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
@@ -23,29 +23,24 @@ Authors: Claudio Merola and Renato Gregio
 
 param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
 
-
-
 If ($Task -eq 'Processing') {
 
-    $POSTGRE = $Resources | Where-Object { $_.TYPE -eq 'microsoft.dbforpostgresql/flexibleservers' }
+    $MySQL = $Resources | Where-Object { $_.TYPE -eq 'microsoft.dbformysql/flexibleservers' }
 
-    if($POSTGRE)
-        {          
+    if($MySQL)
+        {
             $tmp = @()
 
-            foreach ($1 in $POSTGRE) {
+            foreach ($1 in $MySQL) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $sku = $1.SKU
 
-                if ($data.highAvailability.mode -eq "ZoneRedundant") {
-                    $HA = "Zone Redundant"
-                } else {
-                    $HA = "No Zone"
-                }
+                $HA = if(![string]::IsNullOrEmpty($data.highAvailability)){$data.highAvailability.mode}else{'N/A'}
+
 
                 if(!$data.privateEndpointConnections){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
+                $sku = $1.SKU
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
@@ -59,7 +54,7 @@ If ($Task -eq 'Processing') {
                             'SKU Family'                = $sku.family;
                             'Tier'                      = $sku.tier;
                             'Capacity'                  = $sku.capacity;
-                            'Postgre Version'           = $data.version;
+                            'MySQL Version'             = "=$($data.version)";
                             'Private Endpoint'          = $PVTENDP;
                             'Backup Retention Days'     = $data.storageProfile.backupRetentionDays;
                             'Geo-Redundant Backup'      = $data.storageProfile.geoRedundantBackup;
@@ -68,7 +63,7 @@ If ($Task -eq 'Processing') {
                             'Public Network Access'     = $data.publicNetworkAccess;
                             'Admin Login'               = $data.administratorLogin;
                             'Infrastructure Encryption' = $data.InfrastructureEncryption;
-                            'Minimum TLS Version'       = "$($data.minimalTlsVersion -Replace '_', '.' -Replace 'tls', 'TLS')";
+                            'Minimum TLS Version'       = "$($data.minimalTlsVersion -Replace '_', '.' -Replace 'tls', 'TLS ')";
                             'State'                     = $data.userVisibleState;
                             'Replica Capacity'          = $data.replicaCapacity;
                             'Replication Role'          = $data.replicationRole;
@@ -80,21 +75,20 @@ If ($Task -eq 'Processing') {
                         }
                         $tmp += $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
-                    }                
+                    }               
             }
             $tmp
         }
-
 }
 <######## Resource Excel Reporting Begins Here ########>
 
 Else {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if ($SmaResources.POSTGREFlex) {
+    if ($SmaResources.MySQLFlex) {
 
-        $TableName = ('POSTGRETableFlex_'+($SmaResources.POSTGREFlex.id | Select-Object -Unique).count)
-        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
+        $TableName = ('MySQLTableFlex_'+($SmaResources.MySQLFlex.id | Select-Object -Unique).count)
+        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0.0
 
         $condtxt = @()
         $condtxt += New-ConditionalText FALSE -Range J:J
@@ -103,7 +97,6 @@ Else {
         $condtxt += New-ConditionalText Enabled -Range O:O
         $condtxt += New-ConditionalText TLSEnforcementDisabled -Range R:R
         $condtxt += New-ConditionalText Disabled -Range W:W
-
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -115,7 +108,7 @@ Else {
         $Exc.Add('SKU Family')
         $Exc.Add('Tier')
         $Exc.Add('Capacity')
-        $Exc.Add('Postgre Version')
+        $Exc.Add('MySQL Version')
         $Exc.Add('Private Endpoint')
         $Exc.Add('Backup Retention Days')
         $Exc.Add('Geo-Redundant Backup')
@@ -136,11 +129,11 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.POSTGREFlex 
+        $ExcelVar = $SmaResources.MySQLFlex
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'PostgreSQLFlex' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'MySQLFlex' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }
     <######## Insert Column comments and documentations here following this model #########>
