@@ -27,18 +27,10 @@ param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableSty
 
 If ($Task -eq 'Processing') {
 
-    
-
     $POSTGRE = $Resources | Where-Object { $_.TYPE -eq 'microsoft.dbforpostgresql/flexibleservers' }
 
-#    Write-Output "=== Start Looping for Processing " | Out-File -Append -FilePath ./ari.log 
-#    Write-Output $POSTGRE | Out-File -Append -FilePath ./ari.log
-
     if($POSTGRE)
-        {
-
-            Write-Output "=== Start Looping for POSTGRE " | Out-File -Append -FilePath  ./ari.log 
-
+        {          
             $tmp = @()
 
             foreach ($1 in $POSTGRE) {
