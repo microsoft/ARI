@@ -23,24 +23,21 @@ Authors: Claudio Merola and Renato Gregio
 
 param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
 
-$dateTime = Get-Date
-Write-Output "Time stamp: $dateTime" | Out-File -Append -FilePath ./ari.log
-Write-Output "=== Starting Module ===" | Out-File -Append -FilePath ./ari.log 
-Write-Output "=== Task === $Task" | Out-File -Append -FilePath ./ari.log 
+
 
 If ($Task -eq 'Processing') {
 
-    Write-Output "=== Task eq Processing" | Out-File -Append -FilePath ./ari.log 
+    
 
     $POSTGRE = $Resources | Where-Object { $_.TYPE -eq 'microsoft.dbforpostgresql/flexibleservers' }
 
-    Write-Output "=== Start Looping for Processing ===" | Out-File -Append -FilePath ./ari.log 
-    Write-Output "=== POSTGRE: $POSTGRE ===" | Out-File -Append -FilePath ./ari.log
+#    Write-Output "=== Start Looping for Processing " | Out-File -Append -FilePath ./ari.log 
+#    Write-Output $POSTGRE | Out-File -Append -FilePath ./ari.log
 
     if($POSTGRE)
         {
 
-            Write-Host "=== Start Looping for POSTGRE ===" | Out-File -FilePath -Append  ./ari.log 
+            Write-Output "=== Start Looping for POSTGRE " | Out-File -Append -FilePath  ./ari.log 
 
             $tmp = @()
 
@@ -49,6 +46,13 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
+
+                if ($data.highAvailability.mode -eq "ZoneRedundant") {
+                    $HA = "Zone Redundant"
+                } else {
+                    $HA = "No Zone"
+                }
+
                 if(!$data.privateEndpointConnections){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
@@ -58,6 +62,7 @@ If ($Task -eq 'Processing') {
                             'Resource Group'            = $1.RESOURCEGROUP;
                             'Name'                      = $1.NAME;
                             'Location'                  = $1.LOCATION;
+                            'Zones'                     = $HA;
                             'SKU'                       = $sku.name;
                             'SKU Family'                = $sku.family;
                             'Tier'                      = $sku.tier;
@@ -87,15 +92,16 @@ If ($Task -eq 'Processing') {
             }
             $tmp
         }
+
 }
 <######## Resource Excel Reporting Begins Here ########>
 
 Else {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if ($SmaResources.POSTGRE) {
+    if ($SmaResources.POSTGREFlex) {
 
-        $TableName = ('POSTGRETable_'+($SmaResources.POSTGRE.id | Select-Object -Unique).count)
+        $TableName = ('POSTGRETable_'+($SmaResources.POSTGREFlex.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -112,6 +118,7 @@ Else {
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
+        $Exc.Add('Zones')
         $Exc.Add('SKU')
         $Exc.Add('SKU Family')
         $Exc.Add('Tier')
@@ -137,11 +144,11 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.POSTGRE 
+        $ExcelVar = $SmaResources.POSTGREFlex 
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'PostgreSQL' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'PostgreSQLFlex' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }
     <######## Insert Column comments and documentations here following this model #########>

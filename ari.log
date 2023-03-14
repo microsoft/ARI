@@ -1,12 +1,63 @@
-Time stamp: 03/14/2023 13:23:22
-=== Starting Module ===
-=== Task === Reporting
-Time stamp: 03/14/2023 13:24:02
-=== Starting Module ===
-=== Task === Processing
-=== Task eq Processing
-=== Start Looping for Processing ===
-=== POSTGRE: @{extendedlocation=; id=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/10-ari/providers/microsoft.dbforpostgresql/flexibleservers/smi15postgr; identity=; kind=; location=eastasia; managedby=; name=smi15postgr; plan=; properties=; resourcegroup=10-ari; sku=; subscriptionid=0c405f85-9068-46a6-b1c7-766b17bbd69a; tenantid=a7605e62-7543-4826-bff6-1a85e0138e3c; type=microsoft.dbforpostgresql/flexibleservers; zones=} ===
-Time stamp: 03/14/2023 13:24:04
-=== Starting Module ===
-=== Task === Reporting
+Time stamp: 03/14/2023 21:42:00
+=== Starting Module 
+=== Task Processing
+Time stamp: 03/14/2023 21:42:01
+=== Starting Module 
+=== Task Reporting
+Time stamp: 03/14/2023 21:43:17
+=== Starting Module 
+=== Task Processing
+=== Start Looping for POSTGRE 
+Time stamp: 03/14/2023 21:43:19
+=== Starting Module 
+=== Task Reporting
+Time stamp: 03/14/2023 21:45:06
+=== Starting Module 
+=== Task Processing
+=== Start Looping for POSTGRE 
+Time stamp: 03/14/2023 21:45:07
+=== Starting Module 
+=== Task Reporting
+Time stamp: 03/14/2023 21:45:59
+=== Starting Module 
+=== Task Processing
+=== Start Looping for POSTGRE 
+Time stamp: 03/14/2023 21:46:00
+=== Starting Module 
+=== Task Reporting
+Time stamp: 03/14/2023 21:47:06
+=== Starting Module 
+=== Task Processing
+=== Start Looping for POSTGRE 
+Time stamp: 03/14/2023 21:47:08
+=== Starting Module 
+=== Task Reporting
+Time stamp: 03/14/2023 21:48:25
+=== Starting Module 
+=== Task Processing
+=== Start Looping for POSTGRE 
+Time stamp: 03/14/2023 21:48:27
+=== Starting Module 
+=== Task Reporting
+Time stamp: 03/14/2023 21:53:09
+=== Starting Module 
+=== Task Processing
+=== Start Looping for POSTGRE 
+Time stamp: 03/14/2023 21:53:10
+=== Starting Module 
+=== Task Reporting
+Time stamp: 03/14/2023 21:54:02
+=== Starting Module 
+=== Task Processing
+=== Start Looping for POSTGRE 
+Time stamp: 03/14/2023 21:54:03
+=== Starting Module 
+=== Task Reporting
+Time stamp: 03/14/2023 21:55:52
+=== Starting Module 
+=== Task Processing
+=== Start Looping for POSTGRE 
+Time stamp: 03/14/2023 21:55:53
+=== Starting Module 
+=== Task Reporting
+=== Start Looping for POSTGRE 

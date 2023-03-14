@@ -1,3 +1,306 @@
 Time stamp: 03/14/2023 13:20:00
 === Starting Module ===
 === Task === Reporting
+  
+Processing 
+  
+Processing 
+SQLDB before
+  
+SQLDB after 
+Processing 
+SQLDB before
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : eastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t08:35:56.7170000z; currentserviceobjectivename=s0; currentsku=; databaseid=a3bdf55a-c702-4d4e-8140-96b100ff0856; defaultsecondarylocation=southeastasia; earliestrestoredate=2023-03-06t19:50:02.1079998z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; secondarytype=geo; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : southeastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t03:44:23.1330000z; currentserviceobjectivename=s0; currentsku=; databaseid=9d45758b-5f36-4026-9e41-4cb995f19590; defaultsecondarylocation=eastasia; earliestrestoredate=2023-03-06t19:50:01.6577589z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+
+SQLDB after 
+Processing 
+SQLDB before
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : eastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t08:35:56.7170000z; currentserviceobjectivename=s0; currentsku=; databaseid=a3bdf55a-c702-4d4e-8140-96b100ff0856; defaultsecondarylocation=southeastasia; earliestrestoredate=2023-03-06t19:50:02.1079998z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; secondarytype=geo; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : southeastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t03:44:23.1330000z; currentserviceobjectivename=s0; currentsku=; databaseid=9d45758b-5f36-4026-9e41-4cb995f19590; defaultsecondarylocation=eastasia; earliestrestoredate=2023-03-06t19:50:01.6577589z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+
+SQLDB after 
+Processing 
+SQLDB before
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : eastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t08:35:56.7170000z; currentserviceobjectivename=s0; currentsku=; databaseid=a3bdf55a-c702-4d4e-8140-96b100ff0856; defaultsecondarylocation=southeastasia; earliestrestoredate=2023-03-06t19:50:02.1079998z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; secondarytype=geo; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : southeastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t03:44:23.1330000z; currentserviceobjectivename=s0; currentsku=; databaseid=9d45758b-5f36-4026-9e41-4cb995f19590; defaultsecondarylocation=eastasia; earliestrestoredate=2023-03-06t19:50:01.6577589z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+
+SQLDB after 
+Processing 
+SQLDB before
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : eastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t08:35:56.7170000z; currentserviceobjectivename=s0; currentsku=; databaseid=a3bdf55a-c702-4d4e-8140-96b100ff0856; defaultsecondarylocation=southeastasia; earliestrestoredate=2023-03-06t19:50:02.1079998z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; secondarytype=geo; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : southeastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t03:44:23.1330000z; currentserviceobjectivename=s0; currentsku=; databaseid=9d45758b-5f36-4026-9e41-4cb995f19590; defaultsecondarylocation=eastasia; earliestrestoredate=2023-03-06t19:50:01.6577589z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+
+SQLDB after 
+Processing 
+SQLDB before
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : eastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t08:35:56.7170000z; currentserviceobjectivename=s0; currentsku=; databaseid=a3bdf55a-c702-4d4e-8140-96b100ff0856; defaultsecondarylocation=southeastasia; earliestrestoredate=2023-03-06t19:50:02.1079998z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; secondarytype=geo; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : southeastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t03:44:23.1330000z; currentserviceobjectivename=s0; currentsku=; databaseid=9d45758b-5f36-4026-9e41-4cb995f19590; defaultsecondarylocation=eastasia; earliestrestoredate=2023-03-06t19:50:01.6577589z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+
+SQLDB after 
+Processing 
+SQLDB before
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : eastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t08:35:56.7170000z; currentserviceobjectivename=s0; currentsku=; databaseid=a3bdf55a-c702-4d4e-8140-96b100ff0856; defaultsecondarylocation=southeastasia; earliestrestoredate=2023-03-06t19:50:02.1079998z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; secondarytype=geo; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : southeastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t03:44:23.1330000z; currentserviceobjectivename=s0; currentsku=; databaseid=9d45758b-5f36-4026-9e41-4cb995f19590; defaultsecondarylocation=eastasia; earliestrestoredate=2023-03-06t19:50:01.6577589z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+
+SQLDB after 
+Processing 
+SQLDB before
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : eastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t08:35:56.7170000z; currentserviceobjectivename=s0; currentsku=; databaseid=a3bdf55a-c702-4d4e-8140-96b100ff0856; defaultsecondarylocation=southeastasia; earliestrestoredate=2023-03-06t19:50:02.1079998z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; secondarytype=geo; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : southeastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t03:44:23.1330000z; currentserviceobjectivename=s0; currentsku=; databaseid=9d45758b-5f36-4026-9e41-4cb995f19590; defaultsecondarylocation=eastasia; earliestrestoredate=2023-03-06t19:50:01.6577589z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+
+SQLDB after 
+Processing 
+SQLDB before
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : eastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t08:35:56.7170000z; currentserviceobjectivename=s0; currentsku=; databaseid=a3bdf55a-c702-4d4e-8140-96b100ff0856; defaultsecondarylocation=southeastasia; earliestrestoredate=2023-03-06t19:50:02.1079998z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; secondarytype=geo; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+extendedlocation : 
+id               : /subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/databases/smi15sqlseadb
+identity         : 
+kind             : v12.0,user
+location         : southeastasia
+managedby        : 
+name             : smi15sqlseadb
+plan             : 
+properties       : @{catalogcollation=sql_latin1_general_cp1_ci_as; collation=sql_latin1_general_cp1_ci_as; creationdate=2023-02-14t03:44:23.1330000z; currentserviceobjectivename=s0; currentsku=; databaseid=9d45758b-5f36-4026-9e41-4cb995f19590; defaultsecondarylocation=eastasia; earliestrestoredate=2023-03-06t19:50:01.6577589z; failovergroupid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/2023-02-dr-sea/providers/microsoft.sql/servers/smi15sqlsea/failovergroups/smi15sql; maintenanceconfigurationid=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/providers/microsoft.maintenance/publicmaintenanceconfigurations/sql_default; maxsizebytes=32212254720; readscale=disabled; requestedserviceobjectivename=s0; status=online; storageaccounttype=lrs; zoneredundant=False}
+resourcegroup    : 2023-02-dr-sea
+sku              : @{capacity=10; name=standard; tier=standard}
+subscriptionid   : 0c405f85-9068-46a6-b1c7-766b17bbd69a
+tenantid         : a7605e62-7543-4826-bff6-1a85e0138e3c
+type             : microsoft.sql/servers/databases
+zones            : 
+
+
+SQLDB after 

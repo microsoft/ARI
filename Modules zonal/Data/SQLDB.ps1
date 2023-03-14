@@ -27,10 +27,13 @@ param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableSty
 
 if ($Task -eq 'Processing') {
 
-    $SQLDB = $Resources | Where-Object { $_.TYPE -eq 'microsoft.sql/servers/databases' -and $_.name -ne 'master' }
+       $SQLDB = $Resources | Where-Object { $_.TYPE -eq 'microsoft.sql/servers/databases' -and $_.name -ne 'master' }
+
+
 
     if($SQLDB)
         {
+   
             $tmp = @()
 
             foreach ($1 in $SQLDB) {
