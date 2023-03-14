@@ -27,6 +27,8 @@ If ($Task -eq 'Processing') {
 
     $POSTGRE = $Resources | Where-Object { $_.TYPE -eq 'microsoft.dbforpostgresql/servers' }
 
+    
+
     if($POSTGRE)
         {
             $tmp = @()
@@ -37,6 +39,15 @@ If ($Task -eq 'Processing') {
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
                 if(!$data.privateEndpointConnections){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
+
+                $Zones = if($data.highAvailability.mode -eq 'ZoneRedundant') {'Zonal Enable'} else {'No Zone'}
+
+                
+                $Zones | Out-File -FilePath ./Zones.txt
+                $data.highAvailability.mode | Out-File -FilePath ./mode.txt
+                
+
+
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
@@ -45,6 +56,7 @@ If ($Task -eq 'Processing') {
                             'Resource Group'            = $1.RESOURCEGROUP;
                             'Name'                      = $1.NAME;
                             'Location'                  = $1.LOCATION;
+                            'Zones'                     = $Zones;
                             'SKU'                       = $sku.name;
                             'SKU Family'                = $sku.family;
                             'Tier'                      = $sku.tier;
@@ -99,6 +111,7 @@ Else {
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
+        $Exc.Add('Zones')
         $Exc.Add('SKU')
         $Exc.Add('SKU Family')
         $Exc.Add('Tier')

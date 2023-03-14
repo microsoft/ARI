@@ -1,0 +1,12 @@
+Time stamp: 03/14/2023 13:23:22
+=== Starting Module ===
+=== Task === Reporting
+Time stamp: 03/14/2023 13:24:02
+=== Starting Module ===
+=== Task === Processing
+=== Task eq Processing
+=== Start Looping for Processing ===
+=== POSTGRE: @{extendedlocation=; id=/subscriptions/0c405f85-9068-46a6-b1c7-766b17bbd69a/resourcegroups/10-ari/providers/microsoft.dbforpostgresql/flexibleservers/smi15postgr; identity=; kind=; location=eastasia; managedby=; name=smi15postgr; plan=; properties=; resourcegroup=10-ari; sku=; subscriptionid=0c405f85-9068-46a6-b1c7-766b17bbd69a; tenantid=a7605e62-7543-4826-bff6-1a85e0138e3c; type=microsoft.dbforpostgresql/flexibleservers; zones=} ===
+Time stamp: 03/14/2023 13:24:04
+=== Starting Module ===
+=== Task === Reporting
