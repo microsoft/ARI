@@ -44,7 +44,7 @@ If ($Task -eq 'Processing') {
                                     'Resource Group'                               = $1.RESOURCEGROUP;
                                     'Name'                                         = $1.NAME;
                                     'Location'                                     = $1.LOCATION;
-                                    'Zone'                                         = $1.ZONES;
+                                  #  'Zone'                                         = $1.ZONES;
                                     'Address Space'                                = $2;
                                     'Enable DDOS Protection'                       = $data.enableDdosProtection;
                                     'Subnet Name'                                  = $3.name;
@@ -82,7 +82,7 @@ Else {
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
-        $Exc.Add('Zone')
+      #  $Exc.Add('Zone')
         $Exc.Add('Address Space')
         $Exc.Add('Enable DDOS Protection')
         $Exc.Add('Subnet Name')
