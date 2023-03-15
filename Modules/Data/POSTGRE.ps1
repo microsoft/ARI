@@ -42,12 +42,6 @@ If ($Task -eq 'Processing') {
 
                 $Zones = if($data.highAvailability.mode -eq 'ZoneRedundant') {'Zonal Enable'} else {'No Zone'}
 
-                
-                $Zones | Out-File -FilePath ./Zones.txt
-                $data.highAvailability.mode | Out-File -FilePath ./mode.txt
-                
-
-
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
