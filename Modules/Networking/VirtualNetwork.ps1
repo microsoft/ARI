@@ -44,6 +44,7 @@ If ($Task -eq 'Processing') {
                                     'Resource Group'                               = $1.RESOURCEGROUP;
                                     'Name'                                         = $1.NAME;
                                     'Location'                                     = $1.LOCATION;
+                                  # VNET already zone aware  
                                   #  'Zone'                                         = $1.ZONES;
                                     'Address Space'                                = $2;
                                     'Enable DDOS Protection'                       = $data.enableDdosProtection;
