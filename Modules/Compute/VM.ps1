@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VM.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.3.3
+Version: 2.3.4
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -189,21 +189,21 @@ else
                     }
 
                 #Hybrid Benefit
-                $cond += New-ConditionalText None -Range K:K
+                $cond += New-ConditionalText None -Range M:M
                 #NSG
-                $cond += New-ConditionalText None -Range AA:AA
+                $cond += New-ConditionalText None -Range AC:AC
                 #Boot Diagnostics
-                $cond += New-ConditionalText falso -Range N:N
-                $cond += New-ConditionalText false -Range N:N
-                #Performance Agent
-                $cond += New-ConditionalText falso -Range O:O
-                $cond += New-ConditionalText false -Range O:O
-                #Azure Monitor
                 $cond += New-ConditionalText falso -Range P:P
                 $cond += New-ConditionalText false -Range P:P
+                #Performance Agent
+                $cond += New-ConditionalText falso -Range Q:Q
+                $cond += New-ConditionalText false -Range Q:Q
+                #Azure Monitor
+                $cond += New-ConditionalText falso -Range R:R
+                $cond += New-ConditionalText false -Range R:R
                 #Acelerated Network
-                $cond += New-ConditionalText false -Range AC:AC
-                $cond += New-ConditionalText falso -Range AC:AC  
+                $cond += New-ConditionalText false -Range AE:AE
+                $cond += New-ConditionalText falso -Range AE:AE  
     
                 $Exc = New-Object System.Collections.Generic.List[System.Object]
                 $Exc.Add('Subscription')
@@ -257,16 +257,16 @@ else
 
                 $excel = Open-ExcelPackage -Path $File -KillExcel
     
-                $null = $excel.'Virtual Machines'.Cells["N1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
-                $excel.'Virtual Machines'.Cells["N1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
-                $null = $excel.'Virtual Machines'.Cells["O1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
-                $excel.'Virtual Machines'.Cells["O1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
-                $null = $excel.'Virtual Machines'.Cells["P1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource’s health.", "Azure Resource Inventory")
-                $excel.'Virtual Machines'.Cells["P1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
-                $null = $excel.'Virtual Machines'.Cells["AA1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
-                $excel.'Virtual Machines'.Cells["AA1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
-                $null = $excel.'Virtual Machines'.Cells["AC1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
-                $excel.'Virtual Machines'.Cells["AC1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
+                $null = $excel.'Virtual Machines'.Cells["P1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["P1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
+                $null = $excel.'Virtual Machines'.Cells["Q1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["Q1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
+                $null = $excel.'Virtual Machines'.Cells["R1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource’s health.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["R1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
+                $null = $excel.'Virtual Machines'.Cells["AC1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["AC1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
+                $null = $excel.'Virtual Machines'.Cells["AE1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["AE1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
 
             Close-ExcelPackage $excel
         }             

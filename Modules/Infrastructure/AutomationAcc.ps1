@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Infrastructure/AutomationAcc.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 2.4.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -58,7 +58,6 @@ If ($Task -eq 'Processing')
                                     'Runbook State'            = $data.state;
                                     'Runbook Type'             = $data.runbookType;
                                     'Runbook Description'      = $data.description;
-                                    'Job Count'                = $data.jobCount;
                                     'Resource U'               = $ResUCount;
                                     'Tag Name'                 = [string]$Tag.Name;
                                     'Tag Value'                = [string]$Tag.Value
@@ -83,7 +82,6 @@ If ($Task -eq 'Processing')
                                 'Runbook State'            = $null;
                                 'Runbook Type'             = $null;
                                 'Runbook Description'      = $null;
-                                'Job Count'                = $null;
                                 'Resource U'               = $ResUCount;
                                 'Tag Name'                 = [string]$Tag.Name;
                                 'Tag Value'                = [string]$Tag.Value
@@ -124,7 +122,6 @@ Else
         $Exc.Add('Runbook State')
         $Exc.Add('Runbook Type')
         $Exc.Add('Runbook Description')
-        $Exc.Add('Job Count')
         if($InTag)
             {
                 $Exc.Add('Tag Name')
