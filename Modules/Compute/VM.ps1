@@ -30,6 +30,17 @@ If ($Task -eq 'Processing')
         $nic = $Resources | Where-Object {$_.TYPE -eq 'microsoft.network/networkinterfaces'}
         $vmexp = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachines/extensions'}
         $disk = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/disks'}
+        $vmsizemap = @{}
+        foreach($location in ($vm | Select-Object -ExpandProperty location -Unique))
+            {
+                foreach ($vmsize in ( az vm list-sizes -l $location | ConvertFrom-Json))
+                    {
+                        $vmsizemap[$vmsize.name] = @{
+                            CPU = $vmSize.numberOfCores
+                            RAM = [math]::Round($vmSize.memoryInMB / 1024, 0) 
+                        }
+                    }
+            }
 
     if($vm)
         {    
@@ -49,6 +60,13 @@ If ($Task -eq 'Processing')
                     $ext = @()
                     $AzDiag = ''
                     $Azinsights = ''
+                    $Lic = switch ($data.licenseType) {
+                        'Windows_Server' { 'Azure Hybrid Benefit for Windows' }
+                        'Windows_Client' { 'Windows client with multi-tenant hosting' }
+                        'RHEL_BYOS' { 'Azure Hybrid Benefit for Redhat' }
+                        'SLES_BYOS' { 'Azure Hybrid Benefit for SUSE' }
+                        default { $data.licenseType }
+                    }
                     $Lic = if($data.licensetype){$data.licensetype}else{'None'}
                     $ext = ($vmexp | Where-Object { ($_.id -split "/")[8] -eq $1.name }).properties.Publisher
                     if ($null -ne $ext) 
@@ -112,6 +130,8 @@ If ($Task -eq 'Processing')
                                 'Zone'                          = [string]$1.ZONES;
                                 'Availability Set'              = $AVSET;
                                 'VM Size'                       = $data.hardwareProfile.vmSize;
+                                'vCPUs'                         = $vmsizemap[$data.hardwareProfile.vmSize].CPU;
+                                'RAM (GiB)'                     = $vmsizemap[$data.hardwareProfile.vmSize].RAM;
                                 'Image Reference'               = $data.storageProfile.imageReference.publisher;
                                 'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
                                 'Hybrid Benefit'                = $Lic;
@@ -189,7 +209,9 @@ else
                 $Exc.Add('Subscription')
                 $Exc.Add('Resource Group')
                 $Exc.Add('VM Name')
-                $Exc.Add('VM Size')                
+                $Exc.Add('VM Size')
+                $Exc.Add('vCPUs')
+                $Exc.Add('RAM (GiB)')
                 $Exc.Add('Location')
                 $Exc.Add('OS Type')
                 $Exc.Add('OS Name')
