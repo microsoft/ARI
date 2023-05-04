@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/PublicIP.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.1
+Version: 3.0.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -36,6 +36,8 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 if (!($data.ipConfiguration.id)) { $Use = 'Underutilized' } else { $Use = 'Utilized' }
+                if (!($data.natGateway.id) -and $Use -eq 'Underutilized') { $Use = 'Underutilized' } else { $Use = 'Utilized' }
+                
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 if ($null -ne $data.ipConfiguration.id) {
                     foreach ($Tag in $Tags) { 
