@@ -112,15 +112,8 @@ If can also select which Tenant do you want to run the inventory against:
 
 <br/>
 
-To also create the Draw.io XML file of the environment topology is necessary to run the script with the "-Diagram" parameter:
 
-<br/>
-
-![Diagram Parameter](images/DiagramParameter.png)
-
-<br/>
-
-This parameter will create an .XML file in the "C:\AzureResourceInventory" folder:
+Draw.io .XML file will be put in the "C:\AzureResourceInventory" folder:
 
 <br/>
 

@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Infrastructure/StorageAcc.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.1
+Version: 3.0.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio
 
@@ -39,6 +39,7 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $TLSv = if ($data.minimumTlsVersion -eq 'TLS1_2') { "TLS 1.2" }elseif ($data.minimumTlsVersion -eq 'TLS1_1') { "TLS 1.1" }else { "TLS 1.0" }
+                $PvtEnd = [string]$data.privateEndpointConnections.count
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
@@ -54,6 +55,7 @@ If ($Task -eq 'Processing') {
                             'Allow Blob Public Access'              = if ($data.allowBlobPublicAccess -eq $false) { $false }else { $true };
                             'Minimum TLS Version'                   = $TLSv;
                             'Identity-based access for file shares' = if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None') { $false }elseif ($null -eq $data.azureFilesIdentityBasedAuthentication.directoryServiceOptions) { $false }else { $true };
+                            'Private Endpoints'                     = $PvtEnd;
                             'Access Tier'                           = $data.accessTier;
                             'Primary Location'                      = $data.primaryLocation;
                             'Status Of Primary'                     = $data.statusOfPrimary;
@@ -105,6 +107,7 @@ Else {
         $Exc.Add('Allow Blob Public Access')
         $Exc.Add('Minimum TLS Version')
         $Exc.Add('Identity-based access for file shares')
+        $Exc.Add('Private Endpoints')
         $Exc.Add('Access Tier')
         $Exc.Add('Primary Location')
         $Exc.Add('Status Of Primary')

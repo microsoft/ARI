@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Extras/Charts.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.3.1
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -97,7 +97,7 @@ Select-Object -Unique 'Name',
 
 $Date = (get-date -Format "MM/dd/yyyy")
 
-$ExtractTime = ($ExtractionRunTime.Totalminutes.ToString('#######.##')+' Minutes')
+$ExtractTime = if($ExtractionRunTime.Totalminutes -lt 1){($ExtractionRunTime.Seconds.ToString()+' Seconds')}else{($ExtractionRunTime.Totalminutes.ToString('#######.##')+' Minutes')}
 $ReportTime = ($ReportingRunTime.Totalminutes.ToString('#######.##')+' Minutes')
 
 $User = $Subscriptions[0].user.name
@@ -178,7 +178,7 @@ $Draw.SetSize(445, 240)
 $Draw.SetPosition(1, 0, 2, 5)
 
 
-$txt = $Draw.RichText.Add('Azure Resource Inventory v2.3' + "`n")
+$txt = $Draw.RichText.Add('Azure Resource Inventory v3.0' + "`n")
 $txt.Size = 14
 $txt.ComplexFont = $Font
 $txt.LatinFont = $Font

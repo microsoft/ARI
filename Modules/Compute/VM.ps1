@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VM.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.3.4
+Version: 3.0.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -157,8 +157,8 @@ If ($Task -eq 'Processing')
                                 'NSG'                           = $vmnsg;
                                 'Accelerated Networking'        = [string]$vmnic.properties.enableAcceleratedNetworking;
                                 'IP Forwarding'                 = [string]$vmnic.properties.enableIPForwarding;
-                                'Private IP Address'            = $vmnic.properties.ipConfigurations.properties.privateIPAddress;
-                                'Private IP Allocation'         = $vmnic.properties.ipConfigurations.properties.privateIPAllocationMethod;
+                                'Private IP Address'            = [string]$vmnic.properties.ipConfigurations.properties.privateIPAddress;
+                                'Private IP Allocation'         = [string]$vmnic.properties.ipConfigurations.properties.privateIPAllocationMethod;
                                 'VM Extensions'                 = $ext;
                                 'Resource U'                    = $ResUCount;
                                 'Tag Name'                      = [string]$Tag.Name;
@@ -179,7 +179,7 @@ else
         {
             $TableName = ('VMTable_'+($SmaResources.VM.id | Select-Object -Unique).count)
             $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
-            $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AH:AH -Width 60 -WrapText 
+            $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AJ:AJ -Width 60 -WrapText 
 
                 $cond = @()
                 Foreach ($UnSupOS in $Unsupported.Linux)

@@ -4,8 +4,9 @@
 
 <br/>
 
+# Azure Resource Inventory Automation Account v3
 
-# Azure Resource Inventory Automation Account v2.1
+<br/>
 
 <br/>
 
@@ -13,7 +14,11 @@ This section explain how to create an Automation Account to run Azure Resource I
 
 <br/>
 
+<br/>
+
 ## What is required to run ARI as an Automation Account?
+
+<br/>
 
 <br/>
 
@@ -23,9 +28,13 @@ This section explain how to create an Automation Account to run Azure Resource I
 
 <br/>
 
+<br/>
+
 Once you have created the Automation Account, Storage Account and Blob Container. 
 
 ## Those are the steps you have to do:
+
+<br/>
 
 <br/>
 
@@ -33,9 +42,13 @@ Once you have created the Automation Account, Storage Account and Blob Container
 
 <br/>
 
+<br/>
+
 <p align="center">
 <img src="images/ARIAUT_Identity.png">
 </p>
+
+<br/>
 
 <br/>
 
@@ -47,38 +60,39 @@ Once you have created the Automation Account, Storage Account and Blob Container
 
 <br/>
 
+<br/>
+
 <p align="center">
-<img src="images/ARIAUT_TenantRole.png">
+<img src="images/AUTv3Tenant.png">
 </p>
 
 <br/>
 
-#### 2) Contributor to the Storage Account Container (for the script to be able to copy the Excel file to the container)
+<br/>
+
+#### 2) Storage Blob Data Contributor to the Storage Account
+
+<br/>
 
 <br/>
 
 <p align="center">
-<img src="images/ARIAUT_StgRole.png">
+<img src="images/AUTv3STGPerm.png">
 </p>
 
 <br/>
 
-#### 3) Storage Blob Data Contributor to the Storage Account
-
 <br/>
 
-<p align="center">
-<img src="images/ARIAUT_StgBlobRole.png">
-</p>
-
-<br/>
-
-### Now, back in the Automation Account, the following Modules need to be imported:
+### Now, back in the Automation Account, the following Modules need to be imported with Runtime __7.2__:
 
 #### 1) "ImportExcel" 
 #### 2) "Az.ResourceGraph" 
 #### 3) "Az.Storage" 
 #### 4) "Az.Account"
+#### 5) "ThreadJob"
+
+<br/>
 
 <br/>
 
@@ -86,29 +100,28 @@ Once you have created the Automation Account, Storage Account and Blob Container
 
 <br/>
 
+<br/>
+
 <p align="center">
-<img src="images/ARIAUT_Modules.png">
+<img src="images/AUTv3Modules.png">
 </p>
 
 <br/>
 
-#### Then search for the modules, click them and click "Import" (wait for the confirmation as it might take some time):
-
 <br/>
 
-<p align="center">
-<img src="images/ARIAUT_ModuleImport.png">
-</p>
-
-<br/>
 
 #### Now just create a Powershell Runbook:
 
 <br/>
 
+<br/>
+
 <p align="center">
-<img src="images/ARIAUT_RunBook.png">
+<img src="images/AUTv3Runbook.png">
 </p>
+
+<br/>
 
 <br/>
 
@@ -116,9 +129,26 @@ Once you have created the Automation Account, Storage Account and Blob Container
 
 <br/>
 
+<br/>
+
 <p align="center">
 <img src="images/ARIAUT_RunBookScript.png">
 </p>
+
+<br/>
+
+<br/>
+
+Remember to change the lines 33 and 36 with your Storage Account and Container name:
+
+<br/>
+
+<br/>
+
+<p align="center">
+<img src="images/AUTv3StorageName.png">
+</p>
+
 
 <br/>
 

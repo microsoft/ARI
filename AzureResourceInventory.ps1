@@ -71,11 +71,13 @@ param ($TenantID,
         [switch]$IncludeTags, 
         [switch]$QuotaUsage, 
         [switch]$Online, 
-        [switch]$Diagram , 
+        [switch]$Diagram,
+        [switch]$SkipDiagram, 
         [switch]$Debug, 
         [switch]$Help, 
         [switch]$DeviceLogin, 
-        $AzureEnvironment, 
+        $AzureEnvironment,
+        [switch]$DiagramFullEnvironment,
         $ReportName = 'AzureResourceInventory', 
         $ReportDir)
 
@@ -157,6 +159,7 @@ param ($TenantID,
 
     Function Variables {
         Write-Debug ('Cleaning default variables')
+        $Global:ResourceContainers = @()
         $Global:Resources = @()
         $Global:Advisories = @()
         $Global:Security = @()
@@ -164,9 +167,32 @@ param ($TenantID,
         $Global:ReportName = $ReportName
 
         if ($Online.IsPresent) { $Global:RunOnline = $true }else { $Global:RunOnline = $false }
+        if ($DiagramFullEnvironment.IsPresent) {$Global:FullEnv = $true}else{$Global:FullEnv = $false}
 
         $Global:Repo = 'https://github.com/microsoft/ARI/tree/main/Modules'
         $Global:RawRepo = 'https://raw.githubusercontent.com/microsoft/ARI/main'
+
+        Write-Debug ('Checking if -Online parameter will have to be forced.')
+        if(!$Online.IsPresent)
+            {
+                if($PSScriptRoot -like '*\*')
+                    {
+                        $LocalFilesValidation = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Subscriptions.ps1')
+                    }
+                else
+                    {
+                        $LocalFilesValidation = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Subscriptions.ps1')
+                    } 
+                if([string]::IsNullOrEmpty($LocalFilesValidation))
+                    {
+                        Write-Debug ('Using -Online by force.')
+                        $Global:RunOnline = $true
+                    }
+                else
+                    {
+                        $Global:RunOnline = $false
+                    }
+                }
 
     }
 
@@ -174,7 +200,6 @@ param ($TenantID,
 
     Function Extractor {
 
-        Write-Debug ('Starting Extractor function')
         Write-Debug ('Starting Extractor function')
         function checkAzCli() {
             Write-Debug ('Starting checkAzCli function')
@@ -347,6 +372,7 @@ param ($TenantID,
                                 }
                         }
                 $Global:DefaultPath = if($ReportDir) {$ReportDir} else {"$HOME/AzureResourceInventory/"}
+                $Global:DiagramCache = if($ReportDir) {$ReportDir} else {"$HOME/AzureResourceInventory/DiagramCache/"}
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
             }
             else
@@ -376,6 +402,7 @@ param ($TenantID,
                                 }
                         }
                     $Global:DefaultPath = if($ReportDir) {$ReportDir} else {"$HOME/AzureResourceInventory/"}
+                    $Global:DiagramCache = if($ReportDir) {$ReportDir} else {"$HOME/AzureResourceInventory/DiagramCache/"}
                     LoginSession
                 }
                 else {
@@ -403,6 +430,7 @@ param ($TenantID,
                                 }
                         }
                     $Global:DefaultPath = if($ReportDir) {$ReportDir} else {"C:\AzureResourceInventory\"}
+                    $Global:DiagramCache = if($ReportDir) {$ReportDir} else {"C:\AzureResourceInventory\DiagramCache\"}
                     LoginSession
                 }
             }
@@ -434,6 +462,9 @@ param ($TenantID,
         Write-Debug ('Checking report folder: ' + $DefaultPath )
         if ((Test-Path -Path $DefaultPath -PathType Container) -eq $false) {
             New-Item -Type Directory -Force -Path $DefaultPath | Out-Null
+        }
+        if ((Test-Path -Path $DiagramCache -PathType Container) -eq $false) {
+            New-Item -Type Directory -Force -Path $DiagramCache | Out-Null
         }
 
         <######################################################## INVENTORY LOOPs #######################################################################>
@@ -559,6 +590,31 @@ param ($TenantID,
                 }
                 Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
             }
+
+        <######################################################### RESOURCE CONTAINER ######################################################################>
+
+            $GraphQuery = "resourcecontainers | summarize count()"
+            $EnvSize = az graph query -q  $GraphQuery --output json --only-show-errors | ConvertFrom-Json
+            $EnvSizeNum = $EnvSize.data.'count_'
+
+            if ($EnvSizeNum -ge 1) {
+                $Loop = $EnvSizeNum / 1000
+                $Loop = [math]::ceiling($Loop)
+                $Looper = 0
+                $Limit = 0
+
+                while ($Looper -lt $Loop) {
+                    $GraphQuery = "resourcecontainers | order by id asc"
+                    $Container = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+
+                    $Global:ResourceContainers += $Container.data
+                    Start-Sleep 2
+                    $Looper ++
+                    Write-Progress -Id 1 -activity "Running Subscription Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                    $Limit = $Limit + 1000
+                }
+            }
+            Write-Progress -Id 1 -activity "Running Subscription Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
 
 
         <######################################################### QUOTA JOB ######################################################################>
@@ -782,12 +838,12 @@ param ($TenantID,
         <######################################################### DRAW.IO DIAGRAM JOB ######################################################################>
 
         Write-Debug ('Checking if Draw.io Diagram Job Should be Run.')
-        if ($Diagram.IsPresent) {
+        if (!$SkipDiagram.IsPresent) {
             Write-Debug ('Starting Draw.io Diagram Processing Job.')
             Start-job -Name 'DrawDiagram' -ScriptBlock {
 
-                If ($($args[5]) -eq $true) {
-                    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[7]) + '/Extras/DrawIODiagram.ps1')
+                If ($($args[8]) -eq $true) {
+                    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[10]) + '/Extras/DrawIODiagram.ps1')
                 }
                 Else {
                     if($($args[0]) -like '*\*')
@@ -805,7 +861,7 @@ param ($TenantID,
                     
                 $ScriptBlock = [Scriptblock]::Create($ModuSeq)
                     
-                $DrawRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2] | ConvertFrom-Json)).AddArgument($($args[3])).AddArgument($($args[4]))
+                $DrawRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2] | ConvertFrom-Json)).AddArgument($($args[3])).AddArgument($($args[4])).AddArgument($($args[5])).AddArgument($($args[6])).AddArgument($($args[7]))
 
                 $DrawJob = $DrawRun.BeginInvoke()
 
@@ -815,7 +871,7 @@ param ($TenantID,
 
                 $DrawRun.Dispose()
 
-            } -ArgumentList $PSScriptRoot, $Subscriptions, ($Resources | ConvertTo-Json -Depth 50), $Advisories, $DDFile, $RunOnline, $Repo, $RawRepo   | Out-Null
+            } -ArgumentList $PSScriptRoot, $Subscriptions, ($Resources | ConvertTo-Json -Depth 50), $Advisories, $DDFile, $DiagramCache, $FullEnv, $ResourceContainers ,$RunOnline, $Repo, $RawRepo   | Out-Null
         }
 
         <######################################################### VISIO DIAGRAM JOB ######################################################################>
@@ -1435,37 +1491,34 @@ param ($TenantID,
         RunMain
     }
 
-    $Global:VisioCheck = Get-ChildItem -Path $DFile -ErrorAction SilentlyContinue
 }
 
 $Measure = $Global:SRuntime.Totalminutes.ToString('#######.##')
 
-Write-Host ('Report Complete. Total Runtime was: ' + $Measure + ' Minutes')
+Write-Host ('Report Complete. Total Runtime was: ') -NoNewline
+Write-Host $Measure -NoNewline -ForegroundColor Cyan
+Write-Host (' Minutes')
 Write-Host ('Total Resources: ') -NoNewline
 write-host $Resources.count -ForegroundColor Cyan
-if (!$SkipAdvisory.IsPresent) {
-Write-Host ('Total Advisories: ') -NoNewline
-write-host $advco -ForegroundColor Cyan
-}
-if ($SecurityCenter.IsPresent) {
-    Write-Host ('Total Security Advisories: ' + $Secadvco)
-}
+if (!$SkipAdvisory.IsPresent) 
+    {
+        Write-Host ('Total Advisories: ') -NoNewline
+        write-host $advco -ForegroundColor Cyan
+    }
+if ($SecurityCenter.IsPresent) 
+    {
+        Write-Host ('Total Security Advisories: ' + $Secadvco)
+    }
 
 Write-Host ''
 Write-Host ('Excel file saved at: ') -NoNewline
 write-host $File -ForegroundColor Cyan
 Write-Host ''
 
-if(($Global:PlatOS -eq 'PowerShell Desktop' -or $Global:PlatOS -eq 'PowerShell Unix') -and $Diagram.IsPresent) {
-    Write-Host ('Draw.io Diagram file saved at: ') -NoNewline
-    write-host $DDFile -ForegroundColor Cyan
-    Write-Host ''
+if(!$SkipDiagram.IsPresent) 
+    {
+        Write-Host ('Draw.io Diagram file saved at: ') -NoNewline
+        write-host $DDFile -ForegroundColor Cyan
+        Write-Host ''
     }
 
-<#
-if ($Diagram.IsPresent -and $Global:VisioCheck) {
-    Write-Host ('Visio file saved at: ') -NoNewline
-    write-host $DFile -ForegroundColor Cyan
-    Write-Host ''
-}
-#>

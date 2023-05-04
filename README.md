@@ -12,10 +12,9 @@ Tags: Powershell, Azure, Inventory, Excel Report, Customer Engineer
 
 <br/>
 
+# Azure Resource Inventory
 
-# Azure Resource Inventory v2.3
-
-Azure Resource inventory (ARI) is a powerful script written in powershell to generate an Excel report of any Azure Environment you have read access. 
+Azure Resource inventory (ARI) is a powerful script written in powershell that generates an Excel report of any Azure Environment you have read access. 
 
 This project is intend to help Cloud Admins and anyone that might need an easy and fast way to build a full Excel Report of an Azure Environment.  
 
@@ -25,8 +24,103 @@ This project is intend to help Cloud Admins and anyone that might need an easy a
 
 <br/>
 
-In Azure Resource Inventory v2.3 we rollback the use of Azure CLI as changing to 100% Powershell based apparently caused more problems than solutions. One of ours initial and main goal was to keep the script as simple and easy to run as possible, and we believe that rollback make sense in that point.
+### Version 3.0 is alive!!
 
+<br/>
+
+Among the many improvements, those are the highlights of the new version:
+
+![Overview](images/ARIv3-Overview.png)
+
+<br/>
+
+#### 1) Support for 6 extra resource types, including NetApp and VMWare Solution.
+
+<br/>
+
+Since the begining of the project, we wanted ARI to evolve and keep pace with the improvements on Azure Resources. Keeping that in mind we are adding extra modules for newer resources.
+
+We also reviewed and updated some of the old resources as well.
+
+<br/>
+
+<br/>
+
+#### 2) Diagram was completely rebuild and now support environments with more than 30.000 resources
+
+<br/>
+
+Network Topology was cool but in large environments it had some problems (i.e.: freezing and never finishing), and even when it finished it might take forever.
+
+We added parallel processing to diagram, now during the execution of ARI, an extra folder (DiagramCache) will be created, that folder is used by the diagram to store temporary components of the diagrams, after all the parallel processing is done those files are merged in the main diagram.
+
+Now diagram will even finish way before the Excel file.
+
+<br/>
+
+<br/>
+
+#### 3) Network Topology in the Diagram now identifies the Hub and Spokes Virtual Network
+
+<br/>
+
+![Draw.IO](images/DrawioImage.png)
+
+<br/>
+
+Tab names were added in the diagram and now the Network Topology is the first tab. 
+
+Also in the Network Topology, we are using color in the diagram to identify the different Virtual Network usages in HUB-Spoke topologies.
+
+Colors will also be used to indicate broken peers.
+
+<br/>
+
+<br/>
+
+#### 4) Diagram now include "Organizational View" (Management Groups)
+
+<br/>
+
+![Draw.IOOrg](images/DrawioOrganization.png)
+
+<br/>
+
+We added extra tabs in the new diagram, the second tab is called "Organization" and will present the hierarquical view of subscriptions in the environment.
+
+The idea is to make easier to align your environment with the Microsoft's Landing Zone design ([What is an Azure landing zone](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/)).
+
+<br/>
+
+<br/>
+
+#### 5) Diagram now include Resource Overview for every subscription in the environment
+
+<br/>
+
+![Draw.IOOrg](images/Drawiosubs.png)
+
+<br/>
+
+Since not everyone have really complex network environments, many people complain about diagram not really presenting much for their environments. 
+
+This change now. Every single Subscription will be a tab in the diagram, those tabs will contain the Subscription, the resource groups and the sum of every type of resource in the resource groups. By now almost every type of draw.io stencil available will be identified, with more coming in the next months.
+
+<br/>
+
+<br/>
+
+#### 6) ARI in Automation Account
+
+<br/>
+
+![Overview](images/Automation.png)
+
+<br/>
+
+Some people were asking to run ARI in Azure Automation Account and since the old script for automation accounts was not working we managed to fix it for this version. But now is require to use Runtime 7.2 and add the modules: "ImportExcel", "Az.ResourceGraph", "Az.Storage", "Az.Account" and "ThreadJob" in the Automation Account. 
+
+The required steps are present in the: [Automation Guide](https://github.com/microsoft/ARI/blob/main/Automation/README.md).
 
 <br/>
 
@@ -42,7 +136,7 @@ In Azure Resource Inventory v2.3 we rollback the use of Azure CLI as changing to
 
 <br/>
 
-![Overview](images/ARIv2-Overview.png)
+![Overview](images/ARIv3-Overview.png)
 
 <br/>
 
@@ -52,17 +146,13 @@ In Azure Resource Inventory v2.3 we rollback the use of Azure CLI as changing to
 
 ---------------------
 
-<br/>
+By default everytime you run the Azure Resource Inventory the diagram will be created. 
 
-- We disabled the Visio Diagram for now. But Draw.io diagram is still present, the two extra modules that creates a Microsoft Visio and a Draw.io Diagram[^1] of the Azure Network Environment are still present, but only the Draw.io will be genarated.
+If you do not wish to have the diagram created, you must use the __-SkipDiagram__ parameter.
 
-- The diagram now creates the topology in environments where vWAN are used.
-
-We are preparing more improvements in the diagrams, but for now there is no due date yet.
+Also, by default the Network Topology will not consider Virtual Networks that are connected trough peering. If you wants to include those Virtual Networks in the diagram, you must use the parameter __-DiagramFullEnvironment__.
 
 <br/>
-
-You must use the __-Diagram__ parameter for it to be generated!
 
 #### Draw.io Diagram:
 
@@ -72,88 +162,9 @@ You must use the __-Diagram__ parameter for it to be generated!
 
 <br/>
 
-### Note:
-
-[^1]:The script will create a XML file inside the "C:\AzureResourceInventory\" folder. On Draw.io you must go to File > Import from > Device... And import the XML file that was created by the ARI script.
-
-- For the __Draw.io Diagram__, the script will create a XML file inside the "C:\AzureResourceInventory\" folder. On Draw.io you must go to __File__ > __Import from__ > __Device...__ And import the XML file that was created by the script.
-
 <br/>
 
-<p align="center">
-<img src="images/DrawioImport.png">
-</p>
-
-<br/>
-
-<br/>
-
-<br/>
-
-> ### *3) Resource types*
-
----------------------
-
-<br/>
-
-Those are the native modules covered by the script ( there is still the possibility to create your own modules )
-
-#### Resources and Resource Providers:
-
-|Resource Provider|Resource Type|
-|-----------------|-------------|
-|microsoft.advisor|Advisor|
-|microsoft.security|Security Center| 
-|microsoft.compute|Virtual Machine|
-|microsoft.compute|Availability Set|
-|microsoft.compute|Virtual Machine Scale Set|
-|microsoft.compute|Managed Disk|
-|microsoft.storage|Storage Account|
-|microsoft.network|Virtual Network|
-|microsoft.network|Virtual Network Peerings|
-|microsoft.network|Virtual Network Gateway|
-|microsoft.network|Virtual WAN|
-|microsoft.network|Public IP Address|
-|microsoft.network|Load Balancer|
-|microsoft.network|Traffic Manager|
-|microsoft.network|Application Gateways|
-|microsoft.network|Frontdoor|
-|microsoft.network|Route Tables|
-|microsoft.network|Public DNS Zones|
-|microsoft.network|Private DNS Zones|
-|microsoft.network|Bastion Hosts|
-|microsoft.network|Azure Firewall|
-|microsoft.sqlvirtualmachine|SQL VM|
-|microsoft.sql|SQL Servers|
-|microsoft.sql|SQL Database|
-|microsoft.dbformysql|Azure Database for MySQL|
-|microsoft.dbforpostgresql|Azure Database for Postgre|
-|microsoft.cache|Azure Cache for Redis|
-|microsoft.documentdb|Cosmos DB|
-|microsoft.databricks|Databricks|
-|microsoft.kusto|Data Explorer|
-|microsoft.web|App Service Plan|
-|microsoft.web|App Services|
-|microsoft.automation|Automation Accounts and runbooks|
-|microsoft.eventhub|Event HUB|
-|microsoft.servicebus|Service BUS|
-|microsoft.operationalinsights|Log Analytics Workspaces|
-|microsoft.containerservice|Azure Kubernetes Service|
-|microsoft.redhatopenshift|Azure RedHat OpenShift|    
-|microsoft.desktopvirtualization|Azure Virtual Desktop|  
-|microsoft.containerinstance|Container Instances| 
-|microsoft.keyvault|Key Vaults|
-|microsoft.recoveryservices|Recovery Services Vault|
-|microsoft.devices|IoT Hubs|
-|microsoft.apimanagement|API Management|
-|microsoft.streamanalytics|Streaming Analytics Jobs|
-|microsoft.hybridcompute|machines|
-
-<br/>
-
-<br/>
-
-> ### *4) Other features*
+> ### *3) Extra Parameters*
 
 ---------------------
 
@@ -163,6 +174,10 @@ Those are the native modules covered by the script ( there is still the possibil
 :heavy_check_mark: Service Principal Authentication (__-appid__)  
 :heavy_check_mark: Scan Modules diretly in GitHub ARI Repository (__-Online__)  
 :heavy_check_mark: Choose between Azure environments (__-AzureEnvironment__)
+:heavy_check_mark: Network Diagram of the entire environment (__-DiagramFullEnvironment__)
+:heavy_check_mark: Do not create the diagram (__-SkipDiagram__)
+:heavy_check_mark: Customize the name of the report (__-ReportName__)
+:heavy_check_mark: Customize the output folder of the report (__-ReportDir__)
 
 <br/>
 
@@ -188,10 +203,10 @@ These instructions will get you a copy of the project up and running on your loc
 
 |Tool |Version|  
 |-----------------|-------------|
-|Windows|10 21H1| 
+|Windows|11 22H2| 
 |Powershell|5.1.19041.1237|  
-|ImportExcel|7.1.3|
-|azure-cli|2.38.0|
+|ImportExcel|7.8|
+|azure-cli|2.48.1|
 |AzCLI account|0.2.3|
 |AzCLI resource-graph|2.1.0|
 
@@ -257,9 +272,6 @@ Special Thanks for __Doug Finke__, the Author of Powershell [ImportExcel](https:
 * Azure ResourceInventory uses "*C:\AzureResourceInventory*" as default folder for PowerShell Desktop in Windows and "*$HOME/AzureResourceInventory*" for Azure CloudShell to save the final Excel file. 
 * This file will have the name  "*AzureResourceInventory_Report_yyyy-MM-dd_HH_mm.xlsx*"  where "*yyyy-MM-dd_HH_mm*" are the date and time that this inventory was created. 
 
-<br/>
-
-![ARI Final File Desktop](images/FinalReport.png)
 
 <br/>
 

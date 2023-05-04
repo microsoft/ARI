@@ -75,9 +75,9 @@ If ($Task -eq 'Processing') {
 Else {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if ($SmaResources.ExcelStreamanalytics) {
+    if ($SmaResources.Streamanalytics) {
 
-        $TableName = ('StreamsATable_'+($SmaResources.ExcelStreamanalytics.id | Select-Object -Unique).count)
+        $TableName = ('StreamsATable_'+($SmaResources.Streamanalytics.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
         
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -104,7 +104,7 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.ExcelStreamanalytics 
+        $ExcelVar = $SmaResources.Streamanalytics 
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
