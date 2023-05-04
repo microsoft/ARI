@@ -98,7 +98,7 @@ The idea is to make easier to align your environment with the Microsoft's Landin
 
 <br/>
 
-![Draw.IOOrg](images/Drawiosubs.png)
+![Draw.IOOrg](images/drawiosubs.png)
 
 <br/>
 
