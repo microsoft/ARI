@@ -44,8 +44,6 @@ We also reviewed and updated some of the old resources as well.
 
 <br/>
 
-<br/>
-
 #### 2) Diagram was completely rebuild and now support environments with more than 30.000 resources
 
 <br/>
@@ -55,8 +53,6 @@ Network Topology was cool but in large environments it had some problems (i.e.: 
 We added parallel processing to diagram, now during the execution of ARI, an extra folder (DiagramCache) will be created, that folder is used by the diagram to store temporary components of the diagrams, after all the parallel processing is done those files are merged in the main diagram.
 
 Now diagram will even finish way before the Excel file.
-
-<br/>
 
 <br/>
 
@@ -76,8 +72,6 @@ Colors will also be used to indicate broken peers.
 
 <br/>
 
-<br/>
-
 #### 4) Diagram now include "Organizational View" (Management Groups)
 
 <br/>
@@ -92,8 +86,6 @@ The idea is to make easier to align your environment with the Microsoft's Landin
 
 <br/>
 
-<br/>
-
 #### 5) Diagram now include Resource Overview for every subscription in the environment
 
 <br/>
@@ -105,8 +97,6 @@ The idea is to make easier to align your environment with the Microsoft's Landin
 Since not everyone have really complex network environments, many people complain about diagram not really presenting much for their environments. 
 
 This change now. Every single Subscription will be a tab in the diagram, those tabs will contain the Subscription, the resource groups and the sum of every type of resource in the resource groups. By now almost every type of draw.io stencil available will be identified, with more coming in the next months.
-
-<br/>
 
 <br/>
 
