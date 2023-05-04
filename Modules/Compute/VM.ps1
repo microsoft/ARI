@@ -67,7 +67,7 @@ If ($Task -eq 'Processing')
                         'SLES_BYOS' { 'Azure Hybrid Benefit for SUSE' }
                         default { $data.licenseType }
                     }
-                    $Lic = if($data.licensetype){$data.licensetype}else{'None'}
+                    $Lic = if($Lic){$Lic}else{'None'}
                     $ext = ($vmexp | Where-Object { ($_.id -split "/")[8] -eq $1.name }).properties.Publisher
                     if ($null -ne $ext) 
                         {
