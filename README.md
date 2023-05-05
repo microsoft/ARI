@@ -116,19 +116,25 @@ The required steps are present in the: [Automation Guide](https://github.com/mic
 
 <br/>
 
-> ### *1) Dashboard Overview*
+> ### *1) Excel Overview*
 
 ---------------------
 
 <br/>
 
-- The main resource index in the dashboard now shows the correct number of resources and is organized accordingly. 
+- The dashboard shows an overall view and summary of resources in the environment. 
 
 <br/>
 
 ![Overview](images/ARIv3-Overview.png)
 
 <br/>
+
+- The resource sheet present details and recommendations, security and costs reducing tips for the resources.
+
+<br/>
+
+![Overview](images/ARIv3ExcelExample.png)
 
 <br/>
 
