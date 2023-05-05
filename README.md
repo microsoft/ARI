@@ -150,10 +150,32 @@ Also, by default the Network Topology will not consider Virtual Networks that ar
 
 <br/>
 
-#### Draw.io Diagram:
+#### Diagram:
+
+<br/>
 
 <p align="center">
 <img src="images/DrawioImage.png">
+</p>
+
+<br/>
+
+- An extra detail is that if you hover the mouse cursor over any resource in the Network Topology you get the resource details:
+
+<br/>
+
+<p align="center">
+<img src="images/ARIv3DrawioHover.png">
+</p>
+
+<br/>
+
+- This feature is available for any resource and even peering lines:
+
+<br/>
+
+<p align="center">
+<img src="images/ARIv3DrawioPeer.png">
 </p>
 
 <br/>
