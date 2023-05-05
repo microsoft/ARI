@@ -36,6 +36,9 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
+                $timecreated = $data.createdDateTime
+                $timecreated = [datetime]$timecreated
+                $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                 $PIP = if($data.parameters.enableNoPublicIp.value -eq 'False'){$true}else{$false}
                 $VNET = $data.parameters.customVirtualNetworkId.value.split('/')[8]
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
@@ -57,6 +60,7 @@ If ($Task -eq 'Processing') {
                             'Custom Private Subnet'     = $data.parameters.customPrivateSubnetName.value;
                             'Custom Public Subnet'      = $data.parameters.customPublicSubnetName.value;
                             'URL'                       = $data.workspaceUrl;
+                            'Created Time'              = $timecreated;
                             'Resource U'                = $ResUCount;
                             'Tag Name'                  = [string]$Tag.Name;
                             'Tag Value'                 = [string]$Tag.Value
@@ -104,6 +108,7 @@ Else {
         $Exc.Add('Custom Private Subnet')
         $Exc.Add('Custom Public Subnet')
         $Exc.Add('URL')
+        $Exc.Add('Created Time')  
         if($InTag)
             {
                 $Exc.Add('Tag Name')

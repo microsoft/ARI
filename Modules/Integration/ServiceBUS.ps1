@@ -40,6 +40,9 @@ If ($Task -eq 'Processing')
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
+                $timecreated = $data.createdAt
+                $timecreated = [datetime]$timecreated
+                $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) { 
                         $obj = @{
@@ -53,6 +56,7 @@ If ($Task -eq 'Processing')
                             'Geo-Replication'      = $data.zoneRedundant;
                             'Throughput Units'     = $1.sku.capacity;
                             'Endpoint'             = $data.serviceBusEndpoint;
+                            'Created Time'         = $timecreated;      
                             'Resource U'           = $ResUCount;
                             'Tag Name'             = [string]$Tag.Name;
                             'Tag Value'            = [string]$Tag.Value
@@ -90,6 +94,7 @@ Else
         $Exc.Add('Geo-Rep')
         $Exc.Add('Throughput Units')
         $Exc.Add('Endpoint')
+        $Exc.Add('Created Time')
         if($InTag)
             {
                 $Exc.Add('Tag Name')

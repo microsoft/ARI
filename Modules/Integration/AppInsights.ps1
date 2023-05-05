@@ -36,6 +36,9 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $timecreated = $data.CreationDate
+                $timecreated = [datetime]$timecreated
+                $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                 $Sampling = if([string]::IsNullOrEmpty($data.SamplingPercentage)){'Disabled'}else{$data.SamplingPercentage}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
@@ -53,7 +56,8 @@ If ($Task -eq 'Processing') {
                             'Retention In Days'                 = $data.RetentionInDays;
                             'Ingestion Mode'                    = $data.IngestionMode;
                             'Public Access For Ingestion'       = $data.publicNetworkAccessForIngestion;
-                            'Public Access For Query'           = $data.publicNetworkAccessForQuery;                            
+                            'Public Access For Query'           = $data.publicNetworkAccessForQuery;    
+                            'Created Time'                      = $timecreated;                            
                             'Tag Name'                          = [string]$Tag.Name;
                             'Tag Value'                         = [string]$Tag.Value
                         }
@@ -91,6 +95,7 @@ Else {
         $Exc.Add('Ingestion Mode')
         $Exc.Add('Public Access For Ingestion')
         $Exc.Add('Public Access For Query')
+        $Exc.Add('Created Time')
         if($InTag)
             {
                 $Exc.Add('Tag Name')

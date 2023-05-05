@@ -40,6 +40,9 @@ If ($Task -eq 'Processing')
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $timecreated = $data.creationDate
+                $timecreated = [datetime]$timecreated
+                $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 foreach ($Tag in $Tags) {
                     $obj = @{
@@ -56,6 +59,7 @@ If ($Task -eq 'Processing')
                         'Private Link'              = if($data.privateendpointconnections){'True'}else{'False'};
                         'Soft Delete Policy'        = $data.policies.softdeletepolicy.status;
                         'Trust Policy'              = $data.policies.trustpolicy.status;
+                        'Created Time'              = $timecreated;
                         'Resource U'                = $ResUCount;
                         'Total'                     = $Total;
                         'Tag Name'                  = [string]$Tag.Name;
@@ -116,6 +120,7 @@ Else
         $Exc.Add('Private Link')
         $Exc.Add('Soft Delete Policy')
         $Exc.Add('Trust Policy')
+        $Exc.Add('Created Time')  
         if($InTag)
             {
                 $Exc.Add('Tag Name')

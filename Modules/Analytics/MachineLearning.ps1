@@ -36,6 +36,9 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
+                $timecreated = $data.creationTime
+                $timecreated = [datetime]$timecreated
+                $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                 $StorageAcc = $data.storageAccount.split('/')[8]
                 $KeyVault = $data.keyVault.split('/')[8]
                 $Insight = $data.applicationInsights.split('/')[8]
@@ -60,6 +63,7 @@ If ($Task -eq 'Processing') {
                             'ML Flow Tracking Uri'      = $data.mlFlowTrackingUri;
                             'Storage Account'           = $StorageAcc;
                             'Key Vault'                 = $KeyVault;
+                            'Created Time'              = $timecreated;
                             'Application Insight'       = $Insight;
                             'Resource U'                = $ResUCount;
                             'Tag Name'                  = [string]$Tag.Name;
@@ -103,6 +107,7 @@ Else {
         $Exc.Add('Storage Account')
         $Exc.Add('Key Vault')
         $Exc.Add('Application Insight')
+        $Exc.Add('Created Time')  
         if($InTag)
             {
                 $Exc.Add('Tag Name')

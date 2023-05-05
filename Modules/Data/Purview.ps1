@@ -38,6 +38,9 @@ If ($Task -eq 'Processing') {
                 $data = $1.PROPERTIES
                 $CloudConnectors = $data.cloudConnectors.count
                 $pvted = $data.privateEndpointConnections.count
+                $timecreated = $data.createdAt
+                $timecreated = [datetime]$timecreated
+                $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                 $StorageAcc = $data.managedResources.storageAccount.split('/')[8]
                 $eventHubNamespace = $data.managedResources.eventHubNamespace.split('/')[8]
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
@@ -57,7 +60,8 @@ If ($Task -eq 'Processing') {
                             'Managed Storage Account'           = [string]$StorageAcc;
                             'Managed Event Hub'                 = [string]$eventHubNamespace;
                             'Public Network Access'             = $data.publicNetworkAccess;
-                            'Created By'                        = $data.createdBy;                            
+                            'Created By'                        = $data.createdBy;      
+                            'Created Time'                      = $timecreated;                      
                             'Tag Name'                          = [string]$Tag.Name;
                             'Tag Value'                         = [string]$Tag.Value
                         }
@@ -93,6 +97,7 @@ Else {
         $Exc.Add('Managed Event Hub')
         $Exc.Add('Public Network Access')
         $Exc.Add('Created By')
+        $Exc.Add('Created Time')
         if($InTag)
             {
                 $Exc.Add('Tag Name')

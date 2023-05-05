@@ -41,6 +41,10 @@ If ($Task -eq 'Processing')
                 $sub1 = $SUB | Where-Object { $_.Id -eq $0.subscriptionId }
                 $rbs = $runbook | Where-Object { $_.id.split('/')[8] -eq $0.name }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $data0 = $0.properties
+                $timecreated = $data0.creationTime
+                $timecreated = [datetime]$timecreated
+                $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                 if ($null -ne $rbs) {
                     foreach ($1 in $rbs) {
                             foreach ($Tag in $Tags) {    
@@ -52,6 +56,7 @@ If ($Task -eq 'Processing')
                                     'Automation Account Name'  = $0.NAME;
                                     'Automation Account State' = $0.properties.State;
                                     'Automation Account SKU'   = $0.properties.sku.name;
+                                    'Automation Account Created Time'  = $timecreated;   
                                     'Location'                 = $0.LOCATION;
                                     'Runbook Name'             = $1.Name;
                                     'Last Modified Time'       = ([datetime]$data.lastModifiedTime).tostring('MM/dd/yyyy hh:mm') ;
@@ -76,6 +81,7 @@ If ($Task -eq 'Processing')
                                 'Automation Account Name'  = $0.NAME;
                                 'Automation Account State' = $0.properties.State;
                                 'Automation Account SKU'   = $0.properties.sku.name;
+                                'Automation Account Created Time'  = $timecreated;   
                                 'Location'                 = $0.LOCATION;
                                 'Runbook Name'             = $null;
                                 'Last Modified Time'       = $null;
@@ -116,6 +122,7 @@ Else
         $Exc.Add('Automation Account Name')
         $Exc.Add('Automation Account State')
         $Exc.Add('Automation Account SKU')
+        $Exc.Add('Automation Account Created Time')
         $Exc.Add('Location')
         $Exc.Add('Runbook Name')
         $Exc.Add('Last Modified Time')

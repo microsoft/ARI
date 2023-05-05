@@ -39,6 +39,9 @@ If ($Task -eq 'Processing')
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $timecreated = $data.timeCreated
+                $timecreated = [datetime]$timecreated
+                $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                 $SKU = $1.SKU
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
@@ -58,6 +61,7 @@ If ($Task -eq 'Processing')
                             'Disk IOPS Read / Write' = $data.diskIOPSReadWrite;
                             'Disk MBps Read / Write' = $data.diskMBpsReadWrite;
                             'HyperV Generation'      = $data.hyperVGeneration;
+                            'Created Time'           = $timecreated;   
                             'Resource U'             = $ResUCount;
                             'Tag Name'               = [string]$Tag.Name;
                             'Tag Value'              = [string]$Tag.Value
@@ -100,6 +104,7 @@ Else
         $Exc.Add('Disk IOPS Read / Write')
         $Exc.Add('Disk MBps Read / Write')
         $Exc.Add('HyperV Generation')
+        $Exc.Add('Created Time')
         if($InTag)
             {
                 $Exc.Add('Tag Name')

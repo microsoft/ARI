@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VM.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.0
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -29,7 +29,7 @@ If ($Task -eq 'Processing')
         $vm =  $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachines'}
         $nic = $Resources | Where-Object {$_.TYPE -eq 'microsoft.network/networkinterfaces'}
         $vmexp = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachines/extensions'}
-        $disk = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/disks'}
+        $disk = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/disks'}        
         $vmsizemap = @{}
         foreach($location in ($vm | Select-Object -ExpandProperty location -Unique))
             {
@@ -52,6 +52,9 @@ If ($Task -eq 'Processing')
                     $ResUCount = 1
                     $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                     $data = $1.PROPERTIES 
+                    $timecreated = $data.timeCreated
+                    $timecreated = [datetime]$timecreated
+                    $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                     $AVSET = ''
                     $dataSize = ''
                     $StorAcc = ''
@@ -159,6 +162,7 @@ If ($Task -eq 'Processing')
                                 'IP Forwarding'                 = [string]$vmnic.properties.enableIPForwarding;
                                 'Private IP Address'            = [string]$vmnic.properties.ipConfigurations.properties.privateIPAddress;
                                 'Private IP Allocation'         = [string]$vmnic.properties.ipConfigurations.properties.privateIPAllocationMethod;
+                                'Created Time'                  = $timecreated;
                                 'VM Extensions'                 = $ext;
                                 'Resource U'                    = $ResUCount;
                                 'Tag Name'                      = [string]$Tag.Name;
@@ -179,7 +183,7 @@ else
         {
             $TableName = ('VMTable_'+($SmaResources.VM.id | Select-Object -Unique).count)
             $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
-            $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AJ:AJ -Width 60 -WrapText 
+            $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AK:AK -Width 60 -WrapText 
 
                 $cond = @()
                 Foreach ($UnSupOS in $Unsupported.Linux)
@@ -241,6 +245,7 @@ else
                 $Exc.Add('Private IP Address')
                 $Exc.Add('Private IP Allocation')
                 $Exc.Add('Public IP')
+                $Exc.Add('Created Time')                
                 $Exc.Add('VM Extensions')
                 $Exc.Add('Resource U')
                 if($InTag)

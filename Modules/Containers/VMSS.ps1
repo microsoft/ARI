@@ -49,6 +49,9 @@ If ($Task -eq 'Processing')
                 if([string]::IsNullOrEmpty($Scaling)){$AutoSc = $false}else{$AutoSc = $true}
                 $Diag = if($data.virtualMachineProfile.diagnosticsProfile){'Enabled'}else{'Disabled'}
                 if($OS -eq 'Linux'){$PWD = $data.virtualMachineProfile.osProfile.linuxConfiguration.disablePasswordAuthentication}Else{$PWD = 'N/A'}
+                $timecreated = $data.timeCreated
+                $timecreated = [datetime]$timecreated
+                $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                 $Subnet = $data.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.ipConfigurations.properties.subnet.id | Select-Object -Unique
                 $VNET = $subnet.split('/')[8]
                 $Subnet = $Subnet.split('/')[10]
@@ -88,6 +91,7 @@ If ($Task -eq 'Processing')
                         'Extensions'                    = [string]$ext;
                         'Admin Username'                = $data.virtualMachineProfile.osProfile.adminUsername;
                         'VM Name Prefix'                = $data.virtualMachineProfile.osProfile.computerNamePrefix;
+                        'Created Time'                  = $timecreated;
                         'Resource U'                    = $ResUCount;
                         'Tag Name'                      = [string]$Tag.Name;
                         'Tag Value'                     = [string]$Tag.Value
@@ -150,6 +154,7 @@ Else
         $Exc.Add('Extensions')
         $Exc.Add('Admin Username')
         $Exc.Add('VM Name Prefix')
+        $Exc.Add('Created Time')
         if($InTag)
             {
                 $Exc.Add('Tag Name')
