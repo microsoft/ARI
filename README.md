@@ -1,5 +1,5 @@
 ---
-ArtifactType: Excel spreedcheet with the full Azure environment
+ArtifactType: Excel spreadsheet with the full Azure environment
 Language: Powershell
 Platform: Windows / Linux / Mac
 Tags: Powershell, Azure, Inventory, Excel Report, Customer Engineer
