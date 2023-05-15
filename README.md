@@ -28,9 +28,11 @@ This project is intend to help Cloud Admins and anyone that might need an easy a
 
 <br/>
 
-Among the many improvements, those are the highlights of the new version:
-
 ![Overview](images/ARIv3-Overview.png)
+
+<br/>
+
+Among the many improvements, those are the highlights of the new version:
 
 <br/>
 
@@ -146,7 +148,7 @@ By default everytime you run the Azure Resource Inventory the diagram will be cr
 
 If you do not wish to have the diagram created, you must use the __-SkipDiagram__ parameter.
 
-Also, by default the Network Topology will not consider Virtual Networks that are connected trough peering. If you wants to include those Virtual Networks in the diagram, you must use the parameter __-DiagramFullEnvironment__.
+Also, by default the Network Topology will not consider Virtual Networks that are not connected trough peering. If you wants to include those Virtual Networks in the diagram, you must use the parameter __-DiagramFullEnvironment__.
 
 <br/>
 
