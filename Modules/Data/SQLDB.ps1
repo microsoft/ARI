@@ -36,6 +36,44 @@ if ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $DBServer = [string]$1.id.split("/")[8]
+                $PooolId = [string]$data.elasticPoolId.split("/")[10]
+                
+                $metricStartTime = (Get-Date).AddDays(-30)
+                $metricEndTime = (Get-Date)
+    
+                $sqlDtuLimit = (Get-AzMetric -ResourceId $1.id -StartTime $metricStartTime -EndTime $metricEndTime -MetricName 'dtu_limit' -AggregationType Average -TimeGrain "01:00:00").Data.Average
+                $sqlDtuLimitAvg = ($sqlDtuLimit | Measure-Object -Average).Average -as [double]
+                
+                $sqlDtuConsumptionPercent = (Get-AzMetric -ResourceId $1.id -StartTime $metricStartTime -EndTime $metricEndTime -MetricName 'dtu_consumption_percent' -AggregationType Average -TimeGrain "00:30:00").Data.Average
+                $sqlDtuConsumptionPercentAvg = ($sqlDtuConsumptionPercent | Measure-Object -Average).Average -as [double]
+                
+                $sqlDtuUsed = (Get-AzMetric -ResourceId $1.id -StartTime $metricStartTime -EndTime $metricEndTime -MetricName 'dtu_used' -AggregationType Maximum -TimeGrain "00:30:00").Data.Maximum
+                $sqlDtuUsedAvg = ($sqlDtuUsed | Measure-Object -Average).Average -as [double]    
+                
+                $sqlCpuLimit = (Get-AzMetric -ResourceId $1.id -StartTime $metricStartTime -EndTime $metricEndTime -MetricName 'cpu_limit' -AggregationType Maximum -TimeGrain "00:30:00").Data.Maximum
+                $sqlCpuLimitAvg = ($sqlCpuLimit | Measure-Object -Average).Average -as [double]
+                
+                $sqlCpuPercent = (Get-AzMetric -ResourceId $1.id -StartTime $metricStartTime -EndTime $metricEndTime -MetricName 'cpu_percent' -AggregationType Maximum -TimeGrain "00:30:00").Data.Maximum
+                $sqlCpuPercentAvg = ($sqlCpuPercent | Measure-Object -Average).Average -as [double]
+                
+                $sqlCpuUsed = (Get-AzMetric -ResourceId $1.id -StartTime $metricStartTime -EndTime $metricEndTime -MetricName 'cpu_used' -AggregationType Maximum -TimeGrain "00:30:00").Data.Maximum
+                $sqlCpuUsedAvg = ($sqlCpuUsed | Measure-Object -Average).Average -as [double]
+                
+                $allocateDataStorage = (Get-AzMetric -ResourceId $1.id -StartTime $metricStartTime -EndTime $metricEndTime -MetricName 'allocated_data_storage' -AggregationType Average -TimeGrain "01:00:00").Data.Average | Sort-Object -Descending
+                $allocateDataStorageMax = ($allocateDataStorage | Measure-Object -Maximum).Maximum -as [double]
+                   
+                $storage = (Get-AzMetric -ResourceId $1.id -StartTime $metricStartTime -EndTime $metricEndTime -MetricName 'storage' -AggregationType Maximum -TimeGrain "01:00:00").Data.Maximum | Sort-Object -Descending
+                $storageMax = ($storage | Measure-Object -Maximum).Maximum -as [double]
+                
+                $storagePercent = (Get-AzMetric -ResourceId $1.id -StartTime $metricStartTime -EndTime $metricEndTime -MetricName 'storage_percent' -AggregationType Maximum -TimeGrain "01:00:00").Data.Maximum | Sort-Object -Descending
+                $storagePercentMax = ($storagePercent | Measure-Object -Maximum).Maximum -as [double]
+                
+                $physicalReadPercent = (Get-AzMetric -ResourceId $1.id -StartTime $metricStartTime -EndTime $metricEndTime -MetricName 'physical_data_read_percent' -AggregationType Average -TimeGrain "01:00:00").Data.Average | Sort-Object -Descending
+                $physicalReadPercentMax = ($physicalReadPercent | Measure-Object -Maximum).Maximum -as [double]
+                
+                $logWritePercent = (Get-AzMetric -ResourceId $1.id -StartTime $metricStartTime -EndTime $metricEndTime -MetricName 'log_write_percent' -AggregationType Average -TimeGrain "01:00:00").Data.Average | Sort-Object -Descending
+                $logWritePercenttMax = ($logWritePercent | Measure-Object -Maximum).Maximum -as [double]
+                
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
@@ -55,6 +93,18 @@ if ($Task -eq 'Processing') {
                             'Read Replica Count'         = $data.readReplicaCount;
                             'Data Max Size (GB)'         = (($data.maxSizeBytes / 1024) / 1024) / 1024;
                             'Resource U'                 = $ResUCount;
+                            'ElasticPool ID'             = $data.elasticPoolId;
+                            'DTU Limit'                  = $sqlDtuLimitAvg;
+                            'DTU Used'                   = $sqlDtuUsedAvg;
+                            'DTU Consumption Percent'    = $sqlDtuConsumptionPercentAvg;
+                            'CPU Limit'                  = $sqlCpuLimitAvg;
+                            'CPU Percent'                = $sqlCpuPercentAvg;
+                            'CPU Used'                   = $sqlCpuUsedAvg;
+                            'Storage Allocation (GB)'    = (($allocateDataStorageMax / 1024) / 1024) / 1024;
+                            'Storage Used (GB)'          = (($storageMax / 1024) / 1024) / 1024;
+                            'Storage Used Percent'       = $storagePercentMax;
+                            'Physical Read Percent'      = $physicalReadPercentMax;
+                            'Log Write Percent'          = $logWritePercenttMax;
                             'Tag Name'                   = [string]$Tag.Name;
                             'Tag Value'                  = [string]$Tag.Value
                         }
@@ -86,6 +136,18 @@ else {
         $Exc.Add('Zone Redundant')
         $Exc.Add('Catalog Collation')
         $Exc.Add('Read Replica Count')
+        $Exc.Add('ElasticPool ID')
+        $Exc.Add('DTU Limit')
+        $Exc.Add('DTU Used')
+        $Exc.Add('DTU Consumption Percent')        
+        $Exc.Add('CPU Limit')
+        $Exc.Add('CPU Percent')
+        $Exc.Add('CPU Used')
+        $Exc.Add('Storage Allocation (GB)')
+        $Exc.Add('Storage Used (GB)')
+        $Exc.Add('Storage Used Percent')
+        $Exc.Add('Physical Read Percent')
+        $Exc.Add('Log Write Percent')
         if($InTag)
             {
                 $Exc.Add('Tag Name')
