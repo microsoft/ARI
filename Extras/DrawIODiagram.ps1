@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Extras/DrawIODiagram.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.1
+Version: 3.0.4
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -4892,6 +4892,28 @@ Function Organization {
             $Global:XmlWriter.WriteEndElement()
     }
 
+    Function Container4 {
+        Param($x,$y,$w,$h,$title,$p)
+            $Global:ContID4 = (-join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})+'-'+1)
+    
+            $Global:XmlWriter.WriteStartElement('mxCell')
+            $Global:XmlWriter.WriteAttributeString('id', $Global:ContID4)
+            $Global:XmlWriter.WriteAttributeString('value', "$title")
+            $Global:XmlWriter.WriteAttributeString('style', "swimlane;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;swimlaneFillColor=#FFE6CC;rounded=1;")
+            $Global:XmlWriter.WriteAttributeString('vertex', "1")
+            $Global:XmlWriter.WriteAttributeString('parent', $p)
+        
+                $Global:XmlWriter.WriteStartElement('mxGeometry')
+                $Global:XmlWriter.WriteAttributeString('x', $x)
+                $Global:XmlWriter.WriteAttributeString('y', $y)
+                $Global:XmlWriter.WriteAttributeString('width', $w)
+                $Global:XmlWriter.WriteAttributeString('height', $h)
+                $Global:XmlWriter.WriteAttributeString('as', "geometry")
+                $Global:XmlWriter.WriteEndElement()
+            
+            $Global:XmlWriter.WriteEndElement()
+    }
+
     Function Stencils {
         $Global:IconSubscription = "aspect=fixed;html=1;points=[];align=center;image;fontSize=20;image=img/lib/azure2/general/Subscriptions.svg;" #width="44" height="71"
         $Global:IconMgmtGroup = "aspect=fixed;html=1;points=[];align=center;image;fontSize=20;image=img/lib/azure2/general/Management_Groups.svg;" #width="44" height="71"
@@ -4899,6 +4921,7 @@ Function Organization {
         $Global:Ret1 = "rounded=1;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;fillColor=#b0e3e6;strokeColor=#0e8088;"
         $Global:Ret2 = "rounded=1;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;fillColor=#b1ddf0;strokeColor=#10739e;"
         $Global:Ret3 = "rounded=1;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;fillColor=#fad7ac;strokeColor=#b46504;"
+        $Global:Ret4 = "rounded=1;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;fillColor=#e1d5e7;strokeColor=#9673a6;"
 
     }
 
@@ -5388,16 +5411,189 @@ Function Organization {
                                     }
 
 
+                                    ######################################## 4TH LEVEL ##############################################
+
+                                    $4thLevel = @()
+                                    foreach($sub4th in $OrgObjs)
+                                        {                 
+                                            if($sub4th.properties.managementgroupancestorschain.name[1] -eq $3rd)
+                                                {
+                                                    $sub4th += $sub4th.properties.managementgroupancestorschain.name[0]
+                                                }
+                                            if($sub4th.properties.managementgroupancestorschain.name[2] -eq $3rd)
+                                                {
+                                                    $sub4th += $sub4th.properties.managementgroupancestorschain.name[1]
+                                                }
+                                            if($sub4th.properties.managementgroupancestorschain.name[3] -eq $3rd)
+                                                {
+                                                    $sub4th += $sub4th.properties.managementgroupancestorschain.name[2]
+                                                }
+                                        }
+                                        $sub4th = $sub4th | Select-Object -Unique
+
+                                        $XXXXLeft = 0
+                                        if($sub4th.count  % 2 -eq 1 )
+                                            {
+                                                $Align4 = $true
+                                                $loops4 = -[Math]::ceiling($sub4th.count / 2 - 1)
+                                            }
+                                        else
+                                            {
+                                                $Align4 = $false
+                                                $loops4 = [Math]::ceiling($sub4th.count / 2) - 1
+                                                
+                                            }
+                                        if($sub4th.count -eq 1)
+                                            {
+                                                $loops4 = 1
+                                            }
+
+
+                                    foreach($4th in $sub4th)
+                                        {                              
+                                            $RoundSubs4 = @() 
+                                            $Temp5th4 = @()
+                                    
+                                            foreach($Sub in $OrgObjs)
+                                                {
+                                                    if($Sub.properties.managementgroupancestorschain.name[0] -eq $4th)
+                                                        {
+                                                            $RoundSubs4 += $Sub
+                                                        }
+                                                    if($Sub.properties.managementgroupancestorschain.name[1] -eq $4th)
+                                                        {
+                                                            $Temp5th4 += $Sub.properties.managementgroupancestorschain.name[0]
+                                                        }
+                                                    if($Sub.properties.managementgroupancestorschain.name[2] -eq $4th)
+                                                        {
+                                                            $Temp5th4 += $Sub.properties.managementgroupancestorschain.name[0]
+                                                        }
+                                                }
+
+                                            $Temp5th4 = $Temp5th4 | Select-Object -Unique
+
+                                            if($XXXXLeft -eq 0 -and $Align4 -eq $true)
+                                                {
+                                                }
+                                            elseif($XXXXLeft -eq 0 -and $Align4 -eq $false)
+                                                {
+                                                    $XXXXLeft = -150 + -((((($Temp4rd4.count)+($Temp5th4.count)))*150)/2)
+                                                    $loops4++
+                                                }
+                                            elseif($Align4 -eq $false -and $loops4 -eq 0)
+                                                {
+                                                    $XXXXLeft = 150 + ((((($Temp4rd4.count)+($Temp5th4.count)))*150)/2)
+                                                    $loops4++
+                                                }
+                                            elseif($loops4 -gt 0 -and $XXXXLeft -eq 0)
+                                                {
+                                                    $XXXXLeft = $XXXXLeft + ($4thLevel.count*300)/2 + ((((($Temp5th4.count)))*300)/2)
+                                                    $loops4++
+                                                }
+                                            elseif($XXXXLeft -eq 0 -and $loops4 -lt 0)
+                                                {
+                                                    $XXXXTemp = if(((((($Temp5th4.count)))*300)) -eq 0){300}else{((((($Temp5th4.count)))*300))}
+                                                    $XXXXLeft = $XXXXLeft + -$XXXXTemp
+                                                    $loops4++
+                                                }
+                                            elseif($XXXXLeft -lt 0 -and $loops4 -lt 0)
+                                                {
+                                                    $XXXXTemp = if(((((($Temp5th4.count)))*300)) -eq 0){300}else{((((($Temp5th4.count)))*300))}
+                                                    $XXXXLeft = $XXXXLeft + -$XXXXTemp
+                                                    $loops4++
+                                                }
+                                            elseif($XXXXLeft -eq 1 -and $loops4 -gt 0)
+                                                {
+                                                    $XXXXLeft = 150 + ((((($Temp5th4.count)))*150))
+                                                    $loops4++
+                                                }
+                                            else
+                                                {
+                                                    $XXXXTemp = if(((((($Temp5th4.count)))*300)) -eq 0){300}else{((((($Temp5th4.count)))*300))}
+                                                    $XXXXLeft = $XXXXLeft + $XXXXTemp
+                                                    $loops4++
+                                                }
+                
+                                            
+                                            $MgmtHeight3 = if((($RoundSubs4.id.count * 90) + 50) -eq 50){80}else{(($RoundSubs4.id.count * 90) + 50)}
+
+                                            $XXXXTop = $MgmtHeight2 + 200
+
+                                            Container4 $XXXXLeft $XXXXTop '200' $MgmtHeight3 $4th $Global:ContID3
+
+                                            $Global:XmlWriter.WriteStartElement('object')            
+                                            $Global:XmlWriter.WriteAttributeString('label', '')
+                                            $Global:XmlWriter.WriteAttributeString('ManagementGroup', [string]$4th)
+                                            $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))                        
+                                
+                                            if($RoundSubs4)
+                                                {
+                                                    icon $Global:IconMgmtGroup '-30' ($MgmtHeight3-15) '50' '50' $Global:ContID4
+                                                }
+                                            else
+                                                {
+                                                    icon $Global:IconMgmtGroup '75' '27' '50' '50' $Global:ContID4
+                                                }
+                                
+                                            $Global:XmlWriter.WriteEndElement()
+
+                                            Connect $Global:ContID3 $Global:ContID4
+
+                                            if($XXXXLeft -eq 0 -and $loops4 -lt 0)
+                                                {
+                                                    $XXXXLeft = -1
+                                                }
+                                            elseif($XXXXLeft -lt 0 -and $loops4 -ge 0)
+                                                {
+                                                    $XXXXLeft = 1
+                                                }
+
+                                            $LocalTop = 50
+                                            $LocalLeft = 25
+
+                                            foreach($Sub in $RoundSubs4)
+                                                {                                
+
+                                                    $RGs = $Global:ResourceContainers | Where-Object {$_.Type -eq 'microsoft.resources/subscriptions/resourcegroups' -and $_.subscriptionid -eq $sub.subscriptionid}
+
+                                                    $Global:XmlWriter.WriteStartElement('object')
+                                                    $Global:XmlWriter.WriteAttributeString('label', $sub.name)
+                                                    $Global:XmlWriter.WriteAttributeString('id', ($Global:CellIDRes+'-'+($Global:CelNum++)))
+                            
+                                                        Icon $Ret4 $LocalLeft $LocalTop '150' '70' $Global:ContID4
+                                                    
+                                                    $Global:XmlWriter.WriteEndElement()
+
+                                                    $Global:XmlWriter.WriteStartElement('object')            
+                                                    $Global:XmlWriter.WriteAttributeString('label', '')
+
+                                                    $RGNum = 1
+                                                    foreach($RG in $RGs)
+                                                        {
+                                                            $Attr = ('ResourceGroup_'+[string]$RGNum)
+                                                            $Global:XmlWriter.WriteAttributeString($Attr, [string]$RG.Name)
+                                                            $RGNum++
+                                                        }
+                                                    
+                                                    $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))                        
+                                        
+                                                        icon $Global:IconSubscription ($LocalLeft+140) ($LocalTop+40) '31' '51' $Global:ContID4
+
+                                                    $Global:XmlWriter.WriteEndElement()
+
+                                                    $LocalTop = $LocalTop + 90
+                                                }
+                                    
+                                        }
+
                             }
 
                     }
-                        
 
             }
-            
 
     }
-    
+
     Stencils
 
     $OrgFile = ($DiagramCache+'Organization.xml')
