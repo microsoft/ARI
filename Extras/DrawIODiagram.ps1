@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Extras/DrawIODiagram.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.4
+Version: 3.0.6
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -4970,16 +4970,73 @@ Function Organization {
 
             $Global:XTop = $Global:XTop + 200
 
-            Container0 '0' '0' '200' '80' 'tenant root group'
+            $RoundSubs00 = @() 
+            foreach($Sub in $OrgObjs)
+                    {
+                        if($Sub.properties.managementgroupancestorschain[0].displayname -eq 'tenant root group')
+                            {
+                                $RoundSubs00 += $Sub
+                            }
+                    }
+            
+            $MgmtHeight0 = (($RoundSubs00.id.count * 70) + 80)
+
+            Container0 '0' '0' '200' $MgmtHeight0 'tenant root group'
 
             $Global:XmlWriter.WriteStartElement('object')            
             $Global:XmlWriter.WriteAttributeString('label', '')
             $Global:XmlWriter.WriteAttributeString('ManagementGroup', 'tenant root group')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))                        
 
-                icon $Global:IconMgmtGroup '75' '27' '50' '50' $Global:ContID0
+                if($RoundSubs00)
+                    {
+                        icon $Global:IconMgmtGroup '-30' ($MgmtHeight0-15) '50' '50' $Global:ContID0
+                    }
+                else
+                    {
+                        icon $Global:IconMgmtGroup '75' '27' '50' '50' $Global:ContID0
+                    }
 
             $Global:XmlWriter.WriteEndElement()
+
+            $LocalTop = 50
+            $LocalLeft = 25
+
+            foreach($Sub in $RoundSubs00)
+            {
+                $RGs = $Global:ResourceContainers | Where-Object {$_.Type -eq 'microsoft.resources/subscriptions/resourcegroups' -and $_.subscriptionid -eq $sub.subscriptionid}
+
+                $Global:XmlWriter.WriteStartElement('object')            
+                $Global:XmlWriter.WriteAttributeString('label', $sub.name)
+                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellIDRes+'-'+($Global:CelNum++)))
+
+                    Icon $Ret1 $LocalLeft $LocalTop '150' '70' $Global:ContID0
+                
+                $Global:XmlWriter.WriteEndElement()
+
+                $Global:XmlWriter.WriteStartElement('object')            
+                $Global:XmlWriter.WriteAttributeString('label', '')
+
+                $RGNum = 1
+                foreach($RG in $RGs)
+                    {
+                        $Attr = ('ResourceGroup_'+[string]$RGNum)
+                        $Global:XmlWriter.WriteAttributeString($Attr, [string]$RG.Name)
+                        $RGNum++
+                    }
+                
+                $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))                        
+    
+                    icon $Global:IconSubscription ($LocalLeft+140) ($LocalTop+40) '31' '51' $Global:ContID0
+    
+                $Global:XmlWriter.WriteEndElement()
+
+                $LocalTop = $LocalTop + 90
+
+            }
+
+
+
 
             foreach($1stlvl in $Global:1stLevel)
                 {
@@ -4993,7 +5050,7 @@ Function Organization {
                             }
                     }
     
-                $MgmtHeight = (($RoundSubs.id.count * 70) + 80)
+                $MgmtHeight = (($RoundSubs0.id.count * 70) + 80)
 
                 Container1 $XLeft $XTop '200' $MgmtHeight $1stlvl $Global:ContID0       
                 
@@ -5272,7 +5329,7 @@ Function Organization {
 
 
                         foreach($3rd in $3rdLevel)
-                            {                              
+                            {   
                                 $RoundSubs3 = @() 
                                 $Temp4rd3 = @()
                                 $Temp5th3 = @()
@@ -5418,21 +5475,21 @@ Function Organization {
                                         {                 
                                             if($sub4th.properties.managementgroupancestorschain.name[1] -eq $3rd)
                                                 {
-                                                    $sub4th += $sub4th.properties.managementgroupancestorschain.name[0]
+                                                    $4thLevel += $sub4th.properties.managementgroupancestorschain.name[0]
                                                 }
                                             if($sub4th.properties.managementgroupancestorschain.name[2] -eq $3rd)
                                                 {
-                                                    $sub4th += $sub4th.properties.managementgroupancestorschain.name[1]
+                                                    $4thLevel += $sub4th.properties.managementgroupancestorschain.name[1]
                                                 }
                                             if($sub4th.properties.managementgroupancestorschain.name[3] -eq $3rd)
                                                 {
-                                                    $sub4th += $sub4th.properties.managementgroupancestorschain.name[2]
+                                                    $4thLevel += $sub4th.properties.managementgroupancestorschain.name[2]
                                                 }
                                         }
-                                        $sub4th = $sub4th | Select-Object -Unique
+                                        $4thLevel = $4thLevel | Select-Object -Unique
 
                                         $XXXXLeft = 0
-                                        if($sub4th.count  % 2 -eq 1 )
+                                        if($4thLevel.count  % 2 -eq 1 )
                                             {
                                                 $Align4 = $true
                                                 $loops4 = -[Math]::ceiling($sub4th.count / 2 - 1)
@@ -5443,13 +5500,13 @@ Function Organization {
                                                 $loops4 = [Math]::ceiling($sub4th.count / 2) - 1
                                                 
                                             }
-                                        if($sub4th.count -eq 1)
+                                        if($4thLevel.count -eq 1)
                                             {
                                                 $loops4 = 1
                                             }
 
 
-                                    foreach($4th in $sub4th)
+                                    foreach($4th in $4thLevel)
                                         {                              
                                             $RoundSubs4 = @() 
                                             $Temp5th4 = @()
