@@ -36,6 +36,8 @@ if ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $DBServer = [string]$1.id.split("/")[8]
+                $PoolId = [string]$data.elasticPoolId.split("/")[10]
+                
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
@@ -55,6 +57,7 @@ if ($Task -eq 'Processing') {
                             'Read Replica Count'         = $data.readReplicaCount;
                             'Data Max Size (GB)'         = (($data.maxSizeBytes / 1024) / 1024) / 1024;
                             'Resource U'                 = $ResUCount;
+                            'ElasticPool ID'             = $PoolId;
                             'Tag Name'                   = [string]$Tag.Name;
                             'Tag Value'                  = [string]$Tag.Value
                         }
@@ -86,6 +89,8 @@ else {
         $Exc.Add('Zone Redundant')
         $Exc.Add('Catalog Collation')
         $Exc.Add('Read Replica Count')
+        $Exc.Add('ElasticPool ID')
+        
         if($InTag)
             {
                 $Exc.Add('Tag Name')
