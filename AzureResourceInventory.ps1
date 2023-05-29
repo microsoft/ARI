@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 2.3.16                                                                  #
+#       Version: 3.0.08                                                                  #
 #                                                                                        #
-#       Date: 01/09/2022                                                                 #
+#       Date: 05/29/2023                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -676,7 +676,7 @@ param ($TenantID,
             Write-Debug ('Subscriptions To be Gather in Advisories: '+$Subscri.Count)
                 if ([string]::IsNullOrEmpty($ResourceGroup)) {
                     Write-Debug ('Resource Group name is not present, extracting advisories for all Resource Groups')
-                    $GraphQuery = "advisorresources | summarize count()"
+                    $GraphQuery = "advisorresources |  summarize count()"
                 } else {
                     $GraphQuery = "advisorresources | where resourceGroup == '$ResourceGroup' | summarize count()"
                 }
@@ -711,6 +711,8 @@ param ($TenantID,
                 }
                 Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "Completed" -Completed
             }
+
+            $Global:Advisories = $Global:Advisories | Where-Object {$_.subscriptionid -in $Subscri}
         }
 
         <######################################################### Security Center ######################################################################>
