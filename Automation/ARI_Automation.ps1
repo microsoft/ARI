@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Automation/ARI_Automation.ps1
 This powershell Script is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.0
+Version: 3.0.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola
 
@@ -35,6 +35,9 @@ $STGACC = "azureinventorystg"
 #Container Name
 $STGCTG = 'ari'
 
+#Include Tags
+$InTag = $false
+
 
 <######################################################### SCRIPT ######################################################################>
 
@@ -56,7 +59,6 @@ $File = ("ARI_Automation_Report_"+$Date+".xlsx")
 
 $Resources = @()
 $Advisories = @()
-$Security = @()
 $Subscriptions = ''
 
 $Repo = 'https://github.com/azureinventory/ARI/tree/main/Modules'
