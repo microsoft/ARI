@@ -114,6 +114,30 @@ If ($Task -eq 'Processing')
                                 }                    
                     $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     $VMNICS = if(![string]::IsNullOrEmpty($data.networkProfile.networkInterfaces.id)){$data.networkProfile.networkInterfaces.id}else{'0'}
+                    
+                    $metricStartTime = (Get-Date).AddDays(-30)
+                    $metricEndTime = (Get-Date)
+                    
+                    if((New-TimeSpan -Start $1.properties.timeCreated -End (Get-Date)).TotalDays -lt 30)
+                    {
+                        $metricStartTime = $1.properties.timeCreated
+                    }
+
+ 		    $cpuUtilization = (az monitor metrics list --resource $1.id --metric "Percentage CPU" --start-time $metricStartTime --end-time $metricEndTime --interval PT30M --aggregation Maximum | ConvertFrom-Json).value.timeseries.data.maximum| Sort-Object -Descending
+                    $cpuAvgUtil = ($cpuUtilization | Measure-Object -Average).Average
+                    $cpuMaxUtil = $cpuUtilization[0];
+                    
+                    $monthlyUptimeHours = ($cpuUtilization.Where({$_ -ne $null}).Count) / 2
+                    
+                    $memoryTotalGb = $vmsizemap[$data.hardwareProfile.vmSize].RAM
+                    $memoryMaxUtilMetrics = (az monitor metrics list --resource $1.id --metric "Available Memory Bytes" --start-time $metricStartTime --end-time $metricEndTime --interval PT30M --aggregation Minimum | ConvertFrom-Json).value.timeseries.data.minimum| Sort-Object
+
+                    $memoryAvgFreeGb = ($memoryMaxUtilMetrics | Measure-Object -Average).Average / (1024 * 1024 * 1024)
+                    $memoryAvgUtil = ($memoryTotalGb - $memoryAvgFreeGb)*100/$memoryTotalGb
+                    
+                    $memoryMaxFreeGb = $memoryMaxUtilMetrics[1] / (1024 * 1024 * 1024)
+                    $memoryMaxUtil = ($memoryTotalGb - $memoryMaxFreeGb)*100/$memoryTotalGb
+                    
                     foreach ($2 in $VMNICS) {
 
                         $vmnic = $nic | Where-Object { $_.ID -eq $2 } | Select-Object -Unique
@@ -165,6 +189,11 @@ If ($Task -eq 'Processing')
                                 'Created Time'                  = $timecreated;
                                 'VM Extensions'                 = $ext;
                                 'Resource U'                    = $ResUCount;
+                                'vCPU Utilization (Max)'        = $cpuMaxUtil;
+                                'vCPU Utilization (Avg)'        = $cpuAvgUtil;
+                                'RAM Utilization (Max)'         = $memoryMaxUtil;
+                                'RAM Utilization (Avg)'         = $memoryAvgUtil;
+                                'Monthly Hours'                 = $monthlyUptimeHours;
                                 'Tag Name'                      = [string]$Tag.Name;
                                 'Tag Value'                     = [string]$Tag.Value
                                 }
@@ -248,6 +277,12 @@ else
                 $Exc.Add('Created Time')                
                 $Exc.Add('VM Extensions')
                 $Exc.Add('Resource U')
+                $Exc.Add('vCPU Utilization (Max)')
+                $Exc.Add('vCPU Utilization (Avg)')
+                $Exc.Add('RAM Utilization (Max)')
+                $Exc.Add('RAM Utilization (Avg)')
+                $Exc.Add('Monthly Hours')
+                
                 if($InTag)
                 {
                     $Exc.Add('Tag Name')
