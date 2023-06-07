@@ -25,6 +25,9 @@
 .PARAMETER ManagementGroup
     Use this parameter to collect a all Subscriptions in a Specific Management Group in a Tenant
 
+.PARAMETER Lite
+    Use this parameter to use only the Import-Excel module and don't create the charts (using Excel's API)
+
 .PARAMETER SecurityCenter
     Use this parameter to collect Security Center Advisories
 
