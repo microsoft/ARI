@@ -941,7 +941,7 @@ param ($TenantID,
 
                 $DrawJob = $DrawRun.BeginInvoke()
 
-                while ($DrawJob.IsCompleted -contains $false) {}
+                while ($DrawJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
 
                 $DrawRun.EndInvoke($DrawJob)
 
@@ -1012,7 +1012,7 @@ param ($TenantID,
 
                 $SecJob = $SecRun.BeginInvoke()
 
-                while ($SecJob.IsCompleted -contains $false) {}
+                while ($SecJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
 
                 $SecResult = $SecRun.EndInvoke($SecJob)
 
@@ -1052,7 +1052,7 @@ param ($TenantID,
 
                 $AdvJob = $AdvRun.BeginInvoke()
 
-                while ($AdvJob.IsCompleted -contains $false) {}
+                while ($AdvJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
 
                 $AdvResult = $AdvRun.EndInvoke($AdvJob)
 
@@ -1090,7 +1090,7 @@ param ($TenantID,
 
             $SubJob = $SubRun.BeginInvoke()
 
-            while ($SubJob.IsCompleted -contains $false) {}
+            while ($SubJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
 
             $SubResult = $SubRun.EndInvoke($SubJob)
 
@@ -1167,7 +1167,7 @@ param ($TenantID,
                         $job += (get-variable -name ('ModJob' + $ModName)).Value
                     }
 
-                    while ($Job.Runspace.IsCompleted -contains $false) {}
+                    while ($Job.Runspace.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
 
                     foreach ($Module in $Modules) {
                         If ($($args[9]) -eq $true) {
@@ -1292,7 +1292,7 @@ param ($TenantID,
 
             $ExcelJob = $ExcelRun.BeginInvoke()
 
-            while ($ExcelJob.IsCompleted -contains $false) {}
+            while ($ExcelJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
 
             $ExcelRun.EndInvoke($ExcelJob)
 
@@ -1342,7 +1342,7 @@ param ($TenantID,
 
                 $QuotaJob = $QuotaRun.BeginInvoke()
 
-                while ($QuotaJob.IsCompleted -contains $false) {}
+                while ($QuotaJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
 
                 $QuotaRun.EndInvoke($QuotaJob)
 
@@ -1395,7 +1395,7 @@ param ($TenantID,
 
             $SecExcelJob = $SecExcelRun.BeginInvoke()
 
-            while ($SecExcelJob.IsCompleted -contains $false) {}
+            while ($SecExcelJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
 
             $SecExcelRun.EndInvoke($SecExcelJob)
 
@@ -1445,7 +1445,7 @@ param ($TenantID,
 
             $AdvExcelJob = $AdvExcelRun.BeginInvoke()
 
-            while ($AdvExcelJob.IsCompleted -contains $false) {}
+            while ($AdvExcelJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
 
             $AdvExcelRun.EndInvoke($AdvExcelJob)
 
@@ -1483,7 +1483,7 @@ param ($TenantID,
 
         $SubsJob = $SubsRun.BeginInvoke()
 
-        while ($SubsJob.IsCompleted -contains $false) {}
+        while ($SubsJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
 
         $SubsRun.EndInvoke($SubsJob)
 
@@ -1528,7 +1528,7 @@ param ($TenantID,
 
         Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "30% Complete." -PercentComplete 30 -CurrentOperation "Waiting Excel Chart's Thread."
 
-        while ($ChartsJob.IsCompleted -contains $false) {}
+        while ($ChartsJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
 
         $ChartsRun.EndInvoke($ChartsJob)
 
