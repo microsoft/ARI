@@ -38,6 +38,9 @@ $STGCTG = 'ari'
 #Include Tags
 $InTag = $false
 
+#Lite
+$RunLite = $true
+
 
 <######################################################### SCRIPT ######################################################################>
 
@@ -219,7 +222,7 @@ $ScriptBlock = [Scriptblock]::Create($ModuSeq)
 
 $FileFull = ((Get-Location).Path+'\'+$File)
 
-Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $FileFull,'Light20','Azure Automation',$Subscriptions,$Resources.Count,$ExtractionRunTime,$ReportingRunTime
+Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $FileFull,'Light20','Azure Automation',$Subscriptions,$Resources.Count,$ExtractionRunTime,$ReportingRunTime,$RunLite
 
 <######################################################### UPLOAD FILE ######################################################################>
 

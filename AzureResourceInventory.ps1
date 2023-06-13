@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.0.08                                                                  #
+#       Version: 3.0.11                                                                  #
 #                                                                                        #
-#       Date: 05/29/2023                                                                 #
+#       Date: 06/07/2023                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -24,6 +24,9 @@
 
 .PARAMETER ManagementGroup
     Use this parameter to collect a all Subscriptions in a Specific Management Group in a Tenant
+
+.PARAMETER Lite
+    Use this parameter to use only the Import-Excel module and don't create the charts (using Excel's API)
 
 .PARAMETER SecurityCenter
     Use this parameter to collect Security Center Advisories
@@ -77,6 +80,7 @@ param ($TenantID,
         [switch]$Online, 
         [switch]$Diagram,
         [switch]$SkipDiagram, 
+        [switch]$Lite,
         [switch]$Debug, 
         [switch]$Help, 
         [switch]$DeviceLogin, 
@@ -171,6 +175,7 @@ param ($TenantID,
         $Global:ReportName = $ReportName
 
         if ($Online.IsPresent) { $Global:RunOnline = $true }else { $Global:RunOnline = $false }
+        if ($Lite.IsPresent) { $Global:RunLite = $true }else { $Global:RunLite = $false }
         if ($DiagramFullEnvironment.IsPresent) {$Global:FullEnv = $true}else{$Global:FullEnv = $false}
 
         $Global:Repo = 'https://github.com/microsoft/ARI/tree/main/Modules'
@@ -1522,7 +1527,7 @@ param ($TenantID,
 
         Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "15% Complete." -PercentComplete 15 -CurrentOperation "Invoking Excel Chart's Thread."
 
-        $ChartsRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($file).AddArgument($TableStyle).AddArgument($Global:PlatOS).AddArgument($Global:Subscriptions).AddArgument($Global:Resources.Count).AddArgument($ExtractionRunTime).AddArgument($ReportingRunTime)
+        $ChartsRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($file).AddArgument($TableStyle).AddArgument($Global:PlatOS).AddArgument($Global:Subscriptions).AddArgument($Global:Resources.Count).AddArgument($ExtractionRunTime).AddArgument($ReportingRunTime).AddArgument($RunLite)
 
         $ChartsJob = $ChartsRun.BeginInvoke()
 
