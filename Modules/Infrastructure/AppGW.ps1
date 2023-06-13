@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/AppGW.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 3.0.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -23,6 +23,7 @@ param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableSty
 If ($Task -eq 'Processing') {
 
     $APPGTW = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/applicationgateways' }
+    $APPGTWPOL = $Resources | Where-Object { $_.TYPE -eq 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies' }
 
     if($APPGTW)
         {
@@ -35,7 +36,8 @@ If ($Task -eq 'Processing') {
                 if([string]::IsNullOrEmpty($data.autoscaleConfiguration.maxCapacity)){$MaxCap = 'Autoscale Disabled'}else{$MaxCap = $data.autoscaleConfiguration.maxCapacity}
                 if([string]::IsNullOrEmpty($data.autoscaleConfiguration.minCapacity)){$MinCap = 'Autoscale Disabled'}else{$MinCap = $data.autoscaleConfiguration.minCapacity}
                 if([string]::IsNullOrEmpty($data.sslPolicy.minProtocolVersion)){$PROT = 'Default'}else{$PROT = $data.sslPolicy.minProtocolVersion}
-                if([string]::IsNullOrEmpty($data.webApplicationFirewallConfiguration.enabled)){$WAF = $false}else{$WAF = $data.webApplicationFirewallConfiguration.enabled}
+                if([string]::IsNullOrEmpty($data.webApplicationFirewallConfiguration.enabled)){$WAF = 'false'}else{$WAF = $data.webApplicationFirewallConfiguration.enabled}
+                if($WAF -eq 'false' -and $1.id -in $APPGTWPOL.properties.applicationGateways.id){$WAF = 'true'}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {        
                         $obj = @{
