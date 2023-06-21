@@ -112,6 +112,23 @@ If ($Task -eq 'Processing')
                                 { 
                                     ($disk | Where-Object {$_.id -eq $data.storageProfile.dataDisks.managedDisk.id}).properties.diskSizeGB
                                 }                    
+
+                    # Set the bounds for the metrics query
+                    $metricStartTime = [DateTime]::UtcNow.AddDays(-30).ToString("s")
+                    $metricEndTime = [DateTime]::UtcNow.ToString("s")
+
+                    # Get the CPU metrics
+                    $cpuMetrics = az monitor metrics list --resource $1.id --interval P1D --metric "Percentage CPU" --aggregation Average Maximum Minimum --start-time $metricStartTime --end-time $metricEndTime --query "value[].timeseries[].data[?average != null]" | ConvertFrom-Json
+                    $uptimeInDays = ($cpuMetrics | Measure-Object average -Average).Count
+                    $cpuAvgUtilPerc = ($cpuMetrics | Measure-Object average -Average).Average
+                    $cpuMaxUtilPerc = ($cpuMetrics | Measure-Object maximum -Maximum).Maximum
+
+                    # Get the memory metrics
+                    $memTotalGB = $vmsizemap[$data.hardwareProfile.vmSize].RAM
+                    $memMetrics = az monitor metrics list --resource $1.id --interval P1D --metric "Available Memory Bytes" --aggregation Average Maximum Minimum --start-time $metricStartTime --end-time $metricEndTime --query "value[].timeseries[].data[?average != null]" | ConvertFrom-Json
+                    $memAvgUtilGB = $memTotalGb - (($memMetrics | Measure-Object average -Average).Average/(1073741824))
+                    $memMaxUtilGB = $memTotalGb - (($memMetrics | Measure-Object maximum -Maximum).Maximum/(1073741824))
+
                     $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     $VMNICS = if(![string]::IsNullOrEmpty($data.networkProfile.networkInterfaces.id)){$data.networkProfile.networkInterfaces.id}else{'0'}
                     foreach ($2 in $VMNICS) {
@@ -166,7 +183,12 @@ If ($Task -eq 'Processing')
                                 'VM Extensions'                 = $ext;
                                 'Resource U'                    = $ResUCount;
                                 'Tag Name'                      = [string]$Tag.Name;
-                                'Tag Value'                     = [string]$Tag.Value
+                                'Tag Value'                     = [string]$Tag.Value;
+                                'vCPU Percent Utilization (Avg)'= $cpuAvgUtilPerc;
+                                'vCPU Percent Utilization (Max)'= $cpuMaxUtilPerc;
+                                'RAM Utilization GB (Avg)'      = $memAvgUtilGB;
+                                'RAM Utilization GB (Max)'      = $memMaxUtilGB;
+                                'Uptime (Days)'                 = $uptimeInDays;
                                 }
                                 $tmp += $obj
                                 if ($ResUCount -eq 1) { $ResUCount = 0 } 
@@ -248,6 +270,11 @@ else
                 $Exc.Add('Created Time')                
                 $Exc.Add('VM Extensions')
                 $Exc.Add('Resource U')
+                $Exc.Add('vCPU Percent Utilization (Avg)')
+                $Exc.Add('vCPU Percent Utilization (Max)')
+                $Exc.Add('RAM Utilization GB (Avg)')
+                $Exc.Add('RAM Utilization GB (Max)')
+                $Exc.Add('Update Time (Days)')
                 if($InTag)
                 {
                     $Exc.Add('Tag Name')
