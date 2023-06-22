@@ -184,10 +184,10 @@ If ($Task -eq 'Processing')
                                 'Resource U'                    = $ResUCount;
                                 'Tag Name'                      = [string]$Tag.Name;
                                 'Tag Value'                     = [string]$Tag.Value;
-                                'vCPU Percent Utilization (Avg)'= $cpuAvgUtilPerc;
-                                'vCPU Percent Utilization (Max)'= $cpuMaxUtilPerc;
-                                'RAM Utilization GB (Avg)'      = $memAvgUtilGB;
-                                'RAM Utilization GB (Max)'      = $memMaxUtilGB;
+                                'Avg vCPU Utilization (%)'      = $cpuAvgUtilPerc;
+                                'Max vCPU Utilization (%)'      = $cpuMaxUtilPerc;
+                                'Avg RAM Used (GB)'             = $memAvgUtilGB;
+                                'Max RAM Used (GB)'             = $memMaxUtilGB;
                                 'Uptime (Days)'                 = $uptimeInDays;
                                 }
                                 $tmp += $obj
@@ -270,11 +270,11 @@ else
                 $Exc.Add('Created Time')                
                 $Exc.Add('VM Extensions')
                 $Exc.Add('Resource U')
-                $Exc.Add('vCPU Percent Utilization (Avg)')
-                $Exc.Add('vCPU Percent Utilization (Max)')
-                $Exc.Add('RAM Utilization GB (Avg)')
-                $Exc.Add('RAM Utilization GB (Max)')
-                $Exc.Add('Update Time (Days)')
+                $Exc.Add('Avg vCPU Utilization (%)')
+                $Exc.Add('Max vCPU Utilization (%)')
+                $Exc.Add('Avg RAM Used (GB)')
+                $Exc.Add('Max RAM Used (GB)')
+                $Exc.Add('Uptime (Days)')
                 if($InTag)
                 {
                     $Exc.Add('Tag Name')
