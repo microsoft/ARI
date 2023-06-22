@@ -465,7 +465,7 @@ param ($TenantID,
 
         if (![string]::IsNullOrEmpty($ManagementGroup))
             {
-                Write-Debug ('Management group name supplied: ' + $ManagmentGroupName)
+                Write-Debug ('Management group name supplied: ' + $ManagementGroup)
                 $group = az account management-group entities list --query "[?name =='$ManagementGroup']" | ConvertFrom-Json
                 if ($group.Count -lt 1)
                 {
