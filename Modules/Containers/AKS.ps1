@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/AKS.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 3.1.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -42,6 +42,7 @@ If ($Task -eq 'Processing')
                 if([string]::IsNullOrEmpty($data.addonProfiles.omsagent.config.logAnalyticsWorkspaceResourceID)){$Insights = $false}else{$Insights = $data.addonProfiles.omsagent.config.logAnalyticsWorkspaceResourceID.split('/')[8]}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 foreach ($2 in $data.agentPoolProfiles) {
+                        $AutoScale = if([string]::IsNullOrEmpty($2.enableAutoScaling)){$false}else{$true}
                         foreach ($Tag in $Tags) {
                             $obj = @{
                                 'ID'                         = $1.id;
@@ -72,7 +73,7 @@ If ($Task -eq 'Processing')
                                 'OS Disk Size (GB)'          = $2.osDiskSizeGB;
                                 'Nodes'                      = $2.count;
                                 'Zones'                      = [string]$2.availabilityZones;
-                                'Autoscale'                  = $2.enableAutoScaling;
+                                'Autoscale'                  = $AutoScale;
                                 'Autoscale Max'              = $2.maxCount;
                                 'Autoscale Min'              = $2.minCount;
                                 'Max Pods Per Node'          = $2.maxPods;
@@ -105,12 +106,21 @@ Else
         $TableName = ('AKSTable_'+($SmaResources.AKS.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'   
 
-        $cond = @()
-        Foreach ($UnSupOS in $Unsupported.AKS)
-            {
-                $cond += New-ConditionalText $UnSupOS -Range E:E
-            }
-
+        $condtxt = @()
+        #AKS
+        $condtxt += New-ConditionalText 1.24 -Range E:E
+        $condtxt += New-ConditionalText 1.23 -Range E:E
+        $condtxt += New-ConditionalText 1.22 -Range E:E
+        $condtxt += New-ConditionalText 1.21 -Range E:E
+        #Orchestrator
+        $condtxt += New-ConditionalText 1.24 -Range AH:AH
+        $condtxt += New-ConditionalText 1.23 -Range AH:AH
+        $condtxt += New-ConditionalText 1.22 -Range AH:AH
+        $condtxt += New-ConditionalText 1.21 -Range AH:AH
+        #NodeSize
+        $condtxt += New-ConditionalText _b -Range X:X
+        #AutoScale
+        $condtxt += New-ConditionalText false -Range AB:AB
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -158,6 +168,17 @@ Else
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName $TableName -MaxAutoSizeRows 50 -TableStyle $tableStyle -ConditionalText $cond -Numberformat '0' -Style $Style            
+        Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName $TableName -MaxAutoSizeRows 50 -TableStyle $tableStyle -ConditionalText $condtxt -Numberformat '0' -Style $Style   
+        
+        $excel = Open-ExcelPackage -Path $File -KillExcel
+
+        $null = $excel.'AKS'.Cells["E1"].AddComment("AKS follows 12 months of support for a generally available (GA) Kubernetes version. To read more about our support policy for Kubernetes versioning", "Azure Resource Inventory")
+        $excel.'AKS'.Cells["E1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/supported-kubernetes-versions?tabs=azure-cli#aks-kubernetes-release-calendar'
+        $null = $excel.'AKS'.Cells["X1"].AddComment("System node pools require a VM SKU of at least 2 vCPUs and 4 GB memory. But burstable-VM(B series) isn't recommended")
+        $excel.'AKS'.Cells["X1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/use-system-pools?tabs=azure-cli#system-and-user-node-pools'
+        $null = $excel.'AKS'.Cells["AB1"].AddComment("The cluster autoscaler component can watch for pods in your cluster that can't be scheduled because of resource constraints")
+        $excel.'AKS'.Cells["AB1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/cluster-autoscaler'
+
+        Close-ExcelPackage $excel
     }
 }

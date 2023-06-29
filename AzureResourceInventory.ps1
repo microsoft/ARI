@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.0.11                                                                  #
+#       Version: 3.1.01                                                                  #
 #                                                                                        #
-#       Date: 06/07/2023                                                                 #
+#       Date: 06/29/2023                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -74,7 +74,8 @@ param ($TenantID,
         $ResourceGroup, 
         $TagKey, 
         $TagValue,
-        [switch]$SkipAdvisory, 
+        [switch]$SkipAdvisory,
+        [switch]$SkipPolicy,
         [switch]$IncludeTags, 
         [switch]$QuotaUsage, 
         [switch]$Online, 
@@ -171,6 +172,7 @@ param ($TenantID,
         $Global:Resources = @()
         $Global:Advisories = @()
         $Global:Security = @()
+        $Global:Policies = @()
         $Global:Subscriptions = ''
         $Global:ReportName = $ReportName
 
@@ -731,6 +733,41 @@ param ($TenantID,
                 } -ArgumentList $Global:Resources, $Global:Subscriptions
             }
 
+        <######################################################### Policies ######################################################################>
+
+            if (!($SkipPolicy.IsPresent)) {                
+
+                $GraphQuery = "policyresources | where type == 'microsoft.authorization/policyassignments' | summarize count()"
+    
+                $PolSize = az graph query -q $GraphQuery -m $TenantID --output json --only-show-errors | ConvertFrom-Json
+                $PolSizeNum = $PolSize.data.'count_'
+    
+                Write-Debug ('Policy: '+$PolSizeNum)
+                Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Policy extraction jobs.."
+    
+                if ($PolSizeNum -ge 1) {
+                    $Loop = $PolSizeNum / 1000
+                    $Loop = [math]::ceiling($Loop)
+                    $Looper = 0
+                    $Limit = 0
+    
+                    while ($Looper -lt $Loop) {
+                        $Looper ++
+                        Write-Progress -Id 1 -activity "Running Policy Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                        $GraphQuery = "policyresources | where type == 'microsoft.authorization/policyassignments' | order by id asc"
+    
+                        $Policy = (az graph query -q $GraphQuery -m $TenantID --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+    
+                        $Global:Policies += $Policy.data
+                        Start-Sleep 2
+                        $Limit = $Limit + 1000
+                    }
+                    Write-Progress -Id 1 -activity "Running Policy Inventory Job" -Status "Completed" -Completed
+                }
+    
+            }
+
+
         <######################################################### ADVISOR ######################################################################>
 
         $Global:ExtractionRuntime = Measure-Command -Expression {
@@ -1028,6 +1065,46 @@ param ($TenantID,
             } -ArgumentList $PSScriptRoot, $Subscriptions , $Security, 'Processing' , $File, $RunOnline, $RawRepo | Out-Null
         }
 
+        <######################################################### POLICY JOB ######################################################################>
+
+        Write-Debug ('Checking If Should Run Policy Job.')
+        if (!$SkipPolicy.IsPresent) {
+            Write-Debug ('Starting Policy Processing Job.')
+            Start-Job -Name 'Policy' -ScriptBlock {
+
+                If ($($args[5]) -eq $true) {
+                    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[6]) + '/Extras/Policy.ps1')
+                }
+                Else {
+                    if($($args[0]) -like '*\*')
+                        {
+                            $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\Policy.ps1')
+                        }
+                        else
+                        {
+                            $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '/Extras/Policy.ps1')
+                        }
+                    $ModuSeq = $ModuSeq0.ReadToEnd()
+                    $ModuSeq0.Dispose()
+                }
+
+                $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+
+                $PolRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
+
+                $PolJob = $PolRun.BeginInvoke()
+
+                while ($PolJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
+
+                $PolResult = $PolRun.EndInvoke($PolJob)
+
+                $PolRun.Dispose()
+
+                $PolResult
+
+            } -ArgumentList $PSScriptRoot, $Policies, 'Processing', $Subscriptions, $File, $RunOnline, $RawRepo | Out-Null
+        }
+
         <######################################################### ADVISORY JOB ######################################################################>
 
         Write-Debug ('Checking If Should Run Advisory Job.')
@@ -1165,7 +1242,7 @@ param ($TenantID,
                         New-Variable -Name ('ModRun' + $ModName)
                         New-Variable -Name ('ModJob' + $ModName)
 
-                        Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4] | ConvertFrom-Json)).AddArgument($($args[5])).AddArgument($null).AddArgument($null).AddArgument($null).AddArgument($null)
+                        Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4] | ConvertFrom-Json)).AddArgument($($args[5])).AddArgument($null).AddArgument($null).AddArgument($null).AddArgument($($args[12]))
 
                         Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
 
@@ -1199,7 +1276,7 @@ param ($TenantID,
                     }
 
                 $Hashtable
-                } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 50), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo | Out-Null                    
+                } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 50), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo, $Unsupported | Out-Null                    
                 $Limit = $Limit + 1000   
             }
 
@@ -1407,6 +1484,58 @@ param ($TenantID,
             $SecExcelRun.Dispose()
         }
 
+
+        <################################################ POLICY #######################################################>
+        #### Policy worksheet is generated apart from the resources
+        Write-Debug ('Checking if Should Generate Policy Sheet.')
+        if (!$SkipPolicy.IsPresent) {
+            Write-Debug ('Generating Policy Sheet.')
+            $Global:polco = $Policies.count
+
+            Write-Progress -activity $DataActive -Status "Building Policy Report" -PercentComplete 0 -CurrentOperation "Considering $polco Policies"
+
+            while (get-job -Name 'Policy' | Where-Object { $_.State -eq 'Running' }) {
+                Write-Progress -Id 1 -activity 'Processing Policies' -Status "50% Complete." -PercentComplete 50
+                Write-Debug ('Policy Job is: '+(get-job -Name 'Policy').State)
+                Start-Sleep -Seconds 2
+            }
+            Write-Progress -Id 1 -activity 'Processing Policies'  -Status "100% Complete." -Completed
+
+            $Global:Pol = Receive-Job -Name 'Policy'
+
+            If ($RunOnline -eq $true) {
+                Write-Debug ('Looking for the following file: '+$RawRepo + '/Extras/Policy.ps1')
+                $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Policy.ps1')
+            }
+            Else {
+                if($PSScriptRoot -like '*\*')
+                    {
+                        Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\Policy.ps1')
+                        $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Policy.ps1')
+                    }
+                else
+                    {
+                        Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/Policy.ps1')
+                        $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Policy.ps1')
+                    }
+                $ModuSeq = $ModuSeq0.ReadToEnd()
+                $ModuSeq0.Dispose()
+            }
+
+            $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+
+            $PolExcelRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($null).AddArgument('Reporting').AddArgument($null).AddArgument($file).AddArgument($Pol).AddArgument($TableStyle)
+
+            $PolExcelJob = $PolExcelRun.BeginInvoke()
+
+            while ($PolExcelJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
+
+            $PolExcelRun.EndInvoke($PolExcelJob)
+
+            $PolExcelRun.Dispose()
+        }
+
+
         <################################################ ADVISOR #######################################################>
         #### Advisor worksheet is generated apart from the resources
         Write-Debug ('Checking if Should Generate Advisory Sheet.')
@@ -1585,6 +1714,11 @@ if (!$SkipAdvisory.IsPresent)
     {
         Write-Host ('Total Advisories: ') -NoNewline
         write-host $advco -ForegroundColor Cyan
+    }
+if (!$SkipPolicy.IsPresent) 
+    {
+        Write-Host ('Total Policies: ') -NoNewline
+        write-host $polco -ForegroundColor Cyan
     }
 if ($SecurityCenter.IsPresent) 
     {

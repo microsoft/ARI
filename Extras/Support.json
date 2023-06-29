@@ -1,25 +1,268 @@
-{
-    "Linux":  [
-                "14.04",
-                "16.04"
-            ],
-    "AKS":  [
-                "1.12",
-                "1.13",
-                "1.14",
-                "1.15",
-                "1.16",
-                "1.17",
-                "1.18",
-                "1.19",
-                "1.20",
-                "1.21",
-                "1.22",
-                "1.23",
-                "1.24"
-            ],
-    "WebSite":  [
-            "JBOSSEAP|7.2-java8",
-            "JBOSSEAP|7-java8"
-        ]
-}
+[
+    {
+        "Id":1
+        ,"ServiceName":"Virtual Machines"
+        ,"RetiringFeature":"Av1-series"
+        ,"RetirementDate":"2024-08-31"
+        ,"Link": "https://learn.microsoft.com/azure/virtual-machines/av1-series-retirement"
+    }
+,   {
+        "Id":2
+        ,"ServiceName":"Virtual Machines"
+        ,"RetiringFeature":"Classic IaaS"
+        ,"RetirementDate":"2023-09-01"
+        ,"Link": "https://learn.microsoft.com/azure/virtual-machines/classic-vm-deprecation"
+    }
+,   {
+        "Id":3
+        ,"ServiceName":"App Service"
+        ,"RetiringFeature":"App Service Environment v1/v2"
+        ,"RetirementDate":"2024-08-31"
+        ,"Link": "https://azure.microsoft.com/updates/app-service-environment-v1-v2-retirement/"
+    }
+,   {
+        "Id":4
+        ,"ServiceName":"Azure Disks"
+        ,"RetiringFeature":"Unmanaged Disks"
+        ,"RetirementDate":"2025-09-30"
+        ,"Link": "https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation"
+    }
+,   {
+        "Id":5
+        ,"ServiceName":"Azure Database for PostgreSQL"
+        ,"RetiringFeature":"Single server"
+        ,"RetirementDate":"2025-03-28"
+        ,"Link": "https://azure.microsoft.com/updates/azure-database-for-postgresql-single-server-will-be-retired-migrate-to-flexible-server-by-28-march-2025/"
+    }
+,   {
+        "Id":6
+        ,"ServiceName":"Azure Cache for Redis"
+        ,"RetiringFeature":"Version 4.x"
+        ,"RetirementDate":"2023-06-30"
+        ,"Link": "https://learn.microsoft.com/azure/azure-cache-for-redis/cache-retired-features"
+    }
+,   {
+        "Id":7
+        ,"ServiceName":"Azure Database for MySQL"
+        ,"RetiringFeature":"Single server"
+        ,"RetirementDate":"2024-09-16"
+        ,"Link": "https://learn.microsoft.com/azure/mysql/single-server/whats-happening-to-mysql-single-server"
+    }
+,   {
+        "Id":8
+        ,"ServiceName":"Azure Load Balancer"
+        ,"RetiringFeature":"Basic Load Balancer"
+        ,"RetirementDate":"2025-09-30"
+        ,"Link": "https://azure.microsoft.com/updates/azure-basic-load-balancer-will-be-retired-on-30-september-2025-upgrade-to-standard-load-balancer/"
+    }
+,   {
+        "Id":9
+        ,"ServiceName":"Azure Service Map"
+        ,"RetiringFeature":"Entire Service"
+        ,"RetirementDate":"2025-09-30"
+        ,"Link": "https://azure.microsoft.com/updates/migrate-to-azure-monitor-vm-insights-by-30-september-2025-when-service-map-will-be-retired/"
+    }
+,   {
+        "Id":10
+        ,"ServiceName":"Application Insights"
+        ,"RetiringFeature":"Classic"
+        ,"RetirementDate":"2024-02-29"
+        ,"Link": "https://azure.microsoft.com/updates/we-re-retiring-classic-application-insights-on-29-february-2024/"
+    }
+,   {
+        "Id":11
+        ,"ServiceName":"Azure Data Lake Analytics"
+        ,"RetiringFeature":"Entire Service"
+        ,"RetirementDate":"2024-02-29"
+        ,"Link": "https://azure.microsoft.com/updates/migrate-to-azure-synapse-analytics/"
+    }
+,   {
+        "Id":12
+        ,"ServiceName":"Storage Account"
+        ,"RetiringFeature":"Classic"
+        ,"RetirementDate":"2024-08-31"
+        ,"Link": "https://learn.microsoft.com/azure/storage/common/classic-account-migration-overview"
+    }
+,   {
+        "Id":13
+        ,"ServiceName":"Cloud service (classic)"
+        ,"RetiringFeature":"Classic"
+        ,"RetirementDate":"2024-08-31"
+        ,"Link": "https://learn.microsoft.com/azure/cloud-services-extended-support/in-place-migration-overview"
+    }
+,   {
+        "Id":14
+        ,"ServiceName":"Azure Database for PostgreSQL"
+        ,"RetiringFeature":"Single Server- Version 11"
+        ,"RetirementDate":"2024-11-09"
+        ,"Link": "https://azure.microsoft.com/updates/singlepg11-retirement"
+    }
+,   {
+        "Id":15
+        ,"ServiceName":"Azure Logic Apps"
+        ,"RetiringFeature":"Integration Services Environment (IES)"
+        ,"RetirementDate":"2024-08-31"
+        ,"Link": "https://azure.microsoft.com/updates/integration-services-environment-will-be-retired-on-31-august-2024-transition-to-logic-apps-standard/"
+    }
+,   {
+        "Id":16
+        ,"ServiceName":"Virtual Network"
+        ,"RetiringFeature":"Classic"
+        ,"RetirementDate":"2024-08-31"
+        ,"Link": "https://learn.microsoft.com/azure/virtual-network/migrate-classic-vnet-powershell"
+    }
+,   {
+        "Id":17
+        ,"ServiceName":"Azure Application Gateway"
+        ,"RetiringFeature":"V1"
+        ,"RetirementDate":"2026-04-28"
+        ,"Link": "https://learn.microsoft.com/azure/application-gateway/migrate-v1-v2"
+    }
+,   {
+        "Id":18
+        ,"ServiceName":"Virtual Machines"
+        ,"RetiringFeature":"NV and NV_Promo series"
+        ,"RetirementDate":"2023-08-31"
+        ,"Link": "https://learn.microsoft.com/azure/virtual-machines/nv-series-retirement"
+    }
+    ,   {
+        "Id":19
+        ,"ServiceName":"Azure Data Lake Storage"
+        ,"RetiringFeature":"Gen 1"
+        ,"RetirementDate":"2024-02-29"
+        ,"Link": "https://azure.microsoft.com/updates/action-required-switch-to-azure-data-lake-storage-gen2-by-29-february-2024/"
+    }
+    ,   {
+        "Id":20
+        ,"ServiceName":"Reserved IPs"
+        ,"RetiringFeature":"Classic"
+        ,"RetirementDate":"2024-08-31"
+        ,"Link": "https://learn.microsoft.com/azure/virtual-network/ip-services/public-ip-upgrade-classic"
+    }
+    ,
+        {
+        "Id":21
+        ,"ServiceName":"Network Security Group"
+        ,"RetiringFeature":"Classic"
+        ,"RetirementDate":"2024-08-31"
+        ,"Link": "https://azure.microsoft.com/updates/five-azure-classic-networking-services-will-be-retired-on-31-august-2024/"
+    }
+    ,   
+        {
+        "Id":22
+        ,"ServiceName":"Azure Cache for Redis"
+        ,"RetiringFeature":"Classic"
+        ,"RetirementDate":"2024-08-31"
+        ,"Link": "https://learn.microsoft.com/azure/azure-cache-for-redis/cache-faq"
+    }
+        ,   
+        {
+        "Id":31
+        ,"ServiceName":"Azure Synapse Analytics"
+        ,"RetiringFeature":"Synapse Runtime for Apache Spark 2.4"
+        ,"RetirementDate":"2023-09-29"
+        ,"Link": "https://learn.microsoft.com/azure/synapse-analytics/spark/apache-spark-24-runtime"
+    }
+            ,   
+        {
+        "Id":32
+        ,"ServiceName":"Azure Synapse Analytics"
+        ,"RetiringFeature":"Synapse Runtime for Apache Spark 3.1"
+        ,"RetirementDate":"2024-01-26"
+        ,"Link": "https://learn.microsoft.com/azure/synapse-analytics/spark/apache-spark-3-runtime"
+    }
+    ,   
+        {
+        "Id":36
+        ,"ServiceName":"Cognitive Services"
+        ,"RetiringFeature":"QnAMaker"
+        ,"RetirementDate":"2025-03-31"
+        ,"Link": "https://azure.microsoft.com/updates/azure-qna-maker-will-be-retired-on-31-march-2025/"
+    }
+            ,   
+        {
+        "Id":37
+        ,"ServiceName":"Virtual Machines"
+        ,"RetiringFeature":"NC-series"
+        ,"RetirementDate":"2023-08-31"
+        ,"Link": "https://azure.microsoft.com/updates/ncseries-azure-virtual-machines-retirement-extended-to-31-august-2023/"
+    }
+            ,   
+        {
+        "Id":38
+        ,"ServiceName":"Virtual Machines"
+        ,"RetiringFeature":"NC V2 series"
+        ,"RetirementDate":"2023-08-31"
+        ,"Link": "https://azure.microsoft.com/updates/nc-v2series-azure-virtual-machines-will-be-retired-by-31-august-2022/"
+    }
+            ,   
+        {
+        "Id":39
+        ,"ServiceName":"Virtual Machines"
+        ,"RetiringFeature":"ND-Series"
+        ,"RetirementDate":"2023-08-31"
+        ,"Link": "https://azure.microsoft.com/updates/ndseries-azure-virtual-machines-will-be-retired-by-31-august-2022/"
+    }
+            ,   
+        {
+        "Id":40
+        ,"ServiceName":"Virtual Machines"
+        ,"RetiringFeature":"HB-series"
+        ,"RetirementDate":"2024-08-31"
+        ,"Link": "https://learn.microsoft.com/azure/virtual-machines/hb-series-retirement"
+    }
+            ,   
+        {
+        "Id":41
+        ,"ServiceName":"Machine Learning Studio (classic)"
+        ,"RetiringFeature":"Entire service"
+        ,"RetirementDate":"2024-08-31"
+        ,"Link": "https://azure.microsoft.com/updates/machine-learning-studio-classic-will-retire-on-31-august-2024/"
+    }
+            ,   
+        {
+        "Id":42
+        ,"ServiceName":"Public IP address"
+        ,"RetiringFeature":"Basic Sku"
+        ,"RetirementDate":"2025-09-30"
+        ,"Link": "https://learn.microsoft.com/azure/virtual-network/ip-services/public-ip-basic-upgrade-guidance" 
+    }	    ,   
+        {
+        "Id":45
+        ,"ServiceName":"Azure Database for PostgreSQL"
+        ,"RetiringFeature":"FlexibleServers- Version 11"
+        ,"RetirementDate":"2024-11-09"
+        ,"Link": "https://azure.microsoft.com/updates/flexpg11-retirement/"
+    }	    ,   
+        {
+        "Id":46
+        ,"ServiceName":"Azure Cosmos DB for PostgreSQL"
+        ,"RetiringFeature":"Version 11"
+        ,"RetirementDate":"2023-11-09"
+        ,"Link": "https://azure.microsoft.com/updates/hyperscalecitus-pg11/"
+    }
+    ,   
+        {
+        "Id":43
+        ,"ServiceName":"Cognitive Services"
+        ,"RetiringFeature":"Language Understanding (LUIS)"
+        ,"RetirementDate":"2025-09-30"
+        ,"Link": "https://azure.microsoft.com/updates/language-understanding-retirement/"
+    }
+    ,   
+        {
+        "Id":44
+        ,"ServiceName":"Azure Time Series Insights"
+        ,"RetiringFeature":"Entire service"
+        ,"RetirementDate":"2025-03-31"
+        ,"Link": "https://azure.microsoft.com/updates/we-ll-retire-azure-time-series-insights-on-31-of-march-2025/"
+    }
+    ,
+    {
+        "Id":49
+        ,"ServiceName":"Virtual Machines"
+        ,"RetiringFeature":"Azure Dedicated Host SKUs (Dsv3-Type1, Esv3-Type1, Dsv3-Type2, Esv3-Type2)"
+        ,"RetirementDate":"2023-06-30"
+        ,"Link": "https://learn.microsoft.com/azure/virtual-machines/dedicated-host-retirement"
+    }
+]

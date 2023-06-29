@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/APPSERVICEPLAN.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.2
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle,$Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -43,6 +43,9 @@ If ($Task -eq 'Processing')
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
+                $Orphaned = if([string]::IsNullOrEmpty($data.numberOfSites) -or $data.numberOfSites -eq 0){$true}else{$false}
+                $RetDate = ''
+                $RetFeature = ''
                 $AutoScale = ($APPAutoScale | Where-Object {$_.Properties.targetResourceUri -eq $1.id})
                 if([string]::IsNullOrEmpty($AutoScale)){$AutoSc = $false}else{$AutoSc = $true}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
@@ -57,12 +60,15 @@ If ($Task -eq 'Processing')
                             'Compute Mode'        = $data.computeMode;
                             'Intances Size'       = $data.currentWorkerSize;
                             'Current Instances'   = $data.currentNumberOfWorkers;
+                            'Retirement Date'     = [string]$RetDate;
+                            'Retirement Feature'  = $RetFeature;
                             'Autoscale Enabled'   = $AutoSc;
                             'Max Instances'       = $data.maximumNumberOfWorkers;                                                            
                             'App Plan OS'         = if ($data.reserved -eq 'true') { 'Linux' }else { 'Windows' };
                             'Apps Type'           = $data.kind;
                             'Apps'                = $data.numberOfSites;                    
                             'Zone Redundant'      = $data.zoneRedundant;
+                            'Orphaned'            = $Orphaned;
                             'Resource U'          = $ResUCount;
                             'Tag Name'            = [string]$Tag.Name;
                             'Tag Value'           = [string]$Tag.Value
@@ -88,12 +94,14 @@ Else
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
-        $condtxt += New-ConditionalText FALSE -Range I:I
-        $condtxt += New-ConditionalText FALSO -Range I:I
-        $condtxt += New-ConditionalText FALSE -Range M:M
-        $condtxt += New-ConditionalText FALSO -Range M:M
+        $condtxt += New-ConditionalText FALSE -Range K:K
+        $condtxt += New-ConditionalText FALSO -Range K:K
+        $condtxt += New-ConditionalText FALSE -Range O:O
+        $condtxt += New-ConditionalText FALSO -Range O:O
         $condtxt += New-ConditionalText Free -Range E:E
         $condtxt += New-ConditionalText Basic -Range E:E
+        $condtxt += New-ConditionalText - -Range F:F -ConditionalType ContainsText
+        $condtxt += New-ConditionalText TRUE -Range H:H
         
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -102,6 +110,9 @@ Else
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('Pricing Tier')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')
+        $Exc.Add('Orphaned')
         $Exc.Add('Compute Mode')
         $Exc.Add('Intances Size')
         $Exc.Add('Current Instances')

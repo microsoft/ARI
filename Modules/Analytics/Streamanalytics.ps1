@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/Streamanalytics.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle)
+param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -36,6 +36,8 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $RetDate = ''
+                $RetFeature = '' 
                 $Creadate = (get-date $data.createdDate).ToString("yyyy-MM-dd HH:mm:ss")
                 $LastOutput = (get-date $data.lastOutputEventTime).ToString("yyyy-MM-dd HH:mm:ss:ffff")
                 $OutputStart = (get-date $data.outputStartTime).ToString("yyyy-MM-dd HH:mm:ss:ffff")
@@ -51,6 +53,8 @@ If ($Task -eq 'Processing') {
                             'Compatibility Level'               = $data.compatibilityLevel;
                             'Content Storage Policy'            = $data.contentStoragePolicy;
                             'Created Date'                      = $Creadate;
+                            'Retirement Date'                   = [string]$RetDate;
+                            'Retirement Feature'                = $RetFeature;
                             'Data Locale'                       = $data.dataLocale;
                             'Late Arrival Max Delay in Seconds' = $data.eventsLateArrivalMaxDelayInSeconds;
                             'Out of Order Max Delay in Seconds' = $data.eventsOutOfOrderMaxDelayInSeconds;
@@ -79,6 +83,10 @@ Else {
 
         $TableName = ('StreamsATable_'+($SmaResources.Streamanalytics.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
+
+        $condtxt = @()
+        
+        $condtxt += New-ConditionalText - -Range I:I -ConditionalType ContainsText
         
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -89,6 +97,8 @@ Else {
         $Exc.Add('Compatibility Level')
         $Exc.Add('Content Storage Policy')
         $Exc.Add('Created Date')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')
         $Exc.Add('Data Locale')
         $Exc.Add('Late Arrival Max Delay in Seconds')
         $Exc.Add('Out of Order Max Delay in Seconds')

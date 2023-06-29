@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/MySQL.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.2
+Version: 3.0.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -35,6 +35,8 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $RetDate = ($Unsupported | Where-Object {$_.Id -eq 7}).RetirementDate
+                $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 7}).RetiringFeature
                 if(!$data.privateEndpointConnections){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
                 $sku = $1.SKU
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
@@ -45,6 +47,8 @@ If ($Task -eq 'Processing') {
                             'Resource Group'            = $1.RESOURCEGROUP;
                             'Name'                      = $1.NAME;
                             'Location'                  = $1.LOCATION;
+                            'Retirement Date'           = [string]$RetDate;
+                            'Retirement Feature'        = $RetFeature;
                             'SKU'                       = $sku.name;
                             'SKU Family'                = $sku.family;
                             'Tier'                      = $sku.tier;
@@ -86,12 +90,13 @@ Else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0.0
 
         $condtxt = @()
-        $condtxt += New-ConditionalText FALSE -Range J:J
-        $condtxt += New-ConditionalText FALSO -Range J:J
-        $condtxt += New-ConditionalText Disabled -Range L:L
-        $condtxt += New-ConditionalText Enabled -Range O:O
-        $condtxt += New-ConditionalText TLSEnforcementDisabled -Range R:R
-        $condtxt += New-ConditionalText Disabled -Range W:W
+        $condtxt += New-ConditionalText FALSE -Range L:L
+        $condtxt += New-ConditionalText FALSO -Range L:L
+        $condtxt += New-ConditionalText Disabled -Range N:N
+        $condtxt += New-ConditionalText Enabled -Range Q:Q
+        $condtxt += New-ConditionalText TLSEnforcementDisabled -Range T:T
+        $condtxt += New-ConditionalText Disabled -Range Y:Y
+        $condtxt += New-ConditionalText - -Range H:H -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -101,6 +106,8 @@ Else {
         $Exc.Add('SKU')
         $Exc.Add('SKU Family')
         $Exc.Add('Tier')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')  
         $Exc.Add('Capacity')
         $Exc.Add('MySQL Version')
         $Exc.Add('Private Endpoint')
@@ -128,6 +135,13 @@ Else {
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'MySQL' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+
+        $excel = Open-ExcelPackage -Path $File -KillExcel
+    
+        $null = $excel.'MySQL'.Cells["H1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.")
+        $excel.'MySQL'.Cells["H1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
+
+        Close-ExcelPackage $excel
 
     }
     <######## Insert Column comments and documentations here following this model #########>

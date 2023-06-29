@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VM.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.1
+Version: 3.0.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -48,7 +48,6 @@ If ($Task -eq 'Processing')
 
             foreach ($1 in $vm) 
                 {
-
                     $ResUCount = 1
                     $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                     $data = $1.PROPERTIES 
@@ -58,6 +57,45 @@ If ($Task -eq 'Processing')
                     $AVSET = ''
                     $dataSize = ''
                     $StorAcc = ''
+
+                    $RetDate = ''
+                    $RetFeature = '' 
+                    if($data.hardwareProfile.vmSize -in ('basic_a0','basic_a1','basic_a2','basic_a3','basic_a4','standard_a0','standard_a1','standard_a2','standard_a3','standard_a4','standard_a5','standard_a6','standard_a7','standard_a9') -or $1.sku.name -in ('basic_a0','basic_a1','basic_a2','basic_a3','basic_a4','standard_a0','standard_a1','standard_a2','standard_a3','standard_a4','standard_a5','standard_a6','standard_a7','standard_a9'))
+                        {
+                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 1}).RetirementDate
+                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 1}).RetiringFeature
+                        }
+                    if($data.hardwareProfile.vmSize -in ('Standard_NV12','Standard_NV12_Promo','Standard_NV24','Standard_NV24_Promo','Standard_NV6','Standard_NV6_Promo') -or $1.sku.name -in ('Standard_NV12','Standard_NV12_Promo','Standard_NV24','Standard_NV24_Promo','Standard_NV6','Standard_NV6_Promo'))
+                        {
+                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 18}).RetirementDate
+                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 18}).RetiringFeature
+                        }
+                    if($data.hardwareProfile.vmSize -in ('Standard_NC6','Standard_NC6_Promo','Standard_NC12','Standard_NC12_Promo','Standard_NC24','Standard_NC24_Promo','Standard_NC24r','Standard_NC24r_Promo') -or $1.sku.name -in ('Standard_NC6','Standard_NC6_Promo','Standard_NC12','Standard_NC12_Promo','Standard_NC24','Standard_NC24_Promo','Standard_NC24r','Standard_NC24r_Promo'))
+                        {
+                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 37}).RetirementDate
+                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 37}).RetiringFeature
+                        }
+                    if($data.hardwareProfile.vmSize -in ('Standard_NC6s_v2','Standard_NC12s_v2','Standard_NC24s_v2','Standard_NC24rs_v2') -or $1.sku.name -in ('Standard_NC6s_v2','Standard_NC12s_v2','Standard_NC24s_v2','Standard_NC24rs_v2'))
+                        {
+                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 38}).RetirementDate
+                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 38}).RetiringFeature
+                        }
+                    if($data.hardwareProfile.vmSize -in ('Standard_ND6','Standard_ND12','Standard_ND24','Standard_ND24r') -or $1.sku.name -in ('Standard_ND6','Standard_ND12','Standard_ND24','Standard_ND24r'))
+                        {
+                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 39}).RetirementDate
+                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 39}).RetiringFeature
+                        }
+                    if($data.hardwareProfile.vmSize -in ('Standard_HB60rs','Standard_HB60-45rs','Standard_HB60-30rs','Standard_HB60-15rs') -or $1.sku.name -in ('Standard_HB60rs','Standard_HB60-45rs','Standard_HB60-30rs','Standard_HB60-15rs'))
+                        {
+                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 40}).RetirementDate
+                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 40}).RetiringFeature
+                        }
+                    if(!$data.storageProfile.osDisk.managedDisk.id)
+                        {
+                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 4}).RetirementDate
+                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 4}).RetiringFeature
+                        }
+                    
                     $UpdateMgmt = if ($null -eq $data.osProfile.LinuxConfiguration.patchSettings.patchMode) { $data.osProfile.WindowsConfiguration.patchSettings.patchMode } else { $data.osProfile.LinuxConfiguration.patchSettings.patchMode }
 
                     $ext = @()
@@ -142,6 +180,8 @@ If ($Task -eq 'Processing')
                                 'OS Type'                       = $data.storageProfile.osDisk.osType;
                                 'OS Name'                       = $data.extended.instanceView.osname;
                                 'OS Version'                    = $data.extended.instanceView.osversion;
+                                'Retirement Date'               = [string]$RetDate;
+                                'Retirement Feature'            = $RetFeature;
                                 'Update Management'             = $UpdateMgmt;
                                 'Boot Diagnostics'              = $bootdg;
                                 'Performance Agent'             = if ($azDiag -ne '') { $true }else { $false };
@@ -186,28 +226,24 @@ else
             $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AK:AK -Width 60 -WrapText 
 
                 $cond = @()
-                Foreach ($UnSupOS in $Unsupported.Linux)
-                    {
-                        #ImageVersion
-                        $cond += New-ConditionalText $UnSupOS -Range H:H
-                    }
-
                 #Hybrid Benefit
-                $cond += New-ConditionalText None -Range M:M
+                $cond += New-ConditionalText None -Range O:O
                 #NSG
-                $cond += New-ConditionalText None -Range AC:AC
+                $cond += New-ConditionalText None -Range AE:AE
                 #Boot Diagnostics
-                $cond += New-ConditionalText falso -Range P:P
-                $cond += New-ConditionalText false -Range P:P
-                #Performance Agent
-                $cond += New-ConditionalText falso -Range Q:Q
-                $cond += New-ConditionalText false -Range Q:Q
-                #Azure Monitor
                 $cond += New-ConditionalText falso -Range R:R
                 $cond += New-ConditionalText false -Range R:R
+                #Performance Agent
+                $cond += New-ConditionalText falso -Range S:S
+                $cond += New-ConditionalText false -Range S:S
+                #Azure Monitor
+                $cond += New-ConditionalText falso -Range T:T
+                $cond += New-ConditionalText false -Range T:T
                 #Acelerated Network
-                $cond += New-ConditionalText false -Range AE:AE
-                $cond += New-ConditionalText falso -Range AE:AE  
+                $cond += New-ConditionalText false -Range AG:AG
+                $cond += New-ConditionalText falso -Range AG:AG  
+                #Retirement
+                $cond += New-ConditionalText - -Range M:M -ConditionalType ContainsText
     
                 $Exc = New-Object System.Collections.Generic.List[System.Object]
                 $Exc.Add('Subscription')
@@ -222,6 +258,8 @@ else
                 $Exc.Add('OS Version')
                 $Exc.Add('Image Reference')
                 $Exc.Add('Image Version')
+                $Exc.Add('Retirement Date')
+                $Exc.Add('Retirement Feature')
                 $Exc.Add('Hybrid Benefit')
                 $Exc.Add('Admin Username')
                 $Exc.Add('Update Management')
@@ -262,16 +300,18 @@ else
 
                 $excel = Open-ExcelPackage -Path $File -KillExcel
     
-                $null = $excel.'Virtual Machines'.Cells["P1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
-                $excel.'Virtual Machines'.Cells["P1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
-                $null = $excel.'Virtual Machines'.Cells["Q1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
-                $excel.'Virtual Machines'.Cells["Q1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
-                $null = $excel.'Virtual Machines'.Cells["R1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource’s health.", "Azure Resource Inventory")
-                $excel.'Virtual Machines'.Cells["R1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
-                $null = $excel.'Virtual Machines'.Cells["AC1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
-                $excel.'Virtual Machines'.Cells["AC1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
-                $null = $excel.'Virtual Machines'.Cells["AE1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
-                $excel.'Virtual Machines'.Cells["AE1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
+                $null = $excel.'Virtual Machines'.Cells["M1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.")
+                $excel.'Virtual Machines'.Cells["M1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
+                $null = $excel.'Virtual Machines'.Cells["R1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["R1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
+                $null = $excel.'Virtual Machines'.Cells["S1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["S1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
+                $null = $excel.'Virtual Machines'.Cells["T1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource’s health.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["T1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
+                $null = $excel.'Virtual Machines'.Cells["AE1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["AE1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
+                $null = $excel.'Virtual Machines'.Cells["AG1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["AG1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
 
             Close-ExcelPackage $excel
         }             

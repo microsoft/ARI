@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Analytics/MachineLearning.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.10
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -36,6 +36,8 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
+                $RetDate = ''
+                $RetFeature = '' 
                 $timecreated = $data.creationTime
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
@@ -56,6 +58,8 @@ If ($Task -eq 'Processing') {
                             'Description'               = $data.description;
                             'HBI Workspace'             = $data.hbiWorkspace;
                             'Container Registry'        = $containerRegistry;
+                            'Retirement Date'           = [string]$RetDate;
+                            'Retirement Feature'        = $RetFeature;
                             'Storage HNS Enabled'       = $data.storageHnsEnabled;
                             'Private Link Count'        = $data.privateLinkCount;
                             'Public Access Behind Vnet' = $data.allowPublicAccessWhenBehindVnet;
@@ -87,6 +91,7 @@ Else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
+        $condtxt += New-ConditionalText - -Range J:J -ConditionalType ContainsText
 
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -99,6 +104,8 @@ Else {
         $Exc.Add('Description')
         $Exc.Add('HBI Workspace')
         $Exc.Add('Container Registry')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')
         $Exc.Add('Storage HNS Enabled')
         $Exc.Add('Private Link Count')
         $Exc.Add('Public Access Behind Vnet')

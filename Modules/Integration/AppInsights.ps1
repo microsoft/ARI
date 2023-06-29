@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Integration/AppInsights.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle)
+param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -36,6 +36,8 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $RetDate = ''
+                $RetFeature = '' 
                 $timecreated = $data.CreationDate
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
@@ -49,6 +51,8 @@ If ($Task -eq 'Processing') {
                             'Name'                              = $1.NAME;
                             'Location'                          = $1.LOCATION;
                             'Application Type'                  = $data.Application_Type;
+                            'Retirement Date'                   = [string]$RetDate;
+                            'Retirement Feature'                = $RetFeature;
                             'Flow Type'                         = $data.Flow_Type;
                             'Version'                           = $data.Ver;
                             'Request Source'                    = $data.Request_Source;
@@ -79,7 +83,8 @@ Else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
-        $condtxt += New-ConditionalText Disabled -Range I:I
+        $condtxt += New-ConditionalText Disabled -Range K:K
+        $condtxt += New-ConditionalText - -Range F:F -ConditionalType ContainsText
         
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -87,6 +92,8 @@ Else {
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('Application Type')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature') 
         $Exc.Add('Flow Type')
         $Exc.Add('Version')
         $Exc.Add('Request Source')

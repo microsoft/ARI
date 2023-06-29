@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/Databricks.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.10
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -36,6 +36,8 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
+                $RetDate = ''
+                $RetFeature = '' 
                 $timecreated = $data.createdDateTime
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
@@ -55,6 +57,8 @@ If ($Task -eq 'Processing') {
                             'Storage Account SKU'       = $data.parameters.storageAccountSkuName.value;
                             'Infrastructure Encryption' = $data.parameters.requireInfrastructureEncryption.value;
                             'Prepare Encryption'        = $data.parameters.prepareEncryption.value;
+                            'Retirement Date'           = [string]$RetDate;
+                            'Retirement Feature'        = $RetFeature;
                             'Enable Public IP'          = $PIP;
                             'Custom Virtual Network'    = $VNET;
                             'Custom Private Subnet'     = $data.parameters.customPrivateSubnetName.value;
@@ -84,12 +88,12 @@ Else {
 
         $condtxt = @()
         
+        $condtxt += New-ConditionalText FALSE -Range I:I
+        $condtxt += New-ConditionalText FALSO -Range I:I
         $condtxt += New-ConditionalText FALSE -Range J:J
         $condtxt += New-ConditionalText FALSO -Range J:J
-        $condtxt += New-ConditionalText Disabled -Range L:L
-        $condtxt += New-ConditionalText Enabled -Range O:O
-        $condtxt += New-ConditionalText TLSEnforcementDisabled -Range R:R
-        $condtxt += New-ConditionalText Disabled -Range W:W
+        $condtxt += New-ConditionalText - -Range K:K -ConditionalType ContainsText
+
 
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -103,6 +107,8 @@ Else {
         $Exc.Add('Storage Account SKU')
         $Exc.Add('Infrastructure Encryption')
         $Exc.Add('Prepare Encryption')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')
         $Exc.Add('Enable Public IP')
         $Exc.Add('Custom Virtual Network')
         $Exc.Add('Custom Private Subnet')

@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/LoadBalancer.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -34,6 +34,14 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $Orphaned = if([string]::IsNullOrEmpty($data.backendAddressPools.id)){$true}else{$false}
+                $RetDate = ''
+                $RetFeature = ''
+                if($1.sku.name -eq 'Basic')
+                    {
+                        $RetDate = ($Unsupported | Where-Object {$_.Id -eq 8}).RetirementDate
+                        $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 8}).RetiringFeature
+                    }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 if ($null -ne $data.frontendIPConfigurations -and $null -ne $data.backendAddressPools -and $null -ne $data.probes) {
                     foreach ($2 in $data.frontendIPConfigurations) {
@@ -66,6 +74,9 @@ If ($Task -eq 'Processing') {
                                             'Name'                      = $1.NAME;
                                             'Location'                  = $1.LOCATION;
                                             'SKU'                       = $1.sku.name;
+                                            'Retirement Date'           = [string]$RetDate;
+                                            'Retirement Feature'        = $RetFeature;
+                                            'Orphaned'                  = $Orphaned;
                                             'Frontend Name'             = $2.name;
                                             'Frontend Target'           = $Fronttarget;
                                             'Frontend Type'             = $FrontType;
@@ -118,6 +129,9 @@ If ($Task -eq 'Processing') {
                                         'Name'                      = $1.NAME;
                                         'Location'                  = $1.LOCATION;
                                         'SKU'                       = $1.sku.name;
+                                        'Retirement Date'           = [string]$RetDate;
+                                        'Retirement Feature'        = $RetFeature;
+                                        'Orphaned'                  = $Orphaned;
                                         'Frontend Name'             = $2.name;
                                         'Frontend Target'           = $Fronttarget;
                                         'Frontend Type'             = $FrontType;
@@ -162,6 +176,9 @@ If ($Task -eq 'Processing') {
                                     'Name'                      = $1.NAME;
                                     'Location'                  = $1.LOCATION;
                                     'SKU'                       = $1.sku.name;
+                                    'Retirement Date'           = [string]$RetDate;
+                                    'Retirement Feature'        = $RetFeature;
+                                    'Orphaned'                  = $Orphaned;
                                     'Frontend Name'             = $2.name;
                                     'Frontend Target'           = $Fronttarget;
                                     'Frontend Type'             = $FrontType;
@@ -206,6 +223,9 @@ If ($Task -eq 'Processing') {
                                         'Name'                      = $1.NAME;
                                         'Location'                  = $1.LOCATION;
                                         'SKU'                       = $1.sku.name;
+                                        'Retirement Date'           = [string]$RetDate;
+                                        'Retirement Feature'        = $RetFeature;
+                                        'Orphaned'                  = $Orphaned;
                                         'Frontend Name'             = $2.name;
                                         'Frontend Target'           = $Fronttarget;
                                         'Frontend Type'             = $FrontType;
@@ -246,6 +266,9 @@ If ($Task -eq 'Processing') {
                                         'Name'                      = $1.NAME;
                                         'Location'                  = $1.LOCATION;
                                         'SKU'                       = $1.sku.name;
+                                        'Retirement Date'           = [string]$RetDate;
+                                        'Retirement Feature'        = $RetFeature;
+                                        'Orphaned'                  = $Orphaned;
                                         'Frontend Name'             = $null;
                                         'Frontend Target'           = $null;
                                         'Frontend Type'             = $null;
@@ -274,6 +297,9 @@ If ($Task -eq 'Processing') {
                                     'Name'                      = $1.NAME;
                                     'Location'                  = $1.LOCATION;
                                     'SKU'                       = $1.sku.name;
+                                    'Retirement Date'           = [string]$RetDate;
+                                    'Retirement Feature'        = $RetFeature;
+                                    'Orphaned'                  = $Orphaned;
                                     'Frontend Name'             = $null;
                                     'Frontend Target'           = $null;
                                     'Frontend Type'             = $null;
@@ -306,6 +332,9 @@ If ($Task -eq 'Processing') {
                                     'Name'                      = $1.NAME;
                                     'Location'                  = $1.LOCATION;
                                     'SKU'                       = $1.sku.name;
+                                    'Retirement Date'           = [string]$RetDate;
+                                    'Retirement Feature'        = $RetFeature;
+                                    'Orphaned'                  = $Orphaned;
                                     'Frontend Name'             = $null;
                                     'Frontend Target'           = $null;
                                     'Frontend Type'             = $null;
@@ -335,7 +364,11 @@ Else {
     if ($SmaResources.LoadBalancer) {
 
         $TableName = ('LBTable_'+($SmaResources.LoadBalancer.id | Select-Object -Unique).count)
-        $txtLB = New-ConditionalText Basic -Range E:E
+
+        $condtxt = @()
+        $condtxt += New-ConditionalText - -Range F:F -ConditionalType ContainsText
+        $condtxt += New-ConditionalText Basic -Range E:E
+        $condtxt += New-ConditionalText TRUE -Range H:H
                         
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
@@ -345,6 +378,9 @@ Else {
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('SKU')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')
+        $Exc.Add('Orphaned')
         $Exc.Add('Frontend Name')
         $Exc.Add('Frontend Target')
         $Exc.Add('Frontend Type')
@@ -367,7 +403,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Load Balancers' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $txtLB -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Load Balancers' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
     
         <######## Insert Column comments and documentations here following this model #########>
 
@@ -375,6 +411,9 @@ Else {
 
         $null = $excel.'Load Balancers'.Cells["E1"].AddComment("No SLA is provided for Basic Load Balancer!", "Azure Resource Inventory")
         $excel.'Load Balancers'.Cells["E1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/load-balancer/skus'
+    
+        $null = $excel.'Load Balancers'.Cells["F1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.")
+        $excel.'Load Balancers'.Cells["F1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
 
         Close-ExcelPackage $excel 
 

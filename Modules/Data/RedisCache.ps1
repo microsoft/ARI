@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/RedisCache.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -39,6 +39,13 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $RetDate = ''
+                $RetFeature = ''
+                if($data.redisVersion -eq '4.0')
+                    {
+                        $RetDate = ($Unsupported | Where-Object {$_.Id -eq 6}).RetirementDate
+                        $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 6}).RetiringFeature
+                    }
                 $PvtEndP = $data.privateEndpointConnections.properties.privateEndpoint.id.split('/')[8]
                 if ($1.ZONES) { $Zones = $1.ZONES }else { $Zones = 'Not Configured' }
                 if ([string]::IsNullOrEmpty($data.minimumTlsVersion)){$MinTLS = 'Default'}Else{$MinTLS = "TLS $($data.minimumTlsVersion)"}
@@ -51,6 +58,8 @@ If ($Task -eq 'Processing') {
                             'Name'                  = $1.NAME;
                             'Location'              = $1.LOCATION;
                             'Zone'                  = $Zones;
+                            'Retirement Date'       = [string]$RetDate;
+                            'Retirement Feature'    = $RetFeature;
                             'Version'               = $data.redisVersion;
                             'Public Network Access' = $data.publicNetworkAccess;
                             'FQDN'                  = $data.hostName;
@@ -87,23 +96,26 @@ Else {
         $TableName = ('RedisCacheTable_'+($SmaResources.RedisCache.id | Select-Object -Unique).count)
         $condtxt = @()
         $condtxt += New-ConditionalText "Not Configured" -Range E:E
-        $condtxt += New-ConditionalText Default -Range K:K
-        $condtxt += New-ConditionalText 1.0 -Range K:K
-        $condtxt += New-ConditionalText 1.1 -Range K:K
-        $condtxt += New-ConditionalText TRUE -Range J:J
-        $condtxt += New-ConditionalText VERDADEIRO -Range J:J
+        $condtxt += New-ConditionalText Default -Range M:M
+        $condtxt += New-ConditionalText 1.0 -Range M:M
+        $condtxt += New-ConditionalText 1.1 -Range M:M
+        $condtxt += New-ConditionalText TRUE -Range L:L
+        $condtxt += New-ConditionalText VERDADEIRO -Range L:L
+        $condtxt += New-ConditionalText - -Range F:F -ConditionalType ContainsText
 
         $Style = @()        
-        $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0.0 -Range K:K
-        $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0 -Range A:J
-        $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0 -Range L:Z
+        $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0.0 -Range M:M
+        $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0 -Range A:L
+        $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0 -Range N:Z
         
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Name')                    
         $Exc.Add('Location')           
-        $Exc.Add('Zone')                    
+        $Exc.Add('Zone')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')              
         $Exc.Add('Version')                 
         $Exc.Add('Public Network Access')
         $Exc.Add('FQDN')                    
@@ -130,6 +142,14 @@ Else {
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'Redis Cache' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+
+        $excel = Open-ExcelPackage -Path $File -KillExcel
+    
+        $null = $excel.'Redis Cache'.Cells["F1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.")
+        $excel.'Redis Cache'.Cells["F1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
+
+        Close-ExcelPackage $excel
+
     }
     <######## Insert Column comments and documentations here following this model #########>
 }

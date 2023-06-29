@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Analytics/Synapse.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle)
+param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -36,6 +36,8 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $RetDate = ''
+                $RetFeature = '' 
                 $pvt = $data.privateEndpointConnections.count
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
@@ -46,6 +48,8 @@ If ($Task -eq 'Processing') {
                             'Name'                              = $1.NAME;
                             'Location'                          = $1.LOCATION;
                             'Public Network Access'             = $data.publicNetworkAccess;
+                            'Retirement Date'                   = [string]$RetDate;
+                            'Retirement Feature'                = $RetFeature;
                             'Private Endpoints'                 = [string]$pvt;
                             'Double Encryption Enabled'         = [string]$data.encryption.doubleEncryptionEnabled;
                             'Trusted Service Bypass Enabled'    = $data.trustedServiceBypassEnabled;
@@ -75,6 +79,10 @@ Else {
         $TableName = ('SynapseTable_'+($SmaResources.Synapse.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
         
+        $condtxt = @()
+        
+        $condtxt += New-ConditionalText - -Range G:G -ConditionalType ContainsText
+
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
@@ -82,6 +90,8 @@ Else {
         $Exc.Add('Location')
         $Exc.Add('Public Network Access')
         $Exc.Add('Private Endpoints')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')
         $Exc.Add('Double Encryption Enabled')
         $Exc.Add('Trusted Service Bypass Enabled')
         $Exc.Add('SQL Administrator Login')

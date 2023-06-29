@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/POSTGRE.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.2
+Version: 3.0.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -36,6 +36,8 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
+                $RetDate = ($Unsupported | Where-Object {$_.Id -eq 5}).RetirementDate
+                $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 5}).RetiringFeature
                 if(!$data.privateEndpointConnections){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
@@ -48,6 +50,8 @@ If ($Task -eq 'Processing') {
                             'SKU'                       = $sku.name;
                             'SKU Family'                = $sku.family;
                             'Tier'                      = $sku.tier;
+                            'Retirement Date'           = [string]$RetDate;
+                            'Retirement Feature'        = $RetFeature;
                             'Capacity'                  = $sku.capacity;
                             'Postgre Version'           = $data.version;
                             'Private Endpoint'          = $PVTENDP;
@@ -86,12 +90,13 @@ Else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
-        $condtxt += New-ConditionalText FALSE -Range J:J
-        $condtxt += New-ConditionalText FALSO -Range J:J
-        $condtxt += New-ConditionalText Disabled -Range L:L
-        $condtxt += New-ConditionalText Enabled -Range O:O
-        $condtxt += New-ConditionalText TLSEnforcementDisabled -Range R:R
-        $condtxt += New-ConditionalText Disabled -Range W:W
+        $condtxt += New-ConditionalText FALSE -Range L:L
+        $condtxt += New-ConditionalText FALSO -Range L:L
+        $condtxt += New-ConditionalText Disabled -Range M:M
+        $condtxt += New-ConditionalText Enabled -Range Q:Q
+        $condtxt += New-ConditionalText TLSEnforcementDisabled -Range T:T
+        $condtxt += New-ConditionalText Disabled -Range Y:Y
+        $condtxt += New-ConditionalText - -Range J:J -ConditionalType ContainsText
 
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -104,6 +109,8 @@ Else {
         $Exc.Add('Tier')
         $Exc.Add('Capacity')
         $Exc.Add('Postgre Version')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')
         $Exc.Add('Private Endpoint')
         $Exc.Add('Backup Retention Days')
         $Exc.Add('Geo-Redundant Backup')
@@ -129,6 +136,13 @@ Else {
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'PostgreSQL' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+
+        $excel = Open-ExcelPackage -Path $File -KillExcel
+    
+        $null = $excel.'PostgreSQL'.Cells["J1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.")
+        $excel.'PostgreSQL'.Cells["J1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
+
+        Close-ExcelPackage $excel
 
     }
     <######## Insert Column comments and documentations here following this model #########>

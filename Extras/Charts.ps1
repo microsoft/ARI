@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Extras/Charts.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.2
+Version: 3.1.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -22,11 +22,12 @@ param($File, $TableStyle, $PlatOS, $Subscriptions, $Resources, $ExtractionRunTim
     $Excel = New-Object -TypeName OfficeOpenXml.ExcelPackage $File
     $Worksheets = $Excel.Workbook.Worksheets
 
-    $Order = $Worksheets | Where-Object { $_.Name -notin 'Advisory', 'Security Center', 'Subscriptions', 'Quota Usage' } | Select-Object -Property Index, name, @{N = "Dimension"; E = { $_.dimension.Rows - 1 } } | Sort-Object -Property Dimension -Descending
+    $Order = $Worksheets | Where-Object { $_.Name -notin 'Policy', 'Advisory', 'Security Center', 'Subscriptions', 'Quota Usage' } | Select-Object -Property Index, name, @{N = "Dimension"; E = { $_.dimension.Rows - 1 } } | Sort-Object -Property Dimension -Descending
 
     $Order0 = $Order | Where-Object { $_.Name -ne $Order[0].name -and $_.Name -ne ($Order | select-object -Last 1).Name }
 
     $Worksheets.MoveAfter($Order[0].Name, 'Advisory')
+    $Worksheets.MoveAfter($Order[0].Name, 'Policy')
     $Worksheets.MoveBefore(($Order | select-object -Last 1).Name, 'Subscriptions')
 
     $Loop = 0
@@ -65,7 +66,7 @@ param($File, $TableStyle, $PlatOS, $Subscriptions, $Resources, $ExtractionRunTim
     $Font = 'Segoe UI'
 
     $Excel = New-Object -TypeName OfficeOpenXml.ExcelPackage $File
-    $Worksheets = $Excel.Workbook.Worksheets | Where-Object { $_.name -notin 'Overview', 'Subscriptions', 'Advisory', 'Security Center' }
+    $Worksheets = $Excel.Workbook.Worksheets | Where-Object { $_.name -notin 'Overview', 'Subscriptions', 'Advisory', 'Policy', 'Security Center' }
     $WS = $Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Overview' }
 
 
@@ -178,7 +179,7 @@ param($File, $TableStyle, $PlatOS, $Subscriptions, $Resources, $ExtractionRunTim
     $Draw.SetSize(445, 240)
     $Draw.SetPosition(1, 0, 2, 5)
 
-    $txt = $Draw.RichText.Add('Azure Resource Inventory v3.0' + "`n")
+    $txt = $Draw.RichText.Add('Azure Resource Inventory v3.1' + "`n")
     $txt.Size = 14
     $txt.ComplexFont = $Font
     $txt.LatinFont = $Font

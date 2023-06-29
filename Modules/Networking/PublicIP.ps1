@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/PublicIP.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.0
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -35,6 +35,13 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $RetDate = ''
+                $RetFeature = ''
+                if($1.sku.name -eq 'Basic')
+                    {
+                        $RetDate = ($Unsupported | Where-Object {$_.Id -eq 42}).RetirementDate
+                        $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 42}).RetiringFeature
+                    }
                 if (!($data.ipConfiguration.id)) { $Use = 'Underutilized' } else { $Use = 'Utilized' }
                 if (!($data.natGateway.id) -and $Use -eq 'Underutilized') { $Use = 'Underutilized' } else { $Use = 'Utilized' }
                 
@@ -49,6 +56,8 @@ If ($Task -eq 'Processing') {
                             'SKU'                      = $1.SKU.Name;
                             'Location'                 = $1.LOCATION;
                             'Zones'                    = [string]$1.Zones;
+                            'Retirement Date'          = [string]$RetDate;
+                            'Retirement Feature'       = $RetFeature;
                             'Type'                     = $data.publicIPAllocationMethod;
                             'Version'                  = $data.publicIPAddressVersion;
                             'IP Address'               = $data.ipAddress;
@@ -73,6 +82,8 @@ If ($Task -eq 'Processing') {
                             'SKU'                      = $1.SKU.Name;
                             'Location'                 = $1.LOCATION;
                             'Zones'                    = [string]$1.Zones;
+                            'Retirement Date'          = [string]$RetDate;
+                            'Retirement Feature'       = $RetFeature;
                             'Type'                     = $data.publicIPAllocationMethod;
                             'Version'                  = $data.publicIPAddressVersion;
                             'IP Address'               = $data.ipAddress;
@@ -98,7 +109,8 @@ Else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
-        $condtxt += New-ConditionalText Underutilized -Range J:J
+        $condtxt += New-ConditionalText Underutilized -Range L:L
+        $condtxt += New-ConditionalText - -Range G:G -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -107,6 +119,8 @@ Else {
         $Exc.Add('SKU')
         $Exc.Add('Location')
         $Exc.Add('Zones')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')  
         $Exc.Add('Type')
         $Exc.Add('Version')
         $Exc.Add('IP Address')
@@ -124,6 +138,13 @@ Else {
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style -ConditionalText $condtxt
+
+        $excel = Open-ExcelPackage -Path $File -KillExcel
+    
+        $null = $excel.'Public IPs'.Cells["G1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.")
+        $excel.'Public IPs'.Cells["G1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
+
+        Close-ExcelPackage $excel
     
     }
 }

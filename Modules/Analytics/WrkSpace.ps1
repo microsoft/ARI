@@ -10,10 +10,10 @@ Excel Sheet Name: WrkSpace
 https://github.com/microsoft/ARI/Modules/Infrastructure/WrkSpace.ps1
 
 .COMPONENT
-    This powershell Module is part of Azure Resource Inventory (ARI)
+This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.2
+Version: 3.0.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,14 +21,14 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported, $AzCost)
+param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
 
     <######### Insert the resource extraction here ########>
 
-        $wrkspace = $Resources | Where-Object {$_.TYPE -eq 'microsoft.operationalinsights/workspaces'}
+    $wrkspace = $Resources | Where-Object {$_.TYPE -eq 'microsoft.operationalinsights/workspaces'}
 
     <######### Insert the resource Process here ########>
 
@@ -40,6 +40,8 @@ If ($Task -eq 'Processing')
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $RetDate = ''
+                $RetFeature = '' 
                 $timecreated = $data.createdDate
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
@@ -51,8 +53,8 @@ If ($Task -eq 'Processing')
                             'Resource Group'   = $1.RESOURCEGROUP;
                             'Name'             = $1.NAME;
                             'Location'         = $1.LOCATION;
-                            'Currency'         = $Cost.Currency;
-                            'Daily Cost'       = '{0:C}' -f $Cost.Cost;
+                            'Retirement Date'  = [string]$RetDate;
+                            'Retirement Feature' = $RetFeature;
                             'SKU'              = $data.sku.name;
                             'Retention Days'   = $data.retentionInDays;
                             'Daily Quota (GB)' = [decimal]$data.workspaceCapping.dailyQuotaGb;
@@ -83,12 +85,16 @@ Else
 
         $condtxt = @()
 
+        $condtxt += New-ConditionalText - -Range F:F -ConditionalType ContainsText
+
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('SKU')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')
         $Exc.Add('Retention Days')
         $Exc.Add('Daily Quota (GB)')
         $Exc.Add('Created Time')  

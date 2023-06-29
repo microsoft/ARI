@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/VirtualNetwork.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.0
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle) 
+param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported) 
 If ($Task -eq 'Processing') {
 
     $VirtualNetwork = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/virtualnetworks' }
@@ -34,6 +34,8 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $RetDate = ''
+                $RetFeature = '' 
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 foreach ($2 in $data.addressSpace.addressPrefixes) {
                     foreach ($3 in $data.subnets) {
@@ -45,6 +47,8 @@ If ($Task -eq 'Processing') {
                                     'Name'                                         = $1.NAME;
                                     'Location'                                     = $1.LOCATION;
                                     'Zone'                                         = $1.ZONES;
+                                    'Retirement Date'                              = [string]$RetDate;
+                                    'Retirement Feature'                           = $RetFeature;
                                     'Address Space'                                = $2;
                                     'Enable DDOS Protection'                       = $data.enableDdosProtection;
                                     'DNS Servers'                                  = [string]$data.dhcpOptions.dnsServers;
@@ -73,8 +77,12 @@ Else {
     if ($SmaResources.VirtualNetwork) {
 
         $TableName = ('VNETTable_'+($SmaResources.VirtualNetwork.id | Select-Object -Unique).count)
-        $txtvnet = $(New-ConditionalText false -Range G:G
-            New-ConditionalText falso -Range G:G)
+
+        $condtxt = @()
+        $condtxt += New-ConditionalText FALSE -Range G:G
+        $condtxt += New-ConditionalText FALSO -Range G:G
+        $condtxt += New-ConditionalText - -Range H:H -ConditionalType ContainsText
+        
 
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
                 
@@ -87,6 +95,8 @@ Else {
         $Exc.Add('Zone')
         $Exc.Add('Address Space')
         $Exc.Add('Enable DDOS Protection')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')  
         $Exc.Add('DNS Servers')
         $Exc.Add('Subnet Name')
         $Exc.Add('Used IPs')
@@ -106,7 +116,7 @@ Else {
         
         $ExcelVar | 
             ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Virtual Networks' -AutoSize -TableName $TableName -TableStyle $tableStyle -ConditionalText $txtvnet -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Virtual Networks' -AutoSize -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
         
 
         $excel = Open-ExcelPackage -Path $File -KillExcel

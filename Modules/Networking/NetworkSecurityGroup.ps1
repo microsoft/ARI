@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/NetworkSecurityGroup.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 3.0.1
 First Release Date: 2021.10.05
 Authors: Christopher Lewis
 
@@ -21,7 +21,7 @@ Authors: Christopher Lewis
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle)
+param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
 If ($Task -eq 'Processing') {
 
     $NSGs = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/networksecuritygroups' }
@@ -33,6 +33,8 @@ If ($Task -eq 'Processing') {
             $ResUCount = 1
             $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
             $data = $1.PROPERTIES
+            $RetDate = ''
+            $RetFeature = '' 
             $Tags = if (![string]::IsNullOrEmpty($1.tags.psobject.properties)) { $1.tags.psobject.properties }else { '0' }
             foreach ($2 in $data.securityRules)
             {
@@ -50,6 +52,8 @@ If ($Task -eq 'Processing') {
                         'Resource Group'               = $1.RESOURCEGROUP;
                         'Name'                         = $1.NAME;
                         'Location'                     = $1.LOCATION;
+                        'Retirement Date'              = [string]$RetDate;
+                        'Retirement Feature'           = $RetFeature;
                         'Security Rules'               = [string]$2.name;
                         'Direction'                    = [string]$2.properties.direction;
                         'Access'                       = [string]$2.properties.Access;
@@ -89,15 +93,17 @@ If ($Task -eq 'Processing') {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         #Conditional formats.  Note that this can be $() for none
-        $condtxt = $(
-            New-ConditionalText true -Range T:T
-        )
+        $condtxt = @()
+        $condtxt += New-ConditionalText TRUE -Range V:V
+        $condtxt += New-ConditionalText - -Range E:E -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')  
         $Exc.Add('Security Rules')
         $Exc.Add('Direction')
         $Exc.Add('Access')

@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/TrafficManager.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 3.0.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle)
+param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -36,6 +36,7 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $Orphaned = if([string]::IsNullOrEmpty($data.endpoints.id)){$true}else{$false}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
@@ -44,6 +45,7 @@ If ($Task -eq 'Processing') {
                             'Resource Group'                    = $1.RESOURCEGROUP;
                             'Name'                              = $1.NAME;
                             'Status'                            = $data.profilestatus;
+                            'Orphaned'                          = $Orphaned;
                             'DNS name'                          = $data.dnsconfig.fqdn;
                             'Routing method'                    = $data.trafficroutingmethod;
                             'Monitor status'                    = $data.monitorconfig.profilemonitorstatus;                            
@@ -66,7 +68,10 @@ Else {
     if ($SmaResources.TrafficManager) {
 
         $TableName = ('TrafficManagerTable_'+($SmaResources.TrafficManager.id | Select-Object -Unique).count)
-        $condtxt = New-ConditionalText inactive -Range G:G
+        
+        $condtxt = @()
+        $condtxt += New-ConditionalText inactive -Range H:H
+        $condtxt += New-ConditionalText TRUE -Range E:E
 
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
         
@@ -75,6 +80,7 @@ Else {
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Status')
+        $Exc.Add('Orphaned')
         $Exc.Add('DNS name')
         $Exc.Add('Routing method')
         $Exc.Add('Monitor status')

@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/APPServices.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.1
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -40,6 +40,8 @@ If ($Task -eq 'Processing')
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $RetDate = ''
+                $RetFeature = '' 
                 if([string]::IsNullOrEmpty($data.siteConfig.ftpsState)){$FTPS = $false}else{$FTPS = $data.siteConfig.ftpsState}
                 if([string]::IsNullOrEmpty($data.Properties.SiteConfig.acrUseManagedIdentityCreds)){$MGMID = $false}else{$MGMID = $true}
                 $VNET = $data.virtualNetworkSubnetId.split("/")[8]
@@ -57,6 +59,8 @@ If ($Task -eq 'Processing')
                                 'Enabled'                       = $data.enabled;
                                 'State'                         = $data.state;
                                 'SKU'                           = $data.sku;
+                                'Retirement Date'               = [string]$RetDate;
+                                'Retirement Feature'            = $RetFeature;
                                 'Client Cert Enabled'           = $data.clientCertEnabled;
                                 'Client Cert Mode'              = $data.clientCertMode;
                                 'Content Availability State'    = $data.contentAvailabilityState;
@@ -108,14 +112,15 @@ Else
                 $condtxt += New-ConditionalText $UnSupOS -Range U:U
             }
         
-        $condtxt += New-ConditionalText FALSE -Range M:M
-        $condtxt += New-ConditionalText FALSO -Range M:M
-        $condtxt += New-ConditionalText FALSE -Range N:N
-        $condtxt += New-ConditionalText FALSO -Range N:N
-        $condtxt += New-ConditionalText FALSE -Range I:I
-        $condtxt += New-ConditionalText FALSO -Range I:I
-        $condtxt += New-ConditionalText FALSE -Range Q:Q
-        $condtxt += New-ConditionalText FALSO -Range Q:Q
+        $condtxt += New-ConditionalText FALSE -Range O:O
+        $condtxt += New-ConditionalText FALSO -Range O:O
+        $condtxt += New-ConditionalText FALSE -Range P:P
+        $condtxt += New-ConditionalText FALSO -Range P:P
+        $condtxt += New-ConditionalText FALSE -Range K:K
+        $condtxt += New-ConditionalText FALSO -Range K:K
+        $condtxt += New-ConditionalText FALSE -Range S:S
+        $condtxt += New-ConditionalText FALSO -Range S:S
+        $condtxt += New-ConditionalText - -Range I:I -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -126,6 +131,8 @@ Else
         $Exc.Add('Enabled')
         $Exc.Add('State')
         $Exc.Add('SKU')
+        $Exc.Add('Retirement Date')
+        $Exc.Add('Retirement Feature')
         $Exc.Add('Client Cert Enabled')
         $Exc.Add('Client Cert Mode')
         $Exc.Add('Content Availability State')
