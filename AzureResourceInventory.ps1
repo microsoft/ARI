@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.01                                                                  #
+#       Version: 3.1.02                                                                  #
 #                                                                                        #
-#       Date: 06/29/2023                                                                 #
+#       Date: 07/07/2023                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -180,7 +180,7 @@ param ($TenantID,
         if ($Lite.IsPresent) { $Global:RunLite = $true }else { $Global:RunLite = $false }
         if ($DiagramFullEnvironment.IsPresent) {$Global:FullEnv = $true}else{$Global:FullEnv = $false}
 
-        $Global:Repo = 'https://github.com/microsoft/ARI/tree/main/Modules'
+        $Global:Repo = 'https://api.github.com/repos/microsoft/ari/git/trees/main?recursive=1'
         $Global:RawRepo = 'https://raw.githubusercontent.com/microsoft/ARI/main'
 
         Write-Debug ('Checking if -Online parameter will have to be forced.')
@@ -1204,14 +1204,9 @@ param ($TenantID,
                     $RawRepo = $($args[11])
 
                     If ($($args[9]) -eq $true) {
-                        $ResourceJobs = 'Compute', 'Analytics', 'Containers', 'Data', 'Infrastructure', 'Integration', 'Networking', 'Storage'
-                        $Modules = @()
-                        Foreach ($Jobs in $ResourceJobs)
-                            {
-                                $OnlineRepo = Invoke-WebRequest -Uri ($Repo + '/' + $Jobs)
-                                $Modu = $OnlineRepo.Links | Where-Object { $_.href -like '*.ps1' }
-                                $Modules += $Modu.href
-                            }
+                        $OnlineRepo = Invoke-WebRequest -Uri $Repo
+                        $RepoContent = $OnlineRepo | ConvertFrom-Json
+                        $Modules = ($RepoContent.tree | Where-Object {$_.path -like '*.ps1' -and $_.path -notlike 'Extras/*' -and $_.path -ne 'AzureResourceInventory.ps1' -and $_.path -notlike 'Automation/*'}).path
                     }
                     Else {
                         if($($args[1]) -like '*\*')
@@ -1227,14 +1222,14 @@ param ($TenantID,
 
                     foreach ($Module in $Modules) {
                         If ($($args[9]) -eq $true) {
-                            $Modul = $Module.split('/')
-                                $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                            $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Modules/' + $Modul[6] + '/' + $Modul[7])
+                                $Modul = $Module.split('/')
+                                $ModName = $Modul[2].Substring(0, $Modul[2].length - ".ps1".length)
+                                $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/' + $Module)
                             } Else {
                                 $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
-                            $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
-                            $ModuSeq = $ModuSeq0.ReadToEnd()
-                            $ModuSeq0.Dispose()
+                                $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
+                                $ModuSeq = $ModuSeq0.ReadToEnd()
+                                $ModuSeq0.Dispose()
                         }
 
                         $ScriptBlock = [Scriptblock]::Create($ModuSeq)
@@ -1253,8 +1248,8 @@ param ($TenantID,
 
                     foreach ($Module in $Modules) {
                         If ($($args[9]) -eq $true) {
-                            $Modul = $Module.split('/')
-                                $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
+                                $Modul = $Module.split('/')
+                                $ModName = $Modul[2].Substring(0, $Modul[2].length - ".ps1".length)
                             } Else {
                                 $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                         }
@@ -1267,8 +1262,8 @@ param ($TenantID,
 
                     foreach ($Module in $Modules) {
                         If ($($args[9]) -eq $true) {
-                            $Modul = $Module.split('/')
-                                $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
+                                $Modul = $Module.split('/')
+                                $ModName = $Modul[2].Substring(0, $Modul[2].length - ".ps1".length)
                             } Else {
                                 $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                         }
@@ -1322,17 +1317,10 @@ param ($TenantID,
         Write-Debug ('Starting Reporting Phase.')
         Write-Progress -activity $DataActive -Status "Processing Inventory" -PercentComplete 50
 
-        $ResourceJobs = 'Compute', 'Analytics', 'Containers', 'Data', 'Infrastructure', 'Integration', 'Networking', 'Storage'
-
         If ($RunOnline -eq $true) {
-            $Modules = @()
-            Foreach ($Module in $ResourceJobs)
-                {
-                    Write-Debug ('Running Online, Gethering List Of Modules for '+$Module+'.')
-                    $OnlineRepo = Invoke-WebRequest -Uri ($Repo + '/' + $Module)
-                    $RepoFolder = $OnlineRepo.Links | Where-Object { $_.href -like '*.ps1' }
-                    $Modules += $RepoFolder.href
-                }
+            $OnlineRepo = Invoke-WebRequest -Uri $Repo
+            $RepoContent = $OnlineRepo | ConvertFrom-Json
+            $Modules = ($RepoContent.tree | Where-Object {$_.path -like '*.ps1' -and $_.path -notlike 'Extras/*' -and $_.path -ne 'AzureResourceInventory.ps1' -and $_.path -notlike 'Automation/*'}).path
         }
         Else {
             Write-Debug ('Running Offline, Gathering List Of Modules.')
@@ -1357,13 +1345,13 @@ param ($TenantID,
             Write-Progress -Id 1 -activity "Building Report" -Status "$c% Complete." -PercentComplete $c
 
             If ($RunOnline -eq $true) {
-                $Modul = $Module.split('/')
-                    $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-                $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Modules/' + $Modul[6] + '/' + $Modul[7])
+                    $Modul = $Module.split('/')
+                    $ModName = $Modul[2]
+                    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/' + $Module)
                 } Else {
-                $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
-                $ModuSeq = $ModuSeq0.ReadToEnd()
-                $ModuSeq0.Dispose()
+                    $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
+                    $ModuSeq = $ModuSeq0.ReadToEnd()
+                    $ModuSeq0.Dispose()
             }
 
                 Write-Debug "Running Module: '$Module'"
