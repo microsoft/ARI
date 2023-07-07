@@ -184,20 +184,66 @@ Also, by default the Network Topology will not consider Virtual Networks that ar
 
 <br/>
 
-> ### *3) Extra Parameters*
+> ### *3) Parameters*
 
----------------------
+| Parameter              | Description                                                                                                 |                            |
+|------------------------|-------------------------------------------------------------------------------------------------------------|----------------------------|
+| TenantID               | Specify the tenant ID you want to create a Resource Inventory.                                              | `-TenantID <ID>`           |
+| AppId                  | Service Principal Authentication                                                                            | `-AppId <Client ID>`       |
+| Secret                 | Client secret of the Service Principal                                                                      | `-Secret <Client secret>`  |
+| SubscriptionID         | Specifies Subscription(s) to be inventoried.                                                                | `-SubscriptionID <ID>`     |
+| ManagementGroup        | Specifies the Management Grount to be inventoried(all Subscriptions on it)                                  | `-ManagementGroup <ID>`    |  
+| Lite                   | Speficies to use only the Import-Excel module and don't create the charts (using Excel's API)               | `-Lite`                    |
+| SecurityCenter         | Include Security Center Data.                                                                               | `-SecurityCenter`          |
+| SkipAdvisory           | Do not collect Azure Advisory.                                                                              | `-SkipAdvisory`            |
+| IncludeTags            | Include Resource Tags.                                                                                      | `-IncludeTags`             |
+| Debug                  | Run in a Debug mode.                                                                                        | `-Debug`                   |
+| DiagramFullEnvironment | Network Diagram of the entire environment                                                                   | `-DiagramFullEnvironment`  |
+| Diagram                | Create a Visio Diagram.                                                                                     | `-Diagram`                 |
+| SkipDiagram            | To skip the diagrams creation                                                                               | `-SkipDiagram`             |
+| DeviceLogin            | Authenticating on Azure using the Device login approach                                                     | `-DeviceLogin`             |
+| AzureEnvironment       | Choose between Azure environments <br> > Registered Azure Clouds. Use `az cloud list` to get the list       | `-AzureEnvironment <NAME>` |
+| ReportName             | Change the Default Name of the report. `Default name: AzureResourceInventory`                               | `-ReportName <NAME>`       |
+| ReportDir              | Change the Default path of the report.                                                                      | `-ReportDir "<Path>"`      |
+| Online                 | Use Online Modules. Scan Modules diretly in GitHub ARI Repository                                           | `-Online`                  |
+| ResourceGroup          | Specifies one unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. | `-ResourceGroup <NAME>`    |
+| TagKey                 | Specifies the tag key to be inventoried, This parameter requires the `-SubscriptionID` to work.             | `-TagKey <NAME>`           |
+| TagValue               | Specifies the tag value be inventoried, This parameter requires the `-SubscriptionID` to work.              | `-TagValue <NAME>`         |
+| QuotaUsage             | Quota Usage                                                                                                 | `-QuotaUsage`              |
 
-<br/>
-
-:heavy_check_mark: Quota Usage (__-QuotaUsage__)  
-:heavy_check_mark: Service Principal Authentication (__-appid__)  
-:heavy_check_mark: Scan Modules diretly in GitHub ARI Repository (__-Online__)  
-:heavy_check_mark: Choose between Azure environments (__-AzureEnvironment__)
-:heavy_check_mark: Network Diagram of the entire environment (__-DiagramFullEnvironment__)
-:heavy_check_mark: Do not create the diagram (__-SkipDiagram__)
-:heavy_check_mark: Customize the name of the report (__-ReportName__)
-:heavy_check_mark: Customize the output folder of the report (__-ReportDir__)
+#### Examples
+- For CloudShell:
+  ```bash
+  />./AzureResourceInventory.ps1
+  ```
+- Powershell Desktop:
+  ```bash
+  />./AzureResourceInventory.ps1
+  ```
+  > If you do not specify Resource Inventory will be performed on all subscriptions for the selected tenant.
+  > To perform the inventory in a specific Tenant and subscription use `-TenantID` and `-SubscriptionID` parameter
+  ```bash
+    />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID>
+  ```
+- Including Tags:
+   ```bash
+  />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> --IncludeTags
+   ```
+  > By Default Azure Resource inventory do not include Resource Tags.
+- Collecting Security Center Data:
+  ```bash
+  />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SecurityCenter
+  ```
+  > By Default Azure Resource inventory do not collect Security Center Data.
+- Skipping Azure Advisor:
+  ```bash
+  />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SkipAdvisory
+  ```
+  > By Default Azure Resource inventory collects Azure Advisor Data.
+- Creating Network Diagram:
+  ```bash
+  />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -Diagram
+  ```
 
 <br/>
 
