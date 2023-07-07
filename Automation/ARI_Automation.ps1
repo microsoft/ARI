@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Automation/ARI_Automation.ps1
 This powershell Script is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.1
+Version: 3.1.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola
 
@@ -64,7 +64,7 @@ $Resources = @()
 $Advisories = @()
 $Subscriptions = ''
 
-$Repo = 'https://github.com/microsoft/ARI/tree/main/Modules'
+$Repo = 'https://api.github.com/repos/microsoft/ari/git/trees/main?recursive=1'
 $RawRepo = 'https://raw.githubusercontent.com/microsoft/ARI/main'
 
 <######################################################### ADVISORY EXTRACTION ######################################################################>
@@ -156,22 +156,17 @@ Start-ThreadJob -Name 'Subscriptions' -ScriptBlock $ScriptBlock -ArgumentList $S
 
 Write-Output ('Starting Resources Processes')
 
-$ResourceJobs = 'Compute', 'Analytics', 'Containers', 'Data', 'Infrastructure', 'Integration', 'Networking', 'Storage'
-$Modules = @()
-Foreach ($Jobs in $ResourceJobs)
-    {
-        $OnlineRepo = Invoke-WebRequest -Uri ($Repo + '/' + $Jobs)
-        $Modu = $OnlineRepo.Links | Where-Object { $_.href -like '*.ps1' }
-        $Modules += $Modu.href
-    }
+$OnlineRepo = Invoke-WebRequest -Uri $Repo
+$RepoContent = $OnlineRepo | ConvertFrom-Json
+$Modules = ($RepoContent.tree | Where-Object {$_.path -like '*.ps1' -and $_.path -notlike 'Extras/*' -and $_.path -ne 'AzureResourceInventory.ps1' -and $_.path -notlike 'Automation/*'}).path
 
 foreach ($Module in $Modules) 
     {
         $SmaResources = @{}
 
         $Modul = $Module.split('/')
-        $ModName = $Modul[7].Substring(0, $Modul[7].length - ".ps1".length)
-        $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Modules/' + $Modul[6] + '/' + $Modul[7])
+        $ModName = $Modul[2]
+        $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/' + $Module)
 
         $ScriptBlock = [Scriptblock]::Create($ModuSeq)
 
