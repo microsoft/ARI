@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Automation/ARI_Automation.ps1
 This powershell Script is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.2
+Version: 3.1.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola
 
@@ -64,8 +64,8 @@ $Resources = @()
 $Advisories = @()
 $Subscriptions = ''
 
-$Repo = 'https://github.com/azureinventory/ARI/tree/main/Modules'
-$RawRepo = 'https://raw.githubusercontent.com/azureinventory/ARI/main'
+$Repo = 'https://github.com/microsoft/ARI/tree/main/Modules'
+$RawRepo = 'https://raw.githubusercontent.com/microsoft/ARI/main'
 
 <######################################################### ADVISORY EXTRACTION ######################################################################>
 
