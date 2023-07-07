@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Automation/ARI_Automation.ps1
 This powershell Script is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.2
+Version: 3.1.3
 First Release Date: 19th November, 2020
 Authors: Claudio Merola
 
@@ -165,7 +165,7 @@ foreach ($Module in $Modules)
         $SmaResources = @{}
 
         $Modul = $Module.split('/')
-        $ModName = $Modul[2]
+        $ModName = $Modul[2].Substring(0, $Modul[2].length - ".ps1".length)
         $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/' + $Module)
 
         $ScriptBlock = [Scriptblock]::Create($ModuSeq)
