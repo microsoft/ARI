@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Extras/Charts.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.2
+Version: 3.1.3
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -50,9 +50,14 @@ if(!$RunLite)
 
 "" | Export-Excel -Path $File -WorksheetName 'Overview' -MoveToStart
 
-if(!$RunLite)
-    {
-        $Excel = New-Object -TypeName OfficeOpenXml.ExcelPackage $File
+    if($RunLite)
+        {
+            $excel = Open-ExcelPackage -Path $file -KillExcel
+        }
+    else
+        {
+            $Excel = New-Object -TypeName OfficeOpenXml.ExcelPackage $File
+        }
         $Worksheets = $Excel.Workbook.Worksheets
         $WS = $Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Overview' }
 
@@ -60,15 +65,30 @@ if(!$RunLite)
         $WS.SetValue(76,70,'')
         $WS.View.ShowGridLines = $false
 
-        $Excel.Save()
-        $Excel.Dispose()
+    if($RunLite)
+        {
+            Close-ExcelPackage $excel
+        }
+    else
+        {
+            $Excel.Save()
+            $Excel.Dispose()    
+        }
+        
 
         $TableStyleEx = if($PlatOS -eq 'PowerShell Desktop'){'Medium1'}else{$TableStyle}
         $TableStyle = if($PlatOS -eq 'PowerShell Desktop'){'Medium15'}else{$TableStyle}
         #$TableStyle = 'Medium22'
         $Font = 'Segoe UI'
 
-        $Excel = New-Object -TypeName OfficeOpenXml.ExcelPackage $File
+    if($RunLite)
+        {
+            $excel = Open-ExcelPackage -Path $file -KillExcel
+        }
+    else
+        {
+            $Excel = New-Object -TypeName OfficeOpenXml.ExcelPackage $File
+        }
         $Worksheets = $Excel.Workbook.Worksheets | Where-Object { $_.name -notin 'Overview', 'Subscriptions', 'Advisory', 'Policy', 'Security Center' }
         $WS = $Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Overview' }
 
@@ -89,8 +109,15 @@ if(!$RunLite)
             $Table += $tmp
         }
 
-        $Excel.Save()
-        $Excel.Dispose()
+    if($RunLite)
+        {
+            Close-ExcelPackage $excel
+        }
+    else
+        {
+            $Excel.Save()
+            $Excel.Dispose()    
+        }
 
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
@@ -98,7 +125,6 @@ if(!$RunLite)
         ForEach-Object { [PSCustomObject]$_ } | Sort-Object -Property 'Size' -Descending |
         Select-Object -Unique 'Name',
         'Size' | Export-Excel -Path $File -WorksheetName 'Overview' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureTabs' -TableStyle $TableStyleEx -Style $Style -StartRow 6 -StartColumn 1
-
 
         $Date = (get-date -Format "MM/dd/yyyy")
 
@@ -109,7 +135,14 @@ if(!$RunLite)
         $TotalRes = $Resources
 
 
-        $Excel = New-Object -TypeName OfficeOpenXml.ExcelPackage $File
+    if($RunLite)
+        {
+            $excel = Open-ExcelPackage -Path $file -KillExcel
+        }
+    else
+        {
+            $Excel = New-Object -TypeName OfficeOpenXml.ExcelPackage $File
+        }
         $Worksheets = $Excel.Workbook.Worksheets 
         $WS = $Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Overview' }
 
@@ -252,7 +285,6 @@ if(!$RunLite)
         $RGD.RichText.Add($TotalRes).Size = 22
 
 
-
         $DrawP00 = $WS.Drawings | Where-Object { $_.Name -eq 'TP00' }
         $P00Name = 'Reported Resources'
         $DrawP00.RichText.Add($P00Name).Size = 16
@@ -270,7 +302,6 @@ if(!$RunLite)
             $P1Name = 'Subscriptions'
         $DrawP1 = $WS.Drawings | Where-Object { $_.Name -eq 'TP1' }
         $DrawP1.RichText.Add($P1Name) | Out-Null
-
 
 
         $DrawP2 = $WS.Drawings | Where-Object { $_.Name -eq 'TP2' }
@@ -332,23 +363,16 @@ if(!$RunLite)
         }
         $DrawP9.RichText.Add($P9Name) | Out-Null
 
-        $Excel.Save()
-        $Excel.Dispose()
-    }
-
-
     if($RunLite)
-    {
-        $P1Name = 'Subscriptions'
-        $P2Name = 'Annual Savings'
-        $P3Name = 'Storage Accounts' 
-        $P4Name = 'VM Disks'
-        $P5Name = 'Virtual Machines'
-        $P6Name = 'Resources by Location'
-        $P7Name = 'Virtual Machines'
-        $P8Name = 'Advisories'
-        $P9Name = 'Virtual Machines'
-    }
+        {
+            Close-ExcelPackage $excel
+        }
+    else
+        {
+            $Excel.Save()
+            $Excel.Dispose()    
+        }
+
 
 
 $excel = Open-ExcelPackage -Path $file -KillExcel

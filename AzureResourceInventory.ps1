@@ -98,6 +98,10 @@ param ($TenantID,
 
     if ($IncludeTags.IsPresent) { $Global:InTag = $true } else { $Global:InTag = $false }
 
+    if ($Online.IsPresent) { $Global:RunOnline = $true }else { $Global:RunOnline = $false }
+    if ($Lite.IsPresent) { $Global:RunLite = $true }else { $Global:RunLite = $false }
+    if ($DiagramFullEnvironment.IsPresent) {$Global:FullEnv = $true}else{$Global:FullEnv = $false}
+
     $Global:SRuntime = Measure-Command -Expression {
 
     <#########################################################          Help          ######################################################################>
@@ -174,11 +178,7 @@ param ($TenantID,
         $Global:Security = @()
         $Global:Policies = @()
         $Global:Subscriptions = ''
-        $Global:ReportName = $ReportName
-
-        if ($Online.IsPresent) { $Global:RunOnline = $true }else { $Global:RunOnline = $false }
-        if ($Lite.IsPresent) { $Global:RunLite = $true }else { $Global:RunLite = $false }
-        if ($DiagramFullEnvironment.IsPresent) {$Global:FullEnv = $true}else{$Global:FullEnv = $false}
+        $Global:ReportName = $ReportName        
 
         $Global:Repo = 'https://api.github.com/repos/microsoft/ari/git/trees/main?recursive=1'
         $Global:RawRepo = 'https://raw.githubusercontent.com/microsoft/ARI/main'
@@ -1684,8 +1684,8 @@ param ($TenantID,
         Exit
     }
     else {
-        Variables
-        Extractor
+        #Variables
+        #Extractor
         RunMain
     }
 
