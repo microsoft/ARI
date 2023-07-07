@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.02                                                                  #
+#       Version: 3.1.03                                                                  #
 #                                                                                        #
 #       Date: 07/07/2023                                                                 #
 #                                                                                        #
@@ -1684,8 +1684,8 @@ param ($TenantID,
         Exit
     }
     else {
-        #Variables
-        #Extractor
+        Variables
+        Extractor
         RunMain
     }
 
