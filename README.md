@@ -24,7 +24,7 @@ This project is intend to help Cloud Admins and anyone that might need an easy a
 
 <br/>
 
-### Version 3.0 is alive!!
+### Version 3 is alive!!
 
 <br/>
 
