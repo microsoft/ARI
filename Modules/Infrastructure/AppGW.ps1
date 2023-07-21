@@ -127,7 +127,7 @@ Else {
 
         $excel = Open-ExcelPackage -Path $File -KillExcel
     
-        $null = $excel.'App Gateway'.Cells["K1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.")
+        $null = $excel.'App Gateway'.Cells["K1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.", "Azure Resource Inventory")
         $excel.'App Gateway'.Cells["K1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
 
         Close-ExcelPackage $excel

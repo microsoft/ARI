@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/AKS.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.0
+Version: 3.1.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -174,9 +174,9 @@ Else
 
         $null = $excel.'AKS'.Cells["E1"].AddComment("AKS follows 12 months of support for a generally available (GA) Kubernetes version. To read more about our support policy for Kubernetes versioning", "Azure Resource Inventory")
         $excel.'AKS'.Cells["E1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/supported-kubernetes-versions?tabs=azure-cli#aks-kubernetes-release-calendar'
-        $null = $excel.'AKS'.Cells["X1"].AddComment("System node pools require a VM SKU of at least 2 vCPUs and 4 GB memory. But burstable-VM(B series) isn't recommended")
+        $null = $excel.'AKS'.Cells["X1"].AddComment("System node pools require a VM SKU of at least 2 vCPUs and 4 GB memory. But burstable-VM(B series) isn't recommended", "Azure Resource Inventory")
         $excel.'AKS'.Cells["X1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/use-system-pools?tabs=azure-cli#system-and-user-node-pools'
-        $null = $excel.'AKS'.Cells["AB1"].AddComment("The cluster autoscaler component can watch for pods in your cluster that can't be scheduled because of resource constraints")
+        $null = $excel.'AKS'.Cells["AB1"].AddComment("The cluster autoscaler component can watch for pods in your cluster that can't be scheduled because of resource constraints", "Azure Resource Inventory")
         $excel.'AKS'.Cells["AB1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/cluster-autoscaler'
 
         Close-ExcelPackage $excel

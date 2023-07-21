@@ -57,7 +57,6 @@ If ($Task -eq 'Processing') {
                             'Tag Value'                       = [string]$Tag.Value;
                             'Virtual Network'                 = $2.id
                         }
-             
                         $tmp += $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
                     }

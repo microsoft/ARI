@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VM.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.3
+Version: 3.1.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -29,7 +29,7 @@ If ($Task -eq 'Processing')
         $vm =  $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachines'}
         $nic = $Resources | Where-Object {$_.TYPE -eq 'microsoft.network/networkinterfaces'}
         $vmexp = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachines/extensions'}
-        $disk = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/disks'}        
+        $disk = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/disks'}
         $vmsizemap = @{}
         foreach($location in ($vm | Select-Object -ExpandProperty location -Unique))
             {
@@ -96,7 +96,7 @@ If ($Task -eq 'Processing')
                             $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 4}).RetiringFeature
                         }
                     
-                    $UpdateMgmt = if ($null -eq $data.osProfile.LinuxConfiguration.patchSettings.patchMode) { $data.osProfile.WindowsConfiguration.patchSettings.patchMode } else { $data.osProfile.LinuxConfiguration.patchSettings.patchMode }
+                    $UpdateMgmt = if ($null -eq $data.osProfile.LinuxConfiguration.patchSettings.patchMode) { $data.osProfile.WindowsConfiguration.patchSettings.patchMode } else { $data.osProfile.LinuxConfiguration.patchSettings.patchMode }                    
 
                     $ext = @()
                     $AzDiag = ''
@@ -160,6 +160,27 @@ If ($Task -eq 'Processing')
                         $VNET = $vmnic.properties.ipConfigurations.properties.subnet.id.split('/')[8]
                         $Subnet = $vmnic.properties.ipConfigurations.properties.subnet.id.split('/')[10]
 
+                        $Relibility = ''
+                        #Low Level Issues
+                        if(![string]::IsNullOrEmpty($data.extended.instanceView) -and $data.extended.instanceView.replicationStat -ne 'Replicating'){$Relibility = 'VM-4'}
+                        if($data.storageProfile.dataDisks.count -lt 1){$Relibility = 'VM-6'}
+                        if(![string]::IsNullOrEmpty($vmnic.properties.dnsSettings.dnsServers)){$Relibility = 'VM-15'}
+                        if([string]::IsNullOrEmpty($Azinsights)){$Relibility = 'VM-20'}
+    
+                        #Medium Level Issues 
+                        if([string]::IsNullOrEmpty($data.backupProfile)){$Relibility = 'VM-7'}
+                        if($vmnic.properties.enableAcceleratedNetworking -ne $true){$Relibility = 'VM-10'}
+                        if(![string]::IsNullOrEmpty($vmnsg)){$Relibility = 'VM-13'}
+                        if(![string]::IsNullOrEmpty($PIP)){$Relibility = 'VM-12'}
+                        if($vmnic.properties.enableIPForwarding -ne $true){$Relibility = 'VM-14'}
+    
+                        #High Level Issues
+                        if([string]::IsNullOrEmpty($data.availabilitySetReference) -and [string]::IsNullOrEmpty($data.hardwareProfile.zone)){$Relibility = 'VM-1'}
+                        if([string]::IsNullOrEmpty($1.zones)){$Relibility = 'VM-2'}
+                        if([string]::IsNullOrEmpty($data.storageProfile.osDisk.managedDisk.id)){$Relibility = 'VM-5'}
+
+
+
                         foreach ($Tag in $Tags) 
                             {
                                 $obj = @{
@@ -170,6 +191,7 @@ If ($Task -eq 'Processing')
                                 'Location'                      = $1.LOCATION;
                                 'Zone'                          = [string]$1.ZONES;
                                 'Availability Set'              = $AVSET;
+                                'Reliability'                   = $Relibility;
                                 'VM Size'                       = $data.hardwareProfile.vmSize;
                                 'vCPUs'                         = $vmsizemap[$data.hardwareProfile.vmSize].CPU;
                                 'RAM (GiB)'                     = $vmsizemap[$data.hardwareProfile.vmSize].RAM;
@@ -226,24 +248,26 @@ else
             $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AK:AK -Width 60 -WrapText 
 
                 $cond = @()
+                #Reliability
+                $cond += New-ConditionalText VM -Range I:I
                 #Hybrid Benefit
-                $cond += New-ConditionalText None -Range O:O
+                $cond += New-ConditionalText None -Range P:P
                 #NSG
-                $cond += New-ConditionalText None -Range AE:AE
+                $cond += New-ConditionalText None -Range AF:AF
                 #Boot Diagnostics
-                $cond += New-ConditionalText falso -Range R:R
-                $cond += New-ConditionalText false -Range R:R
-                #Performance Agent
                 $cond += New-ConditionalText falso -Range S:S
                 $cond += New-ConditionalText false -Range S:S
-                #Azure Monitor
+                #Performance Agent
                 $cond += New-ConditionalText falso -Range T:T
                 $cond += New-ConditionalText false -Range T:T
+                #Azure Monitor
+                $cond += New-ConditionalText falso -Range U:U
+                $cond += New-ConditionalText false -Range U:U
                 #Acelerated Network
-                $cond += New-ConditionalText false -Range AG:AG
-                $cond += New-ConditionalText falso -Range AG:AG  
+                $cond += New-ConditionalText false -Range AH:AH
+                $cond += New-ConditionalText falso -Range AH:AH  
                 #Retirement
-                $cond += New-ConditionalText - -Range M:M -ConditionalType ContainsText
+                $cond += New-ConditionalText - -Range N:N -ConditionalType ContainsText
     
                 $Exc = New-Object System.Collections.Generic.List[System.Object]
                 $Exc.Add('Subscription')
@@ -254,6 +278,7 @@ else
                 $Exc.Add('RAM (GiB)')
                 $Exc.Add('Location')
                 $Exc.Add('OS Type')
+                $Exc.Add('Reliability')
                 $Exc.Add('OS Name')
                 $Exc.Add('OS Version')
                 $Exc.Add('Image Reference')
@@ -300,18 +325,20 @@ else
 
                 $excel = Open-ExcelPackage -Path $File -KillExcel
     
-                $null = $excel.'Virtual Machines'.Cells["M1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.")
-                $excel.'Virtual Machines'.Cells["M1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
-                $null = $excel.'Virtual Machines'.Cells["R1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.")
-                $excel.'Virtual Machines'.Cells["R1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
-                $null = $excel.'Virtual Machines'.Cells["S1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.")
-                $excel.'Virtual Machines'.Cells["S1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
-                $null = $excel.'Virtual Machines'.Cells["T1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource's health.")
-                $excel.'Virtual Machines'.Cells["T1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
-                $null = $excel.'Virtual Machines'.Cells["AE1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.")
-                $excel.'Virtual Machines'.Cells["AE1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
-                $null = $excel.'Virtual Machines'.Cells["AG1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.")
-                $excel.'Virtual Machines'.Cells["AG1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
+                $null = $excel.'Virtual Machines'.Cells["N1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["N1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
+                $null = $excel.'Virtual Machines'.Cells["S1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["S1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
+                $null = $excel.'Virtual Machines'.Cells["I1"].AddComment("This column is for specific reliability recommendations for Virtual Machines, as well as detailed information on VM regional resiliency with availability zones and cross-region resiliency with disaster recovery.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["I1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/virtual-machines/reliability-virtual-machines'
+                $null = $excel.'Virtual Machines'.Cells["T1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["T1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
+                $null = $excel.'Virtual Machines'.Cells["U1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource's health.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["U1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
+                $null = $excel.'Virtual Machines'.Cells["AF1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["AF1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
+                $null = $excel.'Virtual Machines'.Cells["AH1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
+                $excel.'Virtual Machines'.Cells["AH1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
 
             Close-ExcelPackage $excel
         }             

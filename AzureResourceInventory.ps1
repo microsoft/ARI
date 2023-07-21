@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.03                                                                  #
+#       Version: 3.1.04                                                                  #
 #                                                                                        #
-#       Date: 07/07/2023                                                                 #
+#       Date: 07/21/2023                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -921,7 +921,7 @@ param ($TenantID,
         Write-Debug ('Excel file:' + $File)
 
         #### Generic Conditional Text rules, Excel style specifications for the spreadsheets and tables:
-        $Global:TableStyle = "Light20"
+        $Global:TableStyle = "Light19"
         Write-Debug ('Excel Table Style used: ' + $TableStyle)
 
         Write-Progress -activity 'Azure Inventory' -Status "21% Complete." -PercentComplete 21 -CurrentOperation "Starting to process extraction data.."

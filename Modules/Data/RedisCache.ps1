@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/RedisCache.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.1
+Version: 3.1.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -145,7 +145,7 @@ Else {
 
         $excel = Open-ExcelPackage -Path $File -KillExcel
     
-        $null = $excel.'Redis Cache'.Cells["F1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.")
+        $null = $excel.'Redis Cache'.Cells["F1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.", "Azure Resource Inventory")
         $excel.'Redis Cache'.Cells["F1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
 
         Close-ExcelPackage $excel

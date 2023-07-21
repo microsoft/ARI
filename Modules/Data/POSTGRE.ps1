@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/POSTGRE.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.2
+Version: 3.1.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -139,7 +139,7 @@ Else {
 
         $excel = Open-ExcelPackage -Path $File -KillExcel
     
-        $null = $excel.'PostgreSQL'.Cells["J1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.")
+        $null = $excel.'PostgreSQL'.Cells["J1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.", "Azure Resource Inventory")
         $excel.'PostgreSQL'.Cells["J1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
 
         Close-ExcelPackage $excel

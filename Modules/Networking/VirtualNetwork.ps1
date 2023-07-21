@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/VirtualNetwork.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.2
+Version: 3.1.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -121,7 +121,7 @@ Else {
 
         $excel = Open-ExcelPackage -Path $File -KillExcel
 
-        $null = $excel.VirtualNetwork.Cells["G1"].AddComment("Azure DDoS Protection Standard, combined with application design best practices, provides enhanced DDoS mitigation features to defend against DDoS attacks.")
+        $null = $excel.VirtualNetwork.Cells["G1"].AddComment("Azure DDoS Protection Standard, combined with application design best practices, provides enhanced DDoS mitigation features to defend against DDoS attacks.", "Azure Resource Inventory")
         $excel.VirtualNetwork.Cells["G1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/ddos-protection/ddos-protection-overview'
 
         Close-ExcelPackage $excel 
