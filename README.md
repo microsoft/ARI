@@ -192,7 +192,7 @@ Also, by default the Network Topology will not consider Virtual Networks that ar
 | AppId                  | Service Principal Authentication                                                                            | `-AppId <Client ID>`       |
 | Secret                 | Client secret of the Service Principal                                                                      | `-Secret <Client secret>`  |
 | SubscriptionID         | Specifies Subscription(s) to be inventoried.                                                                | `-SubscriptionID <ID>`     |
-| ManagementGroup        | Specifies the Management Grount to be inventoried(all Subscriptions on it)                                  | `-ManagementGroup <ID>`    |  
+| ManagementGroup        | Specifies the Management Group to be inventoried(all Subscriptions on it)                                   | `-ManagementGroup <ID>`    |  
 | Lite                   | Speficies to use only the Import-Excel module and don't create the charts (using Excel's API)               | `-Lite`                    |
 | SecurityCenter         | Include Security Center Data.                                                                               | `-SecurityCenter`          |
 | SkipAdvisory           | Do not collect Azure Advisory.                                                                              | `-SkipAdvisory`            |
