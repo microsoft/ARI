@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.06                                                                  #
+#       Version: 3.1.07                                                                  #
 #                                                                                        #
-#       Date: 08/24/2023                                                                 #
+#       Date: 08/28/2023                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -1185,7 +1185,7 @@ param ($TenantID,
 
         <######################################################### RESOURCE GROUP JOB ######################################################################>
 
-        if ($Heavy.IsPresent) {
+        if ($HeavyLoad.IsPresent) {
             Write-Debug ('Starting Processing Jobs in Heavy Mode.')
 
             $Loop = $resources.count / 5000
