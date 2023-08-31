@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Automation/ARI_Automation.ps1
 This powershell Script is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.3
+Version: 3.1.4
 First Release Date: 19th November, 2020
 Authors: Claudio Merola
 
@@ -40,6 +40,9 @@ $InTag = $false
 
 #Lite
 $RunLite = $true
+
+#Debug
+$RunDebug = $false
 
 
 <######################################################### SCRIPT ######################################################################>
@@ -93,6 +96,10 @@ Write-Output 'Extracting Advisories'
 
 $Subscriptions = Get-AzContext -ListAvailable | Where-Object {$_.Subscription.State -ne 'Disabled'}
 $Subscriptions = $Subscriptions.Subscription
+if($RunDebug)
+{
+    Write-Output $Subscriptions
+}
 
 <######################################################### RESOURCE EXTRACTION ######################################################################>
 
@@ -100,6 +107,10 @@ Write-Output 'Extracting Resources'
 
     Foreach ($Subscription in $Subscriptions) {
 
+        if($RunDebug)
+            {
+                Write-Output ('DEBUG - extracting resources for the subscription: '+$Subscription)
+            }
         $SUBID = $Subscription.id
         Set-AzContext -Subscription $SUBID | Out-Null
                     
@@ -119,7 +130,7 @@ Write-Output 'Extracting Resources'
                 $Looper ++
                 $Limit = $Limit + 1000
             }
-        }
+        }        
     }   
     
 $ExtractionRunTime = get-date
@@ -139,7 +150,7 @@ $ScriptBlock = [Scriptblock]::Create($ModuSeq)
 
 Start-ThreadJob -Name 'Advisory' -ScriptBlock $ScriptBlock -ArgumentList $Advisories, 'Processing' , $File
 
-            
+
 <######################################################### SUBSCRIPTIONS JOB ######################################################################>
 
 Write-Output ('Starting Subscription Job')
@@ -164,6 +175,11 @@ foreach ($Module in $Modules)
     {
         $SmaResources = @{}
 
+        if($RunDebug)
+            {
+                Write-Output ('DEBUG - Running Module: '+$Module)
+            }
+
         $Modul = $Module.split('/')
         $ModName = $Modul[2].Substring(0, $Modul[2].length - ".ps1".length)
         $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/' + $Module)
@@ -181,6 +197,11 @@ foreach ($Module in $Modules)
 
 <######################################################### ADVISORY REPORTING ######################################################################>
 
+if($RunDebug)
+    {
+        Write-Output ('DEBUG - Reporting Advisories.')
+    }
+
 get-job -Name 'Advisory' | Wait-Job | Out-Null
 
 $Adv = Receive-Job -Name 'Advisory'
@@ -193,6 +214,12 @@ Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $null,'Reporting',$file,$
 
 <######################################################### SUBSCRIPTIONS REPORTING ######################################################################>
 
+
+if($RunDebug)
+    {
+        Write-Output ('DEBUG - Reporting Subscription .')
+    }
+
 get-job -Name 'Subscriptions' | Wait-Job | Out-Null
 
 $AzSubs = Receive-Job -Name 'Subscriptions'
@@ -204,6 +231,11 @@ $ScriptBlock = [Scriptblock]::Create($ModuSeq)
 Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $null,$null,'Reporting',$file,$AzSubs,$TableStyle
 
 <######################################################### CHARTS ######################################################################>
+
+if($RunDebug)
+    {
+        Write-Output ('DEBUG - Reporting Charts.')
+    }
 
 $ReportingRunTime = get-date
 
