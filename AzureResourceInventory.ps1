@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.07                                                                  #
+#       Version: 3.1.08                                                                  #
 #                                                                                        #
-#       Date: 08/28/2023                                                                 #
+#       Date: 08/31/2023                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -1188,7 +1188,7 @@ param ($TenantID,
         if ($HeavyLoad.IsPresent) {
             Write-Debug ('Starting Processing Jobs in Heavy Mode.')
 
-            $Loop = $resources.count / 5000
+            $Loop = $resources.count / 2500
             $Loop = [math]::ceiling($Loop)
             $Looper = 0
             $Limit = 0                    
@@ -1196,7 +1196,7 @@ param ($TenantID,
             while ($Looper -lt $Loop) {
                 $Looper ++            
 
-                $Resource = $resources | Select-Object -First 5000 -Skip $Limit
+                $Resource = $resources | Select-Object -First 2500 -Skip $Limit
 
                 Start-Job -Name ('ResourceJob_'+$Looper) -ScriptBlock {
 
@@ -1231,7 +1231,7 @@ param ($TenantID,
                                     $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                                     $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
                                     $ModuSeq = $ModuSeq0.ReadToEnd()
-                                    $ModuSeq0.Dispose()
+                                    $ModuSeq0.Dispose()                                    
                             }
 
                             $ScriptBlock = [Scriptblock]::Create($ModuSeq)
@@ -1244,9 +1244,10 @@ param ($TenantID,
                             Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
 
                             $job += (get-variable -name ('ModJob' + $ModName)).Value
+                            Start-Sleep -Milliseconds 500 
                         }
 
-                        while ($Job.Runspace.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
+                        while ($Job.Runspace.IsCompleted -contains $false) { Start-Sleep -Milliseconds 1000 }
 
                         foreach ($Module in $Modules) {
                             If ($($args[9]) -eq $true) {
@@ -1258,6 +1259,7 @@ param ($TenantID,
 
                             New-Variable -Name ('ModValue' + $ModName)
                             Set-Variable -Name ('ModValue' + $ModName) -Value (((get-variable -name ('ModRun' + $ModName)).Value).EndInvoke((get-variable -name ('ModJob' + $ModName)).Value))
+                            Start-Sleep -Milliseconds 100 
                         }
 
                         $Hashtable = New-Object System.Collections.Hashtable
@@ -1274,7 +1276,8 @@ param ($TenantID,
 
                     $Hashtable
                     } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 50), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo, $Unsupported | Out-Null                    
-                    $Limit = $Limit + 5000   
+                    $Limit = $Limit + 2500
+                    Start-Sleep -Milliseconds 100    
                 }
         
             }
