@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Automation/ARI_Automation.ps1
 This powershell Script is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.4
+Version: 3.1.5
 First Release Date: 19th November, 2020
 Authors: Claudio Merola
 
@@ -94,7 +94,7 @@ Write-Output 'Extracting Advisories'
     } 
 
 
-$Subscriptions = Get-AzContext -ListAvailable | Where-Object {$_.Subscription.State -ne 'Disabled'}
+$Subscriptions = Get-AzSubscription | Where-Object {$_.State -ne 'Disabled'}
 $Subscriptions = $Subscriptions.Subscription
 if($RunDebug)
 {
