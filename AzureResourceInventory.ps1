@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.08                                                                  #
+#       Version: 3.1.09                                                                  #
 #                                                                                        #
-#       Date: 08/31/2023                                                                 #
+#       Date: 11/06/2023                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -71,7 +71,7 @@ param ($TenantID,
         $ManagementGroup,
         $Appid, 
         $Secret, 
-        $ResourceGroup, 
+        [string[]]$ResourceGroup, 
         $TagKey, 
         $TagValue,
         [switch]$SkipAdvisory,
@@ -113,7 +113,7 @@ param ($TenantID,
         Write-Host ""
         Write-Host " -TenantID <ID>        :  Specifies the Tenant to be inventoried. "
         Write-Host " -SubscriptionID <ID>  :  Specifies Subscription(s) to be inventoried. "
-        Write-Host " -ResourceGroup <NAME> :  Specifies one unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. "
+        Write-Host " -ResourceGroup  <NAME>:  Specifies one (or more) unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. "
         Write-Host " -TagKey <NAME>        :  Specifies the tag key to be inventoried, This parameter requires the -SubscriptionID to work. "
         Write-Host " -TagValue <NAME>      :  Specifies the tag value be inventoried, This parameter requires the -SubscriptionID to work. "
         Write-Host " -SkipAdvisory         :  Do not collect Azure Advisory. "
@@ -545,7 +545,7 @@ param ($TenantID,
 
                 $Subscri = $SubscriptionID
 
-                $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | summarize count()"
+                $GraphQuery = "resources | where resourceGroup in ('$([String]::Join("','",$ResourceGroup))') and strlen(properties.definition.actions) < 123000 | summarize count()"
                 $EnvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
 
@@ -556,7 +556,7 @@ param ($TenantID,
                     $Limit = 0
 
                     while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where resourceGroup == '$ResourceGroup' and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $GraphQuery = "resources | where resourceGroup in ('$([String]::Join("','",$ResourceGroup))') and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
                         $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data
@@ -784,7 +784,7 @@ param ($TenantID,
                 $GraphQueryExtension = "| join kind=inner (resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$ManagementGroup' | project subscriptionId, managanagementGroup = managementGroupParent.name) on subscriptionId"
             }
             if (![string]::IsNullOrEmpty($ResourceGroup)) {
-                $GraphQueryExtension = "$GraphQueryExtension | where resourceGroup == '$ResourceGroup'"
+                $GraphQueryExtension = "$GraphQueryExtension | where resourceGroup in ('$([String]::Join("','",$ResourceGroup))')"
             }
             $GraphQuery = "advisorresources $GraphQueryExtension | summarize count()"
 
@@ -835,7 +835,7 @@ param ($TenantID,
                 $GraphQueryExtension = "| join kind=inner (resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$ManagementGroup' | project subscriptionId, managanagementGroup = managementGroupParent.name) on subscriptionId"
             }
             if (![string]::IsNullOrEmpty($ResourceGroup)) {
-                $GraphQueryExtension = "$GraphQueryExtension | where resourceGroup == '$ResourceGroup'"
+                $GraphQueryExtension = "$GraphQueryExtension | where resourceGroup in ('$([String]::Join("','",$ResourceGroup))')"
             }
             #$SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
             $SecSize = az graph query -q  "securityresources $GraphQueryExtension | where properties['status']['code'] == 'Unhealthy' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
@@ -880,7 +880,7 @@ param ($TenantID,
             $GraphQueryExtension = "| join kind=inner (resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$ManagementGroup' | project subscriptionId, managanagementGroup = managementGroupParent.name) on subscriptionId"
         }
         if (![string]::IsNullOrEmpty($ResourceGroup)) {
-            $GraphQueryExtension = "$GraphQueryExtension | where resourceGroup == '$ResourceGroup'"
+            $GraphQueryExtension = "$GraphQueryExtension | where resourceGroup in ('$([String]::Join("','",$ResourceGroup))')"
         }
         #$AVDSize = az graph query -q "desktopvirtualizationresources | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
         $AVDSize = az graph query -q "desktopvirtualizationresources $GraphQueryExtension | summarize count()" --output json --only-show-errors | ConvertFrom-Json
@@ -977,10 +977,8 @@ param ($TenantID,
                     $ModuSeq = $ModuSeq0.ReadToEnd()
                     $ModuSeq0.Dispose()  
                 }                  
-                    
-                $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-                    
-                $DrawRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2] | ConvertFrom-Json)).AddArgument($($args[3])).AddArgument($($args[4])).AddArgument($($args[5])).AddArgument($($args[6])).AddArgument($($args[7]))
+
+                $DrawRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($($args[1])).AddArgument($($args[2] | ConvertFrom-Json)).AddArgument($($args[3])).AddArgument($($args[4])).AddArgument($($args[5])).AddArgument($($args[6])).AddArgument($($args[7]))
 
                 $DrawJob = $DrawRun.BeginInvoke()
 
@@ -1049,9 +1047,7 @@ param ($TenantID,
                     $ModuSeq0.Dispose()
                 }
 
-                $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-                $SecRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3]))
+                $SecRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3]))
 
                 $SecJob = $SecRun.BeginInvoke()
 
@@ -1089,9 +1085,7 @@ param ($TenantID,
                     $ModuSeq0.Dispose()
                 }
 
-                $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-                $PolRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
+                $PolRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
 
                 $PolJob = $PolRun.BeginInvoke()
 
@@ -1129,9 +1123,7 @@ param ($TenantID,
                     $ModuSeq0.Dispose()
                 }
 
-                $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-                $AdvRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3]))
+                $AdvRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3]))
 
                 $AdvJob = $AdvRun.BeginInvoke()
 
@@ -1167,9 +1159,7 @@ param ($TenantID,
                 $ModuSeq0.Dispose()
             }
 
-            $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-            $SubRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
+            $SubRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4]))
 
             $SubJob = $SubRun.BeginInvoke()
 
@@ -1234,12 +1224,10 @@ param ($TenantID,
                                     $ModuSeq0.Dispose()                                    
                             }
 
-                            $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
                             New-Variable -Name ('ModRun' + $ModName)
                             New-Variable -Name ('ModJob' + $ModName)
 
-                            Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4] | ConvertFrom-Json)).AddArgument($($args[5])).AddArgument($null).AddArgument($null).AddArgument($null).AddArgument($($args[12]))
+                            Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4] | ConvertFrom-Json)).AddArgument($($args[5])).AddArgument($null).AddArgument($null).AddArgument($null).AddArgument($($args[12]))
 
                             Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
 
@@ -1330,12 +1318,10 @@ param ($TenantID,
                                     $ModuSeq0.Dispose()
                             }
 
-                            $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
                             New-Variable -Name ('ModRun' + $ModName)
                             New-Variable -Name ('ModJob' + $ModName)
 
-                            Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4] | ConvertFrom-Json)).AddArgument($($args[5])).AddArgument($null).AddArgument($null).AddArgument($null).AddArgument($($args[12]))
+                            Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4] | ConvertFrom-Json)).AddArgument($($args[5])).AddArgument($null).AddArgument($null).AddArgument($null).AddArgument($($args[12]))
 
                             Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
 
@@ -1456,9 +1442,7 @@ param ($TenantID,
 
                 Write-Debug "Running Module: '$Module'"
 
-            $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-            $ExcelRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($PSScriptRoot).AddArgument($null).AddArgument($InTag).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($SmaResources).AddArgument($TableStyle).AddArgument($Unsupported)
+            $ExcelRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($PSScriptRoot).AddArgument($null).AddArgument($InTag).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($SmaResources).AddArgument($TableStyle).AddArgument($Unsupported)
 
             $ExcelJob = $ExcelRun.BeginInvoke()
 
@@ -1506,9 +1490,7 @@ param ($TenantID,
                     $ModuSeq0.Dispose()
                 }
 
-                $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-                $QuotaRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($File).AddArgument($Global:AzQuota).AddArgument($TableStyle)
+                $QuotaRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($File).AddArgument($Global:AzQuota).AddArgument($TableStyle)
 
                 $QuotaJob = $QuotaRun.BeginInvoke()
 
@@ -1559,9 +1541,7 @@ param ($TenantID,
                 $ModuSeq0.Dispose()
             }
 
-            $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-            $SecExcelRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($null).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($Sec).AddArgument($TableStyle)
+            $SecExcelRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($null).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($Sec).AddArgument($TableStyle)
 
             $SecExcelJob = $SecExcelRun.BeginInvoke()
 
@@ -1610,9 +1590,7 @@ param ($TenantID,
                 $ModuSeq0.Dispose()
             }
 
-            $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-            $PolExcelRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($null).AddArgument('Reporting').AddArgument($null).AddArgument($file).AddArgument($Pol).AddArgument($TableStyle)
+            $PolExcelRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($null).AddArgument('Reporting').AddArgument($null).AddArgument($file).AddArgument($Pol).AddArgument($TableStyle)
 
             $PolExcelJob = $PolExcelRun.BeginInvoke()
 
@@ -1661,9 +1639,7 @@ param ($TenantID,
                 $ModuSeq0.Dispose()
             }
 
-            $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-            $AdvExcelRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($Adv).AddArgument($TableStyle)
+            $AdvExcelRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($Adv).AddArgument($TableStyle)
 
             $AdvExcelJob = $AdvExcelRun.BeginInvoke()
 
@@ -1699,9 +1675,7 @@ param ($TenantID,
             $ModuSeq0.Dispose()
         }
 
-        $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-        $SubsRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($null).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($AzSubs).AddArgument($TableStyle)
+        $SubsRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($null).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($AzSubs).AddArgument($TableStyle)
 
         $SubsJob = $SubsRun.BeginInvoke()
 
@@ -1740,11 +1714,9 @@ param ($TenantID,
 
     }
 
-        $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
         Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "15% Complete." -PercentComplete 15 -CurrentOperation "Invoking Excel Chart's Thread."
 
-        $ChartsRun = ([PowerShell]::Create()).AddScript($ScriptBlock).AddArgument($file).AddArgument($TableStyle).AddArgument($Global:PlatOS).AddArgument($Global:Subscriptions).AddArgument($Global:Resources.Count).AddArgument($ExtractionRunTime).AddArgument($ReportingRunTime).AddArgument($RunLite)
+        $ChartsRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($file).AddArgument($TableStyle).AddArgument($Global:PlatOS).AddArgument($Global:Subscriptions).AddArgument($Global:Resources.Count).AddArgument($ExtractionRunTime).AddArgument($ReportingRunTime).AddArgument($RunLite)
 
         $ChartsJob = $ChartsRun.BeginInvoke()
 
@@ -1824,4 +1796,3 @@ if(!$SkipDiagram.IsPresent)
         write-host $DDFile -ForegroundColor Cyan
         Write-Host ''
     }
-
