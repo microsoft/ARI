@@ -110,13 +110,16 @@ Else {
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        
+        $noNumberConversion = @()
+        $noNumberConversion += 'DNS Servers'
 
         $ExcelVar = $SmaResources.VirtualNetwork 
 
         
         $ExcelVar | 
             ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Virtual Networks' -AutoSize -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Virtual Networks' -AutoSize -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
         
 
         $excel = Open-ExcelPackage -Path $File -KillExcel

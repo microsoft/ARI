@@ -294,11 +294,17 @@ else
                     $Exc.Add('Tag Value') 
                 }
     
+                $noNumberConversion = @()
+                $noNumberConversion += 'OS Version'
+                $noNumberConversion += 'Image Version'
+                $noNumberConversion += 'Private IP Address'
+                $noNumberConversion += 'DNS Servers'
+
                 $ExcelVar = $SmaResources.VM
                             
                 $ExcelVar | 
                 ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-                Export-Excel -Path $File -WorksheetName 'Virtual Machines' -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $cond -Style $Style, $StyleExt
+                Export-Excel -Path $File -WorksheetName 'Virtual Machines' -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $cond -Style $Style, $StyleExt -NoNumberConversion $noNumberConversion
 
                 $excel = Open-ExcelPackage -Path $File -KillExcel
     

@@ -126,9 +126,15 @@ If ($Task -eq 'Processing') {
             $Exc.Add('Tag Value')
         }
 
+        $noNumberConversion = @()
+        $noNumberConversion += 'Source Address Prefixes'
+        $noNumberConversion += 'Source Address Prefix'
+        $noNumberConversion += 'Destination Address Prefixes'
+        $noNumberConversion += 'Destination Address Prefix'
+
         $ExcelVar |
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc |
-        Export-Excel -Path $File -WorksheetName 'Network Security Groups' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Network Security Groups' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
 
 
         <######## Insert Column comments and documentations here following this model.  See StoraceAcc.ps1 for samples #########>
