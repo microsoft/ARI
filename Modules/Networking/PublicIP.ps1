@@ -133,11 +133,14 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
+        $noNumberConversion = @()
+        $noNumberConversion += 'IP Address'
+
         $ExcelVar = $SmaResources.PublicIP
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style -ConditionalText $condtxt
+        Export-Excel -Path $File -WorksheetName 'Public IPs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style -ConditionalText $condtxt -NoNumberConversion $noNumberConversion
 
         $excel = Open-ExcelPackage -Path $File -KillExcel
     
