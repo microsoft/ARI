@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Extras/DrawIODiagram.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.6
+Version: 3.0.7
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -451,7 +451,10 @@ Function Network {
         Param($Con1)
         foreach ($Con2 in $Con1)
                 {
-                    $Global:vnetLoc = 700
+                    if([string]::IsNullOrEmpty($Global:vnetLoc))
+                    {
+                        $Global:vnetLoc = 700
+                    }
                     $VGT = $AZVGWs | Where-Object {$_.id -eq $Con2.properties.virtualNetworkGateway1.id}
                     $VGTPIP = $PIPs | Where-Object {$_.properties.ipConfiguration.id -eq $VGT.properties.ipConfigurations.id}
         
@@ -600,7 +603,10 @@ Function Network {
         Function vWan {
         Param($wan1)
         
-            $Global:vnetLoc = 700
+            if([string]::IsNullOrEmpty($Global:vnetLoc))
+            {
+                $Global:vnetLoc = 700
+            }
             $VWAN = $wan1    
         
             $Name2 = $wan1.Name
@@ -742,7 +748,10 @@ Function Network {
         $Global:RoutsW = $AZVNETs | Select-Object -Property Name, @{N="Subnets";E={$_.properties.subnets.properties.addressPrefix.count}} | Sort-Object -Property Subnets -Descending
         
         $Global:VNETHistory = @()
-        $Global:vnetLoc = 700
+        if([string]::IsNullOrEmpty($Global:vnetLoc))
+            {
+                $Global:vnetLoc = 700
+            }
         $Global:Alt = 2
         
             foreach($AZVNETs2 in $AZVNETs)
