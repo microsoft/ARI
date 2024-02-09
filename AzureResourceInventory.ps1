@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.11                                                                  #
+#       Version: 3.1.12                                                                  #
 #                                                                                        #
-#       Date: 11/23/2023                                                                 #
+#       Date: 01/19/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -545,7 +545,7 @@ param ($TenantID,
 
                 $Subscri = $SubscriptionID
 
-                $GraphQuery = "resources | where resourceGroup in ('$([String]::Join("','",$ResourceGroup))') and strlen(properties.definition.actions) < 123000 | summarize count()"
+                $GraphQuery = "resources | where resourceGroup in ('$([String]::Join("','",$ResourceGroup))') and strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' | summarize count()"
                 $EnvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
 
@@ -556,7 +556,7 @@ param ($TenantID,
                     $Limit = 0
 
                     while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where resourceGroup in ('$([String]::Join("','",$ResourceGroup))') and strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $GraphQuery = "resources | where resourceGroup in ('$([String]::Join("','",$ResourceGroup))') and strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
                         $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data
@@ -573,7 +573,7 @@ param ($TenantID,
                 $Subscri = $SubscriptionID
 
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'. And from Tag: '+ $TagKey+ ':'+ $TagValue)
-                $GraphQuery = "resources | where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey == '$TagKey' and tagValue == '$TagValue' | where strlen(properties.definition.actions) < 123000 | summarize count()"
+                $GraphQuery = "resources | where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey == '$TagKey' and tagValue == '$TagValue' | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' | summarize count()"
                 $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
 
@@ -584,7 +584,7 @@ param ($TenantID,
                     $Limit = 0
 
                     while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey == '$TagKey' and tagValue == '$TagValue' | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $GraphQuery = "resources | where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey == '$TagKey' and tagValue == '$TagValue' | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
                         $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data
@@ -600,7 +600,7 @@ param ($TenantID,
             {
 
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'.')
-                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | summarize count()"
+                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' | summarize count()"
                 $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
 
@@ -611,7 +611,7 @@ param ($TenantID,
                     $Limit = 0
 
                     while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
                         $Resource = (az graph query -q $GraphQuery --subscriptions $SubscriptionID --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data
@@ -629,7 +629,7 @@ param ($TenantID,
                 if (![string]::IsNullOrEmpty($ManagementGroup)) {
                     $GraphQueryExtension = "| join kind=inner (resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$ManagementGroup' | project subscriptionId, managanagementGroup = managementGroupParent.name) on subscriptionId"
                 }
-                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 $GraphQueryExtension | summarize count()"
+                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' $GraphQueryExtension | summarize count()"
                 
                 #$EnvSize = az graph query -q  $GraphQuery --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
                 $EnvSize = az graph query -q  $GraphQuery --output json --only-show-errors | ConvertFrom-Json
@@ -642,7 +642,7 @@ param ($TenantID,
                     $Limit = 0
 
                     while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 $GraphQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' $GraphQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
                         #$Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --subscriptions $SubscriptionID --only-show-errors).tolower() | ConvertFrom-Json
                         $Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
