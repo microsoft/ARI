@@ -12,8 +12,7 @@ https://github.com/microsoft/ARI/Automation/ARI_Automation.ps1
 This powershell Script is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.6
-First Release Date: 19th November, 2020
+Version: 3.1.7
 Authors: Claudio Merola
 
 Core Steps:
@@ -42,14 +41,30 @@ $InTag = $false
 $RunLite = $true
 
 #Debug
-$RunDebug = $false
+$RunDebug = $true
 
 
 <######################################################### SCRIPT ######################################################################>
 
-#Clear-AzContext -Force
+if($RunDebug)
+    {
+        Write-Output ('Debugging Enable.')
+    }
 
-Connect-AzAccount -Identity
+# Ensures you do not inherit an AzContext in your runbook
+$null = Disable-AzContextAutosave -Scope Process
+
+# Connect using a Managed Service Identity
+try {
+    $AzureConnection = (Connect-AzAccount -Identity).context
+}
+catch {
+    Write-Output "There is no system-assigned user identity. Aborting." 
+    exit
+}
+
+# set and store context
+$AzureContext = Set-AzContext -SubscriptionName $AzureConnection.Subscription -DefaultProfile $AzureConnection
 
 $Context = New-AzStorageContext -StorageAccountName $STGACC -UseConnectedAccount
 
@@ -95,10 +110,11 @@ Write-Output 'Extracting Advisories'
 
 
 $Subscriptions = Get-AzSubscription | Where-Object {$_.State -ne 'Disabled'}
-$Subscriptions = $Subscriptions.Subscription
+$Subscriptions = $Subscriptions
 if($RunDebug)
 {
-    Write-Output $Subscriptions
+    $Subcount = $Subscriptions.count
+    Write-Output ("Subscriptions found: $Subcount")
 }
 
 <######################################################### RESOURCE EXTRACTION ######################################################################>
@@ -110,6 +126,7 @@ Write-Output 'Extracting Resources'
         if($RunDebug)
             {
                 Write-Output ('DEBUG - extracting resources for the subscription: '+$Subscription)
+                Write-Output ('')
             }
         $SUBID = $Subscription.id
         Set-AzContext -Subscription $SUBID | Out-Null
@@ -177,6 +194,7 @@ foreach ($Module in $Modules)
 
         if($RunDebug)
             {
+                Write-Output ''
                 Write-Output ('DEBUG - Running Module: '+$Module)
             }
 
@@ -186,7 +204,7 @@ foreach ($Module in $Modules)
 
         $ScriptBlock = [Scriptblock]::Create($ModuSeq)
 
-        $SmaResources[$ModName] = Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot, $Subscriptions, $InTag, $Resources, 'Processing'
+        $SmaResources[$ModName] = Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot, $Subscriptions, $InTag, $Resources, 'Processing', $true
 
         Write-Output ('Resources ('+$ModName+'): '+$SmaResources[$ModName].count)
 
