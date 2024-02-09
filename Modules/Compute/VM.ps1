@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VM.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.4
+Version: 3.1.5
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported, $Automation)
+param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -31,25 +31,15 @@ If ($Task -eq 'Processing')
         $vmexp = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachines/extensions'}
         $disk = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/disks'}
         $vmsizemap = @{}
-        if(!$Automation)
+        foreach($location in ($vm | Select-Object -ExpandProperty location -Unique))
             {
-                foreach($location in ($vm | Select-Object -ExpandProperty location -Unique))
+                foreach ($vmsize in ( az vm list-sizes -l $location | ConvertFrom-Json))
                     {
-                        foreach ($vmsize in ( az vm list-sizes -l $location | ConvertFrom-Json))
-                            {
-                                $vmsizemap[$vmsize.name] = @{
-                                    CPU = $vmSize.numberOfCores
-                                    RAM = [math]::Round($vmSize.memoryInMB / 1024, 0) 
-                                }
-                            }
+                        $vmsizemap[$vmsize.name] = @{
+                            CPU = $vmSize.numberOfCores
+                            RAM = [math]::Round($vmSize.memoryInMB / 1024, 0) 
+                        }
                     }
-            }
-        else
-            {
-                $vmsizemap[$vmsize.name] = @{
-                    CPU = ''
-                    RAM = ''
-                }
             }
 
     if($vm)
