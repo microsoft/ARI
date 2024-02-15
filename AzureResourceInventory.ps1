@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.12                                                                  #
+#       Version: 3.1.13                                                                  #
 #                                                                                        #
-#       Date: 01/19/2024                                                                 #
+#       Date: 02/15/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -442,7 +442,7 @@ param ($TenantID,
                                 }
                         }
                     $Global:DefaultPath = if($ReportDir) {$ReportDir} else {"C:\AzureResourceInventory\"}
-                    $Global:DiagramCache = if($ReportDir) {$ReportDir} else {"C:\AzureResourceInventory\DiagramCache\"}
+                    $Global:DiagramCache = if($ReportDir) {($ReportDir+'DiagramCache\')} else {"C:\AzureResourceInventory\DiagramCache\"}
                     LoginSession
                 }
             }

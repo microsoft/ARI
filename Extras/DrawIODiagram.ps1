@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Extras/DrawIODiagram.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.0
+Version: 3.1.13
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -23,7 +23,9 @@ $Global:DiagramCache = $DiagramCache
 
 $Global:FullEnvironment = $FullEnvironment
 
-$Global:Logfile = 'C:\AzureResourceInventory\DiagramLogFile.log'
+$TempPath = $DiagramCache.split("DiagramCache\")[0]
+
+$Global:Logfile = ($TempPath+'DiagramLogFile.log')
 
 Function Network {
     Param($Subscriptions,$Resources,$Advisories,$DiagramCache,$FullEnvironment,$DDFile,$XMLFiles)
