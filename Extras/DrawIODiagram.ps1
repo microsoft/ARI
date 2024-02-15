@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Extras/DrawIODiagram.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.7
+Version: 3.1.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -23,8 +23,12 @@ $Global:DiagramCache = $DiagramCache
 
 $Global:FullEnvironment = $FullEnvironment
 
+$Global:Logfile = 'C:\AzureResourceInventory\DiagramLogFile.log'
+
 Function Network {
     Param($Subscriptions,$Resources,$Advisories,$DiagramCache,$FullEnvironment,$DDFile,$XMLFiles)
+
+    Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Network Diagram Job...')
 
     Start-Job -Name 'Diagram_NetworkTopology' -ScriptBlock {
         
@@ -37,6 +41,7 @@ Function Network {
         $Global:FullEnvironment = $($args[4])
         $Global:DDFile  = $($args[5])
         $Global:XMLFiles  = $($args[6])
+        $Global:Logfile = $($args[7])
 
         Function Icon {    
             Param($Style,$x,$y,$w,$h,$p)
@@ -55,7 +60,7 @@ Function Network {
                     $Global:XmlWriter.WriteEndElement()
                 
                 $Global:XmlWriter.WriteEndElement()
-            }
+        }
         
         Function VNETContainer {
             Param($x,$y,$w,$h,$title)
@@ -2783,6 +2788,8 @@ Function Network {
         
         }
         
+        Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting Subnet files')
+
         $Subnetfiles = Get-ChildItem -Path $DiagramCache
         
         foreach($SubFile in $Subnetfiles)
@@ -2793,13 +2800,19 @@ Function Network {
                         }
             }
         
+        Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Variables0 Function')
+
         Variables0
+
+        Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting Variables Job to complete')
         
         Get-Job -Name 'DiagramVariables' | Wait-Job
         
         $Job = Receive-Job -Name 'DiagramVariables'
         
         Get-Job -Name 'DiagramVariables' | Remove-Job
+
+        Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting Variables')
         
         $Global:AZVGWs = $Job.AZVGWs
         $Global:AZLGWs = $Job.AZLGWs
@@ -2818,6 +2831,8 @@ Function Network {
         $Global:CellID = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
 
         $Global:IDNum = 0
+
+        Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Defining XML file')
 
         $Global:XmlWriter = New-Object System.XMl.XmlTextWriter($DDFile,$Null)
 
@@ -2866,18 +2881,26 @@ Function Network {
                         $Global:XmlWriter.WriteAttributeString('parent', "0")
                         $Global:XmlWriter.WriteEndElement()
 
+                        Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Stensils')
+
                             Stensils
 
                             if($AZLGWs -or $AZEXPROUTEs -or $AZVERs -or $AZVPNSITES)
                                 {
+                                    Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling OnPremNet')
+
                                     OnPremNet
                                     if($Global:FullEnvironment)
                                         {
+                                            Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling as FullEnvironment')
+
                                             FullEnvironment
                                         }
                                 }
                             else
                                 {
+                                    Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling CloudOnly Function')
+
                                     CloudOnly
                                 }
 
@@ -2892,11 +2915,15 @@ Function Network {
             $Global:XmlWriter.Flush()
             $Global:XmlWriter.Close()                
 
+            Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting Job2 to complete')
+
             while ($Global:jobs2.IsCompleted -contains $false) {}
 
             #$VNetFile = ($DiagramCache+'Network.xml')
             
             $Subnetfiles = Get-ChildItem -Path $DiagramCache
+
+            Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Processing Subnet files')
 
             foreach($SubFile in $Subnetfiles)
                 {
@@ -2923,7 +2950,10 @@ Function Network {
                             Remove-Item -Path $SubFile.FullName
                         }
                 }
-    } -ArgumentList $Subscriptions,$Resources,$Advisories,$DiagramCache,$FullEnvironment,$DDFile,$XMLFiles
+
+            Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - End of Network Diagram')
+
+    } -ArgumentList $Subscriptions,$Resources,$Advisories,$DiagramCache,$FullEnvironment,$DDFile,$XMLFiles,$Logfile
 }
 
 Function Subscription {
@@ -5739,11 +5769,16 @@ Function Organization {
 }
 
 
+Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Draw.IO file')
+
 $XMLFiles = @()
+
+Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting XML files to be clean')
 
 $XMLFiles += ($DiagramCache+'Organization.xml')
 $XMLFiles += ($DiagramCache+'Subscriptions.xml')
 
+Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Cleaning old files')
 
 foreach($File in $XMLFiles)
     {
@@ -5751,15 +5786,23 @@ foreach($File in $XMLFiles)
     }
 
 
+Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Organization Function')
+
 Organization $ResourceContainers $DiagramCache
+
+Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Network Topology Function')
 
 Network $Subscriptions $Resources $Advisories $DiagramCache $FullEnvironment $DDFile $XMLFiles 
 
+Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Subscription Function')
+
 Subscription $Subscriptions $Resources $DiagramCache
 
+Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting for Jobs to complete')
 
 (Get-Job | Where-Object {$_.name -like 'Diagram_*'}) | Wait-Job
 
+Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting to process files')
 
 foreach($File in $XMLFiles)
     {
@@ -5776,5 +5819,6 @@ foreach($File in $XMLFiles)
         Remove-Item -Path $File
     }
 
+Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Cleaning old jobs')
 
 (Get-Job | Where-Object {$_.name -like 'Diagram_*'}) | Remove-Job
