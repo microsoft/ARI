@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/PrivateEndpoint.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.13
+Version: 3.1.14
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -25,6 +25,7 @@ param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableSty
 If ($Task -eq 'Processing') {
 
     $PrivateEdp = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/privateendpoints' }
+    $NICs = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/networkinterfaces' }
 
     if($PrivateEdp)
         {
@@ -39,6 +40,18 @@ If ($Task -eq 'Processing') {
 
                 $VNET = if(![string]::IsNullOrEmpty($data.subnet.id)){$data.subnet.id.split('/')[8]}else{''}
                 $Subnet = if(![string]::IsNullOrEmpty($data.subnet.id)){$data.subnet.id.split('/')[10]}else{''}
+
+                if([string]::IsNullOrEmpty($data.customDnsConfigs.ipAddresses))
+                    {
+                        $NIC = $NICs | Where-Object {$_.id -eq $data.networkInterfaces.id}
+                        $IPAddress = [string]$NIC.properties.ipconfigurations.properties.privateipaddress
+                        $FQDN = [string]$NIC.properties.ipconfigurations.properties.privatelinkconnectionproperties.fqdns
+                    }
+                else
+                    {
+                        $IPAddress = [string]$data.customDnsConfigs.ipAddresses
+                        $FQDN = [string]$data.customDnsConfigs.fqdn
+                    }
                 
                 foreach ($Tag in $Tags) {     
                     $obj = @{
@@ -53,8 +66,8 @@ If ($Task -eq 'Processing') {
                         'Private Link Status'             = $data.privatelinkserviceconnections.properties.privateLinkServiceConnectionState.status;
                         'Private Link Resource Type'      = [string]$data.privatelinkserviceconnections.properties.groupids;
                         'Private Link Target Resource'    = [string]$data.privatelinkserviceconnections.properties.privatelinkserviceid;
-                        'IP Address'                      = [string]$data.customDnsConfigs.ipAddresses;
-                        'FQDN'                            = [string]$data.customDnsConfigs.fqdn;
+                        'IP Address'                      = $IPAddress;
+                        'FQDN'                            = $FQDN;
                         'Tag Name'                        = [string]$Tag.Name;
                         'Tag Value'                       = [string]$Tag.Value;
                     }
