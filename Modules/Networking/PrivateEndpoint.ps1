@@ -3,8 +3,8 @@
 Inventory for Azure Private Endpoint
 
 .DESCRIPTION
-This script consolidates information for all microsoft.network/privatednszones and  resource provider in $Resources variable. 
-Excel Sheet Name: PvtEndpoint
+This script consolidates information for all microsoft.network/privateendpoints and resource provider in $Resources variable. 
+Excel Sheet Name: Private Endpoints
 
 .Link
 https://github.com/microsoft/ARI/Modules/Networking/PrivateEndpoint.ps1
@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/PrivateEndpoint.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.14
+Version: 3.1.15
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -109,7 +109,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'PvtEndpoint' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Private Endpoint' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
     
     }   
 }
