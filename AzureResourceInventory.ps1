@@ -1687,6 +1687,46 @@ param ($TenantID,
 
         Write-Progress -activity 'Azure Resource Inventory Subscriptions' -Status "100% Complete." -Completed
 
+        <################################################ BILLING #######################################################>
+
+        Write-Debug ('Checking If Should Run Billing.')
+        if ($Billing.IsPresent) 
+        {
+            Write-Debug ('Generating Billing Report.')
+            $Global:Bilco = $Billing.Count
+            
+            $Bil = Receive-Job -Name 'Billing'
+            Write-Debug ('Starting Billing Job.')
+            If ($RunOnline -eq $true) {
+                Write-Debug ('Looking for the following file: '+$RawRepo + '/Extras/Billing.ps1')
+                $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Billing.ps1')
+            }
+            Else {
+                if($PSScriptRoot -like '*\*')
+                    {                        
+                        Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\Billing.ps1')
+                        $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Billing.ps1')
+                    }
+                else
+                    {                        
+                        Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/Billing.ps1')
+                        $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Billing.ps1')
+                    }
+                $ModuSeq = $ModuSeq0.ReadToEnd()
+                $ModuSeq0.Dispose()
+            }
+
+            $BilExcelRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($($SubscriptionID)).AddArgument($null).AddArgument('Billing').AddArgument($file).AddArgument($Bil).AddArgument($TableStyle)                        
+            $BilExcelJob = $BilExcelRun.BeginInvoke()
+
+            while ($BilExcelJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
+            $BilExcelRun.EndInvoke($BilExcelJob)
+            $BilExcelRun.Dispose()
+            
+            Write-Progress -activity 'Azure Resource Inventory Billing' -Status "100% Complete." -Completed
+
+        }             
+        
         <################################################################### CHARTS ###################################################################>
 
         Write-Debug ('Generating Overview sheet (Charts).')
@@ -1783,6 +1823,11 @@ if (!$SkipPolicy.IsPresent)
 if ($SecurityCenter.IsPresent) 
     {
         Write-Host ('Total Security Advisories: ' + $Secadvco)
+    }
+
+if ($Billing.IsPresent) 
+    {
+    Write-Host ('Total Billing: ' + $Bilco)
     }
 
 Write-Host ''
