@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.13                                                                  #
+#       Version: 3.1.14                                                                  #
 #                                                                                        #
-#       Date: 02/15/2024                                                                 #
+#       Date: 03/12/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -1426,6 +1426,8 @@ param ($TenantID,
 
         foreach ($Module in $Modules) {
 
+            Write-Debug "Running Module: '$Module'"
+
             $c = (($ReportCounter / $Lops) * 100)
             $c = [math]::Round($c)
             Write-Progress -Id 1 -activity "Building Report" -Status "$c% Complete." -PercentComplete $c
@@ -1439,8 +1441,6 @@ param ($TenantID,
                     $ModuSeq = $ModuSeq0.ReadToEnd()
                     $ModuSeq0.Dispose()
             }
-
-                Write-Debug "Running Module: '$Module'"
 
             $ExcelRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($PSScriptRoot).AddArgument($null).AddArgument($InTag).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($SmaResources).AddArgument($TableStyle).AddArgument($Unsupported)
 
