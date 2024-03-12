@@ -961,12 +961,22 @@ param ($TenantID,
             Write-Debug ('Starting Draw.io Diagram Processing Job.')
             Start-job -Name 'DrawDiagram' -ScriptBlock {
 
+                $DiagramCache = $($args[5])
+
+                $TempPath = $DiagramCache.split("DiagramCache\")[0]
+
+                $Logfile = ($TempPath+'DiagramLogFile.log')
+
+                Add-Content -Path $Logfile -Value ('DrawIOCoreJob - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Draw.IO Job')
+
                 If ($($args[8]) -eq $true) {
+                    Add-Content -Path $Logfile -Value ('DrawIOCoreJob - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Running Online')
                     $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[10]) + '/Extras/DrawIODiagram.ps1')
                 }
                 Else {
                     if($($args[0]) -like '*\*')
                         {
+                            Add-Content -Path $Logfile -Value ('DrawIOCoreJob - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Running Local')
                             $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\DrawIODiagram.ps1')
                         }
                     else
@@ -978,15 +988,23 @@ param ($TenantID,
                     $ModuSeq0.Dispose()  
                 }                  
 
-                $DrawRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($($args[1])).AddArgument($($args[2] | ConvertFrom-Json)).AddArgument($($args[3])).AddArgument($($args[4])).AddArgument($($args[5])).AddArgument($($args[6])).AddArgument($($args[7]))
+                Add-Content -Path $Logfile -Value ('DrawIOCoreJob - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Draw.IO Thread')
+                try
+                    {
+                        $DrawRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($($args[1])).AddArgument($($args[2] | ConvertFrom-Json)).AddArgument($($args[3])).AddArgument($($args[4])).AddArgument($($args[5])).AddArgument($($args[6])).AddArgument($($args[7]))
 
-                $DrawJob = $DrawRun.BeginInvoke()
+                        $DrawJob = $DrawRun.BeginInvoke()
 
-                while ($DrawJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
+                        while ($DrawJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
 
-                $DrawRun.EndInvoke($DrawJob)
+                        $DrawRun.EndInvoke($DrawJob)
 
-                $DrawRun.Dispose()
+                        $DrawRun.Dispose()
+                    }
+                catch
+                    {
+                        Add-Content -Path $Logfile -Value ('DrawIOCoreJob - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+$_.Exception.Message)
+                    }
 
             } -ArgumentList $PSScriptRoot, $Subscriptions, ($Resources | ConvertTo-Json -Depth 50), $Advisories, $DDFile, $DiagramCache, $FullEnv, $ResourceContainers ,$RunOnline, $Repo, $RawRepo   | Out-Null
         }
