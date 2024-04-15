@@ -51,7 +51,7 @@
     PS C:\>.\AzureResourceInventory.ps1 -TenantID <your-Tenant-Id> -SubscriptionID <your-Subscription-Id>
 
 .NOTES
-    AUTHORS: Claudio Merola and Renato Gregio | Azure Infrastucture/Automation/Devops/Governance 
+    AUTHORS: Claudio Merola and Renato Gregio | Azure Infrastucture/Automation/Devops/Governance
 
 .LINK
     Copyright (c) 2018 Microsoft Corporation. All rights reserved.
@@ -66,29 +66,29 @@
 #>
 
 param ($TenantID,
-        [switch]$SecurityCenter, 
-        $SubscriptionID, 
+        [switch]$SecurityCenter,
+        $SubscriptionID,
         $ManagementGroup,
-        $Appid, 
-        $Secret, 
-        [string[]]$ResourceGroup, 
-        $TagKey, 
+        $Appid,
+        $Secret,
+        [string[]]$ResourceGroup,
+        $TagKey,
         $TagValue,
         [switch]$SkipAdvisory,
         [switch]$SkipPolicy,
         [switch]$IncludeTags,
-        [switch]$HeavyLoad, 
-        [switch]$QuotaUsage, 
-        [switch]$Online, 
+        [switch]$HeavyLoad,
+        [switch]$QuotaUsage,
+        [switch]$Online,
         [switch]$Diagram,
-        [switch]$SkipDiagram, 
+        [switch]$SkipDiagram,
         [switch]$Lite,
-        [switch]$Debug, 
-        [switch]$Help, 
-        [switch]$DeviceLogin, 
+        [switch]$Debug,
+        [switch]$Help,
+        [switch]$DeviceLogin,
         $AzureEnvironment,
         [switch]$DiagramFullEnvironment,
-        $ReportName = 'AzureResourceInventory', 
+        $ReportName = 'AzureResourceInventory',
         $ReportDir)
 
     if ($Debug.IsPresent) {$DebugPreference = 'Continue'}
@@ -179,7 +179,7 @@ param ($TenantID,
         $Global:Security = @()
         $Global:Policies = @()
         $Global:Subscriptions = ''
-        $Global:ReportName = $ReportName        
+        $Global:ReportName = $ReportName
 
         $Global:Repo = 'https://api.github.com/repos/microsoft/ari/git/trees/main?recursive=1'
         $Global:RawRepo = 'https://raw.githubusercontent.com/microsoft/ARI/main'
@@ -194,7 +194,7 @@ param ($TenantID,
                 else
                     {
                         $LocalFilesValidation = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Subscriptions.ps1')
-                    } 
+                    }
                 if([string]::IsNullOrEmpty($LocalFilesValidation))
                     {
                         Write-Debug ('Using -Online by force.')
@@ -246,7 +246,7 @@ param ($TenantID,
         }
 
         function LoginSession() {
-            Write-Debug ('Starting LoginSession function')            
+            Write-Debug ('Starting LoginSession function')
             if(![string]::IsNullOrEmpty($AzureEnvironment))
                 {
                     az cloud set --name $AzureEnvironment
@@ -266,7 +266,7 @@ param ($TenantID,
                     {
                         az login --use-device-code
                     }
-                else 
+                else
                     {
                         az login --only-show-errors | Out-Null
                     }
@@ -295,7 +295,7 @@ param ($TenantID,
                         {
                             az login --use-device-code -t $TenantID
                         }
-                    else 
+                    else
                         {
                             az login -t $TenantID --only-show-errors | Out-Null
                         }
@@ -324,7 +324,7 @@ param ($TenantID,
                         {
                             az login --use-device-code -t $TenantID
                         }
-                    else 
+                    else
                         {
                             az login -t $TenantID --only-show-errors | Out-Null
                         }
@@ -365,15 +365,15 @@ param ($TenantID,
                 write-host ""
                 if($ReportDir)
                         {
-                            try 
+                            try
                                 {
                                     Resolve-Path $ReportDir -ErrorAction STOP
                                     if ($ReportDir -notmatch '/$')
                                         {
                                             $ReportDir = $ReportDir + '/'
                                         }
-                                } 
-                            catch 
+                                }
+                            catch
                                 {
                                     Write-Host "ERROR:" -NoNewline -ForegroundColor Red
                                     Write-Host " Wrong ReportDir Path!"
@@ -395,15 +395,15 @@ param ($TenantID,
                     write-host ""
                     if($ReportDir)
                         {
-                            try 
+                            try
                                 {
                                     Resolve-Path $ReportDir -ErrorAction STOP
                                     if ($ReportDir -notmatch '/$')
                                         {
                                             $ReportDir = $ReportDir + '/'
                                         }
-                                } 
-                            catch 
+                                }
+                            catch
                                 {
                                     Write-Host "ERROR:" -NoNewline -ForegroundColor Red
                                     Write-Host " Wrong ReportDir Path!"
@@ -423,15 +423,15 @@ param ($TenantID,
                     write-host ""
                     if($ReportDir)
                         {
-                            try 
+                            try
                                 {
                                     Resolve-Path $ReportDir -ErrorAction STOP
                                     if ($ReportDir -notlike '*\')
                                         {
                                             $ReportDir = $ReportDir + '\'
                                         }
-                                } 
-                            catch 
+                                }
+                            catch
                                 {
                                     Write-Host "ERROR:" -NoNewline -ForegroundColor Red
                                     Write-Host " Wrong ReportDir Path!"
@@ -510,7 +510,7 @@ param ($TenantID,
                             }
                         }
                         Write-Progress -Id 1 -activity "Running Subscription Inventory Job" -Status "$Looper / $Loop of Subscription Jobs" -Completed
-                    }                    
+                    }
                 }
             }
 
@@ -529,7 +529,7 @@ param ($TenantID,
 
         <######################################################## INVENTORY LOOPs #######################################################################>
 
-        Write-Progress -activity 'Azure Inventory' -Status "4% Complete." -PercentComplete 4 -CurrentOperation "Starting Resources extraction jobs.."        
+        Write-Progress -activity 'Azure Inventory' -Status "4% Complete." -PercentComplete 4 -CurrentOperation "Starting Resources extraction jobs.."
 
         if(![string]::IsNullOrEmpty($ResourceGroup) -and [string]::IsNullOrEmpty($SubscriptionID))
             {
@@ -595,7 +595,7 @@ param ($TenantID,
                     }
                 }
                 Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
-            } 
+            }
         elseif([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
             {
 
@@ -622,15 +622,15 @@ param ($TenantID,
                     }
                 }
                 Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
-            } 
-        else 
+            }
+        else
             {
                 $GraphQueryExtension = ""
                 if (![string]::IsNullOrEmpty($ManagementGroup)) {
                     $GraphQueryExtension = "| join kind=inner (resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$ManagementGroup' | project subscriptionId, managanagementGroup = managementGroupParent.name) on subscriptionId"
                 }
                 $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' $GraphQueryExtension | summarize count()"
-                
+
                 #$EnvSize = az graph query -q  $GraphQuery --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
                 $EnvSize = az graph query -q  $GraphQuery --output json --only-show-errors | ConvertFrom-Json
                 $EnvSizeNum = $EnvSize.data.'count_'
@@ -736,36 +736,36 @@ param ($TenantID,
 
         <######################################################### Policies ######################################################################>
 
-            if (!($SkipPolicy.IsPresent)) {                
+            if (!($SkipPolicy.IsPresent)) {
 
                 $GraphQuery = "policyresources | where type == 'microsoft.authorization/policyassignments' | summarize count()"
-    
+
                 $PolSize = az graph query -q $GraphQuery -m $TenantID --output json --only-show-errors | ConvertFrom-Json
                 $PolSizeNum = $PolSize.data.'count_'
-    
+
                 Write-Debug ('Policy: '+$PolSizeNum)
                 Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Policy extraction jobs.."
-    
+
                 if ($PolSizeNum -ge 1) {
                     $Loop = $PolSizeNum / 1000
                     $Loop = [math]::ceiling($Loop)
                     $Looper = 0
                     $Limit = 0
-    
+
                     while ($Looper -lt $Loop) {
                         $Looper ++
                         Write-Progress -Id 1 -activity "Running Policy Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                         $GraphQuery = "policyresources | where type == 'microsoft.authorization/policyassignments' | order by id asc"
-    
+
                         $Policy = (az graph query -q $GraphQuery -m $TenantID --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-    
+
                         $Global:Policies += $Policy.data
                         Start-Sleep 2
                         $Limit = $Limit + 1000
                     }
                     Write-Progress -Id 1 -activity "Running Policy Inventory Job" -Status "Completed" -Completed
                 }
-    
+
             }
 
 
@@ -778,7 +778,7 @@ param ($TenantID,
         if (!($SkipAdvisory.IsPresent)) {
 
             Write-Debug ('Subscriptions To be Gather in Advisories: '+$Subscri.Count)
-            
+
             $GraphQueryExtension = ""
             if (![string]::IsNullOrEmpty($ManagementGroup)) {
                 $GraphQueryExtension = "| join kind=inner (resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$ManagementGroup' | project subscriptionId, managanagementGroup = managementGroupParent.name) on subscriptionId"
@@ -839,7 +839,7 @@ param ($TenantID,
             }
             #$SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
             $SecSize = az graph query -q  "securityresources $GraphQueryExtension | where properties['status']['code'] == 'Unhealthy' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-            $SecSizeNum = $SecSize.data.'count_'            
+            $SecSizeNum = $SecSize.data.'count_'
 
             if ($SecSizeNum -ge 1) {
                 $Loop = $SecSizeNum / 1000
@@ -850,7 +850,7 @@ param ($TenantID,
                     $Looper ++
                     Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                     $GraphQuery = "securityresources $GraphQueryExtension | where properties['status']['code'] == 'Unhealthy' | order by id asc"
-                
+
                     #$SecCenter = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
                     $SecCenter = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
@@ -985,8 +985,8 @@ param ($TenantID,
                         }
                     $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '/Extras/DrawIODiagram.ps1')
                     $ModuSeq = $ModuSeq0.ReadToEnd()
-                    $ModuSeq0.Dispose()  
-                }                  
+                    $ModuSeq0.Dispose()
+                }
 
                 Add-Content -Path $Logfile -Value ('DrawIOCoreJob - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Draw.IO Thread')
                 try
@@ -1023,8 +1023,8 @@ param ($TenantID,
                 Else {
                     $ModuSeq0 = New-Object System.IO.StreamReader($($args[0]) + '\Extras\VisioDiagram.ps1')
                     $ModuSeq = $ModuSeq0.ReadToEnd()
-                    $ModuSeq0.Dispose()  
-                }                  
+                    $ModuSeq0.Dispose()
+                }
 
                 $ScriptBlock = [Scriptblock]::Create($ModuSeq)
 
@@ -1200,10 +1200,10 @@ param ($TenantID,
             $Loop = $resources.count / 2500
             $Loop = [math]::ceiling($Loop)
             $Looper = 0
-            $Limit = 0                    
+            $Limit = 0
 
             while ($Looper -lt $Loop) {
-                $Looper ++            
+                $Looper ++
 
                 $Resource = $resources | Select-Object -First 2500 -Skip $Limit
 
@@ -1240,7 +1240,7 @@ param ($TenantID,
                                     $ModName = $Module.Name.Substring(0, $Module.Name.length - ".ps1".length)
                                     $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
                                     $ModuSeq = $ModuSeq0.ReadToEnd()
-                                    $ModuSeq0.Dispose()                                    
+                                    $ModuSeq0.Dispose()
                             }
 
                             New-Variable -Name ('ModRun' + $ModName)
@@ -1251,7 +1251,7 @@ param ($TenantID,
                             Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
 
                             $job += (get-variable -name ('ModJob' + $ModName)).Value
-                            Start-Sleep -Milliseconds 500 
+                            Start-Sleep -Milliseconds 500
                         }
 
                         while ($Job.Runspace.IsCompleted -contains $false) { Start-Sleep -Milliseconds 1000 }
@@ -1266,7 +1266,7 @@ param ($TenantID,
 
                             New-Variable -Name ('ModValue' + $ModName)
                             Set-Variable -Name ('ModValue' + $ModName) -Value (((get-variable -name ('ModRun' + $ModName)).Value).EndInvoke((get-variable -name ('ModJob' + $ModName)).Value))
-                            Start-Sleep -Milliseconds 100 
+                            Start-Sleep -Milliseconds 100
                         }
 
                         $Hashtable = New-Object System.Collections.Hashtable
@@ -1282,11 +1282,11 @@ param ($TenantID,
                         }
 
                     $Hashtable
-                    } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 50), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo, $Unsupported | Out-Null                    
+                    } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 50), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo, $Unsupported | Out-Null
                     $Limit = $Limit + 2500
-                    Start-Sleep -Milliseconds 100    
+                    Start-Sleep -Milliseconds 100
                 }
-        
+
             }
         else{
             Write-Debug ('Starting Processing Jobs in Regular Mode.')
@@ -1294,7 +1294,7 @@ param ($TenantID,
             $Loop = $resources.count / 1000
             $Loop = [math]::ceiling($Loop)
             $Looper = 0
-            $Limit = 0                    
+            $Limit = 0
 
             while ($Looper -lt $Loop) {
                 $Looper ++            
@@ -1374,8 +1374,8 @@ param ($TenantID,
                         }
 
                     $Hashtable
-                    } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 50), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo, $Unsupported | Out-Null                    
-                    $Limit = $Limit + 1000   
+                    } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 50), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo, $Unsupported | Out-Null
+                    $Limit = $Limit + 1000
                 }
 
             }
@@ -1390,8 +1390,8 @@ param ($TenantID,
 
         Foreach($Job in (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}))
             {
-                $JobNames += $Job.Name 
-            }                  
+                $JobNames += $Job.Name
+            }
 
         while (get-job -Name $JobNames | Where-Object { $_.State -eq 'Running' }) {
             $jb = get-job -Name $JobNames
@@ -1414,9 +1414,8 @@ param ($TenantID,
                 $TempJob = Receive-Job -Name $Job
                 Write-Debug ('Job '+ $Job +' Returned: ' + ($TempJob.values | Where-Object {$_ -ne $null}).Count + ' Resource Types.')
                 $Global:SmaResources += $TempJob
-            }        
+            }
 
-            
         <############################################################## REPORTING ###################################################################>
 
         Write-Debug ('Starting Reporting Phase.')
@@ -1789,17 +1788,17 @@ Write-Host $Measure -NoNewline -ForegroundColor Cyan
 Write-Host (' Minutes')
 Write-Host ('Total Resources: ') -NoNewline
 write-host $Resources.count -ForegroundColor Cyan
-if (!$SkipAdvisory.IsPresent) 
+if (!$SkipAdvisory.IsPresent)
     {
         Write-Host ('Total Advisories: ') -NoNewline
         write-host $advco -ForegroundColor Cyan
     }
-if (!$SkipPolicy.IsPresent) 
+if (!$SkipPolicy.IsPresent)
     {
         Write-Host ('Total Policies: ') -NoNewline
         write-host $polco -ForegroundColor Cyan
     }
-if ($SecurityCenter.IsPresent) 
+if ($SecurityCenter.IsPresent)
     {
         Write-Host ('Total Security Advisories: ' + $Secadvco)
     }
@@ -1809,7 +1808,7 @@ Write-Host ('Excel file saved at: ') -NoNewline
 write-host $File -ForegroundColor Cyan
 Write-Host ''
 
-if(!$SkipDiagram.IsPresent) 
+if(!$SkipDiagram.IsPresent)
     {
         Write-Host ('Draw.io Diagram file saved at: ') -NoNewline
         write-host $DDFile -ForegroundColor Cyan
