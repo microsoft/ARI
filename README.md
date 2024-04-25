@@ -12,6 +12,8 @@ Tags: Powershell, Azure, Inventory, Excel Report, Customer Engineer
 
 <br/>
 
+![Logo](images/ARI_Logo.png)
+
 # Azure Resource Inventory
 
 Azure Resource inventory (ARI) is a powerful script written in powershell that generates an Excel report of any Azure Environment you have read access. 
