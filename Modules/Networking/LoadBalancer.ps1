@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/LoadBalancer.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.1
+Version: 3.1.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -33,6 +33,9 @@ If ($Task -eq 'Processing') {
             foreach ($1 in $LoadBalancer) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
+                $FrontEnds = @()
+                $Backends = @()
+                $Probes = @()
                 $data = $1.PROPERTIES
                 $Orphaned = if([string]::IsNullOrEmpty($data.backendAddressPools.id)){$true}else{$false}
                 $RetDate = ''
@@ -43,319 +46,332 @@ If ($Task -eq 'Processing') {
                         $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 8}).RetiringFeature
                     }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
-                if ($null -ne $data.frontendIPConfigurations -and $null -ne $data.backendAddressPools -and $null -ne $data.probes) {
-                    foreach ($2 in $data.frontendIPConfigurations) {
-                        $Fronttarget = ''    
-                        $Frontsub = ''
-                        $FrontType = ''
-                        if ($null -ne $2.properties.subnet.id) {
-                            $Fronttarget = $2.properties.subnet.id.split('/')[8]
-                            $Frontsub = $2.properties.subnet.id.split('/')[10]
-                            $FrontType = 'VNET' 
-                        }
-                        elseif ($null -ne $2.properties.publicIPAddress.id) {
-                            $Fronttarget = $2.properties.publicIPAddress.id.split('/')[8]
-                            $Frontsub = ''
-                            $FrontType = 'Public IP' 
-                        }       
-                        foreach ($3 in $data.backendAddressPools) {
-                            $BackTarget = ''
-                            $BackType = ''
-                            if ($null -ne $3.properties.backendIPConfigurations.id) {
-                                $BackTarget = $3.properties.backendIPConfigurations.id.split('/')[8]
-                                $BackType = $3.properties.backendIPConfigurations.id.split('/')[7]
-                            }
-                            foreach ($4 in $data.probes) {
-                                    foreach ($Tag in $Tags) {
-                                        $obj = @{
-                                            'ID'                        = $1.id;
-                                            'Subscription'              = $sub1.Name;
-                                            'Resource Group'            = $1.RESOURCEGROUP;
-                                            'Name'                      = $1.NAME;
-                                            'Location'                  = $1.LOCATION;
-                                            'SKU'                       = $1.sku.name;
-                                            'Retirement Date'           = [string]$RetDate;
-                                            'Retirement Feature'        = $RetFeature;
-                                            'Orphaned'                  = $Orphaned;
-                                            'Frontend Name'             = $2.name;
-                                            'Frontend Target'           = $Fronttarget;
-                                            'Frontend Type'             = $FrontType;
-                                            'Frontend Subnet'           = $frontsub;
-                                            'Backend Pool Name'         = $3.name;
-                                            'Backend Target'            = $BackTarget;
-                                            'Backend Type'              = $BackType;
-                                            'Probe Name'                = $4.name;
-                                            'Probe Interval (sec)'      = $4.properties.intervalInSeconds;
-                                            'Probe Protocol'            = $4.properties.protocol;
-                                            'Probe Port'                = $4.properties.port;
-                                            'Probe Unhealthy threshold' = $4.properties.numberOfProbes;
-                                            'Resource U'                = $ResUCount;
-                                            'Tag Name'                  = [string]$Tag.Name;
-                                            'Tag Value'                 = [string]$Tag.Value
-                                        }
-                                        $tmp += $obj
-                                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
-                                    }                               
-                            }
-                        }
-                    }
-                }  
-                elseif ($null -ne $data.frontendIPConfigurations -and $null -ne $data.backendAddressPools -and $null -eq $data.probes) {
-                    foreach ($2 in $data.frontendIPConfigurations) {
-                        $Fronttarget = ''    
-                        $Frontsub = ''
-                        if ($null -ne $2.properties.subnet.id) {
-                            $Fronttarget = $2.properties.subnet.id.split('/')[8]
-                            $Frontsub = $2.properties.subnet.id.split('/')[10]
-                            $FrontType = 'VNET' 
-                        }
-                        elseif ($null -ne $2.properties.publicIPAddress.id) {
-                            $Fronttarget = $2.properties.publicIPAddress.id.split('/')[8]
-                            $Frontsub = ''
-                            $FrontType = 'Public IP' 
-                        }        
-                        foreach ($3 in $data.backendAddressPools) {
-                            $BackTarget = ''
-                            $BackType = ''
-                            if ($null -ne $3.properties.backendIPConfigurations.id) {
-                                $BackTarget = $3.properties.backendIPConfigurations.id.split('/')[8]
-                                $BackType = $3.properties.backendIPConfigurations.id.split('/')[7]
-                            }
-                                foreach ($Tag in $Tags) {  
-                                    $obj = @{
-                                        'ID'                        = $1.id;
-                                        'Subscription'              = $sub1.Name;
-                                        'Resource Group'            = $1.RESOURCEGROUP;
-                                        'Name'                      = $1.NAME;
-                                        'Location'                  = $1.LOCATION;
-                                        'SKU'                       = $1.sku.name;
-                                        'Retirement Date'           = [string]$RetDate;
-                                        'Retirement Feature'        = $RetFeature;
-                                        'Orphaned'                  = $Orphaned;
-                                        'Frontend Name'             = $2.name;
-                                        'Frontend Target'           = $Fronttarget;
-                                        'Frontend Type'             = $FrontType;
-                                        'Frontend Subnet'           = $frontsub;
-                                        'Backend Pool Name'         = $3.name;
-                                        'Backend Target'            = $BackTarget;
-                                        'Backend Type'              = $BackType;
-                                        'Probe Name'                = $null;
-                                        'Probe Interval (sec)'      = $null;
-                                        'Probe Protocol'            = $null;
-                                        'Probe Port'                = $null;
-                                        'Probe Unhealthy threshold' = $null;
-                                        'Resource U'                = $ResUCount;
-                                        'Tag Name'                  = [string]$Tag.Name;
-                                        'Tag Value'                 = [string]$Tag.Value
-                                    }
-                                    $tmp += $obj
-                                    if ($ResUCount -eq 1) { $ResUCount = 0 }          
-                                }                           
-                        }
-                    }
-                }   
-                elseif ($null -ne $data.frontendIPConfigurations -and $null -eq $data.backendAddressPools -and $null -eq $data.probes) {
-                    foreach ($2 in $data.frontendIPConfigurations) {
-                        $Fronttarget = ''    
-                        $Frontsub = ''
-                        if ($null -ne $2.properties.subnet.id) {
-                            $Fronttarget = $2.properties.subnet.id.split('/')[8]
-                            $Frontsub = $2.properties.subnet.id.split('/')[10]
-                            $FrontType = 'VNET' 
-                        }
-                        elseif ($null -ne $2.properties.publicIPAddress.id) {
-                            $Fronttarget = $2.properties.publicIPAddress.id.split('/')[8]
-                            $Frontsub = ''
-                            $FrontType = 'Public IP' 
-                        }         
-                            foreach ($Tag in $Tags) {
-                                $obj = @{
-                                    'ID'                        = $1.id;
-                                    'Subscription'              = $sub1.Name;
-                                    'Resource Group'            = $1.RESOURCEGROUP;
-                                    'Name'                      = $1.NAME;
-                                    'Location'                  = $1.LOCATION;
-                                    'SKU'                       = $1.sku.name;
-                                    'Retirement Date'           = [string]$RetDate;
-                                    'Retirement Feature'        = $RetFeature;
-                                    'Orphaned'                  = $Orphaned;
-                                    'Frontend Name'             = $2.name;
-                                    'Frontend Target'           = $Fronttarget;
-                                    'Frontend Type'             = $FrontType;
-                                    'Frontend Subnet'           = $frontsub;
-                                    'Backend Pool Name'         = $null;
-                                    'Backend Target'            = $null;
-                                    'Backend Type'              = $null;
-                                    'Probe Name'                = $null;
-                                    'Probe Interval (sec)'      = $null;
-                                    'Probe Protocol'            = $null;
-                                    'Probe Port'                = $null;
-                                    'Probe Unhealthy threshold' = $null;
-                                    'Resource U'                = $ResUCount;
-                                    'Tag Name'                  = [string]$Tag.Name;
-                                    'Tag Value'                 = [string]$Tag.Value
+                foreach ($2 in $data.frontendIPConfigurations) 
+                    {
+                        if (![string]::IsNullOrEmpty($2.properties.subnet.id)) 
+                            {
+                                $tmps = [pscustomobject]@{
+                                    Name             = $2.name
+                                    Fronttarget      = $2.properties.subnet.id.split('/')[8]
+                                    FrontType        = 'VNET'
+                                    frontsub         = $2.properties.subnet.id.split('/')[10]
                                 }
-                                $tmp += $obj   
-                                if ($ResUCount -eq 1) { $ResUCount = 0 }      
-                            }                       
-                    }
-                }   
-                elseif ($null -ne $data.frontendIPConfigurations -and $null -eq $data.backendAddressPools -and $null -ne $data.probes) {
-                    foreach ($2 in $data.frontendIPConfigurations) {
-                        $Fronttarget = ''    
-                        $Frontsub = ''
-                        if ($null -ne $2.properties.subnet.id) {
-                            $Fronttarget = $2.properties.subnet.id.split('/')[8]
-                            $Frontsub = $2.properties.subnet.id.split('/')[10]
-                            $FrontType = 'VNET' 
-                        }
-                        elseif ($null -ne $2.properties.publicIPAddress.id) {
-                            $Fronttarget = $2.properties.publicIPAddress.id.split('/')[8]
-                            $Frontsub = ''
-                            $FrontType = 'Public IP' 
-                        }        
-                        foreach ($3 in $data.probes) {
-                                foreach ($Tag in $Tags) {
-                                    $obj = @{
-                                        'ID'                        = $1.id;
-                                        'Subscription'              = $sub1.Name;
-                                        'Resource Group'            = $1.RESOURCEGROUP;
-                                        'Name'                      = $1.NAME;
-                                        'Location'                  = $1.LOCATION;
-                                        'SKU'                       = $1.sku.name;
-                                        'Retirement Date'           = [string]$RetDate;
-                                        'Retirement Feature'        = $RetFeature;
-                                        'Orphaned'                  = $Orphaned;
-                                        'Frontend Name'             = $2.name;
-                                        'Frontend Target'           = $Fronttarget;
-                                        'Frontend Type'             = $FrontType;
-                                        'Frontend Subnet'           = $frontsub;
-                                        'Backend Pool Name'         = $null;
-                                        'Backend Target'            = $null;
-                                        'Backend Type'              = $null;
-                                        'Probe Name'                = $3.name;
-                                        'Probe Interval (sec)'      = $3.properties.intervalInSeconds;
-                                        'Probe Protocol'            = $3.properties.protocol;
-                                        'Probe Port'                = $3.properties.port;
-                                        'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
-                                        'Resource U'                = $ResUCount;
-                                        'Tag Name'                  = [string]$Tag.Name;
-                                        'Tag Value'                 = [string]$Tag.Value
-                                    }
-                                    $tmp += $obj  
-                                    if ($ResUCount -eq 1) { $ResUCount = 0 }     
-                                }                           
-                        }
-                    }
-                }   
-                elseif ($null -eq $data.frontendIPConfigurations -and $null -ne $data.backendAddressPools -and $null -ne $data.probes) {
-                    foreach ($2 in $data.backendAddressPools) {
-                        $BackTarget = ''
-                        $BackType = ''
-                        if ($null -ne $3.properties.backendIPConfigurations.id) {
-                            $BackTarget = $2.properties.backendIPConfigurations.id.split('/')[8]
-                            $BackType = $2.properties.backendIPConfigurations.id.split('/')[7]
-                        }
-                        foreach ($3 in $data.probes) {
-                            if (![string]::IsNullOrEmpty($Tag.Keys) -and $InTag -eq $true) {
-                                foreach ($TagKey in $Tag.Keys) {
-                                    $obj = @{
-                                        'ID'                        = $1.id;
-                                        'Subscription'              = $sub1.Name;
-                                        'Resource Group'            = $1.RESOURCEGROUP;
-                                        'Name'                      = $1.NAME;
-                                        'Location'                  = $1.LOCATION;
-                                        'SKU'                       = $1.sku.name;
-                                        'Retirement Date'           = [string]$RetDate;
-                                        'Retirement Feature'        = $RetFeature;
-                                        'Orphaned'                  = $Orphaned;
-                                        'Frontend Name'             = $null;
-                                        'Frontend Target'           = $null;
-                                        'Frontend Type'             = $null;
-                                        'Frontend Subnet'           = $null;
-                                        'Backend Pool Name'         = $2.name;
-                                        'Backend Target'            = $BackTarget;
-                                        'Backend Type'              = $BackType;
-                                        'Probe Name'                = $3.name;
-                                        'Probe Interval (sec)'      = $3.properties.intervalInSeconds;
-                                        'Probe Protocol'            = $3.properties.protocol;
-                                        'Probe Port'                = $3.properties.port;
-                                        'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
-                                        'Resource U'                = $ResUCount;
-                                        'Tag Name'                  = [string]$TagKey;
-                                        'Tag Value'                 = [string]$Tag.$TagKey
-                                    }
-                                    $tmp += $obj   
-                                    if ($ResUCount -eq 1) { $ResUCount = 0 }     
-                                }
+                                $FrontEnds += $tmps
                             }
-                            else { 
-                                $obj = @{
-                                    'ID'                        = $1.id;
-                                    'Subscription'              = $sub1.Name;
-                                    'Resource Group'            = $1.RESOURCEGROUP;
-                                    'Name'                      = $1.NAME;
-                                    'Location'                  = $1.LOCATION;
-                                    'SKU'                       = $1.sku.name;
-                                    'Retirement Date'           = [string]$RetDate;
-                                    'Retirement Feature'        = $RetFeature;
-                                    'Orphaned'                  = $Orphaned;
-                                    'Frontend Name'             = $null;
-                                    'Frontend Target'           = $null;
-                                    'Frontend Type'             = $null;
-                                    'Frontend Subnet'           = $null;
-                                    'Backend Pool Name'         = $2.name;
-                                    'Backend Target'            = $BackTarget;
-                                    'Backend Type'              = $BackType;
-                                    'Probe Name'                = $3.name;
-                                    'Probe Interval (sec)'      = $3.properties.intervalInSeconds;
-                                    'Probe Protocol'            = $3.properties.protocol;
-                                    'Probe Port'                = $3.properties.port;
-                                    'Probe Unhealthy threshold' = $3.properties.numberOfProbes;
-                                    'Resource U'                = $ResUCount;
-                                    'Tag Name'                  = $null;
-                                    'Tag Value'                 = $null
+                        elseif (![string]::IsNullOrEmpty($2.properties.publicIPAddress.id)) 
+                            {
+                                $tmps = [pscustomobject]@{
+                                    Name              = $2.name
+                                    Fronttarget       = $2.properties.publicIPAddress.id.split('/')[8]
+                                    FrontType         = 'Public IP'
+                                    frontsub          = $null
                                 }
-                                $tmp += $obj   
-                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
-                            }     
+                                $FrontEnds += $tmps
+                            }
+                    }
+                foreach ($3 in $data.backendAddressPools) 
+                    {
+                        if (![string]::IsNullOrEmpty($3.properties.backendIPConfigurations.id)) 
+                            {
+                                $tmps = [pscustomobject]@{
+                                    name         = $3.name
+                                    BackTarget   = $3.properties.backendIPConfigurations.id.split('/')[8]
+                                    BackType     = $3.properties.backendIPConfigurations.id.split('/')[7]
+                                }
+                                $Backends += $tmps
+                            }
+                    }
+                foreach ($4 in $data.probes) 
+                    {
+                        $tmps = [pscustomobject]@{
+                            name            = $4.name
+                            Interval        = $4.properties.intervalInSeconds
+                            Protocol        = $4.properties.protocol
+                            Port            = $4.properties.port
+                            Threshold       = $4.properties.numberOfProbes
                         }
-                    }            
-                }    
-                elseif ($null -eq $data.frontendIPConfigurations -and $null -eq $data.backendAddressPools -and $null -ne $data.probes) {
-                    foreach ($2 in $data.probes) {
-                            foreach ($Tag in $Tags) {
-                                $obj = @{
-                                    'ID'                        = $1.id;
-                                    'Subscription'              = $sub1.Name;
-                                    'Resource Group'            = $1.RESOURCEGROUP;
-                                    'Name'                      = $1.NAME;
-                                    'Location'                  = $1.LOCATION;
-                                    'SKU'                       = $1.sku.name;
-                                    'Retirement Date'           = [string]$RetDate;
-                                    'Retirement Feature'        = $RetFeature;
-                                    'Orphaned'                  = $Orphaned;
-                                    'Frontend Name'             = $null;
-                                    'Frontend Target'           = $null;
-                                    'Frontend Type'             = $null;
-                                    'Frontend Subnet'           = $null;
-                                    'Backend Pool Name'         = $null;
-                                    'Backend Target'            = $null;
-                                    'Backend Type'              = $null;
-                                    'Probe Name'                = $2.name;
-                                    'Probe Interval (sec)'      = $2.properties.intervalInSeconds;
-                                    'Probe Protocol'            = $2.properties.protocol;
-                                    'Probe Port'                = $2.properties.port;
-                                    'Probe Unhealthy threshold' = $2.properties.numberOfProbes;
-                                    'Resource U'                = $ResUCount;
-                                    'Tag Name'                  = [string]$Tag.Name;
-                                    'Tag Value'                 = [string]$Tag.Value
-                                }
-                                $tmp += $obj
-                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
-                            }                       
-                    }            
+                        $Probes += $tmps
+                    }
+
+                $TempAr = @()
+                $ob = [pscustomobject]@{
+                        loop = 'FrontEnd'
+                        number = $FrontEnds.Count
+                    }
+                $TempAr += $ob
+                $ob = [pscustomobject]@{
+                    loop = 'BackEnd'
+                    number = $Backends.Count
                 }
+                $TempAr += $ob
+                $ob = [pscustomobject]@{
+                    loop = 'Probe'
+                    number = $Probes.Count
+                }
+                $TempAr += $ob
+                $Order = $TempAr | Select-Object -Property loop,number | Sort-Object number
+
+                if (($Order.loop | Select-Object -First 1) -eq 'Probe')
+                    {
+                        if (($Order.loop | Select-Object -First 1 -Skip 1) -eq 'FrontEnd')
+                            {
+                                foreach ($Probe in $Probes)
+                                    {
+                                        foreach ($FrontEnd in $FrontEnds)
+                                            {
+                                                foreach ($Backend in $Backends)
+                                                    {
+                                                        foreach ($Tag in $Tags) {
+                                                            $obj = @{
+                                                                'ID'                        = $1.id;
+                                                                'Subscription'              = $sub1.Name;
+                                                                'Resource Group'            = $1.RESOURCEGROUP;
+                                                                'Name'                      = $1.NAME;
+                                                                'Location'                  = $1.LOCATION;
+                                                                'SKU'                       = $1.sku.name;
+                                                                'Retirement Date'           = [string]$RetDate;
+                                                                'Retirement Feature'        = $RetFeature;
+                                                                'Orphaned'                  = $Orphaned;
+                                                                'Frontend Name'             = $FrontEnd.Name;
+                                                                'Frontend Target'           = $FrontEnd.Fronttarget;
+                                                                'Frontend Type'             = $FrontEnd.FrontType;
+                                                                'Frontend Subnet'           = $FrontEnd.frontsub;
+                                                                'Backend Pool Name'         = $BackEnd.name;
+                                                                'Backend Target'            = $BackEnd.BackTarget;
+                                                                'Backend Type'              = $BackEnd.BackType;
+                                                                'Probe Name'                = $Probe.name;
+                                                                'Probe Interval (sec)'      = $Probe.Interval;
+                                                                'Probe Protocol'            = $Probe.Protocol;
+                                                                'Probe Port'                = $Probe.Port;
+                                                                'Probe Unhealthy threshold' = $Probe.Threshold;
+                                                                'Resource U'                = $ResUCount;
+                                                                'Tag Name'                  = [string]$Tag.Name;
+                                                                'Tag Value'                 = [string]$Tag.Value
+                                                            }
+                                                            $tmp += $obj
+                                                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                                        }  
+                                                    }
+                                            }
+                                    }
+                            }
+                        else
+                            {
+                                foreach ($Probe in $Probes)
+                                    {
+                                        foreach ($Backend in $Backends)
+                                            {
+                                                foreach ($FrontEnd in $FrontEnds)
+                                                    {
+                                                        foreach ($Tag in $Tags) {
+                                                            $obj = @{
+                                                                'ID'                        = $1.id;
+                                                                'Subscription'              = $sub1.Name;
+                                                                'Resource Group'            = $1.RESOURCEGROUP;
+                                                                'Name'                      = $1.NAME;
+                                                                'Location'                  = $1.LOCATION;
+                                                                'SKU'                       = $1.sku.name;
+                                                                'Retirement Date'           = [string]$RetDate;
+                                                                'Retirement Feature'        = $RetFeature;
+                                                                'Orphaned'                  = $Orphaned;
+                                                                'Frontend Name'             = $FrontEnd.Name;
+                                                                'Frontend Target'           = $FrontEnd.Fronttarget;
+                                                                'Frontend Type'             = $FrontEnd.FrontType;
+                                                                'Frontend Subnet'           = $FrontEnd.frontsub;
+                                                                'Backend Pool Name'         = $BackEnd.name;
+                                                                'Backend Target'            = $BackEnd.BackTarget;
+                                                                'Backend Type'              = $BackEnd.BackType;
+                                                                'Probe Name'                = $Probe.name;
+                                                                'Probe Interval (sec)'      = $Probe.Interval;
+                                                                'Probe Protocol'            = $Probe.Interval;
+                                                                'Probe Port'                = $Probe.Port;
+                                                                'Probe Unhealthy threshold' = $Probe.Threshold;
+                                                                'Resource U'                = $ResUCount;
+                                                                'Tag Name'                  = [string]$Tag.Name;
+                                                                'Tag Value'                 = [string]$Tag.Value
+                                                            }
+                                                            $tmp += $obj
+                                                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                                        }  
+                                                    }
+                                            }
+                                    }
+                            }
+                    }
+                if (($Order.loop | Select-Object -First 1) -eq 'FrontEnd')
+                    {
+                        if (($Order.loop | Select-Object -First 1 -Skip 1) -eq 'Probe')
+                            {
+                                foreach ($FrontEnd in $FrontEnds)
+                                    {
+                                        foreach ($Probe in $Probes)
+                                            {
+                                                foreach ($Backend in $Backends)
+                                                    {
+                                                        foreach ($Tag in $Tags) {
+                                                            $obj = @{
+                                                                'ID'                        = $1.id;
+                                                                'Subscription'              = $sub1.Name;
+                                                                'Resource Group'            = $1.RESOURCEGROUP;
+                                                                'Name'                      = $1.NAME;
+                                                                'Location'                  = $1.LOCATION;
+                                                                'SKU'                       = $1.sku.name;
+                                                                'Retirement Date'           = [string]$RetDate;
+                                                                'Retirement Feature'        = $RetFeature;
+                                                                'Orphaned'                  = $Orphaned;
+                                                                'Frontend Name'             = $FrontEnd.Name;
+                                                                'Frontend Target'           = $FrontEnd.Fronttarget;
+                                                                'Frontend Type'             = $FrontEnd.FrontType;
+                                                                'Frontend Subnet'           = $FrontEnd.frontsub;
+                                                                'Backend Pool Name'         = $BackEnd.name;
+                                                                'Backend Target'            = $BackEnd.BackTarget;
+                                                                'Backend Type'              = $BackEnd.BackType;
+                                                                'Probe Name'                = $Probe.name;
+                                                                'Probe Interval (sec)'      = $Probe.Interval;
+                                                                'Probe Protocol'            = $Probe.Interval;
+                                                                'Probe Port'                = $Probe.Port;
+                                                                'Probe Unhealthy threshold' = $Probe.Threshold;
+                                                                'Resource U'                = $ResUCount;
+                                                                'Tag Name'                  = [string]$Tag.Name;
+                                                                'Tag Value'                 = [string]$Tag.Value
+                                                            }
+                                                            $tmp += $obj
+                                                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                                        }  
+                                                    }
+                                            }
+                                    }
+                            }
+                        else
+                            {
+                                foreach ($FrontEnd in $FrontEnds)
+                                    {
+                                        foreach ($Backend in $Backends)
+                                            {
+                                                foreach ($Probe in $Probes)
+                                                    {
+                                                        foreach ($Tag in $Tags) {
+                                                            $obj = @{
+                                                                'ID'                        = $1.id;
+                                                                'Subscription'              = $sub1.Name;
+                                                                'Resource Group'            = $1.RESOURCEGROUP;
+                                                                'Name'                      = $1.NAME;
+                                                                'Location'                  = $1.LOCATION;
+                                                                'SKU'                       = $1.sku.name;
+                                                                'Retirement Date'           = [string]$RetDate;
+                                                                'Retirement Feature'        = $RetFeature;
+                                                                'Orphaned'                  = $Orphaned;
+                                                                'Frontend Name'             = $FrontEnd.Name;
+                                                                'Frontend Target'           = $FrontEnd.Fronttarget;
+                                                                'Frontend Type'             = $FrontEnd.FrontType;
+                                                                'Frontend Subnet'           = $FrontEnd.frontsub;
+                                                                'Backend Pool Name'         = $BackEnd.name;
+                                                                'Backend Target'            = $BackEnd.BackTarget;
+                                                                'Backend Type'              = $BackEnd.BackType;
+                                                                'Probe Name'                = $Probe.name;
+                                                                'Probe Interval (sec)'      = $Probe.Interval;
+                                                                'Probe Protocol'            = $Probe.Interval;
+                                                                'Probe Port'                = $Probe.Port;
+                                                                'Probe Unhealthy threshold' = $Probe.Threshold;
+                                                                'Resource U'                = $ResUCount;
+                                                                'Tag Name'                  = [string]$Tag.Name;
+                                                                'Tag Value'                 = [string]$Tag.Value
+                                                            }
+                                                            $tmp += $obj
+                                                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                                        }  
+                                                    }
+                                            }
+                                    }
+                            }
+                    }
+                if (($Order.loop | Select-Object -First 1) -eq 'BackEnd')
+                    {
+                        if (($Order.loop | Select-Object -First 1 -Skip 1) -eq 'FrontEnd')
+                            {
+                                foreach ($Backend in $Backends)
+                                    {
+                                        foreach ($FrontEnd in $FrontEnds)
+                                            {
+                                                foreach ($Probe in $Probes)
+                                                    {
+                                                        foreach ($Tag in $Tags) {
+                                                            $obj = @{
+                                                                'ID'                        = $1.id;
+                                                                'Subscription'              = $sub1.Name;
+                                                                'Resource Group'            = $1.RESOURCEGROUP;
+                                                                'Name'                      = $1.NAME;
+                                                                'Location'                  = $1.LOCATION;
+                                                                'SKU'                       = $1.sku.name;
+                                                                'Retirement Date'           = [string]$RetDate;
+                                                                'Retirement Feature'        = $RetFeature;
+                                                                'Orphaned'                  = $Orphaned;
+                                                                'Frontend Name'             = $FrontEnd.Name;
+                                                                'Frontend Target'           = $FrontEnd.Fronttarget;
+                                                                'Frontend Type'             = $FrontEnd.FrontType;
+                                                                'Frontend Subnet'           = $FrontEnd.frontsub;
+                                                                'Backend Pool Name'         = $BackEnd.name;
+                                                                'Backend Target'            = $BackEnd.BackTarget;
+                                                                'Backend Type'              = $BackEnd.BackType;
+                                                                'Probe Name'                = $Probe.name;
+                                                                'Probe Interval (sec)'      = $Probe.Interval;
+                                                                'Probe Protocol'            = $Probe.Interval;
+                                                                'Probe Port'                = $Probe.Port;
+                                                                'Probe Unhealthy threshold' = $Probe.Threshold;
+                                                                'Resource U'                = $ResUCount;
+                                                                'Tag Name'                  = [string]$Tag.Name;
+                                                                'Tag Value'                 = [string]$Tag.Value
+                                                            }
+                                                            $tmp += $obj
+                                                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                                        }  
+                                                    }
+                                            }
+                                    }
+                            }
+                        else
+                            {
+                                foreach ($Backend in $Backends)
+                                    {
+                                        foreach ($Probe in $Probes)
+                                            {
+                                                foreach ($FrontEnd in $FrontEnds)
+                                                    {
+                                                        foreach ($Tag in $Tags) {
+                                                            $obj = @{
+                                                                'ID'                        = $1.id;
+                                                                'Subscription'              = $sub1.Name;
+                                                                'Resource Group'            = $1.RESOURCEGROUP;
+                                                                'Name'                      = $1.NAME;
+                                                                'Location'                  = $1.LOCATION;
+                                                                'SKU'                       = $1.sku.name;
+                                                                'Retirement Date'           = [string]$RetDate;
+                                                                'Retirement Feature'        = $RetFeature;
+                                                                'Orphaned'                  = $Orphaned;
+                                                                'Frontend Name'             = $FrontEnd.Name;
+                                                                'Frontend Target'           = $FrontEnd.Fronttarget;
+                                                                'Frontend Type'             = $FrontEnd.FrontType;
+                                                                'Frontend Subnet'           = $FrontEnd.frontsub;
+                                                                'Backend Pool Name'         = $BackEnd.name;
+                                                                'Backend Target'            = $BackEnd.BackTarget;
+                                                                'Backend Type'              = $BackEnd.BackType;
+                                                                'Probe Name'                = $Probe.name;
+                                                                'Probe Interval (sec)'      = $Probe.Interval;
+                                                                'Probe Protocol'            = $Probe.Interval;
+                                                                'Probe Port'                = $Probe.Port;
+                                                                'Probe Unhealthy threshold' = $Probe.Threshold;
+                                                                'Resource U'                = $ResUCount;
+                                                                'Tag Name'                  = [string]$Tag.Name;
+                                                                'Tag Value'                 = [string]$Tag.Value
+                                                            }
+                                                            $tmp += $obj
+                                                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                                        }  
+                                                    }
+                                            }
+                                    }
+                            }
+                    }
             }
             $tmp
         }
