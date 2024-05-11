@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.14                                                                  #
+#       Version: 3.1.15                                                                  #
 #                                                                                        #
-#       Date: 03/12/2024                                                                 #
+#       Date: 05/11/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -567,6 +567,27 @@ param ($TenantID,
                     }
                 }
                 Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
+                $GraphQuery = "networkresources | where resourceGroup in~ ('$([String]::Join("','",$ResourceGroup))') | summarize count()"
+                $EnvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
+                $EnvSizeNum = $EnvSize.data.'count_'
+
+                if ($EnvSizeNum -ge 1) {
+                    $Loop = $EnvSizeNum / 1000
+                    $Loop = [math]::ceiling($Loop)
+                    $Looper = 0
+                    $Limit = 0
+
+                    while ($Looper -lt $Loop) {
+                        $GraphQuery = "networkresources | where resourceGroup in~ ('$([String]::Join("','",$ResourceGroup))') | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+
+                        $Global:Resources += $Resource.data
+                        Start-Sleep -Milliseconds 100
+                        $Looper ++
+                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                        $Limit = $Limit + 1000
+                    }
+                }
             }
         elseif(![string]::IsNullOrEmpty($TagKey) -and ![string]::IsNullOrEmpty($TagValue) -and ![string]::IsNullOrEmpty($SubscriptionID))
             {
@@ -595,10 +616,30 @@ param ($TenantID,
                     }
                 }
                 Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
+                $GraphQuery = "networkresources | where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey == '$TagKey' and tagValue == '$TagValue' | summarize count()"
+                $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
+                $EnvSizeNum = $EnvSize.data.'count_'
+
+                if ($EnvSizeNum -ge 1) {
+                    $Loop = $EnvSizeNum / 1000
+                    $Loop = [math]::ceiling($Loop)
+                    $Looper = 0
+                    $Limit = 0
+
+                    while ($Looper -lt $Loop) {
+                        $GraphQuery = "networkresources | where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey == '$TagKey' and tagValue == '$TagValue' | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+
+                        $Global:Resources += $Resource.data
+                        Start-Sleep -Milliseconds 100
+                        $Looper ++
+                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                        $Limit = $Limit + 1000
+                    }
+                }
             }
         elseif([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
             {
-
                 Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'.')
                 $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' | summarize count()"
                 $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
@@ -622,6 +663,27 @@ param ($TenantID,
                     }
                 }
                 Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
+                $GraphQuery = "networkresources | summarize count()"
+                $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
+                $EnvSizeNum = $EnvSize.data.'count_'
+
+                if ($EnvSizeNum -ge 1) {
+                    $Loop = $EnvSizeNum / 1000
+                    $Loop = [math]::ceiling($Loop)
+                    $Looper = 0
+                    $Limit = 0
+
+                    while ($Looper -lt $Loop) {
+                        $GraphQuery = "networkresources | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        $Resource = (az graph query -q $GraphQuery --subscriptions $SubscriptionID --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+
+                        $Global:Resources += $Resource.data
+                        Start-Sleep -Milliseconds 100
+                        $Looper ++
+                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                        $Limit = $Limit + 1000
+                    }
+                }
             }
         else
             {
@@ -647,13 +709,37 @@ param ($TenantID,
                         $Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
                         $Global:Resources += $Resource.data
-                        Start-Sleep 2
+                        Start-Sleep -Milliseconds 100
                         $Looper ++
                         Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
                         $Limit = $Limit + 1000
                     }
                 }
                 Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
+                $GraphQuery = "networkresources $GraphQueryExtension | summarize count()"
+
+                #$EnvSize = az graph query -q  $GraphQuery --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
+                $EnvSize = az graph query -q  $GraphQuery --output json --only-show-errors | ConvertFrom-Json
+                $EnvSizeNum = $EnvSize.data.'count_'
+
+                if ($EnvSizeNum -ge 1) {
+                    $Loop = $EnvSizeNum / 1000
+                    $Loop = [math]::ceiling($Loop)
+                    $Looper = 0
+                    $Limit = 0
+
+                    while ($Looper -lt $Loop) {
+                        $GraphQuery = "networkresources $GraphQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                        #$Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --subscriptions $SubscriptionID --only-show-errors).tolower() | ConvertFrom-Json
+                        $Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+
+                        $Global:Resources += $Resource.data
+                        Start-Sleep 2
+                        $Looper ++
+                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                        $Limit = $Limit + 1000
+                    }
+                }
             }
 
         <######################################################### RESOURCE CONTAINER ######################################################################>
@@ -704,32 +790,32 @@ param ($TenantID,
                     }
                 $Quotas = @()
                 Foreach($Loc in $Location)
-                {
-                    if($Loc.Loc.count -eq 1)
-                        {
-                            $Quota = az vm list-usage --location $Loc.Loc --subscription $Loc.Sub -o json | ConvertFrom-Json
-                            $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
-                            $Q = @{
-                                'Location' = $Loc.Loc;
-                                'Subscription' = $Loc.Sub;
-                                'Data' = $Quota
-                            }
-                            $Quotas += $Q
-                        }
-                    else {
-                            foreach($Loc1 in $Loc.loc)
-                                {
-                                    $Quota = az vm list-usage --location $Loc1 --subscription $Loc.Sub -o json | ConvertFrom-Json
-                                    $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
-                                    $Q = @{
-                                        'Location' = $Loc1;
-                                        'Subscription' = $Loc.Sub;
-                                        'Data' = $Quota
-                                    }
-                                    $Quotas += $Q
+                    {
+                        if($Loc.Loc.count -eq 1)
+                            {
+                                $Quota = az vm list-usage --location $Loc.Loc --subscription $Loc.Sub -o json | ConvertFrom-Json
+                                $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
+                                $Q = @{
+                                    'Location' = $Loc.Loc;
+                                    'Subscription' = $Loc.Sub;
+                                    'Data' = $Quota
                                 }
+                                $Quotas += $Q
+                            }
+                        else {
+                                foreach($Loc1 in $Loc.loc)
+                                    {
+                                        $Quota = az vm list-usage --location $Loc1 --subscription $Loc.Sub -o json | ConvertFrom-Json
+                                        $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
+                                        $Q = @{
+                                            'Location' = $Loc1;
+                                            'Subscription' = $Loc.Sub;
+                                            'Data' = $Quota
+                                        }
+                                        $Quotas += $Q
+                                    }
+                        }
                     }
-                }
                     $Quotas
                 } -ArgumentList $Global:Resources, $Global:Subscriptions
             }
