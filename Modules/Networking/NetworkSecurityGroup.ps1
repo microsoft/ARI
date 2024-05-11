@@ -26,6 +26,7 @@ If ($Task -eq 'Processing') {
 
     $NSGs = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/networksecuritygroups' }
     $nic = $Resources | Where-Object {$_.TYPE -eq 'microsoft.network/networkinterfaces'}
+    $vmss = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachinescalesets'}
 
     if ($NSGs) {
         $tmp = @()
@@ -45,7 +46,15 @@ If ($Task -eq 'Processing') {
                     foreach ($NICID in $data.networkInterfaces.id)
                         {
                             $NICDetails = $nic | Where-Object {$_.id -eq $NICID}
-                            $RelatedNics += ($NICDetails.name + ' ('+$NICDetails.properties.ipconfigurations.properties.privateipaddress+')')
+                            if (![string]::IsNullOrEmpty($NICDetails))
+                                {
+                                    $RelatedNics += ($NICDetails.name + ' ('+$NICDetails.properties.ipconfigurations.properties.privateipaddress+')')
+                                }
+                            elseif ($NICID -like '*microsoft.compute/virtualmachinescalesets*')
+                                {
+                                    $RelatedNics += $NICID.split('/')[12]
+                                }
+                            
                         }
                     $FinalNICs = if ($RelatedNics.count -gt 1) { $RelatedNics | ForEach-Object { $_ + ' ,' } }else { $RelatedNics }
                     $FinalNICs = [string]$FinalNICs
@@ -55,6 +64,18 @@ If ($Task -eq 'Processing') {
                 {
                     foreach ($SUBID in $data.Subnets.id)
                         {
+                            $RelatedSubs += ($SUBID.Split('/')[8] + ' ('+ $SUBID.Split('/')[10] + ')')
+                        }
+                    $FinalSUBs = if ($RelatedSubs.count -gt 1) { $RelatedSubs | ForEach-Object { $_ + ' ,' } }else { $RelatedSubs }
+                    $FinalSUBs = [string]$FinalSUBs
+                    $FinalSUBs = if ($FinalSUBs -like '* ,*') { $FinalSUBs -replace ".$" }else { $FinalSUBs }
+                }
+            elseif ([string]::IsNullOrEmpty($data.Subnets.id) -and $data.networkInterfaces.id -like '*microsoft.compute/virtualmachinescalesets*')
+                {
+                    $VMSSs = $vmss | Where-Object {$_.properties.virtualmachineprofile.networkprofile.networkinterfaceconfigurations.properties.networksecuritygroup.id -eq $1.id}
+                    foreach ($VM in $VMSSs)
+                        {
+                            $SUBID = $VM.properties.virtualmachineprofile.networkprofile.networkinterfaceconfigurations.properties.ipconfigurations.properties.subnet.id
                             $RelatedSubs += ($SUBID.Split('/')[8] + ' ('+ $SUBID.Split('/')[10] + ')')
                         }
                     $FinalSUBs = if ($RelatedSubs.count -gt 1) { $RelatedSubs | ForEach-Object { $_ + ' ,' } }else { $RelatedSubs }

@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/PrivateEndpoint.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.15
+Version: 3.2.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -44,13 +44,23 @@ If ($Task -eq 'Processing') {
                 if([string]::IsNullOrEmpty($data.customDnsConfigs.ipAddresses))
                     {
                         $NIC = $NICs | Where-Object {$_.id -eq $data.networkInterfaces.id}
-                        $IPAddress = [string]$NIC.properties.ipconfigurations.properties.privateipaddress
-                        $FQDN = [string]$NIC.properties.ipconfigurations.properties.privatelinkconnectionproperties.fqdns
+                        $IPAddress = if ($NIC.properties.ipconfigurations.properties.privateipaddress.count -gt 1) { $NIC.properties.ipconfigurations.properties.privateipaddress | ForEach-Object { $_ + ' ,' } }else { $NIC.properties.ipconfigurations.properties.privateipaddress }
+                        $IPAddress = [string]$IPAddress
+                        $IPAddress = if ($IPAddress -like '* ,*') { $IPAddress -replace ".$" }else { $IPAddress }
+
+                        $FQDN = if ($NIC.properties.ipconfigurations.properties.privatelinkconnectionproperties.fqdns.count -gt 1) { $NIC.properties.ipconfigurations.properties.privatelinkconnectionproperties.fqdns | ForEach-Object { $_ + ' ,' } }else { $NIC.properties.ipconfigurations.properties.privatelinkconnectionproperties.fqdns }
+                        $FQDN = [string]$FQDN
+                        $FQDN = if ($FQDN -like '* ,*') { $FQDN -replace ".$" }else { $FQDN }
                     }
                 else
                     {
-                        $IPAddress = [string]$data.customDnsConfigs.ipAddresses
-                        $FQDN = [string]$data.customDnsConfigs.fqdn
+                        $IPAddress = if ($data.customDnsConfigs.ipAddresses.count -gt 1) { $data.customDnsConfigs.ipAddresses | ForEach-Object { $_ + ' ,' } }else { $data.customDnsConfigs.ipAddresses }
+                        $IPAddress = [string]$IPAddress
+                        $IPAddress = if ($IPAddress -like '* ,*') { $IPAddress -replace ".$" }else { $IPAddress }
+
+                        $FQDN = if ($data.customDnsConfigs.fqdn.count -gt 1) { $data.customDnsConfigs.fqdn | ForEach-Object { $_ + ' ,' } }else { $data.customDnsConfigs.fqdn }
+                        $FQDN = [string]$FQDN
+                        $FQDN = if ($FQDN -like '* ,*') { $FQDN -replace ".$" }else { $FQDN }
                     }
                 
                 foreach ($Tag in $Tags) {     
@@ -82,7 +92,9 @@ Else {
     if ($SmaResources.PrivateEndpoint) {
 
         $TableName = ('PvtEndpointTable_'+($SmaResources.PrivateEndpoint.id | Select-Object -Unique).count)
-        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
+        $Style = @()
+        $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
+        $Style += New-ExcelStyle -HorizontalAlignment Center -WrapText -NumberFormat 0 -Width 40 -Range "I:I"
 
         $condtxt = @()
 
