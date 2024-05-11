@@ -1457,20 +1457,20 @@ Function Network {
         
                 Function ProcType {
                     Param($sub,$subloc,$Alt0,$ContainerID) 
-                    
+
                         $temp = ''
                         remove-variable TrueTemp -ErrorAction SilentlyContinue
                         remove-variable RESNames -ErrorAction SilentlyContinue
-                    
+
                         <####################################################### FIND THE RESOURCES IN THE SUBNET ###################################################################>
-                    
+
                         if($sub.properties.resourceNavigationLinks.properties.linkedResourceType -eq 'Microsoft.ApiManagement/service')
                             {
                                 $TrueTemp = 'APIM'
                             }
                         if($sub.properties.serviceAssociationLinks.properties.link -and $null -eq $TrueTemp)
                             {
-                                if($sub.properties.serviceAssociationLinks.properties.link.split("/")[6] -eq 'Microsoft.Web')
+                                if($sub.properties.serviceAssociationLinks.properties.link.split("/")[6] -eq 'Microsoft.Web') 
                                     {
                                         $TrueTemp = 'App Service'
                                     }
@@ -1525,7 +1525,8 @@ Function Network {
                             {                                
                                 $TrueTemp = 'Data Explorer Clusters'                                                                                 
                             }
-                        if($null -eq $TrueTemp)
+
+                        if([string]::IsNullOrEmpty($TrueTemp))
                             {
                                 $AKS = $resources | Where-Object {$_.type -eq 'microsoft.containerservice/managedclusters'}
                                 if($sub.id -in $AKS.properties.agentPoolProfiles.vnetSubnetID)
@@ -1533,7 +1534,7 @@ Function Network {
                                         $TrueTemp = 'AKS'
                                     }
                             }
-                        if($null -eq $TrueTemp)
+                        if([string]::IsNullOrEmpty($TrueTemp))
                             {
                                 $Types = @()
                                 
@@ -1558,11 +1559,17 @@ Function Network {
                                         $TrueTemp = $temp[0].name
                                     }
                             }
-                    
-                    
+
+                        if([string]::IsNullOrEmpty($TrueTemp))
+                            {
+                                if ($sub.id -in (($Resources | Where-Object {$_.type -eq 'Microsoft.Compute/virtualMachineScaleSets'}).properties.virtualMachineProfile.networkprofile.networkInterfaceConfigurations.properties.ipconfigurations.properties.subnet.id))
+                                    {
+                                        $TrueTemp = 'virtualMachineScaleSets'
+                                    }
+                            }
+
                         <#################################################### FIND RESOURCE NAME AND DETAILS #################################################################>
-                    
-                    
+
                         if($TrueTemp -eq 'networkInterfaces')
                             {
                                 $NIcNames = $resources | Where-Object {$_.type -eq 'microsoft.network/networkinterfaces' -and $_.properties.ipConfigurations.properties.subnet.id -eq $sub.id}
@@ -1602,7 +1609,7 @@ Function Network {
                                                 $TrueTemp = 'Network Interface'
                                                 $RESNames = $NIcNames
                                             }
-                                    }                  
+                                    }
                             }
                         if($TrueTemp -eq 'AKS')
                             {

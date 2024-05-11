@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/NetworkSecurityGroup.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.1
+Version: 3.1.0
 First Release Date: 2021.10.05
 Authors: Christopher Lewis
 
@@ -25,6 +25,7 @@ param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableSty
 If ($Task -eq 'Processing') {
 
     $NSGs = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/networksecuritygroups' }
+    $nic = $Resources | Where-Object {$_.TYPE -eq 'microsoft.network/networkinterfaces'}
 
     if ($NSGs) {
         $tmp = @()
@@ -36,15 +37,108 @@ If ($Task -eq 'Processing') {
             $RetDate = ''
             $RetFeature = '' 
             $Tags = if (![string]::IsNullOrEmpty($1.tags.psobject.properties)) { $1.tags.psobject.properties }else { '0' }
+            $RelatedNics = @()
+            $RelatedSubs = @()
+
+            if (![string]::IsNullOrEmpty($data.networkInterfaces.id))
+                {
+                    foreach ($NICID in $data.networkInterfaces.id)
+                        {
+                            $NICDetails = $nic | Where-Object {$_.id -eq $NICID}
+                            $RelatedNics += ($NICDetails.name + ' ('+$NICDetails.properties.ipconfigurations.properties.privateipaddress+')')
+                        }
+                    $FinalNICs = if ($RelatedNics.count -gt 1) { $RelatedNics | ForEach-Object { $_ + ' ,' } }else { $RelatedNics }
+                    $FinalNICs = [string]$FinalNICs
+                    $FinalNICs = if ($FinalNICs -like '* ,*') { $FinalNICs -replace ".$" }else { $FinalNICs }
+                }
+            if (![string]::IsNullOrEmpty($data.Subnets.id))
+                {
+                    foreach ($SUBID in $data.Subnets.id)
+                        {
+                            $RelatedSubs += ($SUBID.Split('/')[8] + ' ('+ $SUBID.Split('/')[10] + ')')
+                        }
+                    $FinalSUBs = if ($RelatedSubs.count -gt 1) { $RelatedSubs | ForEach-Object { $_ + ' ,' } }else { $RelatedSubs }
+                    $FinalSUBs = [string]$FinalSUBs
+                    $FinalSUBs = if ($FinalSUBs -like '* ,*') { $FinalSUBs -replace ".$" }else { $FinalSUBs }
+                }
+
             foreach ($2 in $data.securityRules)
             {
                 foreach ($Tag in $Tags) {
+                    if (![string]::IsNullOrEmpty($2.properties.sourceAddressPrefixes))
+                        {
+                            $Source = if ($2.properties.sourceAddressPrefixes.count -gt 1) { $2.properties.sourceAddressPrefixes | ForEach-Object { $_ + ' ,' } }else { $2.properties.sourceAddressPrefixes }
+                            $Source = [string]$Source
+                            $Source = if ($Source -like '* ,*') { $Source -replace ".$" }else { $Source }
+                        }
+                    elseif(![string]::IsNullOrEmpty($2.properties.sourceAddressPrefix))
+                        {
+                            $Source = if ($2.properties.sourceAddressPrefix.count -gt 1) { $2.properties.sourceAddressPrefix | ForEach-Object { $_ + ' ,' } }else { $2.properties.sourceAddressPrefix }
+                            $Source = [string]$Source
+                            $Source = if ($Source -like '* ,*') { $Source -replace ".$" }else { $Source }
+                        }
+                    else
+                        {
+                            $Source = ''
+                        }
+
+                    if (![string]::IsNullOrEmpty($2.properties.sourcePortRanges))
+                        {
+                            $SourcePort = if ($2.properties.sourcePortRanges.count -gt 1) { $2.properties.sourcePortRanges | ForEach-Object { $_ + ' ,' } }else { $2.properties.sourcePortRanges }
+                            $SourcePort = [string]$SourcePort
+                            $SourcePort = if ($SourcePort -like '* ,*') { $SourcePort -replace ".$" }else { $SourcePort }
+                        }
+                    elseif(![string]::IsNullOrEmpty($2.properties.sourcePortRange))
+                        {
+                            $SourcePort = if ($2.properties.sourcePortRange.count -gt 1) { $2.properties.sourcePortRange | ForEach-Object { $_ + ' ,' } }else { $2.properties.sourcePortRange }
+                            $SourcePort = [string]$SourcePort
+                            $SourcePort = if ($SourcePort -like '* ,*') { $SourcePort -replace ".$" }else { $SourcePort }
+                        }
+                    else
+                        {
+                            $SourcePort = ''
+                        }
+
+                    if (![string]::IsNullOrEmpty($2.properties.destinationAddressPrefixes))
+                        {
+                            $Destination = if ($2.properties.destinationAddressPrefixes.count -gt 1) { $2.properties.destinationAddressPrefixes | ForEach-Object { $_ + ' ,' } }else { $2.properties.destinationAddressPrefixes }
+                            $Destination = [string]$Destination
+                            $Destination = if ($Destination -like '* ,*') { $Destination -replace ".$" }else { $Destination }
+                        }
+                    elseif(![string]::IsNullOrEmpty($2.properties.destinationAddressPrefix))
+                        {
+                            $Destination = if ($2.properties.destinationAddressPrefix.count -gt 1) { $2.properties.destinationAddressPrefix | ForEach-Object { $_ + ' ,' } }else { $2.properties.destinationAddressPrefix }
+                            $Destination = [string]$Destination
+                            $Destination = if ($Destination -like '* ,*') { $Destination -replace ".$" }else { $Destination }
+                        }
+                    else
+                        {
+                            $Destination = ''
+                        }
+
+                    if (![string]::IsNullOrEmpty($2.properties.destinationPortRanges))
+                        {
+                            $DestinationPort = if ($2.properties.destinationPortRanges.count -gt 1) { $2.properties.destinationPortRanges | ForEach-Object { $_ + ' ,' } }else { $2.properties.destinationPortRanges }
+                            $DestinationPort = [string]$DestinationPort
+                            $DestinationPort = if ($DestinationPort -like '* ,*') { $DestinationPort -replace ".$" }else { $DestinationPort }
+                        }
+                    elseif(![string]::IsNullOrEmpty($2.properties.destinationPortRange))
+                        {
+                            $DestinationPort = if ($2.properties.destinationPortRange.count -gt 1) { $2.properties.destinationPortRange | ForEach-Object { $_ + ' ,' } }else { $2.properties.destinationPortRange }
+                            $DestinationPort = [string]$DestinationPort
+                            $DestinationPort = if ($DestinationPort -like '* ,*') { $DestinationPort -replace ".$" }else { $DestinationPort }
+                        }
+                    else
+                        {
+                            $DestinationPort = ''
+                        }
+
                     if ($data.networkInterfaces.count -eq 0 -and $data.subnets.count -eq 0) 
-                    {
-                        $Orphaned = $true;
-                    } else {
-                        $Orphaned = $false;
-                    }
+                        {
+                            $Orphaned = $true;
+                        } else {
+                            $Orphaned = $false;
+                        }
 
                     $obj = @{
                         'ID'                           = $1.id;
@@ -54,22 +148,18 @@ If ($Task -eq 'Processing') {
                         'Location'                     = $1.LOCATION;
                         'Retirement Date'              = [string]$RetDate;
                         'Retirement Feature'           = $RetFeature;
-                        'Security Rules'               = [string]$2.name;
-                        'Direction'                    = [string]$2.properties.direction;
-                        'Access'                       = [string]$2.properties.Access;
+                        'Orphaned'                     = $Orphaned;
+                        'Security Rules'               = $2.name;
+                        'Direction'                    = $2.properties.direction;
+                        'Action'                       = $2.properties.Access;
                         'Priority'                     = [string]$2.properties.priority;
                         'Protocol'                     = [string]$2.properties.protocol;
-                        'Source Address Prefixes'      = [string]$2.properties.sourceAddressPrefixes;
-                        'Source Address Prefix'        = [string]$2.properties.sourceAddressPrefix;
-                        'Source Port Ranges'           = [string]$2.properties.sourcePortRanges;
-                        'Source Port Range'            = [string]$2.properties.sourcePortRange;
-                        'Destination Address Prefixes' = [string]$2.properties.destinationAddressPrefixes;
-                        'Destination Address Prefix'   = [string]$2.properties.destinationAddressPrefix;
-                        'Destination Port Ranges'      = [string]$2.properties.destinationPortRanges;
-                        'Destination Port Range'       = [string]$2.properties.destinationPortRange;
-                        'NICs'                         = [string]$data.networkInterfaces.id -Join ",";
-                        'Subnets'                      = [string]$data.Subnets.id;
-                        'Orphaned'                     = $Orphaned;
+                        'Source'                       = $Source;
+                        'Source Port'                  = $SourcePort;
+                        'Destination'                  = $Destination;
+                        'Destination Port'             = $DestinationPort;
+                        'Related NICs'                 = $FinalNICs;
+                        'Related VNETs and Subnets'    = $FinalSUBs;
                         'Tag Name'                     = [string]$Tag.Name;
                         'Tag Value'                    = [string]$Tag.Value
                     }
@@ -90,11 +180,15 @@ If ($Task -eq 'Processing') {
     if ($ExcelVar) {
 
         $TableName = ('NSGTable_'+($SmaResources.NetworkSecurityGroup.id | Select-Object -Unique).count)
-        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
+        $Style = @()
+        $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
+        $Style += New-ExcelStyle -HorizontalAlignment Center -WrapText -NumberFormat 0 -Range "M:M" -Width 70
+        $Style += New-ExcelStyle -HorizontalAlignment Center -WrapText -NumberFormat 0 -Range "O:O" -Width 70
+        $Style += New-ExcelStyle -HorizontalAlignment Center -WrapText -NumberFormat 0 -Range "Q:R" -Width 70
 
         #Conditional formats.  Note that this can be $() for none
         $condtxt = @()
-        $condtxt += New-ConditionalText TRUE -Range V:V
+        $condtxt += New-ConditionalText TRUE -Range G:G
         $condtxt += New-ConditionalText - -Range E:E -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -103,23 +197,19 @@ If ($Task -eq 'Processing') {
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('Retirement Date')
-        $Exc.Add('Retirement Feature')  
+        $Exc.Add('Retirement Feature')
+        $Exc.Add('Orphaned')
         $Exc.Add('Security Rules')
         $Exc.Add('Direction')
-        $Exc.Add('Access')
+        $Exc.Add('Action')
         $Exc.Add('Priority')
         $Exc.Add('Protocol')
-        $Exc.Add('Source Address Prefixes')
-        $Exc.Add('Source Address Prefix')
-        $Exc.Add('Source Port Ranges')
-        $Exc.Add('Source Port Range')
-        $Exc.Add('Destination Address Prefixes')
-        $Exc.Add('Destination Address Prefix')
-        $Exc.Add('Destination Port Ranges')
-        $Exc.Add('Destination Port Range')
-        $Exc.Add('NICs')
-        $Exc.Add('Subnets')
-        $Exc.Add('Orphaned')
+        $Exc.Add('Source')
+        $Exc.Add('Source Port')
+        $Exc.Add('Destination')
+        $Exc.Add('Destination Port')
+        $Exc.Add('Related NICs')
+        $Exc.Add('Related VNETs and Subnets')
 
         if ($InTag) {
             $Exc.Add('Tag Name')
@@ -127,10 +217,8 @@ If ($Task -eq 'Processing') {
         }
 
         $noNumberConversion = @()
-        $noNumberConversion += 'Source Address Prefixes'
-        $noNumberConversion += 'Source Address Prefix'
-        $noNumberConversion += 'Destination Address Prefixes'
-        $noNumberConversion += 'Destination Address Prefix'
+        $noNumberConversion += 'Source'
+        $noNumberConversion += 'Destination'
 
         $ExcelVar |
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc |
