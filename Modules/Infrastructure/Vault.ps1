@@ -40,7 +40,7 @@ If ($Task -eq 'Processing')
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 if([string]::IsNullOrEmpty($Data.enableSoftDelete)){$Soft = $false}else{$Soft = $Data.enableSoftDelete}
-                if([string]::IsNullOrEmpty($data.enableRbacAuthorization)){$RBAC = $false}else{$RBAC = $Data.enableSoftDelete}
+                if([string]::IsNullOrEmpty($data.enableRbacAuthorization)){$RBAC = $false}else{$RBAC = $Data.enableRbacAuthorization}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 Foreach($2 in $data.accessPolicies)
                     {
