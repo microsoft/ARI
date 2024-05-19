@@ -40,6 +40,30 @@ If ($Task -eq 'Processing')
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+
+                if($data.networkprofile.networkinterfaces.ipaddresses.count -gt 1)
+                    {
+                        $IPTemp = @()
+                        $SubnetTemp = @()
+                        foreach ($IPaddresses in $data.networkprofile.networkinterfaces.ipaddresses)
+                            {
+                                $IPTemp += $IPaddresses.address
+                                $SubnetTemp += $IPaddresses.subnet.addressprefix
+                            }
+                        $IP = if ($IPTemp.count -gt 1) { $IPTemp | ForEach-Object { $_ + ' ,' } }else { $IPTemp }
+                        $IP = [string]$IP
+                        $IP = if ($IP -like '* ,*') { $IP -replace ".$" }else { $IP }
+
+                        $Subnet = if ($SubnetTemp.count -gt 1) { $SubnetTemp | ForEach-Object { $_ + ' ,' } }else { $SubnetTemp }
+                        $Subnet = [string]$Subnet
+                        $Subnet = if ($Subnet -like '* ,*') { $Subnet -replace ".$" }else { $Subnet }
+                    }
+                else
+                    {
+                        $IP = $data.networkprofile.networkinterfaces.ipaddresses.address
+                        $Subnet = $data.networkprofile.networkinterfaces.ipaddresses.subnet.addressprefix
+                    }
+
                     foreach ($Tag in $Tags) { 
                         $obj = @{
                             'ID'                   = $1.id;
@@ -64,8 +88,8 @@ If ($Task -eq 'Processing')
                             'Agent Version'        = $data.agentversion;
                             'Status'               = $data.status;
                             'Last Status Change'   = [string](get-date($data.laststatuschange));
-                            'IP Address'           = $data.networkprofile.networkinterfaces.ipaddresses.address;
-                            'Subnet'               = $data.networkprofile.networkinterfaces.ipaddresses.subnet;
+                            'IP Address'           = $IP;
+                            'Subnet'               = $Subnet;
                             'OS Name'              = $data.osName;
                             'OS Version'           = $data.osVersion;
                             'OS Install Date'      = [string](get-date($data.osinstalldate));
@@ -93,7 +117,7 @@ Else
 
     if($SmaResources.ARCServers)
     {
-        $TableName = ('ARCServer_'+($SmaResources.ARCServer.id | Select-Object -Unique).count)
+        $TableName = ('ARCServer_'+($SmaResources.ARCServers.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
