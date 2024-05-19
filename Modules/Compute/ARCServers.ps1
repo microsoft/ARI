@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/ARCServers.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.0
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -36,7 +36,6 @@ If ($Task -eq 'Processing')
         {
             $tmp = @()
             foreach ($1 in $arcservers) {
-                $data.cloudmetadata.provider
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
