@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.15                                                                  #
+#       Version: 3.1.16                                                                  #
 #                                                                                        #
-#       Date: 05/11/2024                                                                 #
+#       Date: 05/19/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -529,6 +529,36 @@ param ($TenantID,
 
         <######################################################## INVENTORY LOOPs #######################################################################>
 
+    $Global:ExtractionRuntime = Measure-Command -Expression {
+
+        Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "1% Complete." -Completed
+        function Invoke-InventoryLoop {
+            param($SumGraphQuery,$GraphQuery,$Subscriptions,$LoopName)
+
+                $LocalResults = @()
+                $EnvSize = az graph query -q  $SumGraphQuery --subscriptions $Subscriptions --output json --only-show-errors | ConvertFrom-Json
+                $EnvSizeNum = $EnvSize.data.'count_'
+
+                if ($EnvSizeNum -ge 1) {
+                    $Loop = $EnvSizeNum / 1000
+                    $Loop = [math]::ceiling($Loop)
+                    $Looper = 0
+                    $Limit = 0
+
+                    while ($Looper -lt $Loop) {
+                        $QueryResult = (az graph query -q $GraphQuery --subscriptions $Subscriptions --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+
+                        $LocalResults += $QueryResult.data
+                        Start-Sleep -Milliseconds 100
+                        $Looper ++
+                        Write-Progress -Id 1 -activity "Running $LoopName Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                        $Limit = $Limit + 1000
+                    }
+                }
+                Write-Progress -Id 1 -activity "Running $LoopName Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
+            $LocalResults
+        }
+
         Write-Progress -activity 'Azure Inventory' -Status "4% Complete." -PercentComplete 4 -CurrentOperation "Starting Resources extraction jobs.."
 
         if(![string]::IsNullOrEmpty($ResourceGroup) -and [string]::IsNullOrEmpty($SubscriptionID))
@@ -539,238 +569,81 @@ param ($TenantID,
                 Write-Host ''
                 Exit
             }
-        if(![string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
-            {
-                Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'. And from Resource Group: '+$ResourceGroup)
-
-                $Subscri = $SubscriptionID
-
-                $GraphQuery = "resources | where resourceGroup in~ ('$([String]::Join("','",$ResourceGroup))') and strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' | summarize count()"
-                $EnvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
-                $EnvSizeNum = $EnvSize.data.'count_'
-
-                if ($EnvSizeNum -ge 1) {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where resourceGroup in~ ('$([String]::Join("','",$ResourceGroup))') and strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                        $Global:Resources += $Resource.data
-                        Start-Sleep 2
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $Limit = $Limit + 1000
-                    }
-                }
-                Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
-                $GraphQuery = "networkresources | where resourceGroup in~ ('$([String]::Join("','",$ResourceGroup))') | summarize count()"
-                $EnvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
-                $EnvSizeNum = $EnvSize.data.'count_'
-
-                if ($EnvSizeNum -ge 1) {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $GraphQuery = "networkresources | where resourceGroup in~ ('$([String]::Join("','",$ResourceGroup))') | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                        $Global:Resources += $Resource.data
-                        Start-Sleep -Milliseconds 100
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $Limit = $Limit + 1000
-                    }
-                }
-            }
-        elseif(![string]::IsNullOrEmpty($TagKey) -and ![string]::IsNullOrEmpty($TagValue) -and ![string]::IsNullOrEmpty($SubscriptionID))
-            {
-                $Subscri = $SubscriptionID
-
-                Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'. And from Tag: '+ $TagKey+ ':'+ $TagValue)
-                $GraphQuery = "resources | where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey == '$TagKey' and tagValue == '$TagValue' | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' | summarize count()"
-                $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
-                $EnvSizeNum = $EnvSize.data.'count_'
-
-                if ($EnvSizeNum -ge 1) {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey == '$TagKey' and tagValue == '$TagValue' | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                        $Global:Resources += $Resource.data
-                        Start-Sleep 2
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $Limit = $Limit + 1000
-                    }
-                }
-                Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
-                $GraphQuery = "networkresources | where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey == '$TagKey' and tagValue == '$TagValue' | summarize count()"
-                $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $Subscri --only-show-errors | ConvertFrom-Json
-                $EnvSizeNum = $EnvSize.data.'count_'
-
-                if ($EnvSizeNum -ge 1) {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $GraphQuery = "networkresources | where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey == '$TagKey' and tagValue == '$TagValue' | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                        $Global:Resources += $Resource.data
-                        Start-Sleep -Milliseconds 100
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $Limit = $Limit + 1000
-                    }
-                }
-            }
-        elseif([string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
-            {
-                Write-Debug ('Extracting Resources from Subscription: '+$SubscriptionID+'.')
-                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' | summarize count()"
-                $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
-                $EnvSizeNum = $EnvSize.data.'count_'
-
-                if ($EnvSizeNum -ge 1) {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = (az graph query -q $GraphQuery --subscriptions $SubscriptionID --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                        $Global:Resources += $Resource.data
-                        Start-Sleep 2
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $Limit = $Limit + 1000
-                    }
-                }
-                Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
-                $GraphQuery = "networkresources | summarize count()"
-                $EnvSize = az graph query -q $GraphQuery  --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
-                $EnvSizeNum = $EnvSize.data.'count_'
-
-                if ($EnvSizeNum -ge 1) {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $GraphQuery = "networkresources | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        $Resource = (az graph query -q $GraphQuery --subscriptions $SubscriptionID --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                        $Global:Resources += $Resource.data
-                        Start-Sleep -Milliseconds 100
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $Limit = $Limit + 1000
-                    }
-                }
-            }
         else
             {
-                $GraphQueryExtension = ""
-                if (![string]::IsNullOrEmpty($ManagementGroup)) {
-                    $GraphQueryExtension = "| join kind=inner (resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$ManagementGroup' | project subscriptionId, managanagementGroup = managementGroupParent.name) on subscriptionId"
-                }
-                $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' $GraphQueryExtension | summarize count()"
-
-                #$EnvSize = az graph query -q  $GraphQuery --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
-                $EnvSize = az graph query -q  $GraphQuery --output json --only-show-errors | ConvertFrom-Json
-                $EnvSizeNum = $EnvSize.data.'count_'
-
-                if ($EnvSizeNum -ge 1) {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $GraphQuery = "resources | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' $GraphQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        #$Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --subscriptions $SubscriptionID --only-show-errors).tolower() | ConvertFrom-Json
-                        $Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                        $Global:Resources += $Resource.data
-                        Start-Sleep -Milliseconds 100
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $Limit = $Limit + 1000
+                $Subscri = $Global:Subscriptions.id
+                $RGQueryExtension = ''
+                $TagQueryExtension = ''
+                $MGQueryExtension = ''
+                if(![string]::IsNullOrEmpty($ResourceGroup) -and ![string]::IsNullOrEmpty($SubscriptionID))
+                    {
+                        $RGQueryExtension = "| where resourceGroup in~ ('$([String]::Join("','",$ResourceGroup))')"
                     }
-                }
-                Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
-                $GraphQuery = "networkresources $GraphQueryExtension | summarize count()"
-
-                #$EnvSize = az graph query -q  $GraphQuery --output json --subscriptions $SubscriptionID --only-show-errors | ConvertFrom-Json
-                $EnvSize = az graph query -q  $GraphQuery --output json --only-show-errors | ConvertFrom-Json
-                $EnvSizeNum = $EnvSize.data.'count_'
-
-                if ($EnvSizeNum -ge 1) {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $GraphQuery = "networkresources $GraphQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                        #$Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --subscriptions $SubscriptionID --only-show-errors).tolower() | ConvertFrom-Json
-                        $Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                        $Global:Resources += $Resource.data
-                        Start-Sleep 2
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running Resource Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $Limit = $Limit + 1000
+                elseif(![string]::IsNullOrEmpty($TagKey) -and ![string]::IsNullOrEmpty($TagValue))
+                    {
+                        $TagQueryExtension = "| where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey =~ '$TagKey' and tagValue =~ '$TagValue'"
                     }
-                }
+                elseif (![string]::IsNullOrEmpty($ManagementGroup)) 
+                    {
+                        $MGQueryExtension = "| join kind=inner (resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$ManagementGroup' | project subscriptionId, managanagementGroup = managementGroupParent.name) on subscriptionId"
+                        $MGContainerExtension = "| mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$ManagementGroup'"
+                    }
             }
 
-        <######################################################### RESOURCE CONTAINER ######################################################################>
+                $SumGraphQuery = "resources $RGQueryExtension $TagQueryExtension | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' $MGQueryExtension | summarize count()"
+                $GraphQuery = "resources $RGQueryExtension $TagQueryExtension | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' $MGQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
-            $GraphQueryExtension = ""
-            if (![string]::IsNullOrEmpty($ManagementGroup)) {
-                $GraphQueryExtension = "| mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$ManagementGroup'"
-            }
-            $GraphQuery = "resourcecontainers $GraphQueryExtension | summarize count()"
-            $EnvSize = az graph query -q  $GraphQuery --output json --only-show-errors | ConvertFrom-Json
-            $EnvSizeNum = $EnvSize.data.'count_'
+                Write-Debug ('Invoking Inventory Loop for Resources')
+                $Global:Resources += Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Resources'
 
-            if ($EnvSizeNum -ge 1) {
-                $Loop = $EnvSizeNum / 1000
-                $Loop = [math]::ceiling($Loop)
-                $Looper = 0
-                $Limit = 0
+                $SumGraphQuery = "networkresources $RGQueryExtension $TagQueryExtension $MGQueryExtension | summarize count()"
+                $GraphQuery = "networkresources $RGQueryExtension $TagQueryExtension $MGQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
-                while ($Looper -lt $Loop) {
-                    $GraphQuery = "resourcecontainers $GraphQueryExtension | order by id asc"
-                    $Container = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                Write-Debug ('Invoking Inventory Loop for Network Resources')
+                $Global:Resources += Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Network Resources'
 
-                    $Global:ResourceContainers += $Container.data
-                    Start-Sleep 2
-                    $Looper ++
-                    Write-Progress -Id 1 -activity "Running Subscription Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                    $Limit = $Limit + 1000
-                }
-            }
-            Write-Progress -Id 1 -activity "Running Subscription Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
+                $SumGraphQuery = "recoveryservicesresources $RGQueryExtension $TagQueryExtension | where type =~ 'microsoft.recoveryservices/vaults/backupfabrics/protectioncontainers/protecteditems' or type =~ 'microsoft.recoveryservices/vaults/backuppolicies' $MGQueryExtension | summarize count()"
+                $GraphQuery = "recoveryservicesresources $RGQueryExtension $TagQueryExtension | where type =~ 'microsoft.recoveryservices/vaults/backupfabrics/protectioncontainers/protecteditems' or type =~ 'microsoft.recoveryservices/vaults/backuppolicies' $MGQueryExtension  | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
+                Write-Debug ('Invoking Inventory Loop for Backup Resources')
+                $Global:Resources += Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Backup Items'
+
+                $SumGraphQuery = "desktopvirtualizationresources $RGQueryExtension $MGQueryExtension | summarize count()"
+                $GraphQuery = "desktopvirtualizationresources $RGQueryExtension $MGQueryExtension| project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+
+                Write-Debug ('Invoking Inventory Loop for AVD Resources')
+                $Global:Resources += Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Virtual Desktop'
+
+                $SumGraphQuery = "resourcecontainers $RGQueryExtension $TagQueryExtension $MGContainerExtension | summarize count()"
+                $GraphQuery = "resourcecontainers $RGQueryExtension $TagQueryExtension $MGContainerExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+
+                Write-Debug ('Invoking Inventory Loop for Resource Containers')
+                $Global:ResourceContainers = Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Subscriptions and Resource Groups'
+
+                if (!($SkipPolicy.IsPresent)) 
+                    {
+                        $SumGraphQuery = "policyresources | where type == 'microsoft.authorization/policyassignments' | summarize count()"
+                        $GraphQuery = "policyresources | where type == 'microsoft.authorization/policyassignments' | order by id asc"
+
+                        Write-Debug ('Invoking Inventory Loop for Policies Resources')
+                        $Global:Policies = Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Policies'
+                    }
+                if (!($SkipAdvisory.IsPresent)) 
+                    {
+                        $SumGraphQuery = "advisorresources $RGQueryExtension $MGQueryExtension | summarize count()"
+                        $GraphQuery = "advisorresources $RGQueryExtension $MGQueryExtension | order by id asc"
+
+                        Write-Debug ('Invoking Inventory Loop for Advisories')
+                        $Global:Advisories = Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Advisories'
+                    }
+                if ($SecurityCenter.IsPresent) 
+                    {
+                        $SumGraphQuery = "securityresources $RGQueryExtension | where type =~ 'microsoft.security/assessments' and properties['status']['code'] == 'Unhealthy' $MGQueryExtension | summarize count()" 
+                        $GraphQuery = "securityresources $RGQueryExtension | where type =~ 'microsoft.security/assessments' and properties['status']['code'] == 'Unhealthy' $MGQueryExtension | order by id asc" 
+
+                        Write-Debug ('Invoking Inventory Loop for Security Resources')
+                        $Global:Security = Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Security Center'
+                    }
 
         <######################################################### QUOTA JOB ######################################################################>
 
@@ -820,176 +693,9 @@ param ($TenantID,
                 } -ArgumentList $Global:Resources, $Global:Subscriptions
             }
 
-        <######################################################### Policies ######################################################################>
-
-            if (!($SkipPolicy.IsPresent)) {
-
-                $GraphQuery = "policyresources | where type == 'microsoft.authorization/policyassignments' | summarize count()"
-
-                $PolSize = az graph query -q $GraphQuery -m $TenantID --output json --only-show-errors | ConvertFrom-Json
-                $PolSizeNum = $PolSize.data.'count_'
-
-                Write-Debug ('Policy: '+$PolSizeNum)
-                Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Policy extraction jobs.."
-
-                if ($PolSizeNum -ge 1) {
-                    $Loop = $PolSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
-
-                    while ($Looper -lt $Loop) {
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running Policy Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $GraphQuery = "policyresources | where type == 'microsoft.authorization/policyassignments' | order by id asc"
-
-                        $Policy = (az graph query -q $GraphQuery -m $TenantID --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                        $Global:Policies += $Policy.data
-                        Start-Sleep 2
-                        $Limit = $Limit + 1000
-                    }
-                    Write-Progress -Id 1 -activity "Running Policy Inventory Job" -Status "Completed" -Completed
-                }
-
-            }
-
-
-        <######################################################### ADVISOR ######################################################################>
-
-        $Global:ExtractionRuntime = Measure-Command -Expression {
-
-        $Subscri = $Global:Subscriptions.id
-
-        if (!($SkipAdvisory.IsPresent)) {
-
-            Write-Debug ('Subscriptions To be Gather in Advisories: '+$Subscri.Count)
-
-            $GraphQueryExtension = ""
-            if (![string]::IsNullOrEmpty($ManagementGroup)) {
-                $GraphQueryExtension = "| join kind=inner (resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$ManagementGroup' | project subscriptionId, managanagementGroup = managementGroupParent.name) on subscriptionId"
-            }
-            if (![string]::IsNullOrEmpty($ResourceGroup)) {
-                $GraphQueryExtension = "$GraphQueryExtension | where resourceGroup in~ ('$([String]::Join("','",$ResourceGroup))')"
-            }
-            $GraphQuery = "advisorresources $GraphQueryExtension | summarize count()"
-
-            #$AdvSize = az graph query -q $GraphQuery --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
-            $AdvSize = az graph query -q $GraphQuery --output json --only-show-errors | ConvertFrom-Json
-            $AdvSizeNum = $AdvSize.data.'count_'
-
-            Write-Debug ('Advisories: '+$AdvSizeNum)
-            Write-Progress -activity 'Azure Inventory' -Status "5% Complete." -PercentComplete 5 -CurrentOperation "Starting Advisories extraction jobs.."
-
-            if ($AdvSizeNum -ge 1) {
-                $Loop = $AdvSizeNum / 1000
-                $Loop = [math]::ceiling($Loop)
-                $Looper = 0
-                $Limit = 0
-
-                while ($Looper -lt $Loop) {
-                    $Looper ++
-                    Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                    $GraphQuery = "advisorresources $GraphQueryExtension | order by id asc"
-
-                    #$Advisor = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-                    $Advisor = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                    $Global:Advisories += $Advisor.data
-                    Start-Sleep 2
-                    $Limit = $Limit + 1000
-                }
-                Write-Progress -Id 1 -activity "Running Advisory Inventory Job" -Status "Completed" -Completed
-            }
-
-            $Global:Advisories = $Global:Advisories | Where-Object {$_.subscriptionid -in $Subscri}
-        }
-
-        <######################################################### Security Center ######################################################################>
-
-        if ($SecurityCenter.IsPresent) {
-            Write-Progress -activity 'Azure Inventory' -Status "6% Complete." -PercentComplete 6 -CurrentOperation "Starting Security Advisories extraction jobs.."
-            Write-Host " Azure Resource Inventory are collecting Security Center Advisories."
-            Write-Host " Collecting Security Center Can increase considerably the execution time of Azure Resource Inventory and the size of final report "
-            Write-Host " "
-
-            $Subscri = $Global:Subscriptions.id
-
-            Write-Debug ('Extracting total number of Security Advisories from Tenant')
-            $GraphQueryExtension = ""
-            if (![string]::IsNullOrEmpty($ManagementGroup)) {
-                $GraphQueryExtension = "| join kind=inner (resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$ManagementGroup' | project subscriptionId, managanagementGroup = managementGroupParent.name) on subscriptionId"
-            }
-            if (![string]::IsNullOrEmpty($ResourceGroup)) {
-                $GraphQueryExtension = "$GraphQueryExtension | where resourceGroup in~ ('$([String]::Join("','",$ResourceGroup))')"
-            }
-            #$SecSize = az graph query -q  "securityresources | where properties['status']['code'] == 'Unhealthy' | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
-            $SecSize = az graph query -q  "securityresources $GraphQueryExtension | where properties['status']['code'] == 'Unhealthy' | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-            $SecSizeNum = $SecSize.data.'count_'
-
-            if ($SecSizeNum -ge 1) {
-                $Loop = $SecSizeNum / 1000
-                $Loop = [math]::ceiling($Loop)
-                $Looper = 0
-                $Limit = 0
-                while ($Looper -lt $Loop) {
-                    $Looper ++
-                    Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                    $GraphQuery = "securityresources $GraphQueryExtension | where properties['status']['code'] == 'Unhealthy' | order by id asc"
-
-                    #$SecCenter = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-                    $SecCenter = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                    $Global:Security += $SecCenter.data
-                    Start-Sleep 3
-                    $Limit = $Limit + 1000
-                }
-                Write-Progress -Id 1 -activity "Running Security Advisory Inventory Job" -Status "Completed" -Completed
-            }
-        }
-        else {
-            Write-Host " "
-            Write-Host " To include Security Center details in the report, use <-SecurityCenter> parameter. "
-            Write-Host " "
-        }
-
         Write-Progress -activity 'Azure Inventory' -PercentComplete 20
 
         Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "100% Complete." -Completed
-
-        <######################################################### AVD ######################################################################>
-
-
-        $Subscri = $Global:Subscriptions.id
-        $GraphQueryExtension = ""
-        if (![string]::IsNullOrEmpty($ManagementGroup)) {
-            $GraphQueryExtension = "| join kind=inner (resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$ManagementGroup' | project subscriptionId, managanagementGroup = managementGroupParent.name) on subscriptionId"
-        }
-        if (![string]::IsNullOrEmpty($ResourceGroup)) {
-            $GraphQueryExtension = "$GraphQueryExtension | where resourceGroup in~ ('$([String]::Join("','",$ResourceGroup))')"
-        }
-        #$AVDSize = az graph query -q "desktopvirtualizationresources | summarize count()" --subscriptions $Subscri --output json --only-show-errors | ConvertFrom-Json
-        $AVDSize = az graph query -q "desktopvirtualizationresources $GraphQueryExtension | summarize count()" --output json --only-show-errors | ConvertFrom-Json
-        $AVDSizeNum = $AVDSize.data.'count_'
-
-        if ($AVDSizeNum -ge 1) {
-            $Loop = $AVDSizeNum / 1000
-            $Loop = [math]::ceiling($Loop)
-            $Looper = 0
-            $Limit = 0
-
-            while ($Looper -lt $Loop) {
-                $GraphQuery = "desktopvirtualizationresources $GraphQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
-                #$AVD = (az graph query -q $GraphQuery --subscriptions $Subscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-                $AVD = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                $Global:Resources += $AVD.data
-                Start-Sleep 2
-                $Looper ++
-                $Limit = $Limit + 1000
-            }
-        }
-
 
         }
     }
@@ -1134,7 +840,6 @@ param ($TenantID,
         if ($SecurityCenter.IsPresent) {
             Write-Debug ('Starting Security Job.')
             Start-Job -Name 'Security' -ScriptBlock {
-
 
                 If ($($args[5]) -eq $true) {
                     $ModuSeq = (New-Object System.Net.WebClient).DownloadString($($args[6]) + '/Extras/SecurityCenter.ps1')

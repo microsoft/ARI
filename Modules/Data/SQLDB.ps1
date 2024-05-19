@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/SQLDB.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 3.0.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -35,8 +35,10 @@ if ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $DBServer = [string]$1.id.split("/")[8]
+                $DBServer = $1.id.split("/")[8]
                 $PoolId = [string]$data.elasticPoolId.split("/")[10]
+
+                $RestorePoint = [string](get-date($data.earliestrestoredate))
                 
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
@@ -46,12 +48,15 @@ if ($Task -eq 'Processing') {
                             'Resource Group'             = $1.RESOURCEGROUP;
                             'Name'                       = $1.NAME;
                             'Location'                   = $1.LOCATION;
-                            'Storage Account Type'       = $data.storageAccountType;
                             'Database Server'            = $DBServer;
                             'Default Secondary Location' = $data.defaultSecondaryLocation;
                             'Status'                     = $data.status;
+                            'Availability Zone'          = $data.availabilityzone;
+                            'Earliest Restore Point'     = $RestorePoint;
+                            'Min DTU Capacity'           = $data.minCapacity;
                             'DTU Capacity'               = $data.currentSku.capacity;
-                            'DTU Tier'                   = $data.requestedServiceObjectiveName;
+                            'Service Tier'               = $data.currentSku.tier;
+                            'Hardware Configuration'     = $data.currentsku.name;
                             'Zone Redundant'             = $data.zoneRedundant;
                             'Catalog Collation'          = $data.catalogCollation;
                             'Read Replica Count'         = $data.readReplicaCount;
@@ -79,12 +84,14 @@ else {
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
-        $Exc.Add('Storage Account Type')
         $Exc.Add('Database Server')
         $Exc.Add('Default Secondary Location')
         $Exc.Add('Status')
+        $Exc.Add('Availability Zone')
+        $Exc.Add('Min DTU Capacity')
         $Exc.Add('DTU Capacity')
-        $Exc.Add('DTU Tier')
+        $Exc.Add('Service Tier')
+        $Exc.Add('Hardware Configuration')
         $Exc.Add('Data Max Size (GB)')
         $Exc.Add('Zone Redundant')
         $Exc.Add('Catalog Collation')
