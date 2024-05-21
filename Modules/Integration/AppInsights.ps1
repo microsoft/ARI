@@ -84,6 +84,8 @@ Else {
 
         $condtxt = @()
         $condtxt += New-ConditionalText Disabled -Range K:K
+        $condtxt += New-ConditionalText enabled -Range N:N
+        $condtxt += New-ConditionalText enabled -Range O:O
         $condtxt += New-ConditionalText - -Range F:F -ConditionalType ContainsText
         
         $Exc = New-Object System.Collections.Generic.List[System.Object]
