@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/APPServices.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.1
+Version: 3.0.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -109,18 +109,14 @@ Else
         $condtxt = @()
         Foreach ($UnSupOS in $Unsupported.WebSite)
             {                
-                $condtxt += New-ConditionalText $UnSupOS -Range U:U
+                $condtxt += New-ConditionalText $UnSupOS -Range W:W
             }
         
         $condtxt += New-ConditionalText FALSE -Range O:O
-        $condtxt += New-ConditionalText FALSO -Range O:O
         $condtxt += New-ConditionalText FALSE -Range P:P
-        $condtxt += New-ConditionalText FALSO -Range P:P
         $condtxt += New-ConditionalText FALSE -Range K:K
-        $condtxt += New-ConditionalText FALSO -Range K:K
         $condtxt += New-ConditionalText FALSE -Range S:S
-        $condtxt += New-ConditionalText FALSO -Range S:S
-        $condtxt += New-ConditionalText - -Range I:I -ConditionalType ContainsText
+        $condtxt += New-ConditionalText - -Range J:J -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
