@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/PrivateEndpoint.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.2.0
+Version: 3.2.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -94,7 +94,6 @@ Else {
         $TableName = ('PvtEndpointTable_'+($SmaResources.PrivateEndpoint.id | Select-Object -Unique).count)
         $Style = @()
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
-        $Style += New-ExcelStyle -HorizontalAlignment Center -WrapText -NumberFormat 0 -Width 40 -Range "I:I"
 
         $condtxt = @()
 
