@@ -41,49 +41,63 @@ If ($Task -eq 'Processing')
                 $data = $1.PROPERTIES
                 if([string]::IsNullOrEmpty($data.addonProfiles.omsagent.config.logAnalyticsWorkspaceResourceID)){$Insights = $false}else{$Insights = $data.addonProfiles.omsagent.config.logAnalyticsWorkspaceResourceID.split('/')[8]}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $NetworkPlugin = if($data.networkprofile.networkplugin -eq 'azure'){'Azure CNI'}else{$data.networkprofile.networkplugin}
+                $LocalAccounts = if($data.disablelocalaccounts -eq $true){$false}else{$true}
+                $GroupsChosen = if($data.aadprofile.admingroupobjectids){[string]$data.aadprofile.admingroupobjectids.count}else{'0'}
+                $GroupsChosen = ($GroupsChosen+' groups chosen')
+                $NodeChannel = if([string]::IsNullOrEmpty($data.autoupgradeprofile.nodeosupgradechannel)){'None'}else{$data.autoupgradeprofile.nodeosupgradechannel}
+                $Ingress = if([string]::IsNullOrEmpty($data.addonProfiles.ingressApplicationGateway.config.applicationGatewayName)){'Not enabled'}else{$data.addonProfiles.ingressApplicationGateway.config.applicationGatewayName}
                 foreach ($2 in $data.agentPoolProfiles) {
-                        $AutoScale = if([string]::IsNullOrEmpty($2.enableAutoScaling)){$false}else{$true}
+                        $AutoScale = if([string]::IsNullOrEmpty($2.enableAutoScaling)){$false}else{if($2.enableautoscaling -eq $true){$true}else{$false}}
+                        $AVZone = if([string]::IsNullOrEmpty($2.availabilityZones)){'None'}else{[string]$2.availabilityZones}
                         foreach ($Tag in $Tags) {
                             $obj = @{
-                                'ID'                         = $1.id;
-                                'Subscription'               = $sub1.Name;
-                                'Resource Group'             = $1.RESOURCEGROUP;
-                                'Clusters'                   = $1.NAME;
-                                'Location'                   = $1.LOCATION;
-                                'Kubernetes Version'         = $data.kubernetesVersion;
-                                'Role-Based Access Control'  = $data.enableRBAC;
-                                'AAD Enabled'                = if ($data.aadProfile) { $true }else { $false };
-                                'Network Type'               = $data.networkProfile.networkPlugin;
-                                'Ingress Controller'         = $data.addonProfiles.ingressApplicationGateway.config.applicationGatewayName;                        
-                                'Private Cluster'            = $data.apiServerAccessProfile.enablePrivateCluster;
-                                'Container Insights'         = $Insights;                    
-                                'Outbound Type'              = $data.networkProfile.outboundType;
-                                'LoadBalancer Sku'           = $data.networkProfile.loadBalancerSku;
-                                'Docker Pod Cidr'            = $data.networkProfile.podCidr;
-                                'Service Cidr'               = $data.networkProfile.serviceCidr;
-                                'Docker Bridge Cidr'         = $data.networkProfile.dockerBridgeCidr;                   
-                                'Network DNS Service IP'     = $data.networkProfile.dnsServiceIP;
-                                'FQDN'                       = $data.fqdn
-                                'HTTP Application Routing'   = if ($data.addonProfiles.httpapplicationrouting.enabled) { $true }else { $false };
-                                'Node Pool Name'             = $2.name;
-                                'Pool Profile Type'          = $2.type;
-                                'Pool Mode'                  = $2.mode;
-                                'Pool OS'                    = $2.osType;
-                                'Node Size'                  = $2.vmSize;
-                                'OS Disk Size (GB)'          = $2.osDiskSizeGB;
-                                'Nodes'                      = $2.count;
-                                'Zones'                      = [string]$2.availabilityZones;
-                                'Autoscale'                  = $AutoScale;
-                                'Autoscale Max'              = $2.maxCount;
-                                'Autoscale Min'              = $2.minCount;
-                                'Max Pods Per Node'          = $2.maxPods;
-                                'Virtual Network'            = if($2.vnetSubnetID){$2.vnetSubnetID.split('/')[8]}else{$false}
-                                'VNET Subnet'                = if($2.vnetSubnetID){$2.vnetSubnetID.split('/')[10]}else{$false}
-                                'Orchestrator Version'       = $2.orchestratorVersion;
-                                'Enable Node Public IP'      = $2.enableNodePublicIP;
-                                'Resource U'                 = $ResUCount;
-                                'Tag Name'                   = [string]$Tag.Name;
-                                'Tag Value'                  = [string]$Tag.Value
+                                'ID'                                            = $1.id;
+                                'Subscription'                                  = $sub1.Name;
+                                'Resource Group'                                = $1.RESOURCEGROUP;
+                                'Clusters'                                      = $1.NAME;
+                                'Location'                                      = $1.LOCATION;
+                                'AKS Pricing Tier'                              = $1.sku.tier;
+                                'Kubernetes Version'                            = [string]$data.kubernetesVersion;
+                                'Cluster Power State'                           = $data.powerstate.code;
+                                'Role-Based Access Control'                     = $data.enableRBAC;
+                                'AAD Enabled'                                   = if ($data.aadProfile) { $true }else { $false };
+                                'Kubernetes Local Accounts'                     = $LocalAccounts;
+                                'Cluster Admin ClusterRoleBinding'              = $GroupsChosen;
+                                'Network Type (Plugin)'                         = $NetworkPlugin;
+                                'Plugin Mode'                                   = $data.networkprofile.networkpluginmode;
+                                'Pod CIDR'                                      = $data.networkProfile.podCidr;
+                                'Network Policy'                                = $data.networkProfile.networkPolicy;
+                                'Outbound Type'                                 = $data.networkProfile.outboundType;
+                                'Infrastructure Resource Group'                 = $data.noderesourcegroup;
+                                'App Gateway Ingress Controller'                = $Ingress;                        
+                                'Private Cluster'                               = $data.apiServerAccessProfile.enablePrivateCluster;
+                                'Node Security Channel Type'                    = $NodeChannel;
+                                'Container Insights'                            = $Insights;                    
+                                'API Server Address'                            = $data.fqdn
+                                'Node Pool Name'                                = $2.name;
+                                'Node Pool Power State'                         = $2.powerstate.code;
+                                'Node Pool Version'                             = [string]$2.orchestratorVersion;
+                                'Node Pool Mode'                                = $2.mode;
+                                'Node Pool OS Type'                             = $2.osType;
+                                'Node Pool OS'                                  = $2.ossku;
+                                'Node Pool Image'                               = $2.nodeimageversion;
+                                'Node Pool Size'                                = $2.vmSize;
+                                'OS Disk Size (GB)'                             = $2.osDiskSizeGB;
+                                'Target Nodes'                                  = $2.count;
+                                'Availability Zones'                            = $AVZone;
+                                'Autoscale'                                     = $AutoScale;
+                                'Autoscale Minimum Node Count'                  = $2.minCount;
+                                'Autoscale Maximum Node Count'                  = $2.maxCount;
+                                'Max Pods Per Node'                             = $2.maxPods;
+                                'Virtual Network'                               = if($2.vnetSubnetID){$2.vnetSubnetID.split('/')[8]}else{$false}
+                                'Subnet'                                        = if($2.vnetSubnetID){$2.vnetSubnetID.split('/')[10]}else{$false}
+                                'Enable Node Public IP'                         = $2.enableNodePublicIP;
+                                'Taints'                                        = [string]$2.nodetaints;
+                                'Labels'                                        = [string]$2.nodelabels;
+                                'Resource U'                                    = $ResUCount;
+                                'Tag Name'                                      = [string]$Tag.Name;
+                                'Tag Value'                                     = [string]$Tag.Value
                             }
                             $tmp += $obj
                             if ($ResUCount -eq 1) { $ResUCount = 0 } 
@@ -104,80 +118,110 @@ Else
     {
 
         $TableName = ('AKSTable_'+($SmaResources.AKS.id | Select-Object -Unique).count)
-        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'   
+        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize
+        $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AO:AP -Width 90 -WrapText 
 
         $condtxt = @()
         #AKS
-        $condtxt += New-ConditionalText 1.24 -Range E:E
-        $condtxt += New-ConditionalText 1.23 -Range E:E
-        $condtxt += New-ConditionalText 1.22 -Range E:E
-        $condtxt += New-ConditionalText 1.21 -Range E:E
+        $condtxt += New-ConditionalText 1.27 -Range F:F
+        $condtxt += New-ConditionalText 1.26 -Range F:F
+        $condtxt += New-ConditionalText 1.25 -Range F:F
+        $condtxt += New-ConditionalText 1.24 -Range F:F
+        $condtxt += New-ConditionalText 1.23 -Range F:F
+        $condtxt += New-ConditionalText 1.22 -Range F:F
+        $condtxt += New-ConditionalText 1.21 -Range F:F
         #Orchestrator
-        $condtxt += New-ConditionalText 1.24 -Range AH:AH
-        $condtxt += New-ConditionalText 1.23 -Range AH:AH
-        $condtxt += New-ConditionalText 1.22 -Range AH:AH
-        $condtxt += New-ConditionalText 1.21 -Range AH:AH
+        $condtxt += New-ConditionalText 1.27 -Range Y:Y
+        $condtxt += New-ConditionalText 1.26 -Range Y:Y
+        $condtxt += New-ConditionalText 1.25 -Range Y:Y
+        $condtxt += New-ConditionalText 1.24 -Range Y:Y
+        $condtxt += New-ConditionalText 1.23 -Range Y:Y
+        $condtxt += New-ConditionalText 1.22 -Range Y:Y
+        $condtxt += New-ConditionalText 1.21 -Range Y:Y
+        #Pricing Tier
+        $condtxt += New-ConditionalText Free -Range E:E
+        #Local Accounts
+        $condtxt += New-ConditionalText true -Range J:J
+        #Private Cluster
+        $condtxt += New-ConditionalText false -Range S:S
+        #Node Security Channel
+        $condtxt += New-ConditionalText none -Range T:T
+        #Container Insight
+        $condtxt += New-ConditionalText false -Range U:U
         #NodeSize
-        $condtxt += New-ConditionalText _b -Range X:X
+        $condtxt += New-ConditionalText _b -Range AD:AD
+        #Av Zone
+        $condtxt += New-ConditionalText None -Range AG:AG
         #AutoScale
-        $condtxt += New-ConditionalText false -Range AB:AB
+        $condtxt += New-ConditionalText false -Range AH:AH
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Clusters')
         $Exc.Add('Location')
+        $Exc.Add('AKS Pricing Tier')
         $Exc.Add('Kubernetes Version')
+        $Exc.Add('Cluster Power State')
         $Exc.Add('Role-Based Access Control')
         $Exc.Add('AAD Enabled')
-        $Exc.Add('Network Type')
-        $Exc.Add('Ingress Controller')
-        $Exc.Add('Private Cluster')
-        $Exc.Add('Container Insights')
+        $Exc.Add('Kubernetes Local Accounts')
+        $Exc.Add('Cluster Admin ClusterRoleBinding')
+        $Exc.Add('Network Type (Plugin)')
+        $Exc.Add('Plugin Mode')
+        $Exc.Add('Pod CIDR')
+        $Exc.Add('Network Policy')
         $Exc.Add('Outbound Type')
-        $Exc.Add('LoadBalancer Sku')
-        $Exc.Add('Docker Pod Cidr')
-        $Exc.Add('Service Cidr')
-        $Exc.Add('Docker Bridge Cidr')   
-        $Exc.Add('Network DNS Service IP')
-        $Exc.Add('FQDN')
-        $Exc.Add('HTTP Application Routing')
+        $Exc.Add('Infrastructure Resource Group')
+        $Exc.Add('App Gateway Ingress Controller')
+        $Exc.Add('Private Cluster')
+        $Exc.Add('Node Security Channel Type')
+        $Exc.Add('Container Insights')
+        $Exc.Add('API Server Address')
         $Exc.Add('Node Pool Name')
-        $Exc.Add('Pool Profile Type')
-        $Exc.Add('Pool Mode')
-        $Exc.Add('Pool OS')
-        $Exc.Add('Node Size')
-        $Exc.Add('OS Disk Size (GB)')
-        $Exc.Add('Nodes')
-        $Exc.Add('Zones')
-        $Exc.Add('Autoscale')
-        $Exc.Add('Autoscale Max')
-        $Exc.Add('Autoscale Min')
+        $Exc.Add('Node Pool Power State')
+        $Exc.Add('Node Pool Version')
+        $Exc.Add('Node Pool Mode')
+        $Exc.Add('Node Pool OS Type')
+        $Exc.Add('Node Pool OS')
+        $Exc.Add('Node Pool Image')
+        $Exc.Add('Node Pool Size')
+        $Exc.Add('Availability Zones')
         $Exc.Add('Max Pods Per Node')
+        $Exc.Add('OS Disk Size (GB)')
+        $Exc.Add('Target Nodes')
+        $Exc.Add('Autoscale')
+        $Exc.Add('Autoscale Minimum Node Count')
+        $Exc.Add('Autoscale Maximum Node Count')
         $Exc.Add('Virtual Network')
-        $Exc.Add('VNET Subnet')
-        $Exc.Add('Orchestrator Version')
+        $Exc.Add('Subnet')
         $Exc.Add('Enable Node Public IP')
+        $Exc.Add('Taints')
+        $Exc.Add('Labels')
         if($InTag)
             {
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.AKS 
+        $noNumberConversion = @()
+        $noNumberConversion += 'Kubernetes Version'
+        $noNumberConversion += 'Node Pool Version'
+
+        $ExcelVar = $SmaResources.AKS
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName $TableName -MaxAutoSizeRows 50 -TableStyle $tableStyle -ConditionalText $condtxt -Numberformat '0' -Style $Style   
+        Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName $TableName -MaxAutoSizeRows 50 -TableStyle $tableStyle -ConditionalText $condtxt -Numberformat '0' -Style $Style,$StyleExt -NoNumberConversion $noNumberConversion 
         
         $excel = Open-ExcelPackage -Path $File -KillExcel
 
-        $null = $excel.'AKS'.Cells["E1"].AddComment("AKS follows 12 months of support for a generally available (GA) Kubernetes version. To read more about our support policy for Kubernetes versioning", "Azure Resource Inventory")
+        $null = $excel.'AKS'.Cells["F1"].AddComment("AKS follows 12 months of support for a generally available (GA) Kubernetes version. To read more about our support policy for Kubernetes versioning", "Azure Resource Inventory")
         $excel.'AKS'.Cells["E1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/supported-kubernetes-versions?tabs=azure-cli#aks-kubernetes-release-calendar'
-        $null = $excel.'AKS'.Cells["X1"].AddComment("System node pools require a VM SKU of at least 2 vCPUs and 4 GB memory. But burstable-VM(B series) isn't recommended", "Azure Resource Inventory")
-        $excel.'AKS'.Cells["X1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/use-system-pools?tabs=azure-cli#system-and-user-node-pools'
-        $null = $excel.'AKS'.Cells["AB1"].AddComment("The cluster autoscaler component can watch for pods in your cluster that can't be scheduled because of resource constraints", "Azure Resource Inventory")
-        $excel.'AKS'.Cells["AB1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/cluster-autoscaler'
+        $null = $excel.'AKS'.Cells["AD1"].AddComment("System node pools require a VM SKU of at least 2 vCPUs and 4 GB memory. But burstable-VM(B series) isn't recommended", "Azure Resource Inventory")
+        $excel.'AKS'.Cells["AD1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/use-system-pools?tabs=azure-cli#system-and-user-node-pools'
+        $null = $excel.'AKS'.Cells["AH1"].AddComment("The cluster autoscaler component can watch for pods in your cluster that can't be scheduled because of resource constraints", "Azure Resource Inventory")
+        $excel.'AKS'.Cells["AH1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/cluster-autoscaler'
 
         Close-ExcelPackage $excel
     }
