@@ -284,7 +284,7 @@ else
         {
             $TableName = ('VMTable_'+($SmaResources.VM.id | Select-Object -Unique).count)
             $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
-            $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AN:AN -Width 60 -WrapText 
+            $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AO:AO -Width 60 -WrapText 
 
                 $cond = @()
                 #Automatic Updates
