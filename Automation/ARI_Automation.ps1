@@ -12,8 +12,8 @@ https://github.com/microsoft/ARI/Automation/ARI_Automation.ps1
 This powershell Script is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.7
-Authors: Claudio Merola
+Version: 3.1.8
+Author: Claudio Merola
 
 Core Steps:
 1 ) Create System Identity
@@ -29,20 +29,22 @@ Core Steps:
 <######################################################### VARIABLES ######################################################################>
 
 #StorageAccount Name
-$STGACC = "azureinventorystg"
+$Script:STGACC = "azureinventorystg"
 
 #Container Name
-$STGCTG = 'ari'
+$Script:STGCTG = 'ari'
 
 #Include Tags
-$InTag = $false
+$Script:InTag = $false
 
 #Lite
-$RunLite = $true
+$Script:RunLite = $true
 
 #Debug
-$RunDebug = $true
+$Script:RunDebug = $true
 
+#Include Security Center
+$Script:IncludeSecurityCenter = $false
 
 <######################################################### SCRIPT ######################################################################>
 
@@ -56,7 +58,7 @@ $null = Disable-AzContextAutosave -Scope Process
 
 # Connect using a Managed Service Identity
 try {
-    $AzureConnection = (Connect-AzAccount -Identity).context
+    $Script:AzureConnection = (Connect-AzAccount -Identity).context
 }
 catch {
     Write-Output "There is no system-assigned user identity. Aborting." 
@@ -64,216 +66,296 @@ catch {
 }
 
 # set and store context
-$AzureContext = Set-AzContext -SubscriptionName $AzureConnection.Subscription -DefaultProfile $AzureConnection
+$Script:AzureContext = Set-AzContext -SubscriptionName $AzureConnection.Subscription -DefaultProfile $AzureConnection
 
-$Context = New-AzStorageContext -StorageAccountName $STGACC -UseConnectedAccount
+$Script:Context = New-AzStorageContext -StorageAccountName $STGACC -UseConnectedAccount
 
-$aristg = $STGCTG
+$Script:aristg = $STGCTG
 
-$TableStyle = "Light20"
+$Script:TableStyle = "Light20"
 
 $Date = get-date -Format "yyyy-MM-dd_HH_mm"
-$DateStart = get-date
+$Script:DateStart = get-date
 
-$File = ("ARI_Automation_Report_"+$Date+".xlsx")
-
-
-$Resources = @()
-$Advisories = @()
-$Subscriptions = ''
-
-$Repo = 'https://api.github.com/repos/microsoft/ari/git/trees/main?recursive=1'
-$RawRepo = 'https://raw.githubusercontent.com/microsoft/ARI/main'
-
-<######################################################### ADVISORY EXTRACTION ######################################################################>
-
-Write-Output 'Extracting Advisories'
-
-    $AdvSize = Search-AzGraph -Query "advisorresources | summarize count()"
-    $AdvSizeNum = $AdvSize.'count_'
-
-    if ($AdvSizeNum -ge 1) {
-        $Loop = $AdvSizeNum / 1000
-        $Loop = [math]::ceiling($Loop)
-        $Looper = 0
-        $Limit = 1
-
-        while ($Looper -lt $Loop) 
-            {
-                $Looper ++
-                $Advisor = Search-AzGraph -Query "advisorresources | order by id asc" -skip $Limit -first 1000
-                $Advisories += $Advisor
-                Start-Sleep 2
-                $Limit = $Limit + 1000
-            }
-    } 
+$Script:File = ("ARI_Automation_Report_"+$Date+".xlsx")
 
 
-$Subscriptions = Get-AzSubscription | Where-Object {$_.State -ne 'Disabled'}
-$Subscriptions = $Subscriptions
+$Script:Resources = @()
+$Script:Advisories = @()
+$Script:Policies = @()
+$Script:Security = @()
+$Script:Subscriptions = ''
+
+$Script:Repo = 'https://api.github.com/repos/microsoft/ari/git/trees/main?recursive=1'
+$Script:RawRepo = 'https://raw.githubusercontent.com/microsoft/ARI/main'
+
+
+
+<######################################################### EXTRACTION ######################################################################>
+
+function Invoke-Extraction {
+    param($kqlQuery, $SubID)
+    [System.Collections.Generic.List[string]]$kqlResult
+
+    $Looper = 0
+    while ($true) {
+
+        if ($Looper -gt 0) {
+            $graphResult = Search-AzGraph -Query $kqlQuery -First 1000 -Subscription $SubID -SkipToken $graphResult.SkipToken
+        }
+        else {
+            $graphResult = Search-AzGraph -Query $kqlQuery -First 1000 -Subscription $SubID
+        }
+
+        $kqlResult += $graphResult.data
+
+        if ($graphResult.data.Count -lt 1000) {
+            break;
+        }
+        $Looper += $Looper + 1000
+    }
+    $kqlResult
+}
+
+function LoopExtraction {
+    Write-Output 'Extracting Resources'    
+
+    $ExtractionRunTime = get-date
+
+    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Support.json')
+    $Script:Unsupported = $ModuSeq | ConvertFrom-Json
+
+    $Query = "advisorresources | order by id asc"
+    $Script:Advisories += Invoke-Extraction -kqlQuery $Query -SubID $Subscriptions
+
+    if($RunDebug)
+        {
+            Write-Output ('DEBUG - extracting resources')
+            Write-Output ('')
+        }
+    $Query = "resources | where strlen(properties) < 123000 | order by id asc"
+    $Script:Resources += Invoke-Extraction -kqlQuery $Query -SubID $Subscriptions
+
+    $Query = "networkresources | order by id asc"
+    $Script:Resources += Invoke-Extraction -kqlQuery $Query -SubID $Subscriptions
+
+    $Query = "recoveryservicesresources | where type =~ 'microsoft.recoveryservices/vaults/backupfabrics/protectioncontainers/protecteditems' or type =~ 'microsoft.recoveryservices/vaults/backuppolicies'"
+    $Script:Resources += Invoke-Extraction -kqlQuery $Query -SubID $Subscriptions
+
+    $Query = "desktopvirtualizationresources | order by id asc"
+    $Script:Resources += Invoke-Extraction -kqlQuery $Query -SubID $Subscriptions
+
+    $Query = "policyresources | where type == 'microsoft.authorization/policyassignments' | order by id asc"
+    $Script:Policies += Invoke-Extraction -kqlQuery $Query -SubID $Subscriptions
+
+    if($Script:IncludeSecurityCenter)
+        {
+            $Query = "securityresources | where type =~ 'microsoft.security/assessments' and properties['status']['code'] == 'Unhealthy' | order by id asc"
+            $Script:Security += Invoke-Extraction -kqlQuery $Query -SubID $Subscriptions
+        }
+
+}         
+
+<######################################################### JOBs ######################################################################>
+
+function AdvisoryJob {
+    Write-Output ('Starting Advisory Job')
+
+    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Advisory.ps1')
+
+    $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+
+    Start-ThreadJob -Name 'Advisory' -ScriptBlock $ScriptBlock -ArgumentList $Script:Advisories, 'Processing' , $File
+}
+
+function PolicyJob {
+    Write-Output ('Starting Policy Job')
+
+    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Policy.ps1')
+
+    $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+
+    Start-ThreadJob -Name 'Policy' -ScriptBlock $ScriptBlock -ArgumentList $Script:Policies, 'Processing' , $Script:File
+}
+
+function SecurityCenterJob {
+    if($Script:IncludeSecurityCenter)
+        {
+            Write-Output ('Starting SecurityCenter Job')
+
+            $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/SecurityCenter.ps1')
+
+            $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+
+            Start-ThreadJob -Name 'SecurityCenter' -ScriptBlock $ScriptBlock -ArgumentList $Script:Security, 'Processing' , $Script:File
+        }
+}
+
+function SubscriptionJob {
+    Write-Output ('Starting Subscription Job')
+
+    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Subscriptions.ps1')
+
+    $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+
+    Start-ThreadJob -Name 'Subscriptions' -ScriptBlock $ScriptBlock -ArgumentList $Script:Subscriptions, $Script:Resources, 'Processing' , $File
+}
+
+<######################################################### Reporting ######################################################################>
+
+function Resources {
+    Write-Output ('Starting Resources Processes')
+
+    $OnlineRepo = Invoke-WebRequest -Uri $Repo
+    $RepoContent = $OnlineRepo | ConvertFrom-Json
+    $Modules = ($RepoContent.tree | Where-Object {$_.path -like '*.ps1' -and $_.path -notlike 'Extras/*' -and $_.path -ne 'AzureResourceInventory.ps1' -and $_.path -notlike 'Automation/*'}).path
+
+    foreach ($Module in $Modules) 
+        {
+            $SmaResources = @{}
+
+            if($RunDebug)
+                {
+                    Write-Output ''
+                    Write-Output ('DEBUG - Running Module: '+$Module)
+                }
+
+            $Modul = $Module.split('/')
+            $ModName = $Modul[2].Substring(0, $Modul[2].length - ".ps1".length)
+            $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/' + $Module)
+
+            $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+
+            $SmaResources[$ModName] = Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot, $Script:Subscriptions, $Script:InTag, $Script:Resources, 'Processing', $true
+
+            Write-Output ('Resources ('+$ModName+'): '+$SmaResources[$ModName].count)
+
+            Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot,$null,$InTag,$null,'Reporting',$File,$SmaResources,$TableStyle,$Unsupported | Out-Null
+
+        }
+}
+
+function Advisories {
+    if($RunDebug)
+        {
+            Write-Output ('DEBUG - Reporting Advisories.')
+        }
+
+    get-job -Name 'Advisory' | Wait-Job | Out-Null
+
+    $Adv = Receive-Job -Name 'Advisory'
+
+    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Advisory.ps1')
+
+    $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+
+    Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $null,'Reporting',$file,$Adv,$TableStyle
+}
+
+function Policies {
+    if($RunDebug)
+        {
+            Write-Output ('DEBUG - Reporting Policies.')
+        }
+
+    get-job -Name 'Policy' | Wait-Job | Out-Null
+
+    $Pol = Receive-Job -Name 'Policy'
+
+    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Policy.ps1')
+
+    $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+
+    Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $null,'Reporting',$Script:file,$Pol,$Script:TableStyle
+}
+
+function SecurityCenter {
+    if($Script:IncludeSecurityCenter)
+        {
+            if($RunDebug)
+                {
+                    Write-Output ('DEBUG - Reporting SecurityCenter.')
+                }
+
+            get-job -Name 'SecurityCenter' | Wait-Job | Out-Null
+
+            $Sec = Receive-Job -Name 'SecurityCenter'
+
+            $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/SecurityCenter.ps1')
+
+            $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+
+            Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $null,'Reporting',$Script:file,$Sec,$Script:TableStyle
+        }
+}
+
+function Subscriptions {
+    if($RunDebug)
+        {
+            Write-Output ('DEBUG - Reporting Subscription .')
+        }
+
+    get-job -Name 'Subscriptions' | Wait-Job | Out-Null
+
+    $AzSubs = Receive-Job -Name 'Subscriptions'
+
+    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Subscriptions.ps1')
+
+    $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+
+    Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $null,$null,'Reporting',$file,$AzSubs,$TableStyle
+}
+
+<######################################################### CHARTS ######################################################################>
+
+function Charts {
+    if($RunDebug)
+        {
+            Write-Output ('DEBUG - Reporting Charts.')
+        }
+
+    $ReportingRunTime = get-date
+
+    $ExtractionRunTime = (($ExtractionRunTime) - ($DateStart))
+
+    $ReportingRunTime = (($ReportingRunTime) - ($DateStart))
+
+    $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Charts.ps1')
+
+    $ScriptBlock = [Scriptblock]::Create($ModuSeq)
+
+    $FileFull = ((Get-Location).Path+'\'+$File)
+
+    Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $FileFull,'Light20','Azure Automation',$Subscriptions,$Resources.Count,$ExtractionRunTime,$ReportingRunTime,$RunLite
+}
+
+<######################################################### Starting Script ######################################################################>
+
+$Script:Subscriptions = Get-AzSubscription | Where-Object {$_.State -ne 'Disabled'}
 if($RunDebug)
 {
     $Subcount = $Subscriptions.count
     Write-Output ("Subscriptions found: $Subcount")
 }
 
-<######################################################### RESOURCE EXTRACTION ######################################################################>
+LoopExtraction
+AdvisoryJob
+PolicyJob
+SecurityCenterJob
+SubscriptionJob
+Resources
+Advisories
+Policies
+SecurityCenter
+Subscriptions
+Charts
 
-Write-Output 'Extracting Resources'
-
-    Foreach ($Subscription in $Subscriptions) {
-
-        if($RunDebug)
-            {
-                Write-Output ('DEBUG - extracting resources for the subscription: '+$Subscription)
-                Write-Output ('')
-            }
-        $SUBID = $Subscription.id
-        Set-AzContext -Subscription $SUBID | Out-Null
-                    
-        $EnvSize = Search-AzGraph -Query "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | summarize count()"
-        $EnvSizeNum = $EnvSize.count_
-                        
-        if ($EnvSizeNum -ge 1) {
-            $Loop = $EnvSizeNum / 1000
-            $Loop = [math]::ceiling($Loop)
-            $Looper = 0
-            $Limit = 1
-    
-            while ($Looper -lt $Loop) {
-                $Resource0 = Search-AzGraph -Query "resources | where subscriptionId == '$SUBID' and strlen(properties) < 123000 | order by id asc" -skip $Limit -first 1000
-                $Resources += $Resource0
-                Start-Sleep 2
-                $Looper ++
-                $Limit = $Limit + 1000
-            }
-        }        
-    }   
-    
-$ExtractionRunTime = get-date
-
-$ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Support.json')
-$Unsupported = $ModuSeq | ConvertFrom-Json
-
-
-<######################################################### ADVISORY JOB ######################################################################>
-
-
-Write-Output ('Starting Advisory Job')
-
-$ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Advisory.ps1')
-
-$ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-Start-ThreadJob -Name 'Advisory' -ScriptBlock $ScriptBlock -ArgumentList $Advisories, 'Processing' , $File
-
-
-<######################################################### SUBSCRIPTIONS JOB ######################################################################>
-
-Write-Output ('Starting Subscription Job')
-
-$ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Subscriptions.ps1')
-
-$ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-Start-ThreadJob -Name 'Subscriptions' -ScriptBlock $ScriptBlock -ArgumentList $Subscriptions, $Resources, 'Processing' , $File
-
-
-<######################################################### RESOURCES ######################################################################>
-
-
-Write-Output ('Starting Resources Processes')
-
-$OnlineRepo = Invoke-WebRequest -Uri $Repo
-$RepoContent = $OnlineRepo | ConvertFrom-Json
-$Modules = ($RepoContent.tree | Where-Object {$_.path -like '*.ps1' -and $_.path -notlike 'Extras/*' -and $_.path -ne 'AzureResourceInventory.ps1' -and $_.path -notlike 'Automation/*'}).path
-
-foreach ($Module in $Modules) 
-    {
-        $SmaResources = @{}
-
-        if($RunDebug)
-            {
-                Write-Output ''
-                Write-Output ('DEBUG - Running Module: '+$Module)
-            }
-
-        $Modul = $Module.split('/')
-        $ModName = $Modul[2].Substring(0, $Modul[2].length - ".ps1".length)
-        $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/' + $Module)
-
-        $ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-        $SmaResources[$ModName] = Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot, $Subscriptions, $InTag, $Resources, 'Processing', $true
-
-        Write-Output ('Resources ('+$ModName+'): '+$SmaResources[$ModName].count)
-
-        Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot,$null,$InTag,$null,'Reporting',$File,$SmaResources,$TableStyle,$Unsupported | Out-Null
-
-    }
-
-
-<######################################################### ADVISORY REPORTING ######################################################################>
-
-if($RunDebug)
-    {
-        Write-Output ('DEBUG - Reporting Advisories.')
-    }
-
-get-job -Name 'Advisory' | Wait-Job | Out-Null
-
-$Adv = Receive-Job -Name 'Advisory'
-
-$ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Advisory.ps1')
-
-$ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $null,'Reporting',$file,$Adv,$TableStyle
-
-<######################################################### SUBSCRIPTIONS REPORTING ######################################################################>
-
-
-if($RunDebug)
-    {
-        Write-Output ('DEBUG - Reporting Subscription .')
-    }
-
-get-job -Name 'Subscriptions' | Wait-Job | Out-Null
-
-$AzSubs = Receive-Job -Name 'Subscriptions'
-
-$ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Subscriptions.ps1')
-
-$ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $null,$null,'Reporting',$file,$AzSubs,$TableStyle
-
-<######################################################### CHARTS ######################################################################>
-
-if($RunDebug)
-    {
-        Write-Output ('DEBUG - Reporting Charts.')
-    }
-
-$ReportingRunTime = get-date
-
-$ExtractionRunTime = (($ExtractionRunTime) - ($DateStart))
-
-$ReportingRunTime = (($ReportingRunTime) - ($DateStart))
-
-$ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Charts.ps1')
-
-$ScriptBlock = [Scriptblock]::Create($ModuSeq)
-
-$FileFull = ((Get-Location).Path+'\'+$File)
-
-Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $FileFull,'Light20','Azure Automation',$Subscriptions,$Resources.Count,$ExtractionRunTime,$ReportingRunTime,$RunLite
 
 <######################################################### UPLOAD FILE ######################################################################>
 
 Write-Output 'Uploading Excel File to Storage Account'
 
-Set-AzStorageBlobContent -File $File -Container $aristg -Context $Context | Out-Null
-if($Diagram){Set-AzStorageBlobContent -File $DDFile -Container $aristg -Context $Context | Out-Null}
+Set-AzStorageBlobContent -File $Script:File -Container $Script:aristg -Context $Script:Context | Out-Null
+if($Diagram){Set-AzStorageBlobContent -File $DDFile -Container $Script:aristg -Context $Script:Context | Out-Null}
 
 Write-Output 'Completed'
