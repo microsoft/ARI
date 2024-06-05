@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.16                                                                  #
+#       Version: 3.1.17                                                                  #
 #                                                                                        #
-#       Date: 05/19/2024                                                                 #
+#       Date: 06/05/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -988,7 +988,7 @@ param ($TenantID,
         if ($HeavyLoad.IsPresent) {
             Write-Debug ('Starting Processing Jobs in Heavy Mode.')
 
-            $Loop = $resources.count / 2500
+            $Loop = $resources.count / 7500
             $Loop = [math]::ceiling($Loop)
             $Looper = 0
             $Limit = 0
@@ -996,7 +996,7 @@ param ($TenantID,
             while ($Looper -lt $Loop) {
                 $Looper ++
 
-                $Resource = $resources | Select-Object -First 2500 -Skip $Limit
+                $Resource = $resources | Select-Object -First 7500 -Skip $Limit
 
                 Start-Job -Name ('ResourceJob_'+$Looper) -ScriptBlock {
 
