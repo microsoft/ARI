@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.17                                                                  #
+#       Version: 3.1.18                                                                  #
 #                                                                                        #
-#       Date: 06/05/2024                                                                 #
+#       Date: 06/06/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -358,7 +358,7 @@ param ($TenantID,
 
         function checkPS() {
             Write-Debug ('Starting checkPS function')
-            $CShell = try{Get-CloudDrive}catch{}
+            $CShell = try{Get-CloudShellTip}catch{}
             if ($CShell) {
                 write-host 'Azure CloudShell Identified.'
                 $Global:PlatOS = 'Azure CloudShell'
@@ -386,6 +386,17 @@ param ($TenantID,
                 $Global:DefaultPath = if($ReportDir) {$ReportDir} else {"$HOME/AzureResourceInventory/"}
                 $Global:DiagramCache = if($ReportDir) {$ReportDir} else {"$HOME/AzureResourceInventory/DiagramCache/"}
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
+                if ($SubscriptionID)
+                    {
+                        if($SubscriptionID.count -gt 1)
+                            {
+                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -in $SubscriptionID }
+                            }
+                        else
+                            {
+                                $Global:Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
+                            }
+                    }
             }
             else
             {
