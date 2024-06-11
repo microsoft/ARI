@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Extras/DrawIODiagram.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.13
+Version: 3.1.14
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -30,7 +30,7 @@ $Global:Logfile = ($TempPath+'DiagramLogFile.log')
 Function Network {
     Param($Subscriptions,$Resources,$Advisories,$DiagramCache,$FullEnvironment,$DDFile,$XMLFiles)
 
-    Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Network Diagram Job...')
+    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Network Diagram Job...') | Out-File -FilePath $LogFile -Append 
 
     Start-Job -Name 'Diagram_NetworkTopology' -ScriptBlock {
         
@@ -270,12 +270,12 @@ Function Network {
                 $Global:ConnSourceResource = 'GTW'
 
                 OnPrem $Con1
-        
+
                 $Global:Alt = $Global:Alt + 150
             }
-        
+
             ##################################### ERS #############################################
-        
+
             Foreach($ERs in $AZEXPROUTEs)
             {
                 if($ERs.properties.provisioningState -ne 'Succeeded')
@@ -284,12 +284,12 @@ Function Network {
                     $Global:XmlWriter.WriteAttributeString('label', '')
                     $Global:XmlWriter.WriteAttributeString('Status', 'This Express Route has Errors')
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                         Icon $IconError 51 ($Global:Alt+25) "25" "25" 1
-        
+
                     $Global:XmlWriter.WriteEndElement()
                 }       
-        
+
                 $Con1 = $AZCONs | Where-Object {$_.properties.peer.id -eq $ERs.id}
                 
                 if(!$Con1 -and $ERs.properties.circuitProvisioningState -eq 'Enabled')
@@ -298,14 +298,14 @@ Function Network {
                     $Global:XmlWriter.WriteAttributeString('label', '')
                     $Global:XmlWriter.WriteAttributeString('Status', 'No Connections were found in this Express Route')
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                         Icon $SymInfo 51 ($Global:Alt+30) "20" "20" 1
-        
+
                     $Global:XmlWriter.WriteEndElement()
                 }
-        
+
                 $Name = $ERs.name
-        
+
                 $Global:XmlWriter.WriteStartElement('object')            
                 $Global:XmlWriter.WriteAttributeString('label', ("`n" +[string]$Name))
                 $Global:XmlWriter.WriteAttributeString('Provider', [string]$ERs.properties.serviceProviderProperties.serviceProviderName)
@@ -314,22 +314,22 @@ Function Network {
                 $Global:XmlWriter.WriteAttributeString('SKU', [string]$ERs.sku.tier)
                 $Global:XmlWriter.WriteAttributeString('Billing_model', $ERs.sku.family)
                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                     Icon $IconExpressRoute "61.5" $Global:Alt "44" "40" 1
-        
+
                 $Global:XmlWriter.WriteEndElement()
 
                 $Global:ERAddress = ($Global:CellID+'-'+($Global:IDNum-1))
                 $Global:ConnSourceResource = 'ER'
-        
+
                 OnPrem $Con1
-        
+
                 $Global:Alt = $Global:Alt + 150
-        
+
             }
-        
+
             ##################################### VWAN VPNSITES #############################################
-        
+
             foreach($GTW in $AZVPNSITES)
             {
                 if($GTW.properties.provisioningState -ne 'Succeeded')
@@ -338,41 +338,41 @@ Function Network {
                     $Global:XmlWriter.WriteAttributeString('label', '')
                     $Global:XmlWriter.WriteAttributeString('Status', 'This VPN Site has Errors')
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                         Icon $IconError 40 ($Global:Alt+25) "25" "25" 1
-        
+
                     $Global:XmlWriter.WriteEndElement()
                 }
-            
+
                 $wan1 = $AZVWAN | Where-Object {$_.properties.vpnSites.id -eq $GTW.id}
-                
+
                 if(!$wan1 -and $GTW.properties.provisioningState -eq 'Succeeded')
                 {
                     $Global:XmlWriter.WriteStartElement('object')            
                     $Global:XmlWriter.WriteAttributeString('label', '')
                     $Global:XmlWriter.WriteAttributeString('Status', 'No vWANs were found in this VPN Site')
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                         Icon $SymInfo 40 ($Global:Alt+30) "20" "20" 1
-        
+
                     $Global:XmlWriter.WriteEndElement()
                 }
-                
+
                 $Name = $GTW.name
-        
+
                 $Global:XmlWriter.WriteStartElement('object')            
                 $Global:XmlWriter.WriteAttributeString('label', ("`n" + [string]$Name))
                 $Global:XmlWriter.WriteAttributeString('Address_Space', [string]$GTW.properties.addressSpace.addressPrefixes)
                 $Global:XmlWriter.WriteAttributeString('Link_Speed_In_Mbps', [string]$GTW.properties.deviceProperties.linkSpeedInMbps)
                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                     Icon $IconNAT 50 $Global:Alt "67" "40" 1
-        
+
                 $Global:XmlWriter.WriteEndElement()            
                 #$tt = $tt + 200        
-        
+
                 vWan $wan1
-        
+
                 $Global:Alt = $Global:Alt + 150
             }
         
@@ -386,74 +386,74 @@ Function Network {
                     $Global:XmlWriter.WriteAttributeString('label', '')
                     $Global:XmlWriter.WriteAttributeString('Status', 'This Express Route Circuit has Errors')
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                         Icon $IconError 40 ($Global:Alt+25) "25" "25" 1
-        
+
                     $Global:XmlWriter.WriteEndElement()
                 }
-            
+
                 $wan1 = $AZVWAN | Where-Object {$_.properties.vpnSites.id -eq $GTW.id}
-                
+
                 if(!$wan1 -and $GTW.properties.provisioningState -eq 'Succeeded')
                 {
                     $Global:XmlWriter.WriteStartElement('object')            
                     $Global:XmlWriter.WriteAttributeString('label', '')
                     $Global:XmlWriter.WriteAttributeString('Status', 'No vWANs were found in this Express Route Circuit')
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                         Icon $SymInfo 40 ($Global:Alt+30) "20" "20" 1
-        
+
                     $Global:XmlWriter.WriteEndElement()
                 }
-                
+
                 $Name = $GTW.name
-        
+
                 $Global:XmlWriter.WriteStartElement('object')            
                 $Global:XmlWriter.WriteAttributeString('label', ("`n" + [string]$Name))
                 $Global:XmlWriter.WriteAttributeString('Address_Space', [string]$GTW.properties.addressSpace.addressPrefixes)
                 $Global:XmlWriter.WriteAttributeString('LinkSpeed_In_Mbps', [string]$GTW.properties.deviceProperties.linkSpeedInMbps)
                 $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                     Icon $IconNAT 50 $Global:Alt "67" "40" 1
-        
+
                 $Global:XmlWriter.WriteEndElement()            
                 #$tt = $tt + 200        
-        
+
                 vWan $wan1
-        
+
                 $Global:Alt = $Global:Alt + 150
             }
-        
+
             ##################################### LABELs #############################################
-        
+
             if(!$Global:FullEnvironment)
                 {
-        
+
                     $Global:XmlWriter.WriteStartElement('object')            
                     $Global:XmlWriter.WriteAttributeString('label', '')
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                         Icon $Ret -520 -100 "500" ($Global:Alt + 100) 1
-        
+
                     $Global:XmlWriter.WriteEndElement()
-        
+
                     $Global:XmlWriter.WriteStartElement('object')            
                     $Global:XmlWriter.WriteAttributeString('label', ('On Premises'+ "`n" +'Environment'))
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                         Icon $OnPrem -351 (($Global:Alt + 100)/2) "168.2" "290" 1
-        
+
                     $Global:XmlWriter.WriteEndElement()  
-        
+
                     label
-        
+
                         Icon $Signature -520 ($Global:Alt + 100) "27.5" "22" 1
-        
+
                     $Global:XmlWriter.WriteEndElement()  
                 }
-        
+
         }
-        
+
         Function OnPrem {
         Param($Con1)
         foreach ($Con2 in $Con1)
@@ -464,9 +464,9 @@ Function Network {
                     }
                     $VGT = $AZVGWs | Where-Object {$_.id -eq $Con2.properties.virtualNetworkGateway1.id}
                     $VGTPIP = $PIPs | Where-Object {$_.properties.ipConfiguration.id -eq $VGT.properties.ipConfigurations.id}
-        
+
                     $Name2 = $Con2.Name
-        
+
                     $Global:XmlWriter.WriteStartElement('object')            
                     $Global:XmlWriter.WriteAttributeString('label', [string]$Name2)
                     $Global:XmlWriter.WriteAttributeString('Connection_Type', [string]$Con2.properties.connectionType)
@@ -475,13 +475,13 @@ Function Network {
                     $Global:XmlWriter.WriteAttributeString('Connection_Protocol', [string]$Con2.properties.connectionProtocol)
                     $Global:Source = ($Global:CellID+'-'+($Global:IDNum-1))
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                         Icon $IconConnections 250 $Global:Alt "40" "40" 1
-        
+
                     $Global:XmlWriter.WriteEndElement()
-        
+
                     $Global:Target = ($Global:CellID+'-'+($Global:IDNum-1))
-        
+
                     if($Global:ConnSourceResource -eq 'ER')
                         {
                             Connect $Global:ERAddress $Global:Target
@@ -490,9 +490,9 @@ Function Network {
                         {
                             Connect $Global:GTWAddress $Global:Target
                         }
-        
+
                     $Global:Source = $Global:Target
-                    
+
                     $Global:XmlWriter.WriteStartElement('object')            
                     $Global:XmlWriter.WriteAttributeString('label', ("`n" +[string]$VGT.Name + "`n" + [string]$VGTPIP.properties.ipAddress))
                     $Global:XmlWriter.WriteAttributeString('VPN_Type', [string]$VGT.properties.vpnType)
@@ -502,17 +502,17 @@ Function Network {
                     $Global:XmlWriter.WriteAttributeString('Active_active_mode', [string]$VGT.properties.activeActive)
                     $Global:XmlWriter.WriteAttributeString('Gateway_Private_IPs', [string]$VGT.properties.enablePrivateIpAddress)
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                         Icon $IconVGW2 425 ($Global:Alt-4) "31.34" "48" 1
-        
+
                     $Global:XmlWriter.WriteEndElement()
-        
+
                     $Global:Target = ($Global:CellID+'-'+($Global:IDNum-1))
-        
+
                         Connect $Global:Source $Global:Target
-        
+
                     $Global:Source = $Global:Target
-        
+
                     foreach($AZVNETs2 in $AZVNETs)
                     {
                         foreach($VNETTEMP in $AZVNETs2.properties.subnets.properties.ipconfigurations.id)
@@ -522,7 +522,7 @@ Function Network {
                             if($VNETTEMP1 -eq $VGT.id)
                             {
                                 $Global:VNET2 = $AZVNETs2
-        
+
                                 $Global:Alt0 = $Global:Alt
                                 if($VNET2.id -notin $VNETHistory.vnet)
                                     {
@@ -532,7 +532,7 @@ Function Network {
                                         }Else{
                                             $AddSpace = ($VNET2.properties.addressSpace.addressPrefixes | ForEach-Object {$_ + "`n"})
                                         }
-        
+
                                         $Global:XmlWriter.WriteStartElement('object')            
                                         $Global:XmlWriter.WriteAttributeString('label', ([string]$VNET2.Name + "`n" + $AddSpace))
                                         if($VNET2.properties.dhcpoptions.dnsServers)
@@ -545,60 +545,58 @@ Function Network {
                                                 $Global:XmlWriter.WriteAttributeString('DDOS_Protection', [string]$VNET2.properties.enableDdosProtection)
                                             }
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                                             Icon $IconVNET 600 $Global:Alt "65" "39" 1
-        
+
                                         $Global:XmlWriter.WriteEndElement()      
-                                        
+
                                         $Global:VNETDrawID = ($Global:CellID+'-'+($Global:IDNum-1))
-                                                            
+
                                         $Global:Target = ($Global:CellID+'-'+($Global:IDNum-1))
-        
+
                                             Connect $Global:Source $Global:Target
-                            
+
                                         if($VNET2.properties.enableDdosProtection -eq $true)
                                         {
                                             $Global:XmlWriter.WriteStartElement('object')            
                                             $Global:XmlWriter.WriteAttributeString('label', '')
                                             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-                                
+
                                                 Icon $IconDDOS 580 ($Global:Alt + 15) "23" "28" 1
-                                
+
                                             $Global:XmlWriter.WriteEndElement()
                                         }
-        
+
                                         $Global:Source = $Global:Target
-        
+
                                             VNETCreator $Global:VNET2
-        
+
                                         if($VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id)
                                             {
                                                 PeerCreator $Global:VNET2
                                             }
-        
+
                                             $tmp =@{
                                                 'VNETid' = $Global:VNETDrawID;
                                                 'VNET' = $AZVNETs2.id
                                             }    
                                             $Global:VNETHistory += $tmp 
-                                            
+
                                     }
                                 else
                                     {     
-        
+
                                         $VNETDID = $VNETHistory | Where-Object {$_.VNET -eq $AZVNETs2.id}
-        
+
                                         Connect $Global:Source $VNETDID.VNETid 
-        
+
                                     }
-                            
-                                    
+
                                 }
                         }
-        
+
                     }
-        
-                    
+
                     if($Con1.count -gt 1)
                     {
                         $Global:Alt = $Global:Alt + 250
@@ -1528,7 +1526,7 @@ Function Network {
 
                         if([string]::IsNullOrEmpty($TrueTemp))
                             {
-                                $AKS = $resources | Where-Object {$_.type -eq 'microsoft.containerservice/managedclusters'}
+                                $AKS = $Global:AKS
                                 if($sub.id -in $AKS.properties.agentPoolProfiles.vnetSubnetID)
                                     {
                                         $TrueTemp = 'AKS'
@@ -1562,7 +1560,7 @@ Function Network {
 
                         if([string]::IsNullOrEmpty($TrueTemp))
                             {
-                                if ($sub.id -in (($Resources | Where-Object {$_.type -eq 'Microsoft.Compute/virtualMachineScaleSets'}).properties.virtualMachineProfile.networkprofile.networkInterfaceConfigurations.properties.ipconfigurations.properties.subnet.id))
+                                if ($sub.id -in ($Global:VMSS).properties.virtualMachineProfile.networkprofile.networkInterfaceConfigurations.properties.ipconfigurations.properties.subnet.id)
                                     {
                                         $TrueTemp = 'virtualMachineScaleSets'
                                     }
@@ -1572,31 +1570,30 @@ Function Network {
 
                         if($TrueTemp -eq 'networkInterfaces')
                             {
-                                $NIcNames = $resources | Where-Object {$_.type -eq 'microsoft.network/networkinterfaces' -and $_.properties.ipConfigurations.properties.subnet.id -eq $sub.id}
+                                $NIcNames = $Global:NIC| Where-Object {$_.properties.ipConfigurations.properties.subnet.id -eq $sub.id}
                     
                                 if($sub.properties.privateEndpoints.id)
                                     {
-                                        $PrivEndNames = $resources | Where-Object {$_.type -eq 'microsoft.network/privateendpoints' -and $_.properties.networkInterfaces.id -in $NIcNames.id}
+                                        $PrivEndNames = $Global:PrivEnd | Where-Object {$_.properties.networkInterfaces.id -in $NIcNames.id}
                                         $TrueTemp = 'privateLinkServices'
                                         $RESNames = $PrivEndNames
                                     }
                                 else
                                     {                    
-                                        $VMNamesAro = $resources | Where-Object {$_.type -eq 'microsoft.compute/virtualmachines' -and $_.properties.networkprofile.networkInterfaces.id -in $NIcNames.id}
+                                        $VMNamesAro = $Global:VM | Where-Object {$_.properties.networkprofile.networkInterfaces.id -in $NIcNames.id}
                                         if($VMNamesAro.properties.storageprofile.imageReference.offer -like 'aro*')
                                             {
-                                                $AROs = $Resources | Where-Object {$_.Type -eq 'microsoft.redhatopenshift/openshiftclusters'}
-                                                $ARONames = $AROs | Where-Object {$_.properties.masterprofile.subnetId -eq $sub.id -or $_.properties.workerProfiles.subnetId -eq $sub.id}
+                                                $ARONames = $Global:ARO | Where-Object {$_.properties.masterprofile.subnetId -eq $sub.id -or $_.properties.workerProfiles.subnetId -eq $sub.id}
                                                 $TrueTemp = 'Open Shift'
                                                 $RESNames = $ARONames
                                             }
                                         if($TrueTemp -ne 'Open Shift')
                                             {
                                                 $VMs = @()
-                                                $VMNames = ($resources | Where-Object {$_.type -eq 'microsoft.compute/virtualmachines'}).properties.networkprofile.networkInterfaces.id | Where-Object {$_ -in $NIcNames.id}
-                                                foreach($NIC in $VMNames)
+                                                $VMNames = ($Global:VM).properties.networkprofile.networkInterfaces.id | Where-Object {$_ -in $NIcNames.id}
+                                                $VMs = foreach($NIC in $VMNames)
                                                     {
-                                                        $VMs += $resources | Where-Object {$_.type -eq 'microsoft.compute/virtualmachines' -and $NIC -in $_.properties.networkprofile.networkInterfaces.id}
+                                                        $Global:VM| Where-Object {$NIC -in $_.properties.networkprofile.networkInterfaces.id}
                                                     }
                                                 if($VMs)
                                                     {
@@ -1613,35 +1610,35 @@ Function Network {
                             }
                         if($TrueTemp -eq 'AKS')
                             {
-                                $AKSNames = $resources | Where-Object {$_.type -eq 'microsoft.containerservice/managedclusters' -and $_.properties.agentPoolProfiles.vnetSubnetID -eq $sub.id}
+                                $AKSNames = $Global:AKS | Where-Object {$_.properties.agentPoolProfiles.vnetSubnetID -eq $sub.id}
                                 $RESNames = $AKSNames            
                             }
                         if($TrueTemp -eq 'Data Explorer Clusters')
                             {
-                                $KustoNames = $resources | Where-Object {$_.type -eq 'Microsoft.Kusto/clusters' -and $_.properties.virtualNetworkConfiguration.subnetid -eq $sub.id}
+                                $KustoNames = $Global:Kusto | Where-Object {$_.properties.virtualNetworkConfiguration.subnetid -eq $sub.id}
                                 $RESNames = $KustoNames
                             }
                         if($TrueTemp -eq 'applicationGateways')
                             {
-                                $AppGTWNames = $resources | Where-Object {$_.type -eq 'microsoft.network/applicationgateways' -and $_.properties.gatewayIPConfigurations.id -in $sub.properties.applicationGatewayIPConfigurations.id}
+                                $AppGTWNames = $Global:AppGtw| Where-Object {$_.properties.gatewayIPConfigurations.id -in $sub.properties.applicationGatewayIPConfigurations.id}
                                 $RESNames = $AppGTWNames
                             }
                         if($TrueTemp -eq 'DataBricks')
                             {
                                 $DatabriksNames = @()
-                                $Databricks = $Resources | Where-Object {$_.Type -eq 'Microsoft.Databricks/workspaces'}
-                                Foreach($Data in $Databricks)
+                                $Databricks = $Global:Databricks
+                                $DatabriksNames = Foreach($Data in $Databricks)
                                     {                 
                                         if($Data.properties.parameters.customVirtualNetworkId.value+'/subnets/'+$Data.properties.parameters.customPrivateSubnetName.value -eq $sub.id -or $Data.properties.parameters.customVirtualNetworkId.value+'/subnets/'+$Data.properties.parameters.custompublicSubnetName.value -eq $sub.id)
                                             {                         
-                                            $DatabriksNames += $Data
+                                                $Data
                                             }
                                     }
                                 $RESNames = $DatabriksNames     
                             }
                         if($TrueTemp -eq 'App Service')
                             {
-                                $Apps = $Resources | Where-Object {$_.Type -eq 'microsoft.web/sites' -and $_.properties.virtualNetworkSubnetId -eq $Sub.id}
+                                $Apps = $Global:AppWeb | Where-Object {$_.properties.virtualNetworkSubnetId -eq $Sub.id}
                                 if($Apps.kind -like 'functionapp*')
                                     {
                                         $FuntionAppNames = $Apps
@@ -1656,51 +1653,50 @@ Function Network {
                             }                   
                         if($TrueTemp -eq 'APIM')
                             {
-                                $APIMNames = $Resources | Where-Object {$_.Type -eq 'Microsoft.ApiManagement/service' -and $_.properties.virtualNetworkConfiguration.subnetResourceId -eq $sub.id}
+                                $APIMNames = $Global:APIM | Where-Object {$_.properties.virtualNetworkConfiguration.subnetResourceId -eq $sub.id}
                                 $RESNames = $APIMNames
                             }
                         if($TrueTemp -eq 'loadBalancers')
                             {
-                                $LBNames = $Resources | Where-Object {$_.Type -eq 'microsoft.network/loadbalancers' -and $_.properties.frontendIPConfigurations.id -in $sub.properties.ipconfigurations.id}
+                                $LBNames = $Global:LB | Where-Object {$_.properties.frontendIPConfigurations.id -in $sub.properties.ipconfigurations.id}
                                 $RESNames = $LBNames
                             }
                         if($TrueTemp -eq 'virtualMachineScaleSets')
                             {
-                                $VMSSNames = $Resources | Where-Object {$_.Type -eq 'microsoft.compute/virtualMachineScaleSets' -and $_.properties.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.ipconfigurations.properties.subnet.id -eq $sub.id }
+                                $VMSSNames = $Global:VMSS | Where-Object {$_.properties.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.ipconfigurations.properties.subnet.id -eq $sub.id }
                                 $RESNames = $VMSSNames
                             }
                         if($TrueTemp -eq 'virtualNetworkGateways')
                             {
-                                $VPNGTWNames = $Resources | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworkgateways' -and $_.properties.ipconfigurations.properties.subnet.id -eq $sub.id }
+                                $VPNGTWNames = $Global:AZVGWs | Where-Object {$_.properties.ipconfigurations.properties.subnet.id -eq $sub.id }
                                 $RESNames = $VPNGTWNames
                             }
                         if($TrueTemp -eq 'bastionHosts')
                             {
-                                $BastionNames = $Resources | Where-Object {$_.Type -eq 'microsoft.network/bastionhosts' -and $_.properties.ipConfigurations.properties.subnet.id -eq $sub.id }
+                                $BastionNames = $Global:Bastion | Where-Object {$_.properties.ipConfigurations.properties.subnet.id -eq $sub.id }
                                 $RESNames = $BastionNames
                             }
                         if($TrueTemp -eq 'azureFirewalls')
                             {
-                                $AzFWNames = $Resources | Where-Object {$_.Type -eq 'microsoft.network/azurefirewalls' -and $_.properties.ipConfigurations.properties.subnet.id -eq $sub.id }
+                                $AzFWNames = $Global:FW | Where-Object {$_.properties.ipConfigurations.properties.subnet.id -eq $sub.id }
                                 $RESNames = $AzFWNames
                             }
                         if($TrueTemp -eq 'Container Instance')
                             {
                                 $ContainerNames = ''
-                                $ContNICs = $resources | Where-Object {$_.Type -eq 'microsoft.network/networkprofiles' -and $_.properties.containerNetworkInterfaceConfigurations.properties.ipconfigurations.properties.subnet.id -eq $sub.id}
-                                $ContainerNames = $Resources | Where-Object {$_.Type -eq 'Microsoft.ContainerInstance/containerGroups' -and $_.properties.networkprofile.id -in $ContNICs.id}
+                                $ContNICs = $Global:NetProf | Where-Object {$_.properties.containerNetworkInterfaceConfigurations.properties.ipconfigurations.properties.subnet.id -eq $sub.id}
+                                $ContainerNames = $Global:Container | Where-Object {$_.properties.networkprofile.id -in $ContNICs.id}
                                 $RESNames = $ContainerNames
                                 if([string]::IsNullOrEmpty($ContainerNames))
                                     {
-                                        $AROs = $Resources | Where-Object {$_.Type -eq 'microsoft.redhatopenshift/openshiftclusters'}
-                                        $ARONames = $AROs | Where-Object {$_.properties.masterprofile.subnetId -eq $sub.id -or $_.properties.workerProfiles.subnetId -eq $sub.id}
+                                        $ARONames = $Global:ARO | Where-Object {$_.properties.masterprofile.subnetId -eq $sub.id -or $_.properties.workerProfiles.subnetId -eq $sub.id}
                                         $TrueTemp = 'Open Shift'
                                         $RESNames = $ARONames
                                     }
                             }
                         if($TrueTemp -eq 'NetApp')
                             {
-                                $NetAppNames = $Resources | Where-Object {$_.Type -eq 'microsoft.netapp/netappaccounts/capacitypools/volumes' -and $_.properties.subnetId -eq $sub.id }
+                                $NetAppNames = $Global:ANF | Where-Object {$_.properties.subnetId -eq $sub.id }
                                 $RESNames = $NetAppNames
                             }               
                     
@@ -2640,7 +2636,7 @@ Function Network {
                     }
             }
         }
-        
+
         <# Function to create the Label of Version #>
         Function label {
             $Global:XmlWriter.WriteStartElement('object')            
@@ -2648,7 +2644,7 @@ Function Network {
             $Global:XmlWriter.WriteAttributeString('author', 'Claudio Merola')
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
         }
-                
+
         Function Icon {    
         Param($Style,$x,$y,$w,$h,$p)
         
@@ -2667,7 +2663,7 @@ Function Network {
             
             $Global:XmlWriter.WriteEndElement()
         }
-        
+
         Function Container {
             Param($x,$y,$w,$h,$title)
                 $Global:ContID = (-join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})+'-'+1)
@@ -2689,7 +2685,7 @@ Function Network {
                 
                 $Global:XmlWriter.WriteEndElement()
         }
-        
+
         Function Connect {
         Param($Source,$Target,$Parent)
         
@@ -2712,7 +2708,7 @@ Function Network {
             $Global:XmlWriter.WriteEndElement()
         
         }
-        
+
         Function Variables0 {
             Start-Job -Name 'DiagramVariables' -ScriptBlock {
         
@@ -2728,7 +2724,25 @@ Function Network {
                 $AZVHUB = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualhubs'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
                 $AZVPNSITES = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/vpnsites'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
                 $AZVERs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/expressroutegateways'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-                
+
+                $AZAKS = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.containerservice/managedclusters'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZVMSS = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.Compute/virtualMachineScaleSets'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZNIC = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/networkinterfaces'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZPrivEnd = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/privateendpoints'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZVM = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.compute/virtualmachines'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZARO = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.redhatopenshift/openshiftclusters'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZKusto = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.Kusto/clusters'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZAppGW = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/applicationgateways'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZDW = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.Databricks/workspaces'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZAppWeb = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.web/sites'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZAPIM = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.ApiManagement/service'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZLB = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/loadbalancers'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZBastion = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/bastionhosts'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZFW = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/azurefirewalls'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZNetProf = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/networkprofiles'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZCont = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.ContainerInstance/containerGroups'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+                $AZANF = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.netapp/netappaccounts/capacitypools/volumes'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+
                 $jobAZVGWs = $AZVGWs.BeginInvoke()
                 $jobAZLGWs = $AZLGWs.BeginInvoke()
                 $jobAZVNETs = $AZVNETs.BeginInvoke()
@@ -2738,7 +2752,23 @@ Function Network {
                 $jobAZVWAN = $AZVWAN.BeginInvoke()
                 $jobAZVHUB = $AZVHUB.BeginInvoke()
                 $jobAZVPNSITES = $AZVPNSITES.BeginInvoke()
-                $jobAZVERs = $AZVERs.BeginInvoke() 
+                $jobAZAKS = $AZAKS.BeginInvoke()
+                $jobAZVMSS = $AZVMSS.BeginInvoke()
+                $jobAZNIC = $AZNIC.BeginInvoke()
+                $jobAZPrivEnd = $AZPrivEnd.BeginInvoke()
+                $jobAZVM = $AZVM.BeginInvoke()
+                $jobAZARO = $AZARO.BeginInvoke()
+                $jobAZKusto = $AZKusto.BeginInvoke()
+                $jobAZAppGW = $AZAppGW.BeginInvoke()
+                $jobAZDW = $AZDW.BeginInvoke()
+                $jobAZAppWeb = $AZAppWeb.BeginInvoke()
+                $jobAZAPIM = $AZAPIM.BeginInvoke()
+                $jobAZLB = $AZLB.BeginInvoke()
+                $jobAZBastion = $AZBastion.BeginInvoke()
+                $jobAZFW = $AZFW.BeginInvoke()
+                $jobAZNetProf = $AZNetProf.BeginInvoke()
+                $jobAZCont = $AZCont.BeginInvoke()
+                $jobAZANF = $AZANF.BeginInvoke()
         
                 $job += $jobAZVGWs
                 $job += $jobAZLGWs
@@ -2750,7 +2780,24 @@ Function Network {
                 $job += $jobAZVHUB
                 $job += $jobAZVPNSITES
                 $job += $jobAZVERs
-        
+                $job += $jobAZAKS
+                $job += $jobAZVMSS
+                $job += $jobAZNIC
+                $job += $jobAZPrivEnd
+                $job += $jobAZVM
+                $job += $jobAZARO
+                $job += $jobAZKusto
+                $job += $jobAZAppGW
+                $job += $jobAZDW
+                $job += $jobAZAppWeb
+                $job += $jobAZAPIM
+                $job += $jobAZLB
+                $job += $jobAZBastion
+                $job += $jobAZFW
+                $job += $jobAZNetProf
+                $job += $jobAZCont
+                $job += $jobAZANF
+
                 while ($Job.Runspace.IsCompleted -contains $false) {}
         
                 $AZVGWsS = $AZVGWs.EndInvoke($jobAZVGWs)
@@ -2763,7 +2810,25 @@ Function Network {
                 $AZVHUBS = $AZVHUB.EndInvoke($jobAZVHUB)
                 $AZVPNSITESS = $AZVPNSITES.EndInvoke($jobAZVPNSITES)
                 $AZVERsS = $AZVERs.EndInvoke($jobAZVERs)
-        
+                $AZAKSs = $AZAKS.EndInvoke($jobAZAKS)
+                $AZVMSSs = $AZVMSS.EndInvoke($jobAZVMSS)
+                $AZNICs = $AZNIC.EndInvoke($jobAZNIC)
+                $AZPrivEnds = $AZPrivEnd.EndInvoke($jobAZPrivEnd)
+                $AZVMs = $AZVM.EndInvoke($jobAZVM)
+                $AZAROs = $AZARO.EndInvoke($jobAZARO)
+                $AZKustos = $AZKusto.EndInvoke($jobAZKusto)
+                $AZAppGWs = $AZAppGW.EndInvoke($jobAZAppGW)
+                $AZDWs = $AZDW.EndInvoke($jobAZDW)
+                $AZAppWebs = $AZAppWeb.EndInvoke($jobAZAppWeb)
+                $AZAPIMs = $AZAPIM.EndInvoke($jobAZAPIM)
+                $AZLBs = $AZLB.EndInvoke($jobAZLB)
+                $AZBastions = $AZBastion.EndInvoke($jobAZBastion)
+                $AZFWs = $AZFW.EndInvoke($jobAZFW)
+                $AZNetProfs = $AZNetProf.EndInvoke($jobAZNetProf)
+                $AZConts = $AZCont.EndInvoke($jobAZCont)
+                $AZANFs = $AZANF.EndInvoke($jobAZANF)
+
+
                 $AZVGWs.Dispose()
                 $AZLGWs.Dispose()
                 $AZVNETs.Dispose()
@@ -2774,6 +2839,23 @@ Function Network {
                 $AZVHUB.Dispose()
                 $AZVPNSITES.Dispose()
                 $AZVERs.Dispose()
+                $AZAKS.Dispose()
+                $AZVMSS.Dispose()
+                $AZNIC.Dispose()
+                $AZPrivEnd.Dispose()
+                $AZVM.Dispose()
+                $AZARO.Dispose()
+                $AZKusto.Dispose()
+                $AZAppGW.Dispose()
+                $AZDW.Dispose()
+                $AZAppWeb.Dispose()
+                $AZAPIM.Dispose()
+                $AZLB.Dispose()
+                $AZBastion.Dispose()
+                $AZFW.Dispose()
+                $AZNetProf.Dispose()
+                $AZCont.Dispose()
+                $AZANF.Dispose()
         
                 $CleanPIPs = $PIPsS | Where-Object {$_.id -notin $AZVGWsS.properties.ipConfigurations.properties.publicIPAddress.id}
         
@@ -2788,7 +2870,24 @@ Function Network {
                         'AZVHUB' = $AZVHUBS;
                         'AZVPNSITES' = $AZVPNSITESS;
                         'AZVERs' = $AZVERsS;
-                        'CleanPIPs' = $CleanPIPs
+                        'CleanPIPs' = $CleanPIPs;
+                        'AKS' = $AZAKSs;
+                        'VMSS' = $AZVMSSs;
+                        'NIC' = $AZNICs;
+                        'PrivEnd' = $AZPrivEnds;
+                        'VM' = $AZVMs;
+                        'ARO' = $AZAROs;
+                        'Kusto' = $AZKustos;
+                        'AppGtw' = $AZAppGWs;
+                        'DW' = $AZDWs;
+                        'AppWeb' = $AZAppWebs;
+                        'APIM' = $AZAPIMs;
+                        'LB' = $AZLBs;
+                        'Bastion' = $AZBastions;
+                        'FW' = $AZFWs;
+                        'NetProf' = $AZNetProfs;
+                        'Container' = $AZConts;
+                        'ANF' = $AZANFs
                     }
         
                 $Variables
@@ -2796,11 +2895,11 @@ Function Network {
             } -ArgumentList $resources, $null
         
         }
-        
-        Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting Subnet files')
+
+        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting Subnet files') | Out-File -FilePath $LogFile -Append 
 
         $Subnetfiles = Get-ChildItem -Path $DiagramCache
-        
+
         foreach($SubFile in $Subnetfiles)
             {
                 if($SubFile.FullName -notin $XMLFiles)
@@ -2809,20 +2908,20 @@ Function Network {
                         }
             }
         
-        Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Variables0 Function')
+        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Variables0 Function') | Out-File -FilePath $LogFile -Append 
 
         Variables0
 
-        Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting Variables Job to complete')
-        
+        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting Variables Job to complete') | Out-File -FilePath $LogFile -Append 
+
         Get-Job -Name 'DiagramVariables' | Wait-Job
-        
+
         $Job = Receive-Job -Name 'DiagramVariables'
-        
+
         Get-Job -Name 'DiagramVariables' | Remove-Job
 
-        Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting Variables')
-        
+        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting Variables') | Out-File -FilePath $LogFile -Append 
+
         $Global:AZVGWs = $Job.AZVGWs
         $Global:AZLGWs = $Job.AZLGWs
         $Global:AZVNETs = $Job.AZVNETs
@@ -2834,6 +2933,23 @@ Function Network {
         $Global:AZVPNSITES = $Job.AZVPNSITES
         $Global:AZVERs = $Job.AZVERs
         $Global:CleanPIPs = $Job.CleanPIPs
+        $Global:AKS = $Job.AKS
+        $Global:VMSS = $Job.VMSS
+        $Global:NIC = $Job.NIC
+        $Global:PrivEnd = $Job.PrivEnd
+        $Global:VM = $Job.VM
+        $Global:ARO = $Job.ARO
+        $Global:Kusto = $Job.Kusto
+        $Global:AppGtw = $Job.AppGtw
+        $Global:Databricks = $Job.DW
+        $Global:AppWeb = $Job.AppWeb
+        $Global:APIM = $Job.APIM
+        $Global:LB = $Job.LB
+        $Global:Bastion = $Job.Bastion
+        $Global:FW = $Job.FW
+        $Global:NetProf = $Job.NetProf
+        $Global:Container = $Job.Container
+        $Global:ANF = $Job.ANF
 
         $Global:etag = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
         $Global:DiagID = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
@@ -2841,7 +2957,7 @@ Function Network {
 
         $Global:IDNum = 0
 
-        Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Defining XML file')
+        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Defining XML file') | Out-File -FilePath $LogFile -Append 
 
         $Global:XmlWriter = New-Object System.XMl.XmlTextWriter($DDFile,$Null)
 
@@ -2890,26 +3006,25 @@ Function Network {
                         $Global:XmlWriter.WriteAttributeString('parent', "0")
                         $Global:XmlWriter.WriteEndElement()
 
-                        Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Stensils')
+                        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Stensils') | Out-File -FilePath $LogFile -Append 
 
                             Stensils
 
                             if($AZLGWs -or $AZEXPROUTEs -or $AZVERs -or $AZVPNSITES)
                                 {
-                                    Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling OnPremNet')
+                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling OnPremNet') | Out-File -FilePath $LogFile -Append 
 
                                     OnPremNet
                                     if($Global:FullEnvironment)
                                         {
-                                            Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling as FullEnvironment')
+                                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling as FullEnvironment') | Out-File -FilePath $LogFile -Append 
 
                                             FullEnvironment
                                         }
                                 }
                             else
                                 {
-                                    Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling CloudOnly Function')
-
+                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling CloudOnly Function') | Out-File -FilePath $LogFile -Append
                                     CloudOnly
                                 }
 
@@ -2924,15 +3039,15 @@ Function Network {
             $Global:XmlWriter.Flush()
             $Global:XmlWriter.Close()                
 
-            Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting Job2 to complete')
+            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting Job2 to complete') | Out-File -FilePath $LogFile -Append 
 
             while ($Global:jobs2.IsCompleted -contains $false) {}
 
             #$VNetFile = ($DiagramCache+'Network.xml')
-            
+
             $Subnetfiles = Get-ChildItem -Path $DiagramCache
 
-            Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Processing Subnet files')
+            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Processing Subnet files') | Out-File -FilePath $LogFile -Append 
 
             foreach($SubFile in $Subnetfiles)
                 {
@@ -2940,27 +3055,27 @@ Function Network {
                         {
                             $newxml = New-Object XML
                             $newxml.Load($SubFile.FullName)
-                    
+
                             $Innerxml = $newxml.mxfile.diagram.mxGraphModel.root.InnerXml
-                    
+
                             $Innerxml2 = $Innerxml.Replace('<mxCell id="0" /><mxCell id="1" parent="0" />','')
-                    
+
                             #force the config into an XML
                             $xml = [xml](get-content $DDFile)
-                    
+
                             $xmlFrag=$xml.CreateDocumentFragment()
                             $xmlFrag.InnerXml=$Innerxml2
-                    
+
                             $xml.mxfile.diagram.mxGraphModel.root.AppendChild($xmlFrag)
-                    
+
                             #save file
                             $xml.Save($DDFile)
-                    
+
                             Remove-Item -Path $SubFile.FullName
                         }
                 }
 
-            Add-Content -Path $Logfile -Value ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - End of Network Diagram')
+            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - End of Network Diagram') | Out-File -FilePath $LogFile -Append 
 
     } -ArgumentList $Subscriptions,$Resources,$Advisories,$DiagramCache,$FullEnvironment,$DDFile,$XMLFiles,$Logfile
 }
@@ -5778,16 +5893,16 @@ Function Organization {
 }
 
 
-Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Draw.IO file')
+('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Draw.IO file') | Out-File -FilePath $LogFile -Append 
 
 $XMLFiles = @()
 
-Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting XML files to be clean')
+('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting XML files to be clean') | Out-File -FilePath $LogFile -Append 
 
 $XMLFiles += ($DiagramCache+'Organization.xml')
 $XMLFiles += ($DiagramCache+'Subscriptions.xml')
 
-Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Cleaning old files')
+('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Cleaning old files') | Out-File -FilePath $LogFile -Append 
 
 foreach($File in $XMLFiles)
     {
@@ -5795,39 +5910,39 @@ foreach($File in $XMLFiles)
     }
 
 
-Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Organization Function')
+('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Organization Function') | Out-File -FilePath $LogFile -Append 
 
 Organization $ResourceContainers $DiagramCache
 
-Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Network Topology Function')
+('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Network Topology Function') | Out-File -FilePath $LogFile -Append 
 
 Network $Subscriptions $Resources $Advisories $DiagramCache $FullEnvironment $DDFile $XMLFiles 
 
-Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Subscription Function')
+('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Subscription Function') | Out-File -FilePath $LogFile -Append 
 
 Subscription $Subscriptions $Resources $DiagramCache
 
-Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting for Jobs to complete')
+('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting for Jobs to complete') | Out-File -FilePath $LogFile -Append 
 
 (Get-Job | Where-Object {$_.name -like 'Diagram_*'}) | Wait-Job
 
-Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting to process files')
+('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting to process files') | Out-File -FilePath $LogFile -Append 
 
 foreach($File in $XMLFiles)
     {
         $oldxml = New-Object XML
         $oldxml.Load($File)
-        
+
         $newxml = New-Object XML
         $newxml.Load($DDFile)
-        
+
         $oldxml.DocumentElement.InsertAfter($oldxml.ImportNode($newxml.SelectSingleNode('mxfile'), $true), $afternode)
-        
+
         $oldxml.Save($DDFile)
 
         Remove-Item -Path $File
     }
 
-Add-Content -Path $Logfile -Value ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Cleaning old jobs')
+('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Cleaning old jobs') | Out-File -FilePath $LogFile -Append 
 
 (Get-Job | Where-Object {$_.name -like 'Diagram_*'}) | Remove-Job
