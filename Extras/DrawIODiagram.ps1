@@ -611,32 +611,31 @@ Function Network {
             if([string]::IsNullOrEmpty($Global:vnetLoc))
             {
                 $Global:vnetLoc = 700
-            }
-            $VWAN = $wan1    
-        
+            }  
+
             $Name2 = $wan1.Name
-        
+
             $Global:XmlWriter.WriteStartElement('object')            
             $Global:XmlWriter.WriteAttributeString('label', [string]$Name2)
             $Global:XmlWriter.WriteAttributeString('allow_VnetToVnet_Traffic', [string]$wan1.properties.allowVnetToVnetTraffic)
             $Global:XmlWriter.WriteAttributeString('allow_BranchToBranch_Traffic', [string]$wan1.properties.allowBranchToBranchTraffic)
             $Global:Source = ($Global:CellID+'-'+($Global:IDNum-1))
             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                 Icon $IconVWAN 250 $Global:Alt "40" "40" 1
-        
+
             $Global:XmlWriter.WriteEndElement()
-        
+
             $Global:Target = ($Global:CellID+'-'+($Global:IDNum-1))
-        
+
                 Connect $Global:Source $Global:Target
-        
+
             $Global:Source1 = $Global:Target
-        
+
             foreach ($Con2 in $wan1.properties.virtualHubs.id)
                 {
                     $VHUB = $AZVHUB | Where-Object {$_.id -eq $Con2}           
-                    
+
                     $Global:XmlWriter.WriteStartElement('object')            
                     $Global:XmlWriter.WriteAttributeString('label', ("`n" +[string]$VHUB.Name))
                     $Global:XmlWriter.WriteAttributeString('Address_Prefix', [string]$VHUB.properties.addressPrefix)
@@ -644,17 +643,17 @@ Function Network {
                     $Global:XmlWriter.WriteAttributeString('Virtual_Router_Asn', [string]$VHUB.properties.virtualRouterAsn)
                     $Global:XmlWriter.WriteAttributeString('Allow_BranchToBranch_Traffic', [string]$VHUB.properties.allowBranchToBranchTraffic)
                     $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                         Icon $IconVWAN 425 $Global:Alt "40" "40" 1
-        
+
                     $Global:XmlWriter.WriteEndElement()
-        
+
                     $Global:Target = ($Global:CellID+'-'+($Global:IDNum-1))
-        
+
                         Connect $Global:Source1 $Global:Target
-        
+
                     $Global:Source = $Global:Target
-        
+
                     foreach($AZVNETs2 in $AZVNETs)
                     {
                         foreach($VNETTEMP in $AZVNETs2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id)
@@ -664,7 +663,7 @@ Function Network {
                             if($VNETTEMP1 -like ('HV_'+$VHUB.name+'_*'))
                             {
                                 $Global:VNET2 = $AZVNETs2
-        
+
                                 $Global:Alt0 = $Global:Alt
                                 if($VNET2.id -notin $VNETHistory.vnet)
                                     {
@@ -674,7 +673,7 @@ Function Network {
                                         }Else{
                                             $AddSpace = ($VNET2.properties.addressSpace.addressPrefixes | ForEach-Object {$_ + "`n"})
                                         }
-        
+
                                         $Global:XmlWriter.WriteStartElement('object')            
                                         $Global:XmlWriter.WriteAttributeString('label', ([string]$VNET2.Name + "`n" + $AddSpace))
                                         if($VNET2.properties.dhcpoptions.dnsServers)
@@ -687,35 +686,35 @@ Function Network {
                                                 $Global:XmlWriter.WriteAttributeString('DDOS_Protection', [string]$VNET2.properties.enableDdosProtection)
                                             }
                                         $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-        
+
                                             Icon $IconVNET 600 $Global:Alt "65" "39" 1
-        
+
                                         $Global:XmlWriter.WriteEndElement()      
                                         
                                         $Global:VNETDrawID = ($Global:CellID+'-'+($Global:IDNum-1))
                                                             
                                         $Global:Target = ($Global:CellID+'-'+($Global:IDNum-1))
-        
+
                                             Connect $Global:Source $Global:Target
-                            
+
                                         if($VNET2.properties.enableDdosProtection -eq $true)
                                         {
                                             $Global:XmlWriter.WriteStartElement('object')            
                                             $Global:XmlWriter.WriteAttributeString('label', '')
                                             $Global:XmlWriter.WriteAttributeString('id', ($Global:CellID+'-'+($Global:IDNum++)))
-                                
+
                                                 Icon $IconDDOS 580 ($Global:Alt + 15) "23" "28" 1
-                                
+
                                             $Global:XmlWriter.WriteEndElement()
                                         }
-        
+
                                             VNETCreator $Global:VNET2
-        
+
                                         if($VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id -and $VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id -notlike ('*/HV_'+$VHUB.name+'_*'))
                                             {
                                                 PeerCreator $Global:VNET2
                                             }
-        
+
                                             $tmp =@{
                                                 'VNETid' = $Global:VNETDrawID;
                                                 'VNET' = $AZVNETs2.id
@@ -725,20 +724,13 @@ Function Network {
                                     }
                                 else
                                     {     
-        
                                         $VNETDID = $VNETHistory | Where-Object {$_.VNET -eq $AZVNETs2.id}
-        
+
                                         Connect $Global:Source $VNETDID.VNETid 
-        
                                     }
-                            
-                                    
                                 }
                         }
-        
-        
                     }
-        
                     
                     if($Con1.count -gt 1)
                     {
@@ -1570,7 +1562,7 @@ Function Network {
 
                         if($TrueTemp -eq 'networkInterfaces')
                             {
-                                $NIcNames = $Global:NIC| Where-Object {$_.properties.ipConfigurations.properties.subnet.id -eq $sub.id}
+                                $NIcNames = $Global:NIC | Where-Object {$_.properties.ipConfigurations.properties.subnet.id -eq $sub.id}
                     
                                 if($sub.properties.privateEndpoints.id)
                                     {
@@ -2711,9 +2703,8 @@ Function Network {
 
         Function Variables0 {
             Start-Job -Name 'DiagramVariables' -ScriptBlock {
-        
                 $job = @()                
-        
+
                 $AZVGWs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworkgateways'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
                 $AZLGWs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/localnetworkgateways'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
                 $AZVNETs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworks'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
@@ -2751,6 +2742,7 @@ Function Network {
                 $jobPIPs = $PIPs.BeginInvoke()
                 $jobAZVWAN = $AZVWAN.BeginInvoke()
                 $jobAZVHUB = $AZVHUB.BeginInvoke()
+                $jobAZVERs = $AZVERs.BeginInvoke()
                 $jobAZVPNSITES = $AZVPNSITES.BeginInvoke()
                 $jobAZAKS = $AZAKS.BeginInvoke()
                 $jobAZVMSS = $AZVMSS.BeginInvoke()
@@ -2769,7 +2761,7 @@ Function Network {
                 $jobAZNetProf = $AZNetProf.BeginInvoke()
                 $jobAZCont = $AZCont.BeginInvoke()
                 $jobAZANF = $AZANF.BeginInvoke()
-        
+
                 $job += $jobAZVGWs
                 $job += $jobAZLGWs
                 $job += $jobAZVNETs
@@ -2799,7 +2791,7 @@ Function Network {
                 $job += $jobAZANF
 
                 while ($Job.Runspace.IsCompleted -contains $false) {}
-        
+
                 $AZVGWsS = $AZVGWs.EndInvoke($jobAZVGWs)
                 $AZLGWsS = $AZLGWs.EndInvoke($jobAZLGWs)
                 $AZVNETsS = $AZVNETs.EndInvoke($jobAZVNETs)
@@ -2856,9 +2848,9 @@ Function Network {
                 $AZNetProf.Dispose()
                 $AZCont.Dispose()
                 $AZANF.Dispose()
-        
+
                 $CleanPIPs = $PIPsS | Where-Object {$_.id -notin $AZVGWsS.properties.ipConfigurations.properties.publicIPAddress.id}
-        
+
                 $Variables = @{
                         'AZVGWs' = $AZVGWsS;
                         'AZLGWs' = $AZLGWsS;

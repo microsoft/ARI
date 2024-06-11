@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.19                                                                  #
+#       Version: 3.1.20                                                                  #
 #                                                                                        #
 #       Date: 06/11/2024                                                                 #
 #                                                                                        #
@@ -543,29 +543,66 @@ param ($TenantID,
 
         Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "1% Complete." -Completed
         function Invoke-InventoryLoop {
-            param($SumGraphQuery,$GraphQuery,$Subscriptions,$LoopName)
+            param($SumGraphQuery,$GraphQuery,$FSubscri,$LoopName)
 
                 $LocalResults = @()
-                $EnvSize = az graph query -q  $SumGraphQuery --subscriptions $Subscriptions --output json --only-show-errors | ConvertFrom-Json
-                $EnvSizeNum = $EnvSize.data.'count_'
+                if($FSubscri.count -gt 200)
+                    {
+                        $SubLoop = $FSubscri.count / 200
+                        $SubLooper = 0
+                        $NStart = 0
+                        $NEnd = 200
+                        while ($SubLooper -lt $SubLoop)
+                            {
+                                $Sub = $FSubscri[$NStart..$NEnd]
+                                $EnvSize = az graph query -q  $SumGraphQuery --subscriptions $Sub --output json --only-show-errors | ConvertFrom-Json
+                                $EnvSizeNum = $EnvSize.data.'count_'
 
-                if ($EnvSizeNum -ge 1) {
-                    $Loop = $EnvSizeNum / 1000
-                    $Loop = [math]::ceiling($Loop)
-                    $Looper = 0
-                    $Limit = 0
+                                if ($EnvSizeNum -ge 1) {
+                                    $Loop = $EnvSizeNum / 1000
+                                    $Loop = [math]::ceiling($Loop)
+                                    $Looper = 0
+                                    $Limit = 0
 
-                    $LocalResults = while ($Looper -lt $Loop) {
-                        $QueryResult = (az graph query -q $GraphQuery --subscriptions $Subscriptions --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                                    while ($Looper -lt $Loop) {
+                                        $QueryResult = (az graph query -q $GraphQuery --subscriptions $Sub --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
 
-                        $QueryResult.data
-                        Start-Sleep -Milliseconds 100
-                        $Looper ++
-                        Write-Progress -Id 1 -activity "Running $LoopName Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                        $Limit = $Limit + 1000
+                                        $LocalResults += $QueryResult.data
+                                        Start-Sleep -Milliseconds 100
+                                        $Looper ++
+                                        Write-Progress -Id 1 -activity "Running $LoopName Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                                        $Limit = $Limit + 1000
+                                    }
+                                    Write-Progress -Id 1 -activity "Running $LoopName Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
+                                }
+                                $NStart = $NStart + 200
+                                $NEnd = $NEnd + 200
+                                $SubLooper ++
+                            }
                     }
-                }
-                Write-Progress -Id 1 -activity "Running $LoopName Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
+                else
+                    {
+                        $EnvSize = az graph query -q  $SumGraphQuery --subscriptions $FSubscri --output json --only-show-errors | ConvertFrom-Json
+                        $EnvSizeNum = $EnvSize.data.'count_'
+
+                        if ($EnvSizeNum -ge 1) {
+                            $Loop = $EnvSizeNum / 1000
+                            $Loop = [math]::ceiling($Loop)
+                            $Looper = 0
+                            $Limit = 0
+
+                            $LocalResults = while ($Looper -lt $Loop) {
+                                $QueryResult = (az graph query -q $GraphQuery --subscriptions $FSubscri --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+
+                                $QueryResult.data
+                                Start-Sleep -Milliseconds 100
+                                $Looper ++
+                                Write-Progress -Id 1 -activity "Running $LoopName Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -PercentComplete (($Looper / $Loop) * 100)
+                                $Limit = $Limit + 1000
+                            }
+                            Write-Progress -Id 1 -activity "Running $LoopName Inventory Job" -Status "$Looper / $Loop of Inventory Jobs" -Completed
+                        }
+                    }
             $LocalResults
         }
 
