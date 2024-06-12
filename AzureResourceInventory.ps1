@@ -94,7 +94,7 @@ param ($TenantID,
 
     if ($Debug.IsPresent) {$ErrorActionPreference = "Continue" }Else {$ErrorActionPreference = "silentlycontinue" }
 
-    Write-Debug ('Debbuging Mode: On. ErrorActionPreference was set to "Continue", every error will be presented.')
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Debbuging Mode: On. ErrorActionPreference was set to "Continue", every error will be presented.')
 
     if ($IncludeTags.IsPresent) { $Global:InTag = $true } else { $Global:InTag = $false }
 
@@ -171,7 +171,7 @@ param ($TenantID,
     }
 
     Function Variables {
-        Write-Debug ('Cleaning default variables')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Cleaning default variables')
         $Global:ResourceContainers = @()
         $Global:Resources = @()
         $Global:Advisories = @()
@@ -183,7 +183,7 @@ param ($TenantID,
         $Global:Repo = 'https://api.github.com/repos/microsoft/ari/git/trees/main?recursive=1'
         $Global:RawRepo = 'https://raw.githubusercontent.com/microsoft/ARI/main'
 
-        Write-Debug ('Checking if -Online parameter will have to be forced.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking if -Online parameter will have to be forced.')
         if(!$Online.IsPresent)
             {
                 if($PSScriptRoot -like '*\*')
@@ -196,7 +196,7 @@ param ($TenantID,
                     }
                 if([string]::IsNullOrEmpty($LocalFilesValidation))
                     {
-                        Write-Debug ('Using -Online by force.')
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Using -Online by force.')
                         $Global:RunOnline = $true
                     }
                 else
@@ -211,12 +211,12 @@ param ($TenantID,
 
     Function Extractor {
 
-        Write-Debug ('Starting Extractor function')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Extractor function')
         function checkAzCli() {
-            Write-Debug ('Starting checkAzCli function')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting checkAzCli function')
             Write-Host "Validating Az Cli.."
             $azcli = az --version
-            Write-Debug ('Current az cli version: ' + $azcli[0])
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Current az cli version: ' + $azcli[0])
             if ($null -eq $azcli) {
                 Read-Host "Azure CLI Not Found. Press <Enter> to finish script"
                 Exit
@@ -224,7 +224,7 @@ param ($TenantID,
             Write-Host "Validating Az Cli Extension.."
             $azcliExt = az extension list --output json | ConvertFrom-Json
             $azcliExt = $azcliExt | Where-Object {$_.name -eq 'resource-graph'}
-            Write-Debug ('Current Resource-Graph Extension Version: ' + $azcliExt.version)
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Current Resource-Graph Extension Version: ' + $azcliExt.version)
             $AzcliExtV = $azcliExt | Where-Object {$_.name -eq 'resource-graph'}
             if (!$AzcliExtV) {
                 Write-Host "Adding Az Cli Extension"
@@ -232,7 +232,7 @@ param ($TenantID,
             }
             Write-Host "Validating ImportExcel Module.."
             $VarExcel = Get-InstalledModule -Name ImportExcel -ErrorAction silentlycontinue
-            Write-Debug ('ImportExcel Module Version: ' + ([string]$VarExcel.Version.Major + '.' + [string]$VarExcel.Version.Minor + '.' + [string]$VarExcel.Version.Build))
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'ImportExcel Module Version: ' + ([string]$VarExcel.Version.Major + '.' + [string]$VarExcel.Version.Minor + '.' + [string]$VarExcel.Version.Build))
             if ($null -eq $VarExcel) {
                 Write-Host "Trying to install ImportExcel Module.."
                 Install-Module -Name ImportExcel -Force
@@ -245,7 +245,7 @@ param ($TenantID,
         }
 
         function LoginSession() {
-            Write-Debug ('Starting LoginSession function')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting LoginSession function')
             if(![string]::IsNullOrEmpty($AzureEnvironment))
                 {
                     az cloud set --name $AzureEnvironment
@@ -258,9 +258,9 @@ param ($TenantID,
                 write-host "Tenant ID not specified. Use -TenantID parameter if you want to specify directly. "
                 write-host "Authenticating Azure"
                 write-host ""
-                Write-Debug ('Cleaning az account cache')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Cleaning az account cache')
                 az account clear | Out-Null
-                Write-Debug ('Calling az login')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Calling az login')
                 if($DeviceLogin.IsPresent)
                     {
                         az login --use-device-code
@@ -272,7 +272,7 @@ param ($TenantID,
                 write-host ""
                 write-host ""
                 $Tenants = az account list --query [].homeTenantId -o tsv --only-show-errors | Sort-Object -Unique
-                Write-Debug ('Checking number of Tenants')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking number of Tenants')
                 if ($Tenants.Count -eq 1) {
                     write-host "You have privileges only in One Tenant "
                     write-host ""
@@ -301,7 +301,7 @@ param ($TenantID,
                 }
 
                 write-host "Extracting from Tenant $TenantID"
-                Write-Debug ('Extracting Subscription details')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Subscription details')
                 $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
                 if ($SubscriptionID)
@@ -356,7 +356,7 @@ param ($TenantID,
         }
 
         function checkPS() {
-            Write-Debug ('Starting checkPS function')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting checkPS function')
             $CShell = try{Get-CloudShellTip}catch{}
             if ($CShell) {
                 write-host 'Azure CloudShell Identified.'
@@ -465,10 +465,10 @@ param ($TenantID,
 
         #Field for tags
         if ($IncludeTags.IsPresent) {
-            Write-Debug "Tags will be included"
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Tags will be included")
             $GraphQueryTags = ",tags "
         } else {
-            Write-Debug "Tags will be ignored"
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Tags will be ignored")
             $GraphQueryTags = ""
         }
 
@@ -478,7 +478,7 @@ param ($TenantID,
 
         if (![string]::IsNullOrEmpty($ManagementGroup))
             {
-                Write-Debug ('Management group name supplied: ' + $ManagmentGroupName)
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Management group name supplied: ' + $ManagmentGroupName)
                 $group = az account management-group entities list --query "[?name =='$ManagementGroup']" | ConvertFrom-Json
                 if ($group.Count -lt 1)
                 {
@@ -491,7 +491,7 @@ param ($TenantID,
                 }
                 else
                 {
-                    Write-Debug ('Management groups found: ' + $group.count)
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Management groups found: ' + $group.count)
                     foreach ($item in $group)
                     {
                         $Global:Subscriptions = @()
@@ -526,10 +526,10 @@ param ($TenantID,
 
         $SubCount = $Global:Subscriptions.count
 
-        Write-Debug ('Number of Subscriptions Found: ' + $SubCount)
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Number of Subscriptions Found: ' + $SubCount)
         Write-Progress -activity 'Azure Inventory' -Status "3% Complete." -PercentComplete 3 -CurrentOperation "$SubCount Subscriptions found.."
 
-        Write-Debug ('Checking report folder: ' + $DefaultPath )
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking report folder: ' + $DefaultPath )
         if ((Test-Path -Path $DefaultPath -PathType Container) -eq $false) {
             New-Item -Type Directory -Force -Path $DefaultPath | Out-Null
         }
@@ -610,7 +610,7 @@ param ($TenantID,
 
         if(![string]::IsNullOrEmpty($ResourceGroup) -and [string]::IsNullOrEmpty($SubscriptionID))
             {
-                Write-Debug ('Resource Group Name present, but missing Subscription ID.')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Resource Group Name present, but missing Subscription ID.')
                 Write-Host ''
                 Write-Host 'If Using the -ResourceGroup Parameter, the Subscription ID must be informed'
                 Write-Host ''
@@ -640,31 +640,31 @@ param ($TenantID,
                 $SumGraphQuery = "resources $RGQueryExtension $TagQueryExtension | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' $MGQueryExtension | summarize count()"
                 $GraphQuery = "resources $RGQueryExtension $TagQueryExtension | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' $MGQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
-                Write-Debug ('Invoking Inventory Loop for Resources')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Resources')
                 $Global:Resources += Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Resources'
 
                 $SumGraphQuery = "networkresources $RGQueryExtension $TagQueryExtension $MGQueryExtension | summarize count()"
                 $GraphQuery = "networkresources $RGQueryExtension $TagQueryExtension $MGQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
-                Write-Debug ('Invoking Inventory Loop for Network Resources')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Network Resources')
                 $Global:Resources += Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Network Resources'
 
                 $SumGraphQuery = "recoveryservicesresources $RGQueryExtension $TagQueryExtension | where type =~ 'microsoft.recoveryservices/vaults/backupfabrics/protectioncontainers/protecteditems' or type =~ 'microsoft.recoveryservices/vaults/backuppolicies' $MGQueryExtension | summarize count()"
                 $GraphQuery = "recoveryservicesresources $RGQueryExtension $TagQueryExtension | where type =~ 'microsoft.recoveryservices/vaults/backupfabrics/protectioncontainers/protecteditems' or type =~ 'microsoft.recoveryservices/vaults/backuppolicies' $MGQueryExtension  | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
-                Write-Debug ('Invoking Inventory Loop for Backup Resources')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Backup Resources')
                 $Global:Resources += Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Backup Items'
 
                 $SumGraphQuery = "desktopvirtualizationresources $RGQueryExtension $MGQueryExtension | summarize count()"
                 $GraphQuery = "desktopvirtualizationresources $RGQueryExtension $MGQueryExtension| project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
-                Write-Debug ('Invoking Inventory Loop for AVD Resources')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for AVD Resources')
                 $Global:Resources += Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Virtual Desktop'
 
                 $SumGraphQuery = "resourcecontainers $RGQueryExtension $TagQueryExtension $MGContainerExtension | summarize count()"
                 $GraphQuery = "resourcecontainers $RGQueryExtension $TagQueryExtension $MGContainerExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
-                Write-Debug ('Invoking Inventory Loop for Resource Containers')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Resource Containers')
                 $Global:ResourceContainers = Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Subscriptions and Resource Groups'
 
                 if (!($SkipPolicy.IsPresent)) 
@@ -672,7 +672,7 @@ param ($TenantID,
                         $SumGraphQuery = "policyresources | where type == 'microsoft.authorization/policyassignments' | summarize count()"
                         $GraphQuery = "policyresources | where type == 'microsoft.authorization/policyassignments' | order by id asc"
 
-                        Write-Debug ('Invoking Inventory Loop for Policies Resources')
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Policies Resources')
                         $Global:Policies = Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Policies'
                     }
                 if (!($SkipAdvisory.IsPresent)) 
@@ -680,7 +680,7 @@ param ($TenantID,
                         $SumGraphQuery = "advisorresources $RGQueryExtension $MGQueryExtension | summarize count()"
                         $GraphQuery = "advisorresources $RGQueryExtension $MGQueryExtension | order by id asc"
 
-                        Write-Debug ('Invoking Inventory Loop for Advisories')
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Advisories')
                         $Global:Advisories = Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Advisories'
                     }
                 if ($SecurityCenter.IsPresent) 
@@ -688,7 +688,7 @@ param ($TenantID,
                         $SumGraphQuery = "securityresources $RGQueryExtension | where type =~ 'microsoft.security/assessments' and properties['status']['code'] == 'Unhealthy' $MGQueryExtension | summarize count()" 
                         $GraphQuery = "securityresources $RGQueryExtension | where type =~ 'microsoft.security/assessments' and properties['status']['code'] == 'Unhealthy' $MGQueryExtension | order by id asc" 
 
-                        Write-Debug ('Invoking Inventory Loop for Security Resources')
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Security Resources')
                         $Global:Security = Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -Subscriptions $Subscri -LoopName 'Security Center'
                     }
 
@@ -758,31 +758,31 @@ param ($TenantID,
         $Global:File = ($DefaultPath + $Global:ReportName + "_Report_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xlsx")
         #$Global:DFile = ($DefaultPath + $Global:ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".vsdx")
         $Global:DDFile = ($DefaultPath + $Global:ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xml")
-        Write-Debug ('Excel file:' + $File)
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Excel file:' + $File)
 
         #### Generic Conditional Text rules, Excel style specifications for the spreadsheets and tables:
         $Global:TableStyle = "Light19"
-        Write-Debug ('Excel Table Style used: ' + $TableStyle)
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Excel Table Style used: ' + $TableStyle)
 
         Write-Progress -activity 'Azure Inventory' -Status "21% Complete." -PercentComplete 21 -CurrentOperation "Starting to process extraction data.."
 
 
         <######################################################### IMPORT UNSUPPORTED VERSION LIST ######################################################################>
 
-        Write-Debug ('Importing List of Unsupported Versions.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Importing List of Unsupported Versions.')
         If ($RunOnline -eq $true) {
-            Write-Debug ('Looking for the following file: '+$RawRepo + '/Extras/Support.json')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$RawRepo + '/Extras/Support.json')
             $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Support.json')
         }
         Else {
             if($PSScriptRoot -like '*\*')
                 {
-                    Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\Support.json')
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '\Extras\Support.json')
                     $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Support.json')
                 }
             else
                 {
-                    Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/Support.json')
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '/Extras/Support.json')
                     $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Support.json')
                 }
             $ModuSeq = $ModuSeq0.ReadToEnd()
@@ -795,9 +795,9 @@ param ($TenantID,
 
         <######################################################### DRAW.IO DIAGRAM JOB ######################################################################>
 
-        Write-Debug ('Checking if Draw.io Diagram Job Should be Run.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking if Draw.io Diagram Job Should be Run.')
         if (!$SkipDiagram.IsPresent) {
-            Write-Debug ('Starting Draw.io Diagram Processing Job.')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Draw.io Diagram Processing Job.')
             Start-job -Name 'DrawDiagram' -ScriptBlock {
 
                 $DiagramCache = $($args[5])
@@ -851,9 +851,9 @@ param ($TenantID,
 
         <######################################################### VISIO DIAGRAM JOB ######################################################################>
         <#
-        Write-Debug ('Checking if Visio Diagram Job Should be Run.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking if Visio Diagram Job Should be Run.')
         if ($Diagram.IsPresent) {
-            Write-Debug ('Starting Visio Diagram Processing Job.')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Visio Diagram Processing Job.')
             Start-job -Name 'VisioDiagram' -ScriptBlock {
 
                 If ($($args[5]) -eq $true) {
@@ -883,9 +883,9 @@ param ($TenantID,
 
         <######################################################### SECURITY CENTER JOB ######################################################################>
 
-        Write-Debug ('Checking If Should Run Security Center Job.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking If Should Run Security Center Job.')
         if ($SecurityCenter.IsPresent) {
-            Write-Debug ('Starting Security Job.')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Security Job.')
             Start-Job -Name 'Security' -ScriptBlock {
 
                 If ($($args[5]) -eq $true) {
@@ -921,9 +921,9 @@ param ($TenantID,
 
         <######################################################### POLICY JOB ######################################################################>
 
-        Write-Debug ('Checking If Should Run Policy Job.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking If Should Run Policy Job.')
         if (!$SkipPolicy.IsPresent) {
-            Write-Debug ('Starting Policy Processing Job.')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Policy Processing Job.')
             Start-Job -Name 'Policy' -ScriptBlock {
 
                 If ($($args[5]) -eq $true) {
@@ -959,9 +959,9 @@ param ($TenantID,
 
         <######################################################### ADVISORY JOB ######################################################################>
 
-        Write-Debug ('Checking If Should Run Advisory Job.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking If Should Run Advisory Job.')
         if (!$SkipAdvisory.IsPresent) {
-            Write-Debug ('Starting Advisory Processing Job.')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Advisory Processing Job.')
             Start-Job -Name 'Advisory' -ScriptBlock {
 
                 If ($($args[4]) -eq $true) {
@@ -997,7 +997,7 @@ param ($TenantID,
 
         <######################################################### SUBSCRIPTIONS JOB ######################################################################>
 
-        Write-Debug ('Starting Subscriptions job.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Subscriptions job.')
         Start-Job -Name 'Subscriptions' -ScriptBlock {
 
             If ($($args[5]) -eq $true) {
@@ -1055,7 +1055,7 @@ param ($TenantID,
                         $DebugEnvSize = 'Enormous'
                     }
             }
-            Write-Debug ('Starting Processing Jobs in '+ $DebugEnvSize +' Mode.')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Processing Jobs in '+ $DebugEnvSize +' Mode.')
 
             $Loop = $resources.count / $EnvSizeLooper
             $Loop = [math]::ceiling($Loop)
@@ -1167,7 +1167,7 @@ param ($TenantID,
 
         <############################################################## RESOURCES LOOP CREATION #############################################################>
 
-        Write-Debug ('Starting Jobs Collector.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Jobs Collector.')
         Write-Progress -activity $DataActive -Status "Processing Inventory" -PercentComplete 0
         $c = 0
 
@@ -1181,14 +1181,14 @@ param ($TenantID,
         while (get-job -Name $JobNames | Where-Object { $_.State -eq 'Running' }) {
             $jb = get-job -Name $JobNames
             $c = (((($jb.count - ($jb | Where-Object { $_.State -eq 'Running' }).Count)) / $jb.Count) * 100)
-            Write-Debug ('Jobs Still Running: '+[string]($jb | Where-Object { $_.State -eq 'Running' }).count)
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Jobs Still Running: '+[string]($jb | Where-Object { $_.State -eq 'Running' }).count)
             $c = [math]::Round($c)
             Write-Progress -Id 1 -activity "Processing Resource Jobs" -Status "$c% Complete." -PercentComplete $c
             Start-Sleep -Seconds 2
         }
         Write-Progress -Id 1 -activity "Processing Resource Jobs" -Status "100% Complete." -Completed
 
-        Write-Debug ('Jobs Compleated.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Jobs Compleated.')
 
         $AzSubs = Receive-Job -Name 'Subscriptions'
 
@@ -1197,13 +1197,13 @@ param ($TenantID,
         $Global:SmaResources = Foreach ($Job in $JobNames)
             {
                 $TempJob = Receive-Job -Name $Job
-                Write-Debug ('Job '+ $Job +' Returned: ' + ($TempJob.values | Where-Object {$_ -ne $null}).Count + ' Resource Types.')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Job '+ $Job +' Returned: ' + ($TempJob.values | Where-Object {$_ -ne $null}).Count + ' Resource Types.')
                 $TempJob
             }
 
         <############################################################## REPORTING ###################################################################>
 
-        Write-Debug ('Starting Reporting Phase.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Reporting Phase.')
         Write-Progress -activity $DataActive -Status "Processing Inventory" -PercentComplete 50
 
         If ($RunOnline -eq $true) {
@@ -1212,7 +1212,7 @@ param ($TenantID,
             $Modules = ($RepoContent.tree | Where-Object {$_.path -like '*.ps1' -and $_.path -notlike 'Extras/*' -and $_.path -ne 'AzureResourceInventory.ps1' -and $_.path -notlike 'Automation/*'}).path
         }
         Else {
-            Write-Debug ('Running Offline, Gathering List Of Modules.')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Running Offline, Gathering List Of Modules.')
             if($PSScriptRoot -like '*\*')
                 {
                     $Modules = Get-ChildItem -Path ($PSScriptRoot + '\Modules\*.ps1') -Recurse
@@ -1223,13 +1223,13 @@ param ($TenantID,
                 }
         }
 
-        Write-Debug ('Modules Found: ' + $Modules.Count)
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Modules Found: ' + $Modules.Count)
         $Lops = $Modules.count
         $ReportCounter = 0
 
         foreach ($Module in $Modules) {
 
-            Write-Debug "Running Module: '$Module'"
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Running Module: '$Module'")
 
             $c = (($ReportCounter / $Lops) * 100)
             $c = [math]::Round($c)
@@ -1259,7 +1259,7 @@ param ($TenantID,
 
         }
 
-        Write-Debug ('Resource Reporting Phase Done.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Resource Reporting Phase Done.')
 
         <################################################################### QUOTAS ###################################################################>
 
@@ -1270,23 +1270,23 @@ param ($TenantID,
 
                 $Global:AzQuota = Receive-Job -Name 'Quota Usage'
 
-                Write-Debug ('Generating Quota Usage sheet for: ' + $Global:AzQuota.count + ' Subscriptions/Regions.')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Quota Usage sheet for: ' + $Global:AzQuota.count + ' Subscriptions/Regions.')
 
                 Write-Progress -activity 'Azure Resource Inventory Quota Usage' -Status "50% Complete." -PercentComplete 50 -CurrentOperation "Building Quota Sheet"
 
                 If ($RunOnline -eq $true) {
-                    Write-Debug ('Looking for the following file: '+$RawRepo + '/Extras/QuotaUsage.ps1')
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$RawRepo + '/Extras/QuotaUsage.ps1')
                     $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/QuotaUsage.ps1')
                 }
                 Else {
                     if($PSScriptRoot -like '*\*')
                         {
-                            Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\QuotaUsage.ps1')
+                            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '\Extras\QuotaUsage.ps1')
                             $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\QuotaUsage.ps1')
                         }
                     else
                         {
-                            Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/QuotaUsage.ps1')
+                            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '/Extras/QuotaUsage.ps1')
                             $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/QuotaUsage.ps1')
                         }
                     $ModuSeq = $ModuSeq0.ReadToEnd()
@@ -1310,9 +1310,9 @@ param ($TenantID,
         <################################################ SECURITY CENTER #######################################################>
         #### Security Center worksheet is generated apart
 
-        Write-Debug ('Checking if Should Generate Security Center Sheet.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking if Should Generate Security Center Sheet.')
         if ($SecurityCenter.IsPresent) {
-            Write-Debug ('Generating Security Center Sheet.')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Security Center Sheet.')
             $Global:Secadvco = $Security.Count
 
             Write-Progress -activity $DataActive -Status "Building Security Center Report" -PercentComplete 0 -CurrentOperation "Considering $Secadvco Security Advisories"
@@ -1326,18 +1326,18 @@ param ($TenantID,
             $Sec = Receive-Job -Name 'Security'
 
             If ($RunOnline -eq $true) {
-                Write-Debug ('Looking for the following file: '+$RawRepo + '/Extras/SecurityCenter.ps1')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$RawRepo + '/Extras/SecurityCenter.ps1')
                 $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/SecurityCenter.ps1')
             }
             Else {
                 if($PSScriptRoot -like '*\*')
                     {
-                        Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\SecurityCenter.ps1')
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '\Extras\SecurityCenter.ps1')
                         $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\SecurityCenter.ps1')
                     }
                 else
                     {
-                        Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/SecurityCenter.ps1')
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '/Extras/SecurityCenter.ps1')
                         $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/SecurityCenter.ps1')
                     }
                 $ModuSeq = $ModuSeq0.ReadToEnd()
@@ -1358,16 +1358,16 @@ param ($TenantID,
 
         <################################################ POLICY #######################################################>
         #### Policy worksheet is generated apart from the resources
-        Write-Debug ('Checking if Should Generate Policy Sheet.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking if Should Generate Policy Sheet.')
         if (!$SkipPolicy.IsPresent) {
-            Write-Debug ('Generating Policy Sheet.')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Policy Sheet.')
             $Global:polco = $Policies.count
 
             Write-Progress -activity $DataActive -Status "Building Policy Report" -PercentComplete 0 -CurrentOperation "Considering $polco Policies"
 
             while (get-job -Name 'Policy' | Where-Object { $_.State -eq 'Running' }) {
                 Write-Progress -Id 1 -activity 'Processing Policies' -Status "50% Complete." -PercentComplete 50
-                Write-Debug ('Policy Job is: '+(get-job -Name 'Policy').State)
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Policy Job is: '+(get-job -Name 'Policy').State)
                 Start-Sleep -Seconds 2
             }
             Write-Progress -Id 1 -activity 'Processing Policies'  -Status "100% Complete." -Completed
@@ -1375,18 +1375,18 @@ param ($TenantID,
             $Global:Pol = Receive-Job -Name 'Policy'
 
             If ($RunOnline -eq $true) {
-                Write-Debug ('Looking for the following file: '+$RawRepo + '/Extras/Policy.ps1')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$RawRepo + '/Extras/Policy.ps1')
                 $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Policy.ps1')
             }
             Else {
                 if($PSScriptRoot -like '*\*')
                     {
-                        Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\Policy.ps1')
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '\Extras\Policy.ps1')
                         $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Policy.ps1')
                     }
                 else
                     {
-                        Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/Policy.ps1')
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '/Extras/Policy.ps1')
                         $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Policy.ps1')
                     }
                 $ModuSeq = $ModuSeq0.ReadToEnd()
@@ -1407,16 +1407,16 @@ param ($TenantID,
 
         <################################################ ADVISOR #######################################################>
         #### Advisor worksheet is generated apart from the resources
-        Write-Debug ('Checking if Should Generate Advisory Sheet.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking if Should Generate Advisory Sheet.')
         if (!$SkipAdvisory.IsPresent) {
-            Write-Debug ('Generating Advisor Sheet.')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Advisor Sheet.')
             $Global:advco = $Advisories.count
 
             Write-Progress -activity $DataActive -Status "Building Advisories Report" -PercentComplete 0 -CurrentOperation "Considering $advco Advisories"
 
             while (get-job -Name 'Advisory' | Where-Object { $_.State -eq 'Running' }) {
                 Write-Progress -Id 1 -activity 'Processing Advisories' -Status "50% Complete." -PercentComplete 50
-                Write-Debug ('Advisory Job is: '+(get-job -Name 'Advisory').State)
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Advisory Job is: '+(get-job -Name 'Advisory').State)
                 Start-Sleep -Seconds 2
             }
             Write-Progress -Id 1 -activity 'Processing Advisories'  -Status "100% Complete." -Completed
@@ -1424,18 +1424,18 @@ param ($TenantID,
             $Adv = Receive-Job -Name 'Advisory'
 
             If ($RunOnline -eq $true) {
-                Write-Debug ('Looking for the following file: '+$RawRepo + '/Extras/Advisory.ps1')
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$RawRepo + '/Extras/Advisory.ps1')
                 $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Advisory.ps1')
             }
             Else {
                 if($PSScriptRoot -like '*\*')
                     {
-                        Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\Advisory.ps1')
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '\Extras\Advisory.ps1')
                         $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Advisory.ps1')
                     }
                 else
                     {
-                        Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/Advisory.ps1')
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '/Extras/Advisory.ps1')
                         $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Advisory.ps1')
                     }
                 $ModuSeq = $ModuSeq0.ReadToEnd()
@@ -1455,23 +1455,23 @@ param ($TenantID,
 
         <################################################################### SUBSCRIPTIONS ###################################################################>
 
-        Write-Debug ('Generating Subscription sheet for: ' + $Subscriptions.count + ' Subscriptions.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Subscription sheet for: ' + $Subscriptions.count + ' Subscriptions.')
 
         Write-Progress -activity 'Azure Resource Inventory Subscriptions' -Status "50% Complete." -PercentComplete 50 -CurrentOperation "Building Subscriptions Sheet"
 
         If ($RunOnline -eq $true) {
-            Write-Debug ('Looking for the following file: '+$RawRepo + '/Extras/Subscriptions.ps1')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$RawRepo + '/Extras/Subscriptions.ps1')
             $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Subscriptions.ps1')
         }
         Else {
             if($PSScriptRoot -like '*\*')
                 {
-                    Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\Subscriptions.ps1')
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '\Extras\Subscriptions.ps1')
                     $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Subscriptions.ps1')
                 }
             else
                 {
-                    Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/Subscriptions.ps1')
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '/Extras/Subscriptions.ps1')
                     $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Subscriptions.ps1')
                 }
             $ModuSeq = $ModuSeq0.ReadToEnd()
@@ -1492,23 +1492,23 @@ param ($TenantID,
 
         <################################################################### CHARTS ###################################################################>
 
-        Write-Debug ('Generating Overview sheet (Charts).')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Overview sheet (Charts).')
 
         Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "10% Complete." -PercentComplete 10 -CurrentOperation "Starting Excel Chart's Thread."
 
         If ($RunOnline -eq $true) {
-            Write-Debug ('Looking for the following file: '+$RawRepo + '/Extras/Charts.ps1')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$RawRepo + '/Extras/Charts.ps1')
             $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/Extras/Charts.ps1')
         }
         Else {
             if($PSScriptRoot -like '*\*')
                 {
-                    Write-Debug ('Looking for the following file: '+$PSScriptRoot + '\Extras\Charts.ps1')
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '\Extras\Charts.ps1')
                     $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Charts.ps1')
                 }
             else
                 {
-                    Write-Debug ('Looking for the following file: '+$PSScriptRoot + '/Extras/Charts.ps1')
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for the following file: '+$PSScriptRoot + '/Extras/Charts.ps1')
                     $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Charts.ps1')
                 }
             $ModuSeq = $ModuSeq0.ReadToEnd()
@@ -1531,7 +1531,7 @@ param ($TenantID,
 
         $ChartsRun.Dispose()
 
-        Write-Debug ('Finished Charts Phase.')
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Finished Charts Phase.')
 
         Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "100% Complete." -Completed
 
