@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.20                                                                  #
+#       Version: 3.1.21                                                                  #
 #                                                                                        #
-#       Date: 06/11/2024                                                                 #
+#       Date: 06/12/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -830,7 +830,7 @@ param ($TenantID,
                 Add-Content -Path $Logfile -Value ('DrawIOCoreJob - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Draw.IO Thread')
                 try
                     {
-                        $DrawRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($($args[1])).AddArgument($($args[2] | ConvertFrom-Json)).AddArgument($($args[3])).AddArgument($($args[4])).AddArgument($($args[5])).AddArgument($($args[6])).AddArgument($($args[7]))
+                        $DrawRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($($args[1])).AddArgument($($args[2])).AddArgument($($args[3])).AddArgument($($args[4])).AddArgument($($args[5])).AddArgument($($args[6])).AddArgument($($args[7]))
 
                         $DrawJob = $DrawRun.BeginInvoke()
 
@@ -846,7 +846,7 @@ param ($TenantID,
                     }
                 Add-Content -Path $Logfile -Value ('DrawIOCoreJob - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Draw.IO Ended.')
 
-            } -ArgumentList $PSScriptRoot, $Subscriptions, ($Resources | ConvertTo-Json -Depth 50), $Advisories, $DDFile, $DiagramCache, $FullEnv, $ResourceContainers ,$RunOnline, $Repo, $RawRepo   | Out-Null
+            } -ArgumentList $PSScriptRoot, $Subscriptions, $Resources, $Advisories, $DDFile, $DiagramCache, $FullEnv, $ResourceContainers ,$RunOnline, $Repo, $RawRepo   | Out-Null
         }
 
         <######################################################### VISIO DIAGRAM JOB ######################################################################>
