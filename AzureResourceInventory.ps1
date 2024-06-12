@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.21                                                                  #
+#       Version: 3.1.22                                                                  #
 #                                                                                        #
 #       Date: 06/12/2024                                                                 #
 #                                                                                        #
@@ -1037,26 +1037,21 @@ param ($TenantID,
                 {$_ -le 1000} 
                     {
                         $EnvSizeLooper = 1000
-                        $DebugEnvSize = 'Tiny'
-                    }
-                {$_ -gt 1000 -and $_ -le 10000} 
-                    {
-                        $EnvSizeLooper = 5000
                         $DebugEnvSize = 'Small'
                     }
-                {$_ -gt 10000 -and $_ -le 30000}
+                {$_ -gt 1000 -and $_ -le 30000}
                     {
-                        $EnvSizeLooper = 10000
+                        $EnvSizeLooper = 5000
                         $DebugEnvSize = 'Medium'
                     }
                 {$_ -gt 30000 -and $_ -le 90000}
                     {
-                        $EnvSizeLooper = 25000
+                        $EnvSizeLooper = 10000
                         $DebugEnvSize = 'Large'
                     }
                 {$_ -gt 90000}
                     {
-                        $EnvSizeLooper = 40000
+                        $EnvSizeLooper = 20000
                         $DebugEnvSize = 'Enormous'
                     }
             }
