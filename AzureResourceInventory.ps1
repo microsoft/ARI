@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.22                                                                  #
+#       Version: 3.1.23                                                                  #
 #                                                                                        #
-#       Date: 06/12/2024                                                                 #
+#       Date: 06/13/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -1062,12 +1062,17 @@ param ($TenantID,
             $Looper = 0
             $Limit = 0
 
+            $ResourcesCount = [string]$Resources.count
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Total Resources Being Processed: '+ $ResourcesCount)
+
             while ($Looper -lt $Loop) {
                 $Looper ++
 
                 $Resource = $resources | Select-Object -First $EnvSizeLooper -Skip $Limit
 
-                Write-Debug [string]$Resource.count
+                $ResourceCount = [string]$Resource.count
+                $LoopCountStr = [string]$Looper
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Resources Being Processed in ResourceJob_'+ $LoopCountStr + ': ' + $ResourceCount)
 
                 Start-Job -Name ('ResourceJob_'+$Looper) -ScriptBlock {
 
