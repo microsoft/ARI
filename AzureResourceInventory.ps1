@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.25                                                                  #
+#       Version: 3.1.26                                                                  #
 #                                                                                        #
 #       Date: 06/14/2024                                                                 #
 #                                                                                        #
@@ -1046,7 +1046,7 @@ param ($TenantID,
                         $EnvSizeLooper = 5000
                         $DebugEnvSize = 'Medium'
                     }
-                {$_ -gt 30000 -and $_ -le 90000}
+                {$_ -gt 30000 -and $_ -le 60000}
                     {
                         $EnvSizeLooper = 10000
                         $DebugEnvSize = 'Large'
@@ -1054,9 +1054,9 @@ param ($TenantID,
                         Write-Host (' Size Environment Identified.')
                         Write-Host ('Jobs will be run in batches to avoid CPU Overload.')
                     }
-                {$_ -gt 90000}
+                {$_ -gt 60000}
                     {
-                        $EnvSizeLooper = 10000
+                        $EnvSizeLooper = 5000
                         $DebugEnvSize = 'Enormous'
                         Write-Host $DebugEnvSize -NoNewline -ForegroundColor Green
                         Write-Host (' Size Environment Identified.')
@@ -1154,7 +1154,7 @@ param ($TenantID,
                         Start-Sleep -Milliseconds 250
                     }
 
-                    [System.GC]::Collect()
+                    [System.GC]::GetTotalMemory($true) | out-null
 
                     $Hashtable = New-Object System.Collections.Hashtable
 
@@ -1170,7 +1170,7 @@ param ($TenantID,
                         Start-Sleep -Milliseconds 100
                     }
 
-                    [System.GC]::Collect()
+                    [System.GC]::GetTotalMemory($true) | out-null
 
                 $Hashtable
                 } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 50), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo, $Unsupported | Out-Null
@@ -1195,6 +1195,7 @@ param ($TenantID,
                         $JobLoop = 0
                     }
                 $JobLoop ++
+                [System.GC]::GetTotalMemory($true) | out-null
             }
 
         <############################################################## RESOURCES LOOP CREATION #############################################################>
@@ -1203,12 +1204,7 @@ param ($TenantID,
         Write-Progress -activity $DataActive -Status "Processing Inventory" -PercentComplete 0
         $c = 0
 
-        $JobNames = @()
-
-        Foreach($Job in (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}))
-            {
-                $JobNames += $Job.Name
-            }
+        $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
 
         while (get-job -Name $JobNames | Where-Object { $_.State -eq 'Running' }) {
             $jb = get-job -Name $JobNames
@@ -1590,8 +1586,8 @@ param ($TenantID,
         Exit
     }
     else {
-        Variables
-        Extractor
+        #Variables
+        #Extractor
         RunMain
     }
 

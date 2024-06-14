@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Extras/DrawIODiagram.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.14
+Version: 3.1.15
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -910,6 +910,9 @@ Function Network {
         Function VNETCreator {
         Param($VNET2)
                 $Global:sizeL =  $VNET2.properties.subnets.properties.addressPrefix.count
+
+                [System.GC]::GetTotalMemory($true) | out-null
+
                 if($VNET2.id -notin $VNETHistory.vnet)
                     {
                     if ($Global:sizeL -gt 5)
@@ -1074,6 +1077,8 @@ Function Network {
                         $Global:Alt = $Global:Alt + 350 
                     }
                 }
+
+                [System.GC]::GetTotalMemory($true) | out-null
         }
         
         <# Function for create peered VNETs #>
@@ -1361,7 +1366,7 @@ Function Network {
         }
         
         Function Subnet {
-            Param($subloc,$VNET,$IDNum,$DiagramCache,$ContID) 
+            Param($subloc,$VNET,$IDNum,$DiagramCache,$ContID)
         
             $NameString = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
         
