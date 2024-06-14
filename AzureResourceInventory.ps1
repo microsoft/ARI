@@ -1586,8 +1586,8 @@ param ($TenantID,
         Exit
     }
     else {
-        #Variables
-        #Extractor
+        Variables
+        Extractor
         RunMain
     }
 
