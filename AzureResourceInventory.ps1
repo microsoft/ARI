@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.26                                                                  #
+#       Version: 3.1.27                                                                  #
 #                                                                                        #
-#       Date: 06/14/2024                                                                 #
+#       Date: 06/17/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -639,8 +639,8 @@ param ($TenantID,
                     }
             }
 
-                $SumGraphQuery = "resources $RGQueryExtension $TagQueryExtension | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' $MGQueryExtension | summarize count()"
-                $GraphQuery = "resources $RGQueryExtension $TagQueryExtension | where strlen(properties.definition.actions) < 123000 and type notcontains 'Microsoft.Logic/workflows' $MGQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+                $SumGraphQuery = "resources $RGQueryExtension $TagQueryExtension | where strlen(properties.definition) < 123000 and type notcontains 'Microsoft.Logic/workflows' $MGQueryExtension | summarize count()"
+                $GraphQuery = "resources $RGQueryExtension $TagQueryExtension | where strlen(properties.definition) < 123000 and type notcontains 'Microsoft.Logic/workflows' $MGQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Resources')
                 $Global:Resources = Invoke-InventoryLoop -SumGraphQuery $SumGraphQuery -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Resources'
@@ -1124,6 +1124,7 @@ param ($TenantID,
                                 $ModuSeq = $ModuSeq0.ReadToEnd()
                                 $ModuSeq0.Dispose()
                         }
+                        Start-Sleep -Milliseconds 250
 
                         New-Variable -Name ('ModRun' + $ModName)
                         New-Variable -Name ('ModJob' + $ModName)
@@ -1134,6 +1135,7 @@ param ($TenantID,
 
                         $job += (get-variable -name ('ModJob' + $ModName)).Value
                         Start-Sleep -Milliseconds 250
+                        Clear-Variable -Name ModName
                     }
 
                     while ($Job.Runspace.IsCompleted -contains $false) { Start-Sleep -Milliseconds 1000 }
@@ -1145,6 +1147,7 @@ param ($TenantID,
                             } Else {
                                 $ModName = $_.Name.split(".ps1")[0]
                         }
+                        Start-Sleep -Milliseconds 250
 
                         New-Variable -Name ('ModValue' + $ModName)
                         Set-Variable -Name ('ModValue' + $ModName) -Value (((get-variable -name ('ModRun' + $ModName)).Value).EndInvoke((get-variable -name ('ModJob' + $ModName)).Value))
@@ -1152,6 +1155,7 @@ param ($TenantID,
                         Clear-Variable -Name ('ModRun' + $ModName)
                         Clear-Variable -Name ('ModJob' + $ModName)
                         Start-Sleep -Milliseconds 250
+                        Clear-Variable -Name ModName
                     }
 
                     [System.GC]::GetTotalMemory($true) | out-null
@@ -1165,15 +1169,20 @@ param ($TenantID,
                             } Else {
                                 $ModName = $_.Name.split(".ps1")[0]
                         }
+                        Start-Sleep -Milliseconds 250
+
                         $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
+
                         Clear-Variable -Name ('ModValue' + $ModName)
                         Start-Sleep -Milliseconds 100
+
+                        Clear-Variable -Name ModName
                     }
 
                     [System.GC]::GetTotalMemory($true) | out-null
 
                 $Hashtable
-                } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 50), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo, $Unsupported | Out-Null
+                } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 25), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo, $Unsupported | Out-Null
                 $Limit = $Limit + $EnvSizeLooper
                 Start-Sleep -Milliseconds 250
                 if($DebugEnvSize -in ('Large','Enormous') -and $JobLoop -eq 5)
@@ -1199,6 +1208,15 @@ param ($TenantID,
             }
 
         <############################################################## RESOURCES LOOP CREATION #############################################################>
+
+
+        $Global:ResourcesCount = $Global:Resources.Count
+
+        if($DebugEnvSize -in ('Large','Enormous','Medium'))
+            {
+                Clear-Variable Resources -Scope Global
+                [System.GC]::GetTotalMemory($true) | out-null
+            }
 
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Jobs Collector.')
         Write-Progress -activity $DataActive -Status "Processing Inventory" -PercentComplete 0
@@ -1282,6 +1300,8 @@ param ($TenantID,
             $ExcelRun.EndInvoke($ExcelJob)
 
             $ExcelRun.Dispose()
+
+            [System.GC]::GetTotalMemory($true) | out-null
 
             $ReportCounter ++
 
@@ -1515,6 +1535,8 @@ param ($TenantID,
 
         $SubsRun.Dispose()
 
+        [System.GC]::GetTotalMemory($true) | out-null
+
         Write-Progress -activity 'Azure Resource Inventory Subscriptions' -Status "100% Complete." -Completed
 
         <################################################################### CHARTS ###################################################################>
@@ -1546,7 +1568,7 @@ param ($TenantID,
 
         Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "15% Complete." -PercentComplete 15 -CurrentOperation "Invoking Excel Chart's Thread."
 
-        $ChartsRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($file).AddArgument($TableStyle).AddArgument($Global:PlatOS).AddArgument($Global:Subscriptions).AddArgument($Global:Resources.Count).AddArgument($ExtractionRunTime).AddArgument($ReportingRunTime).AddArgument($RunLite)
+        $ChartsRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($file).AddArgument($TableStyle).AddArgument($Global:PlatOS).AddArgument($Global:Subscriptions).AddArgument($Global:ResourcesCount).AddArgument($ExtractionRunTime).AddArgument($ReportingRunTime).AddArgument($RunLite)
 
         $ChartsJob = $ChartsRun.BeginInvoke()
 
@@ -1557,6 +1579,8 @@ param ($TenantID,
         $ChartsRun.EndInvoke($ChartsJob)
 
         $ChartsRun.Dispose()
+
+        [System.GC]::GetTotalMemory($true) | out-null
 
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Finished Charts Phase.')
 
@@ -1599,7 +1623,7 @@ Write-Host ('Report Complete. Total Runtime was: ') -NoNewline
 Write-Host $Measure -NoNewline -ForegroundColor Cyan
 Write-Host (' Minutes')
 Write-Host ('Total Resources: ') -NoNewline
-write-host $Resources.count -ForegroundColor Cyan
+write-host $Global:ResourcesCount -ForegroundColor Cyan
 if (!$SkipAdvisory.IsPresent)
     {
         Write-Host ('Total Advisories: ') -NoNewline
