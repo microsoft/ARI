@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Automation/ARI_Automation.ps1
 This powershell Script is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.8
+Version: 3.1.9
 Author: Claudio Merola
 
 Core Steps:
@@ -72,7 +72,7 @@ $Script:Context = New-AzStorageContext -StorageAccountName $STGACC -UseConnected
 
 $Script:aristg = $STGCTG
 
-$Script:TableStyle = "Light20"
+$Script:TableStyle = "Light19"
 
 $Date = get-date -Format "yyyy-MM-dd_HH_mm"
 $Script:DateStart = get-date
@@ -198,13 +198,14 @@ function SubscriptionJob {
 
     $ScriptBlock = [Scriptblock]::Create($ModuSeq)
 
-    Start-ThreadJob -Name 'Subscriptions' -ScriptBlock $ScriptBlock -ArgumentList $Script:Subscriptions, $Script:Resources, 'Processing' , $File
+    Start-ThreadJob -Name 'Subscriptions' -ScriptBlock $ScriptBlock -ArgumentList $Script:Subscriptions, $Script:Resources, 'Processing' , $Script:File
 }
 
 <######################################################### Reporting ######################################################################>
 
 function Resources {
     Write-Output ('Starting Resources Processes')
+    Write-Output ('Total Resources Being Analyzed: '+$Script:Resources.count)
 
     $OnlineRepo = Invoke-WebRequest -Uri $Repo
     $RepoContent = $OnlineRepo | ConvertFrom-Json
@@ -226,11 +227,15 @@ function Resources {
 
             $ScriptBlock = [Scriptblock]::Create($ModuSeq)
 
-            $SmaResources[$ModName] = Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot, $Script:Subscriptions, $Script:InTag, $Script:Resources, 'Processing', $true
+            $SmaResources[$ModName] = Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot, $Script:Subscriptions, $Script:InTag, $Script:Resources, 'Processing', $null, $null, $null, $Script:Unsupported
+
+            Start-Sleep -Milliseconds 100
 
             Write-Output ('Resources ('+$ModName+'): '+$SmaResources[$ModName].count)
 
             Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot,$null,$InTag,$null,'Reporting',$File,$SmaResources,$TableStyle,$Unsupported | Out-Null
+
+            Start-Sleep -Milliseconds 100
 
         }
 }
@@ -326,7 +331,7 @@ function Charts {
 
     $FileFull = ((Get-Location).Path+'\'+$File)
 
-    Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $FileFull,'Light20','Azure Automation',$Subscriptions,$Resources.Count,$ExtractionRunTime,$ReportingRunTime,$RunLite
+    Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $FileFull,$Script:TableStyle,'Azure Automation',$Subscriptions,$Resources.Count,$ExtractionRunTime,$ReportingRunTime,$RunLite
 }
 
 <######################################################### Starting Script ######################################################################>
