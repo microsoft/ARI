@@ -1,13 +1,13 @@
 ﻿<#
 .Synopsis
-Inventory for Azure Translator
+Inventory for Azure Document Intelligence
 
 .DESCRIPTION
 This script consolidates information for all microsoft.operationalinsights/workspaces and  resource provider in $Resources variable. 
-Excel Sheet Name: Translator
+Excel Sheet Name: Doc Intelligence
 
 .Link
-https://github.com/microsoft/ARI/Modules/Analytics/Translator.ps1
+https://github.com/microsoft/ARI/Modules/Analytics/DocIntelligence.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
@@ -28,15 +28,15 @@ If ($Task -eq 'Processing')
 
     <######### Insert the resource extraction here ########>
 
-    $Translator = $Resources | Where-Object {$_.TYPE -eq 'microsoft.cognitiveservices/accounts' -and $_.Kind -eq 'TextTranslation'}
+    $DocIntelligence = $Resources | Where-Object {$_.TYPE -eq 'microsoft.cognitiveservices/accounts' -and $_.Kind -eq 'FormRecognizer'}
 
     <######### Insert the resource Process here ########>
 
-    if($Translator)
+    if($DocIntelligence)
         {
             $tmp = @()
 
-            foreach ($1 in $Translator) {
+            foreach ($1 in $DocIntelligence) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
@@ -83,10 +83,10 @@ Else
 {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if($SmaResources.Translator)
+    if($SmaResources.DocIntelligence)
     {
 
-        $TableName = ('TranslaTable_'+($SmaResources.Translator.id | Select-Object -Unique).count)
+        $TableName = ('DocIntTable_'+($SmaResources.DocIntelligence.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0.0'
 
         $condtxt = @()
@@ -113,11 +113,11 @@ Else
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.Translator 
+        $ExcelVar = $SmaResources.DocIntelligence 
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Translator' -AutoSize -MaxAutoSizeRows 100 -ConditionalText $condtxt -TableName $TableName -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Doc Intelligence' -AutoSize -MaxAutoSizeRows 100 -ConditionalText $condtxt -TableName $TableName -TableStyle $tableStyle -Style $Style
 
 
         <######## Insert Column comments and documentations here following this model #########>
