@@ -87,7 +87,7 @@ Else
     {
 
         $TableName = ('ImmersiveRTable_'+($SmaResources.ImmersiveReader.id | Select-Object -Unique).count)
-        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0.0'
+        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
         $condtxt += New-ConditionalText enabled -Range E:E

@@ -87,7 +87,7 @@ Else
     {
 
         $TableName = ('ContentModTable_'+($SmaResources.ContentModerator.id | Select-Object -Unique).count)
-        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0.0'
+        $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
         $condtxt += New-ConditionalText F0 -Range D:D
