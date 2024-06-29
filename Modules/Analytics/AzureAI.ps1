@@ -1,13 +1,13 @@
 ﻿<#
 .Synopsis
-Inventory for Azure Computer Vision
+Inventory for Azure AI
 
 .DESCRIPTION
 This script consolidates information for all microsoft.operationalinsights/workspaces and  resource provider in $Resources variable. 
-Excel Sheet Name: Computer Vision
+Excel Sheet Name: Azure AI
 
 .Link
-https://github.com/microsoft/ARI/Modules/Analytics/ComputerVision.ps1
+https://github.com/microsoft/ARI/Modules/Analytics/AzureAI.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
@@ -28,15 +28,15 @@ If ($Task -eq 'Processing')
 
     <######### Insert the resource extraction here ########>
 
-    $ComputerVision = $Resources | Where-Object {$_.TYPE -eq 'microsoft.cognitiveservices/accounts' -and $_.Kind -eq 'ComputerVision'}
+    $AzureAI = $Resources | Where-Object {$_.TYPE -eq 'microsoft.cognitiveservices/accounts' -and $_.Kind -eq 'AIServices'}
 
     <######### Insert the resource Process here ########>
 
-    if($ComputerVision)
+    if($AzureAI)
         {
             $tmp = @()
 
-            foreach ($1 in $ComputerVision) {
+            foreach ($1 in $AzureAI) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
@@ -83,10 +83,10 @@ Else
 {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if($SmaResources.ComputerVision)
+    if($SmaResources.AzureAI)
     {
 
-        $TableName = ('VisionTable_'+($SmaResources.ComputerVision.id | Select-Object -Unique).count)
+        $TableName = ('AzureAITable_'+($SmaResources.AzureAI.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0.0'
 
         $condtxt = @()
@@ -113,11 +113,11 @@ Else
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.ComputerVision 
+        $ExcelVar = $SmaResources.AzureAI 
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Computer Vision' -AutoSize -MaxAutoSizeRows 100 -ConditionalText $condtxt -TableName $TableName -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Azure AI' -AutoSize -MaxAutoSizeRows 100 -ConditionalText $condtxt -TableName $TableName -TableStyle $tableStyle -Style $Style
 
 
         <######## Insert Column comments and documentations here following this model #########>
