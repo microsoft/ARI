@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VM.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.6
+Version: 3.1.7
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -57,6 +57,8 @@ If ($Task -eq 'Processing')
                     $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                     $dataSize = ''
                     $StorAcc = ''
+                    $OSName = if(![string]::IsNullOrEmpty($data.extended.instanceView.osname)){$data.extended.instanceView.osname}else{$data.storageprofile.imagereference.offer}
+                    $OSVersion = if(![string]::IsNullOrEmpty($data.extended.instanceView.osversion)){$data.extended.instanceView.osversion}else{$data.storageprofile.imagereference.sku}
 
                     #Retirements Validation
                     $RetDate = ''
@@ -239,8 +241,8 @@ If ($Task -eq 'Processing')
                                 'Hybrid Benefit'                = $Lic;
                                 'Admin Username'                = $data.osProfile.adminUsername;
                                 'OS Type'                       = $data.storageProfile.osDisk.osType;
-                                'OS Name'                       = $data.extended.instanceView.osname;
-                                'OS Version'                    = $data.extended.instanceView.osversion;
+                                'OS Name'                       = $OSName;
+                                'OS Version'                    = $OSVersion;
                                 'Automatic Update'              = $Autoupdate;
                                 'Retirement Date'               = [string]$RetDate;
                                 'Retirement Feature'            = $RetFeature;
