@@ -64,7 +64,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 #>
-
+#Requires -PSEdition Core
 param ($TenantID,
         [switch]$SecurityCenter,
         $SubscriptionID,
@@ -212,6 +212,9 @@ param ($TenantID,
     Function Extractor {
 
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Extractor function')
+
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Powershell Edition: ' + ([string]$psversiontable.psEdition))
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Powershell Version: ' + ([string]$psversiontable.psVersion))
         function checkAzCli() {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting checkAzCli function')
             Write-Host "Validating Az Cli.."
@@ -1613,3 +1616,4 @@ if(!$SkipDiagram.IsPresent)
         write-host $DDFile -ForegroundColor Cyan
         Write-Host ''
     }
+Clear-Variable -Name Resources -Scope Global
