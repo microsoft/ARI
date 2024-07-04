@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.28                                                                  #
+#       Version: 3.1.29                                                                  #
 #                                                                                        #
-#       Date: 07/03/2024                                                                 #
+#       Date: 07/04/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -64,7 +64,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 #>
-#Requires -PSEdition Core
+
 param ($TenantID,
         [switch]$SecurityCenter,
         $SubscriptionID,
@@ -328,7 +328,9 @@ param ($TenantID,
                         }
                     else
                         {
-                            az login -t $TenantID --only-show-errors | Out-Null
+                            az config set core.enable_broker_on_windows=false --only-show-errors
+                            #az config set core.login_experience_v2=off --only-show-errors
+                            az login -t $TenantID --only-show-errors
                         }
                     }
                 elseif ($Appid -and $Secret -and $tenantid) {
@@ -342,7 +344,7 @@ param ($TenantID,
                     write-host ".\AzureResourceInventory.ps1 -appid <SP AppID> -secret <SP Secret> -tenant <TenantID>"
                     Exit
                 }
-                $Global:Subscriptions = az account list --output json --only-show-errors | ConvertFrom-Json
+                $Global:Subscriptions = az account list --output json | ConvertFrom-Json
                 $Global:Subscriptions = $Subscriptions | Where-Object { $_.tenantID -eq $TenantID }
                 if ($SubscriptionID)
                     {
@@ -527,7 +529,7 @@ param ($TenantID,
                 }
             }
 
-        $SubCount = $Global:Subscriptions.count
+        $SubCount = [string]$Global:Subscriptions.id.count
 
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Number of Subscriptions Found: ' + $SubCount)
         Write-Progress -activity 'Azure Inventory' -Status "3% Complete." -PercentComplete 3 -CurrentOperation "$SubCount Subscriptions found.."
