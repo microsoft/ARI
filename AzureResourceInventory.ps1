@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.30                                                                  #
+#       Version: 3.1.31                                                                  #
 #                                                                                        #
 #       Date: 07/05/2024                                                                 #
 #                                                                                        #
@@ -318,7 +318,7 @@ param ($TenantID,
                         }
                     else
                         {
-                            $AZConfig = az config get core.enable_broker_on_windows | ConvertFrom-Json
+                            $AZConfig = az config get core.enable_broker_on_windows --only-show-errors | ConvertFrom-Json
                             if ($AZConfig.value -eq $true)
                                 {
                                     az config set core.enable_broker_on_windows=false --only-show-errors
@@ -1102,10 +1102,11 @@ param ($TenantID,
                     $Modules | ForEach-Object {
                         If ($RunOnline -eq $true) {
                                 $Modul = $_.split('/')
-                                $ModName = $Modul[2].split(".ps1")[0]
+                                $ModName = $Modul[2]
+                                $ModName = $ModName.replace(".ps1","")
                                 $ModuSeq = (New-Object System.Net.WebClient).DownloadString($RawRepo + '/' + $_)
                             } Else {
-                                $ModName = $_.Name.split(".ps1")[0]
+                                $ModName = $_.Name.replace(".ps1","")
                                 $ModuSeq0 = New-Object System.IO.StreamReader($_.FullName)
                                 $ModuSeq = $ModuSeq0.ReadToEnd()
                                 $ModuSeq0.Dispose()
@@ -1129,9 +1130,10 @@ param ($TenantID,
                     $Modules | ForEach-Object {
                         If ($RunOnline -eq $true) {
                                 $Modul = $_.split('/')
-                                $ModName = $Modul[2].split(".ps1")[0]
+                                $ModName = $Modul[2]
+                                $ModName = $ModName.replace(".ps1","")
                             } Else {
-                                $ModName = $_.Name.split(".ps1")[0]
+                                $ModName = $_.Name.replace(".ps1","")
                         }
                         Start-Sleep -Milliseconds 250
 
@@ -1151,9 +1153,10 @@ param ($TenantID,
                     $Modules | ForEach-Object {
                         If ($RunOnline -eq $true) {
                                 $Modul = $_.split('/')
-                                $ModName = $Modul[2].split(".ps1")[0]
+                                $ModName = $Modul[2]
+                                $ModName = $ModName.replace(".ps1","")
                             } Else {
-                                $ModName = $_.Name.split(".ps1")[0]
+                                $ModName = $_.Name.replace(".ps1","")
                         }
                         Start-Sleep -Milliseconds 250
 
@@ -1261,8 +1264,6 @@ param ($TenantID,
 
         foreach ($Module in $Modules) {
 
-            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Running Module: '$Module'")
-
             $c = (($ReportCounter / $Lops) * 100)
             $c = [math]::Round($c)
             Write-Progress -Id 1 -activity "Building Report" -Status "$c% Complete." -PercentComplete $c
@@ -1276,18 +1277,28 @@ param ($TenantID,
                     $ModuSeq = $ModuSeq0.ReadToEnd()
                     $ModuSeq0.Dispose()
             }
+            Start-Sleep -Milliseconds 50
+            $ModuleName = $Module.name.replace('.ps1','')
 
-            $ExcelRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($PSScriptRoot).AddArgument($null).AddArgument($InTag).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($SmaResources).AddArgument($TableStyle).AddArgument($Unsupported)
+            $ModuleResourceCount = $SmaResources[$ModuleName].count
 
-            $ExcelJob = $ExcelRun.BeginInvoke()
+            if ($ModuleResourceCount -gt 0)
+                {
+                    Start-Sleep -Milliseconds 100
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Running Module: '$ModuleName'. Resources Count: $ModuleResourceCount")
 
-            while ($ExcelJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
+                    $ExcelRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($PSScriptRoot).AddArgument($null).AddArgument($InTag).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($SmaResources).AddArgument($TableStyle).AddArgument($Unsupported)
 
-            $ExcelRun.EndInvoke($ExcelJob)
+                    $ExcelJob = $ExcelRun.BeginInvoke()
 
-            $ExcelRun.Dispose()
+                    while ($ExcelJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
 
-            [System.GC]::GetTotalMemory($true) | out-null
+                    $ExcelRun.EndInvoke($ExcelJob)
+
+                    $ExcelRun.Dispose()
+
+                    [System.GC]::GetTotalMemory($true) | out-null
+                }
 
             $ReportCounter ++
 
@@ -1637,3 +1648,4 @@ if(!$SkipDiagram.IsPresent)
         Write-Host ''
     }
 Clear-Variable -Name Resources -Scope Global
+Clear-Variable -Name SmaResources -Scope Global
