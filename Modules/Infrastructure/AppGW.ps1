@@ -46,7 +46,7 @@ If ($Task -eq 'Processing') {
                 if([string]::IsNullOrEmpty($data.webApplicationFirewallConfiguration.enabled)){$WAF = 'false'}else{$WAF = $data.webApplicationFirewallConfiguration.enabled}
                 if($WAF -eq 'false' -and $1.id -in $APPGTWPOL.properties.applicationGateways.id){$WAF = 'true'}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
-                    foreach ($Tag in $Tags) {        
+                    foreach ($Tag in $Tags) {
                         $obj = @{
                             'ID'                    = $1.id;
                             'Subscription'          = $sub1.Name;
@@ -74,7 +74,7 @@ If ($Task -eq 'Processing') {
                         }
                         $tmp += $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
-                    }               
+                    }
             }
             $tmp
         }
@@ -119,14 +119,14 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.APPGW 
+        $ExcelVar = $SmaResources.APPGW
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'App Gateway' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
         $excel = Open-ExcelPackage -Path $File -KillExcel
-    
+
         $null = $excel.'App Gateway'.Cells["K1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.", "Azure Resource Inventory")
         $excel.'App Gateway'.Cells["K1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
 

@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.29                                                                  #
+#       Version: 3.1.30                                                                  #
 #                                                                                        #
-#       Date: 07/04/2024                                                                 #
+#       Date: 07/05/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -116,9 +116,9 @@ param ($TenantID,
         Write-Host " -TagKey <NAME>        :  Specifies the tag key to be inventoried, This parameter requires the -SubscriptionID to work. "
         Write-Host " -TagValue <NAME>      :  Specifies the tag value be inventoried, This parameter requires the -SubscriptionID to work. "
         Write-Host " -SkipAdvisory         :  Do not collect Azure Advisory. "
+        Write-Host " -SkipPolicy           :  Do not collect Azure Policies. "
         Write-Host " -SecurityCenter       :  Include Security Center Data. "
         Write-Host " -IncludeTags          :  Include Resource Tags. "
-        Write-Host " -Diagram              :  Create a Draw.IO Diagram. "
         Write-Host " -Online               :  Use Online Modules. "
         Write-Host " -Debug                :  Run in a Debug mode. "
         Write-Host " -AzureEnvironment     :  Change the Azure Cloud Environment. "
@@ -144,20 +144,10 @@ param ($TenantID,
         Write-Host " To include Tags at the inventory use <-IncludeTags> parameter. "
         Write-Host "e.g. />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -IncludeTags"
         Write-Host ""
-        Write-Host "Collecting Security Center Data :"
-        Write-Host " By Default Azure Resource inventory do not collect Security Center Data."
-        Write-Host " To include Security Center details in the report, use <-SecurityCenter> parameter. "
-        Write-Host "e.g. />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SecurityCenter"
-        Write-Host ""
         Write-Host "Skipping Azure Advisor:"
         Write-Host " By Default Azure Resource inventory collects Azure Advisor Data."
         Write-Host " To ignore this  use <-SkipAdvisory> parameter. "
         Write-Host "e.g. />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SkipAdvisory"
-        Write-Host ""
-        Write-Host "Creating Network Diagram :"
-        Write-Host " If you Want to create a Draw.io Diagram you need to use <-Diagram> parameter."
-        Write-Host " This feature only works on Windows O.S. "
-        Write-Host "e.g. />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -Diagram"
         Write-Host ""
         Write-Host "Using the latest modules :"
         Write-Host " You can use the latest modules. For this use <-Online> parameter."
@@ -328,9 +318,19 @@ param ($TenantID,
                         }
                     else
                         {
-                            az config set core.enable_broker_on_windows=false --only-show-errors
-                            #az config set core.login_experience_v2=off --only-show-errors
-                            az login -t $TenantID --only-show-errors
+                            $AZConfig = az config get core.enable_broker_on_windows | ConvertFrom-Json
+                            if ($AZConfig.value -eq $true)
+                                {
+                                    az config set core.enable_broker_on_windows=false --only-show-errors
+                                    #az config set core.login_experience_v2=off --only-show-errors
+                                    az login -t $TenantID --only-show-errors
+                                    az config set core.enable_broker_on_windows=true --only-show-errors
+                                }
+                            else
+                                {
+                                    az login -t $TenantID --only-show-errors
+                                }
+                            
                         }
                     }
                 elseif ($Appid -and $Secret -and $tenantid) {
@@ -574,15 +574,33 @@ param ($TenantID,
                     }
                 else
                     {
-                        $QueryResult = (az graph query -q $GraphQuery --subscriptions $FSubscri --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                        $QueryResult = (az graph query -q $GraphQuery --subscriptions $FSubscri --first 1000 --output json --only-show-errors).tolower()
+                        try
+                            {
+                                $QueryResult = $QueryResult | ConvertFrom-Json
+                            }
+                        catch
+                            {
+                                $QueryResult = $QueryResult | ConvertFrom-Json -AsHashtable
+                            }
+                        
                         $LocalResults += $QueryResult
                         while ($QueryResult.SkipToken) {
                             $QueryResult = (az graph query -q $GraphQuery --subscriptions $FSubscri --skip-token $QueryResult.SkipToken --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
+                            try
+                                {
+                                    $QueryResult = $QueryResult | ConvertFrom-Json
+                                }
+                            catch
+                                {
+                                    $QueryResult = $QueryResult | ConvertFrom-Json -AsHashtable
+                                }
                             $LocalResults += $QueryResult
                         }
                     }
             $LocalResults.data
         }
+
 
         Write-Progress -activity 'Azure Inventory' -Status "4% Complete." -PercentComplete 4 -CurrentOperation "Starting Resources extraction jobs.."
 
