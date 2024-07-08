@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.31                                                                  #
+#       Version: 3.1.32                                                                  #
 #                                                                                        #
-#       Date: 07/05/2024                                                                 #
+#       Date: 07/08/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -1171,7 +1171,7 @@ param ($TenantID,
                     [System.GC]::GetTotalMemory($true) | out-null
 
                 $Hashtable
-                } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 25), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo, $Unsupported | Out-Null
+                } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 50), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo, $Unsupported | Out-Null
                 $Limit = $Limit + $EnvSizeLooper
                 Start-Sleep -Milliseconds 250
                 if($DebugEnvSize -in ('Large','Enormous') -and $JobLoop -eq 5)
@@ -1201,7 +1201,7 @@ param ($TenantID,
 
         $Global:ResourcesCount = $Global:Resources.Count
 
-        if($DebugEnvSize -in ('Large','Enormous','Medium'))
+        if($DebugEnvSize -in ('Large','Enormous'))
             {
                 Clear-Variable Resources -Scope Global
                 [System.GC]::GetTotalMemory($true) | out-null
@@ -1219,15 +1219,13 @@ param ($TenantID,
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Jobs Still Running: '+[string]($jb | Where-Object { $_.State -eq 'Running' }).count)
             $c = [math]::Round($c)
             Write-Progress -Id 1 -activity "Processing Resource Jobs" -Status "$c% Complete." -PercentComplete $c
-            Start-Sleep -Seconds 3
+            Start-Sleep -Seconds 5
         }
         Write-Progress -Id 1 -activity "Processing Resource Jobs" -Status "100% Complete." -Completed
 
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Jobs Compleated.')
 
         $AzSubs = Receive-Job -Name 'Subscriptions'
-
-        $Global:SmaResources = @()
 
         $Global:SmaResources = Foreach ($Job in $JobNames)
             {
@@ -1303,6 +1301,12 @@ param ($TenantID,
             $ReportCounter ++
 
         }
+
+        if($DebugEnvSize -in ('Large','Enormous'))
+            {
+                Clear-Variable SmaResources -Scope Global
+                [System.GC]::GetTotalMemory($true) | out-null
+            }
 
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Resource Reporting Phase Done.')
 
@@ -1620,7 +1624,7 @@ Write-Host ('Report Complete. Total Runtime was: ') -NoNewline
 Write-Host $Measure -NoNewline -ForegroundColor Cyan
 Write-Host (' Minutes')
 Write-Host ('Total Resources: ') -NoNewline
-write-host $Global:ResourcesCount -ForegroundColor Cyan
+Write-Host $Global:ResourcesCount -ForegroundColor Cyan
 if (!$SkipAdvisory.IsPresent)
     {
         Write-Host ('Total Advisories: ') -NoNewline
@@ -1647,5 +1651,3 @@ if(!$SkipDiagram.IsPresent)
         write-host $DDFile -ForegroundColor Cyan
         Write-Host ''
     }
-Clear-Variable -Name Resources -Scope Global
-Clear-Variable -Name SmaResources -Scope Global
