@@ -1075,7 +1075,7 @@ param ($TenantID,
 
                     $Subscriptions = $($args[2])
                     $InTag = $($args[3])
-                    $Resource = $($args[4]) | ConvertFrom-Json
+                    $Resource = $($args[4])
                     $Task = $($args[5])
                     $Unsupported = $($args[12])
                     $RunOnline = $($args[9])
@@ -1171,7 +1171,7 @@ param ($TenantID,
                     [System.GC]::GetTotalMemory($true) | out-null
 
                 $Hashtable
-                } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, ($Resource | ConvertTo-Json -Depth 50), 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo, $Unsupported | Out-Null
+                } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, $Resource, 'Processing', $null, $null, $null, $RunOnline, $Repo, $RawRepo, $Unsupported | Out-Null
                 $Limit = $Limit + $EnvSizeLooper
                 Start-Sleep -Milliseconds 250
                 if($DebugEnvSize -in ('Large','Enormous') -and $JobLoop -eq 5)
