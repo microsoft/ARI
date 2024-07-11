@@ -586,7 +586,7 @@ param ($TenantID,
                         
                         $LocalResults += $QueryResult
                         while ($QueryResult.skip_token) {
-                            $QueryResult = az graph query -q $GraphQuery --subscriptions $FSubscri --skip-token $QueryResult.skip_token --first 1000 --output json --only-show-errors| ConvertFrom-Json
+                            $QueryResult = az graph query -q $GraphQuery --subscriptions $FSubscri --skip-token $QueryResult.skip_token --first 1000 --output json --only-show-errors
                             try
                                 {
                                     $QueryResult = $QueryResult | ConvertFrom-Json
