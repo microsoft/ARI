@@ -2,7 +2,7 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.36                                                                  #
+#       Version: 3.1.37                                                                  #
 #                                                                                        #
 #       Date: 07/12/2024                                                                 #
 #                                                                                        #
@@ -1254,11 +1254,13 @@ param ($TenantID,
 
         $AzSubs = Receive-Job -Name 'Subscriptions'
 
-        $Global:SmaResources = Foreach ($Job in $JobNames)
+        $Global:SmaResources = @()
+
+        Foreach ($Job in $JobNames)
             {
                 $TempJob = Receive-Job -Name $Job
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Job '+ $Job +' Returned: ' + ($TempJob.values | Where-Object {$_ -ne $null}).Count + ' Resource Types.')
-                $TempJob
+                $Global:SmaResources += $TempJob
             }
 
         <############################################################## REPORTING ###################################################################>
@@ -1305,7 +1307,7 @@ param ($TenantID,
             Start-Sleep -Milliseconds 50
             $ModuleName = $Module.name.replace('.ps1','')
 
-            $ModuleResourceCount = $SmaResources[$ModuleName].count
+            $ModuleResourceCount = $SmaResources.$ModuleName.count
 
             if ($ModuleResourceCount -gt 0)
                 {
