@@ -2,9 +2,9 @@
 #                                                                                        #
 #                * Azure Resource Inventory ( ARI ) Report Generator *                   #
 #                                                                                        #
-#       Version: 3.1.37                                                                  #
+#       Version: 3.1.38                                                                  #
 #                                                                                        #
-#       Date: 07/12/2024                                                                 #
+#       Date: 07/15/2024                                                                 #
 #                                                                                        #
 ##########################################################################################
 <#
@@ -566,7 +566,7 @@ param ($TenantID,
                                     }
                                 catch
                                     {
-                                        $QueryResult = az graph query -q $GraphQuery --subscriptions $Sub --first 500 --output json --only-show-errors | ConvertFrom-Json
+                                        $QueryResult = az graph query -q $GraphQuery --subscriptions $Sub --first 200 --output json --only-show-errors | ConvertFrom-Json
                                     }
                                 $LocalResults += $QueryResult
                                 while ($QueryResult.skip_token) {
@@ -576,7 +576,7 @@ param ($TenantID,
                                         }
                                     catch
                                         {
-                                            $QueryResult = az graph query -q $GraphQuery --subscriptions $Sub --skip-token $QueryResult.skip_token --first 500 --output json --only-show-errors | ConvertFrom-Json
+                                            $QueryResult = az graph query -q $GraphQuery --subscriptions $Sub --skip-token $QueryResult.skip_token --first 200 --output json --only-show-errors | ConvertFrom-Json
                                         }
                                     $LocalResults += $QueryResult
                                 }
@@ -593,7 +593,7 @@ param ($TenantID,
                             }
                         catch
                             {
-                                $QueryResult = az graph query -q $GraphQuery --subscriptions $FSubscri --first 500 --output json --only-show-errors
+                                $QueryResult = az graph query -q $GraphQuery --subscriptions $FSubscri --first 200 --output json --only-show-errors
                             }
                         try
                             {
@@ -612,7 +612,7 @@ param ($TenantID,
                                 }
                             catch
                                 {
-                                    $QueryResult = az graph query -q $GraphQuery --subscriptions $FSubscri --skip-token $QueryResult.skip_token --first 500 --output json --only-show-errors
+                                    $QueryResult = az graph query -q $GraphQuery --subscriptions $FSubscri --skip-token $QueryResult.skip_token --first 200 --output json --only-show-errors
                                 }
                             try
                                 {
