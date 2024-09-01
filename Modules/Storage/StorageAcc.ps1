@@ -34,39 +34,40 @@ If ($Task -eq 'Processing') {
         {
             $tmp = @()
 
-            foreach ($1 in $storageacc) { 
+            foreach ($1 in $storageacc) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $RetDate = ''
-                $RetFeature = '' 
+                $RetFeature = ''
                 $timecreated = $data.creationTime
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                 $TLSv = if ($data.minimumTlsVersion -eq 'TLS1_2') { "TLS 1.2" }elseif ($data.minimumTlsVersion -eq 'TLS1_1') { "TLS 1.1" }else { "TLS 1.0" }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 $VNETRules = if(![string]::IsNullOrEmpty($data.networkacls.virtualnetworkrules)){$data.networkacls.virtualnetworkrules}else{' '}
-                $BlobAccess = if ($data.allowBlobPublicAccess -eq $false) { $false }else { $true }
+                $BlobAccess = if ($data.allowBlobPublicAccess -eq $false){$false}else{$true}
                 $KeyAccess = if($data.allowsharedkeyaccess -eq $true){$true}else{$false}
                 $SFTPEnabled = if($data.isSftpEnabled -eq $true){$true}else{$false}
                 $HNSEnabled = if($data.ishnsenabled -eq $true){$true}else{$false}
                 $NFSv3 = if($data.isnfsv3enabled -eq $true){$true}else{$false}
                 $LargeFileShare = if($data.largeFileSharesState -eq $true){$true}else{$false}
                 $CrossTNT = if($data.allowCrossTenantReplication -eq $true){$true}else{$false}
+                $InfrastructureEncryption = if($data.encryption.requireInfrastructureEncryption -eq "True"){$true}else{$false}
 
-                if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None') 
+                if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None')
                     {
                         $EntraID = $false
                     }
-                elseif ([string]::IsNullOrEmpty($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions)) 
+                elseif ([string]::IsNullOrEmpty($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions))
                     {
                         $EntraID = $false
                     }
-                else 
+                else
                     {
                         $EntraID = $true
                     }
-                
+
                 if ($data.networkacls.defaultaction -eq 'allow')
                     {
                         $PubNetAccess = 'Enabled from all networks'
@@ -79,7 +80,7 @@ If ($Task -eq 'Processing') {
                     {
                         $PubNetAccess = 'Disabled'
                     }
-                
+
                 $PVTEndpoints = @()
                 foreach ($pvt in $data.privateEndpointConnections.properties.privateendpoint)
                     {
@@ -90,7 +91,7 @@ If ($Task -eq 'Processing') {
                     {
                         $DirectResources += $DiRes.resourceid.split('/')[8]
                     }
-                
+
                 $FinalDirectResources = if ($DirectResources.count -gt 1) { $DirectResources | ForEach-Object { $_ + ' ,' } }else { $DirectResources }
                 $FinalDirectResources = [string]$FinalDirectResources
                 $FinalDirectResources = if ($FinalDirectResources -like '* ,*') { $FinalDirectResources -replace ".$" }else { $FinalDirectResources }
@@ -131,6 +132,7 @@ If ($Task -eq 'Processing') {
                                 'Large File Shares'                     = $LargeFileShare;
                                 'Access Tier'                           = $data.accessTier;
                                 'Allow Cross Tenant Replication'        = $CrossTNT;
+                                'Infrastructure Encryption Enabled'     = $InfrastructureEncryption;
                                 'Public Network Access'                 = $PubNetAccess;
                                 'Private Endpoints'                     = $FinalPVTEndpoint;
                                 'Direct Access Resources'               = $FinalDirectResources;
@@ -142,7 +144,7 @@ If ($Task -eq 'Processing') {
                                 'Status Of Primary Location'            = $data.statusOfPrimary;
                                 'Secondary Location'                    = $data.secondaryLocation;
                                 'Status Of Secondary Location'          = $data.statusofsecondary;
-                                'Created Time'                          = $timecreated;   
+                                'Created Time'                          = $timecreated;
                                 'Resource U'                            = $ResUCount;
                                 'Tag Name'                              = [string]$Tag.Name;
                                 'Tag Value'                             = [string]$Tag.Value
@@ -174,10 +176,10 @@ Else {
         $condtxt += New-ConditionalText false -Range K:K
         $condtxt += New-ConditionalText true -Range L:L
         $condtxt += New-ConditionalText 1.0 -Range M:M
-        $condtxt += New-ConditionalText all -Range V:V
-        $condtxt += New-ConditionalText . -Range AA:AA -ConditionalType ContainsText
-        $condtxt += New-ConditionalText unavailable -Range AD:AD
-        $condtxt += New-ConditionalText unavailable -Range AF:AF
+        $condtxt += New-ConditionalText all -Range W:W
+        $condtxt += New-ConditionalText . -Range AB:AB -ConditionalType ContainsText
+        $condtxt += New-ConditionalText unavailable -Range AE:AE
+        $condtxt += New-ConditionalText unavailable -Range AG:AG
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -201,6 +203,7 @@ Else {
         $Exc.Add('Large File Shares')
         $Exc.Add('Access Tier')
         $Exc.Add('Allow Cross Tenant Replication')
+        $Exc.Add('Infrastructure Encryption Enabled')
         $Exc.Add('Public Network Access')
         $Exc.Add('Private Endpoints')
         $Exc.Add('Direct Access Resources')
