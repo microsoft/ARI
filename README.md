@@ -12,149 +12,44 @@ Tags: Powershell, Azure, Inventory, Excel Report, Customer Engineer
 
 <br/>
 
-![Logo](images/ARI_Logo.png)
+<p align="center">
+<img src="images/ARI_Logo.png">
+</p>
 
 # Azure Resource Inventory
 
-Azure Resource inventory (ARI) is a powerful script written in powershell that generates an Excel report of any Azure Environment you have read access. 
+Azure Resource inventory (ARI) is a powerful powershell module that generates an Excel report of any Azure Environment you have read access. 
 
 This project is intend to help Cloud Admins and anyone that might need an easy and fast way to build a full Excel Report of an Azure Environment.  
 
 <br/>
 
-## What's new ?
+### What's new ?
 
 <br/>
 
-### Version 3 is alive!!
+- Version 3.5 is here:
+  - ARI Powershell Module
+  - New Automation Account
+  - Azure Rest API
 
 <br/>
 
-![Overview](images/ARIv3-Overview.png)
+## Azure Resource Inventory Overview
 
 <br/>
 
-Among the many improvements, those are the highlights of the new version:
+<p align="center">
+<img src="images/ARIv35-Overview.png">
+</p>
 
 <br/>
 
-#### 1) Support for 6 extra resource types, including NetApp and VMWare Solution.
+<p align="center">
+<img src="images/ARIv3ExcelExample.png">
+</p>
 
-<br/>
-
-Since the begining of the project, we wanted ARI to evolve and keep pace with the improvements on Azure Resources. Keeping that in mind we are adding extra modules for newer resources.
-
-We also reviewed and updated some of the old resources as well.
-
-<br/>
-
-#### 2) Diagram was completely rebuild and now support environments with more than 30.000 resources
-
-<br/>
-
-Network Topology was cool but in large environments it had some problems (i.e.: freezing and never finishing), and even when it finished it might take forever.
-
-We added parallel processing to diagram, now during the execution of ARI, an extra folder (DiagramCache) will be created, that folder is used by the diagram to store temporary components of the diagrams, after all the parallel processing is done those files are merged in the main diagram.
-
-Now diagram will even finish way before the Excel file.
-
-<br/>
-
-#### 3) Network Topology in the Diagram now identifies the Hub and Spokes Virtual Network
-
-<br/>
-
-![Draw.IO](images/DrawioImage.png)
-
-<br/>
-
-Tab names were added in the diagram and now the Network Topology is the first tab. 
-
-Also in the Network Topology, we are using color in the diagram to identify the different Virtual Network usages in HUB-Spoke topologies.
-
-Colors will also be used to indicate broken peers.
-
-<br/>
-
-#### 4) Diagram now include "Organizational View" (Management Groups)
-
-<br/>
-
-![Draw.IOOrg](images/DrawioOrganization.png)
-
-<br/>
-
-We added extra tabs in the new diagram, the second tab is called "Organization" and will present the hierarquical view of subscriptions in the environment.
-
-The idea is to make easier to align your environment with the Microsoft's Landing Zone design ([What is an Azure landing zone](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/)).
-
-<br/>
-
-#### 5) Diagram now include Resource Overview for every subscription in the environment
-
-<br/>
-
-![Draw.IOOrg](images/drawiosubs.png)
-
-<br/>
-
-Since not everyone have really complex network environments, many people complain about diagram not really presenting much for their environments. 
-
-This change now. Every single Subscription will be a tab in the diagram, those tabs will contain the Subscription, the resource groups and the sum of every type of resource in the resource groups. By now almost every type of draw.io stencil available will be identified, with more coming in the next months.
-
-<br/>
-
-#### 6) ARI in Automation Account
-
-<br/>
-
-![Overview](images/Automation.png)
-
-<br/>
-
-Some people were asking to run ARI in Azure Automation Account and since the old script for automation accounts was not working we managed to fix it for this version. But now is require to use Runtime 7.2 and add the modules: "ImportExcel", "Az.ResourceGraph", "Az.Storage", "Az.Account" and "ThreadJob" in the Automation Account. 
-
-The required steps are present in the: [Automation Guide](https://github.com/microsoft/ARI/blob/main/Automation/README.md).
-
-<br/>
-
-<br/>
-
-> ### *1) Excel Overview*
-
----------------------
-
-<br/>
-
-- The dashboard shows an overall view and summary of resources in the environment. 
-
-<br/>
-
-![Overview](images/ARIv3-Overview.png)
-
-<br/>
-
-- The resource sheet present details and recommendations, security and costs reducing tips for the resources.
-
-<br/>
-
-![Overview](images/ARIv3ExcelExample.png)
-
-<br/>
-
-> ### *2) Azure Diagram Inventory!*
-
----------------------
-
-By default everytime you run the Azure Resource Inventory the diagram will be created. 
-
-If you do not wish to have the diagram created, you must use the __-SkipDiagram__ parameter.
-
-Also, by default the Network Topology will not consider Virtual Networks that are not connected trough peering. If you wants to include those Virtual Networks in the diagram, you must use the parameter __-DiagramFullEnvironment__.
-
-<br/>
-
-#### Diagram:
+#### Network Topology View
 
 <br/>
 
@@ -186,22 +81,130 @@ Also, by default the Network Topology will not consider Virtual Networks that ar
 
 <br/>
 
+#### Organization View
+
+<br/>
+
+<p align="center">
+<img src="images/DrawioOrganization.png">
+</p>
+
+<br/>
+
+#### Resources View
+
+<br/>
+
+<p align="center">
+<img src="images/drawiosubs.png">
+</p>
+
+<br/>
+
+## Version 3.5
+
+<br/>
+
+Among the many improvements, there are two that will considerable change the way we use the script and type of data we are reporting:
+
+<br/>
+
+#### 1) Azure Resource Inventory (Powershell Module)
+
+<br/>
+
+We expect this change will positively change the experience of installing and executing ARI:
+
+<br/>
+
+Installing ARI:
+
+```
+Install-Module -Name AzureResourceInventory
+```
+
+<br/>
+
+<p align="center">
+<img src="images/InstallARI.gif">
+</p>
+
+<br/>
+
+Now to run the script just execute "Invoke-ARI" with the regular parameters:
+
+```
+Invoke-ARI 
+```
+
+<br/>
+
+<p align="center">
+<img src="images/RunningARI.gif">
+</p>
+
+<br/>
+
+#### 2) Automation is now fully integrated within the ARI Module
+
+<br/>
+
+The process to run Azure Resource Inventory using Automation Accounts was changed to fully integrate with the new ARI Module
+
+
+<br/>
+
+<p align="center">
+<img src="images/Automation.png">
+</p>
+
+<br/>
+
+
+The required steps are present in the: [Automation Guide](https://github.com/microsoft/ARI/blob/main/Automation/README.md).
+
+<br/>
+
+<br/>
+
+#### 3) Azure Rest API
+
+<br/>
+
+We are finally incorporating Azure REST API data into ARI. 
+
+At this time we are only including:
+
+  - Azure Support Tickets
+  - Azure Health Incidents
+  - Azure Advisor Score Data
+  - Reservation Recommendations
+
+We expect this will open doors for extra types of data to be included in the script in the future.
+
+
+<br/>
+
+
+<br/>
+
 > ### *3) Parameters*
 
 | Parameter              | Description                                                                                                 |                            |
 |------------------------|-------------------------------------------------------------------------------------------------------------|----------------------------|
 | TenantID               | Specify the tenant ID you want to create a Resource Inventory.                                              | `-TenantID <ID>`           |
-| AppId                  | Service Principal Authentication                                                                            | `-AppId <Client ID>`       |
-| Secret                 | Client secret of the Service Principal                                                                      | `-Secret <Client secret>`  |
 | SubscriptionID         | Specifies Subscription(s) to be inventoried.                                                                | `-SubscriptionID <ID>`     |
 | ManagementGroup        | Specifies the Management Group to be inventoried(all Subscriptions on it)                                   | `-ManagementGroup <ID>`    |  
-| Lite                   | Speficies to use only the Import-Excel module and don't create the charts (using Excel's API)               | `-Lite`                    |
+| Lite                   | Specifies to use only the Import-Excel module and don't create the charts (using Excel's API)               | `-Lite`                    |
 | SecurityCenter         | Include Security Center Data.                                                                               | `-SecurityCenter`          |
 | SkipAdvisory           | Do not collect Azure Advisory.                                                                              | `-SkipAdvisory`            |
+| Automation             | Required when running the script with Automation Account                                                    | `-Automation`              |
+| StorageAccount         | Storage Account Name (Required when running the script with Automation Account)                             | `-StorageAccount`          |
+| StorageContainer       | Storage Account Container Name (Required when running the script with Automation Account)                   | `-StorageContainer`        |
 | IncludeTags            | Include Resource Tags.                                                                                      | `-IncludeTags`             |
 | Debug                  | Run in a Debug mode.                                                                                        | `-Debug`                   |
 | DiagramFullEnvironment | Network Diagram of the entire environment                                                                   | `-DiagramFullEnvironment`  |
-| Diagram                | Create a Visio Diagram.                                                                                     | `-Diagram`                 |
+| Diagram                | Create a Draw.IO Diagram.                                                                                   | `-Diagram`                 |
 | SkipDiagram            | To skip the diagrams creation                                                                               | `-SkipDiagram`             |
 | DeviceLogin            | Authenticating on Azure using the Device login approach                                                     | `-DeviceLogin`             |
 | AzureEnvironment       | Choose between Azure environments <br> > Registered Azure Clouds. Use `az cloud list` to get the list       | `-AzureEnvironment <NAME>` |
@@ -216,35 +219,35 @@ Also, by default the Network Topology will not consider Virtual Networks that ar
 #### Examples
 - For CloudShell:
   ```bash
-  />./AzureResourceInventory.ps1
+  />./Invoke-ARI -Debug
   ```
 - Powershell Desktop:
   ```bash
-  />./AzureResourceInventory.ps1
+  />./Invoke-ARI -TenantID <Azure Tenant ID> 
   ```
-  > If you do not specify Resource Inventory will be performed on all subscriptions for the selected tenant.
+  > If you do not specify the Subscription Resource Inventory will be performed on all subscriptions for the selected tenant.
   > To perform the inventory in a specific Tenant and subscription use `-TenantID` and `-SubscriptionID` parameter
   ```bash
-    />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID>
+    />./Invoke-ARI -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID>
   ```
 - Including Tags:
    ```bash
-  />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> --IncludeTags
+  />./Invoke-ARI -TenantID <Azure Tenant ID> --IncludeTags
    ```
   > By Default Azure Resource inventory do not include Resource Tags.
 - Collecting Security Center Data:
   ```bash
-  />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SecurityCenter
+  />./Invoke-ARI -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SecurityCenter
   ```
   > By Default Azure Resource inventory do not collect Security Center Data.
 - Skipping Azure Advisor:
   ```bash
-  />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SkipAdvisory
+  />./Invoke-ARI -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SkipAdvisory
   ```
   > By Default Azure Resource inventory collects Azure Advisor Data.
-- Creating Network Diagram:
+- Skipping Network Diagram:
   ```bash
-  />./AzureResourceInventory.ps1 -TenantID <Azure Tenant ID> -Diagram
+  />./Invoke-ARI -TenantID <Azure Tenant ID> -SkipDiagram
   ```
 
 <br/>
@@ -258,12 +261,8 @@ These instructions will get you a copy of the project up and running on your loc
 <br/>
 
 ### Supportability
-|Resource Provider|Results|Draw.io Diagram|Comments|
-|-----------------|-------------|-----------------|-------------|
-|Windows|Fully successfully tested|Supported|Best Results|
-|MAC|Fully successfully tested|Not Supported||
-|Linux|Tested on Ubuntu Desktop|Not Supported|No Table auto-fit for columns|
-|CloudShell|Tested on Azure CloudShell|Not Supported|No Table auto-fit for columns|
+
+Even the script might work in almost all environments. Some components (i.e the Topology Diagram) use some APIs and components only present in Windows environment. 
 
 <br/>
 
@@ -272,28 +271,18 @@ These instructions will get you a copy of the project up and running on your loc
 |Tool |Version|  
 |-----------------|-------------|
 |Windows|11 22H2| 
-|Powershell|5.1.19041.1237|  
-|ImportExcel|7.8|
-|azure-cli|2.48.1|
-|AzCLI account|0.2.3|
-|AzCLI resource-graph|2.1.0|
+|Powershell|7.4.4|  
+
 
 <br/>
 
 ### Prerequisites
 
-You can use Azure Resource Inventory in both in Cloudshell and Powershell Desktop. 
+Since the script is a Powershell Module, and we fully migrated az cli to powershell. No extra requirements are needed. 
 
-What things you need to run the script 
+Just install the AzureResourceInventory Module and all the required modules will be automatically installed as well.
 
-
-1. Install-Module [ImportExcel](https://github.com/dfinke/ImportExcel)
-2. Install [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
-3. Install Azure CLI [Account](https://docs.microsoft.com/en-us/cli/azure/azure-cli-extensions-list) Extension
-4. Install Azure CLI [Resource-Graph](https://docs.microsoft.com/en-us/cli/azure/azure-cli-extensions-list) Extension
-
-
-By default Azure Resource Inventory will call to install the required Powershell modules and Azure CLI components but you must have administrator privileges during the script execution. 
+By default Azure Resource Inventory will call to install the required Powershell modules but you must have administrator privileges during the script execution. 
 
 Special Thanks for __Doug Finke__, the Author of Powershell [ImportExcel](https://github.com/dfinke/ImportExcel) Module.    
 
@@ -319,13 +308,13 @@ Special Thanks for __Doug Finke__, the Author of Powershell [ImportExcel](https:
 
 <br/>
 
-* Its really simple to use Azure Resource Inventory, all that you need to do is to call this script in PowerShell.
+* Its really simple to use Azure Resource Inventory, all that you need to do is to invoke this cmdlet in PowerShell.
 
-* Run "AzureResourceInventory.ps1". In Azure CloudShell you're already authenticated. In PowerShell Desktop you will be redirected to  Azure sign-in page. 
+* Run "Invoke-ARI". In Azure CloudShell you're already authenticated. In PowerShell Desktop you will be redirected to  Azure sign-in page. 
 
 <br/>
 
-![Tenants Menu](images/Execution.png)  
+![RunningARI](images/RunningARI.gif)  
 
 
 * If you have privileges in multiple tenants you can specify the desired one by using "-TenantID" parameter or Azure Resource will scan all your tenants ID and ask you to choose one.   
