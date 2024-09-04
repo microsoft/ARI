@@ -95,7 +95,9 @@ $ExtractionRuntime = Measure-Command -Expression {
                 }
         }
 
-            $GraphQuery = "resources $RGQueryExtension $TagQueryExtension $MGQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+            $ExcludedTypes = "| where type !in ('microsoft.logic/workflows')"
+
+            $GraphQuery = "resources $RGQueryExtension $TagQueryExtension $MGQueryExtension $ExcludedTypes | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Resources')
             $Resources += Invoke-ResourceInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Resources'

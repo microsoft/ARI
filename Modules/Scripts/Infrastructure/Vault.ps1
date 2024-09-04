@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Infrastructure/Vault.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.1
+Version: 3.0.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -42,7 +42,8 @@ If ($Task -eq 'Processing')
                 if([string]::IsNullOrEmpty($Data.enableSoftDelete)){$Soft = $false}else{$Soft = $Data.enableSoftDelete}
                 if([string]::IsNullOrEmpty($data.enableRbacAuthorization)){$RBAC = $false}else{$RBAC = $Data.enableRbacAuthorization}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
-                Foreach($2 in $data.accessPolicies)
+                $AccessPol = if(![string]::IsNullOrEmpty($data.accessPolicies)){$data.accessPolicies}else{'0'}
+                Foreach($2 in $AccessPol)
                     {
                         $Secrets = if ($2.permissions.secrets.count -gt 1) { $2.permissions.secrets | ForEach-Object { $_ + ' ,' } }else { $2.permissions.secrets }
                         $Secrets = [string]$Secrets
