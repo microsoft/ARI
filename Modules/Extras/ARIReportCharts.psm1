@@ -18,7 +18,7 @@ Authors: Claudio Merola
 
 #>
 function Build-ARIExcelChart {
-    param($File, $TableStyle, $PlatOS, $Subscriptions, $ExtractionRunTime, $ReportingRunTime, $RunLite, $Debug)
+    param($File, $TableStyle, $PlatOS, $Subscriptions, $ExtractionRunTime, $ReportingRunTime, $RunLite, $Overview, $Debug)
     if ($Debug.IsPresent)
         {
             $DebugPreference = 'Continue'
@@ -33,6 +33,15 @@ function Build-ARIExcelChart {
 
     $ScriptVersion = [string]$ARIMod.Version
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Excel Charts Customization.')
+
+    if ($RunLite)
+        {
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Running in Lite Mode.')
+        }
+    else
+        {
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Running in Full Mode.')
+        }
 
     if(!$RunLite)
         {
@@ -318,10 +327,10 @@ function Build-ARIExcelChart {
                     $P00Name = 'Resources'
                 }
             $DrawP0 = $WS.Drawings | Where-Object { $_.Name -eq 'TP0' }
-            if ($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Outages' }) {
+            if (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Outages' }) -and $Overview -eq 1) {
                 $P0Name = 'Outages'
             }
-            elseif ($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Advisor' }) {
+            elseif (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Advisor' }) -and $Overview -eq 2) {
                 $P0Name = 'Advisories'
             }
             else {
@@ -329,20 +338,20 @@ function Build-ARIExcelChart {
             }
             $DrawP0.RichText.Add($P0Name) | Out-Null
 
-            if ($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'AdvisorScore' }) {
+            if (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'AdvisorScore' }) -and $Overview -eq 1) {
                 $P1Name = 'AdvisorScore'
             }
-            elseif ($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Subscriptions' }) {
+            elseif (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Subscriptions' }) -and $Overview -eq 2) {
                 $P1Name = 'Subscriptions'
             }
             $DrawP1 = $WS.Drawings | Where-Object { $_.Name -eq 'TP1' }
             $DrawP1.RichText.Add($P1Name) | Out-Null
 
             $DrawP2 = $WS.Drawings | Where-Object { $_.Name -eq 'TP2' }
-            if ($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Policy' }) {
+            if (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Policy' }) -and $Overview -eq 1) {
                 $P2Name = 'Policy'
             }
-            elseif ($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Advisor' }) {
+            elseif (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Advisor' }) -and $Overview -eq 2) {
                 $P2Name = 'Annual Savings'
             }
             else {
@@ -352,10 +361,10 @@ function Build-ARIExcelChart {
             $DrawP2.RichText.Add($P2Name) | Out-Null
 
             $DrawP3 = $WS.Drawings | Where-Object { $_.Name -eq 'TP3' }
-            if ($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'SupportTickets' }) {
+            if (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'SupportTickets' }) -and $Overview -eq 1) {
                 $P3Name = 'SupportTickets'
             }
-            elseif ($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'AKS' }) {
+            elseif (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'AKS' }) -and $Overview -eq 2) {
                 $P3Name = 'Azure Kubernetes'
             }
             else {
@@ -364,10 +373,10 @@ function Build-ARIExcelChart {
             $DrawP3.RichText.Add($P3Name) | Out-Null
 
             $DrawP4 = $WS.Drawings | Where-Object { $_.Name -eq 'TP4' }
-            if ($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Outages' }) {
+            if (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Outages' }) -and $Overview -eq 1) {
                 $P4Name = 'Outages'
             }
-            elseif ($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Quota Usage' }) {
+            elseif (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Quota Usage' }) -and $Overview -eq 2) {
                 $P4Name = 'Quota Usage'
             }
             else {

@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/CosmosDB.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.2
+Version: 2.2.3
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -91,7 +91,6 @@ Else {
 
         $condtxt = @()
         $condtxt += New-ConditionalText FALSE -Range J:J
-        $condtxt += New-ConditionalText FALSO -Range J:J
         $condtxt += New-ConditionalText Enabled -Range M:M
         $condtxt += New-ConditionalText Disabled -Range I:I
         $condtxt += New-ConditionalText Local -Range G:G

@@ -66,7 +66,11 @@
 Function Invoke-ARI {
 param ([ValidateSet('AzureCloud', 'AzureUSGovernment')]
         $AzureEnvironment = 'AzureCloud',
+        [ValidateSet(1, 2, 3)]
+        $Overview = 1,
         $TenantID,
+        $AppId,
+        [Security.SecureString]$Secret,
         $SubscriptionID,
         $ManagementGroup,
         [string[]]$ResourceGroup,
@@ -175,7 +179,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment')]
 
         if ($PlatOS -ne 'Azure CloudShell' -and !$Automation.IsPresent)
             {
-                $TenantID = Connect-ARILoginSession -AzureEnvironment $AzureEnvironment -TenantID $TenantID -SubscriptionID $SubscriptionID -DeviceLogin $DeviceLogin
+                $TenantID = Connect-ARILoginSession -AzureEnvironment $AzureEnvironment -TenantID $TenantID -SubscriptionID $SubscriptionID -DeviceLogin $DeviceLogin, -AppId $AppId -Secret $Secret
             }
         elseif ($Automation.IsPresent)
             {
@@ -183,13 +187,16 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment')]
                     $AzureConnection = (Connect-AzAccount -Identity).context
 
                     Set-AzContext -SubscriptionName $AzureConnection.Subscription -DefaultProfile $AzureConnection
-
-                    $StorageContext = New-AzStorageContext -StorageAccountName $StorageAccount -UseConnectedAccount
                 }
                 catch {
                     Write-Output "Failed to set Automation Account requirements. Aborting." 
                     exit
                 }
+            }
+
+        if ($StorageAccount)
+            {
+                $StorageContext = New-AzStorageContext -StorageAccountName $StorageAccount -UseConnectedAccount
             }
 
         $Subscriptions = Get-ARISubscriptions -TenantID $TenantID -SubscriptionID $SubscriptionID
@@ -298,7 +305,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment')]
         $polco = [string]$PolicyAssign.policyAssignments.Count
 
         #### Creating Excel file variable:
-        if ($Automation.IsPresent)
+        if ($StorageAccount)
             {
                 $Date = get-date -Format "yyyy-MM-dd_HH_mm"
 
@@ -318,9 +325,9 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment')]
 
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Resources Report Function.')
 
-            Build-AzureResourceReport -Subscriptions $Subscriptions -ExtractionRunTime $ExtractionRuntime -Resources $Resources -SecurityCenter $SecurityCenter -File $File -DDFile $DDFile -SkipDiagram $SkipDiagram -RunLite $RunLite -PlatOS $PlatOS -InTag $InTag -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -Automation $Automation -SkipAPIs $SkipAPIs -Debug $Debug
+            Build-AzureResourceReport -Subscriptions $Subscriptions -DefaultPath $DefaultPath -ExtractionRunTime $ExtractionRuntime -Resources $Resources -SecurityCenter $SecurityCenter -File $File -DDFile $DDFile -SkipDiagram $SkipDiagram -RunLite $RunLite -PlatOS $PlatOS -InTag $InTag -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -Automation $Automation -SkipAPIs $SkipAPIs, -Overview $Overview -Debug $Debug
 
-        if ($Automation.IsPresent)
+        if ($StorageAccount)
             {
                 Set-AzStorageBlobContent -File $File -Container $StorageContainer -Context $StorageContext | Out-Null
             }

@@ -20,6 +20,7 @@ Authors: Claudio Merola
 Function Build-AzureResourceReport {
     Param($Subscriptions,
     $ExtractionRuntime,
+    $DefaultPath,
     $Resources,
     $SecurityCenter,
     $File,
@@ -32,7 +33,13 @@ Function Build-AzureResourceReport {
     $SkipPolicy,
     $SkipAdvisory,
     $Automation,
+    $Overview,
     $Debug)
+
+    if ($Overview -eq 1 -and $SkipAPIs)
+        {
+            $Overview = 2
+        }
 
     if ($Debug.IsPresent)
         {
@@ -78,7 +85,7 @@ Function Build-AzureResourceReport {
 
         if (!$Automation.IsPresent)
             {
-                if($DebugEnvSize -in ('Large','Enormous'))
+                if($DebugEnvSize -eq 'Large')
                 {
                     Clear-Variable Resources
                     [System.GC]::GetTotalMemory($true) | out-null
@@ -102,13 +109,28 @@ Function Build-AzureResourceReport {
 
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Jobs Compleated.')
 
-                $SmaResources = @()
-
-                Foreach ($Job in $JobNames)
+                if($DebugEnvSize -ne 'Large')
                     {
-                        $TempJob = Receive-Job -Name $Job
-                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Job '+ $Job +' Returned: ' + ($TempJob.values | Where-Object {$_ -ne $null}).Count + ' Resource Types.')
-                        $SmaResources += $TempJob
+                        $SmaResources = Foreach ($Job in $JobNames)
+                            {
+                                $TempJob = Receive-Job -Name $Job
+                                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Job '+ $Job +' Returned: ' + ($TempJob.values | Where-Object {$_ -ne $null}).Count + ' Resource Types.')
+                                $TempJob
+                            }
+                    }
+                else
+                    {
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Creating Folder for Cache Files.')
+                        if ((Test-Path -Path ($DefaultPath+'ReportCache\') -PathType Container) -eq $false) {
+                            New-Item -Type Directory -Force -Path ($DefaultPath+'ReportCache\') | Out-Null
+                        }
+                        Foreach ($Job in $JobNames)
+                            {
+                                $TempJob = Receive-Job -Name $Job
+                                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Job '+ $Job +' Returned: ' + ($TempJob.values | Where-Object {$_ -ne $null}).Count + ' Resource Types.')
+                                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Creating Cache File: '+$job)
+                                $TempJob | ConvertTo-Json -Depth 20 | Out-File ($DefaultPath+'ReportCache\'+$job+'.json')
+                            }
                     }
             }
 
@@ -116,7 +138,7 @@ Function Build-AzureResourceReport {
 
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Resource Reporting.')
 
-        Start-ARIResourceReporting -InTag $InTag -file $file -SmaResources $SmaResources -TableStyle $TableStyle -Unsupported $Unsupported -DebugEnvSize $DebugEnvSize -DataActive $DataActive -Debug $Debug
+        Start-ARIResourceReporting -InTag $InTag -file $file -SmaResources $SmaResources -DefaultPath $DefaultPath -TableStyle $TableStyle -Unsupported $Unsupported -DebugEnvSize $DebugEnvSize -DataActive $DataActive -Debug $Debug
 
         <################################################################### EXTRA REPORTS ###################################################################>
 
@@ -132,7 +154,7 @@ Function Build-AzureResourceReport {
 
     Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "15% Complete." -PercentComplete 15 -CurrentOperation "Invoking Excel Chart's Module."
 
-    Build-ARIExcelChart -File $File -TableStyle $TableStyle -PlatOS $PlatOS -Subscriptions $Subscriptions -ExtractionRunTime $ExtractionRuntime -ReportingRunTime $ReportingRunTime -RunLite $RunLite -Debug $Debug
+    Build-ARIExcelChart -File $File -TableStyle $TableStyle -PlatOS $PlatOS -Subscriptions $Subscriptions -ExtractionRunTime $ExtractionRuntime -ReportingRunTime $ReportingRunTime -RunLite $RunLite -Overview $Overview -Debug $Debug
 
     [System.GC]::GetTotalMemory($true) | out-null
 

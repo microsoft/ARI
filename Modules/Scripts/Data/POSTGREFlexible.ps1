@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/POSTGREFlexible.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.0
+Version: 3.1.2
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -85,13 +85,12 @@ Else {
 
     if ($SmaResources.POSTGREFlexible) {
 
-        $TableName = ('POSTGREFlextable_'+($SmaResources.POSTGREFlexible.id | Select-Object -Unique).count)
+        $TableName = ('POSTGFlex_'+($SmaResources.POSTGREFlexible.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
         $condtxt += New-ConditionalText enabled -Range V:V
         $condtxt += New-ConditionalText notenabled -Range P:P
-
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription') #A
@@ -130,10 +129,6 @@ Else {
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'PostgreSQL Flexible' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
-
-        $excel = Open-ExcelPackage -Path $File -KillExcel
-
-        Close-ExcelPackage $excel
 
     }
     <######## Insert Column comments and documentations here following this model #########>

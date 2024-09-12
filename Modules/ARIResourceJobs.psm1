@@ -16,26 +16,18 @@ function Start-ARIResourceJobs {
                     $EnvSizeLooper = 1000
                     $DebugEnvSize = 'Small'
                 }
-            {$_ -gt 1000 -and $_ -le 30000}
+            {$_ -gt 1000 -and $_ -le 10000}
                 {
-                    $EnvSizeLooper = 5000
+                    $EnvSizeLooper = 2500
                     $DebugEnvSize = 'Medium'
                 }
-            {$_ -gt 30000 -and $_ -le 60000}
+            {$_ -gt 10000}
                 {
-                    $EnvSizeLooper = 10000
+                    $EnvSizeLooper = 5000
                     $DebugEnvSize = 'Large'
                     Write-Host $DebugEnvSize -NoNewline -ForegroundColor Green
                     Write-Host (' Size Environment Identified.')
                     Write-Host ('Jobs will be run in batches to avoid CPU Overload.')
-                }
-            {$_ -gt 60000}
-                {
-                    $EnvSizeLooper = 5000
-                    $DebugEnvSize = 'Enormous'
-                    Write-Host $DebugEnvSize -NoNewline -ForegroundColor Green
-                    Write-Host (' Size Environment Identified.')
-                    Write-Host ('Jobs will be run in batches to prevent CPU Overload.')
                 }
         }
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Processing Jobs in '+ $DebugEnvSize +' Mode.')
@@ -135,7 +127,7 @@ function Start-ARIResourceJobs {
             } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, $Resource, 'Processing', $null, $null, $null, $Unsupported | Out-Null
             $Limit = $Limit + $EnvSizeLooper
             Start-Sleep -Milliseconds 250
-            if($DebugEnvSize -in ('Large','Enormous') -and $JobLoop -eq 5)
+            if($DebugEnvSize -in ('Large') -and $JobLoop -eq 5)
                 {
                     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Waiting Batch of Jobs to Complete.')
 

@@ -199,6 +199,7 @@ We expect this will open doors for extra types of data to be included in the scr
 | SecurityCenter         | Include Security Center Data.                                                                               | `-SecurityCenter`          |
 | SkipAdvisory           | Do not collect Azure Advisory.                                                                              | `-SkipAdvisory`            |
 | Automation             | Required when running the script with Automation Account                                                    | `-Automation`              |
+| Overview               | Used to change the Overview Sheet Charts (Available values are: 1 and 2)                                    | `-Overview`                |
 | StorageAccount         | Storage Account Name (Required when running the script with Automation Account)                             | `-StorageAccount`          |
 | StorageContainer       | Storage Account Container Name (Required when running the script with Automation Account)                   | `-StorageContainer`        |
 | IncludeTags            | Include Resource Tags.                                                                                      | `-IncludeTags`             |

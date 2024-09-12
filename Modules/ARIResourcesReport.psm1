@@ -1,5 +1,5 @@
 function Start-ARIResourceReporting {
-    Param($InTag, $file, $SmaResources, $TableStyle, $Unsupported, $DebugEnvSize, $DataActive, $Debug)
+    Param($InTag, $file, $SmaResources, $DefaultPath, $TableStyle, $Unsupported, $DebugEnvSize, $DataActive, $Debug)
     if ($Debug.IsPresent)
         {
             $DebugPreference = 'Continue'
@@ -26,6 +26,12 @@ function Start-ARIResourceReporting {
     $Lops = $Modules.count
     $ReportCounter = 0
 
+    if($DebugEnvSize -eq 'Large')
+        {
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for Cache Files.')
+            $LocalCacheFiles = Get-ChildItem -Path ($DefaultPath+'\ReportCache\*.json')
+        }
+
     foreach ($Module in $Modules) {
 
         $c = (($ReportCounter / $Lops) * 100)
@@ -38,6 +44,21 @@ function Start-ARIResourceReporting {
         Start-Sleep -Milliseconds 50
         $ModuleName = $Module.name.replace('.ps1','')
 
+        if($DebugEnvSize -eq 'Large')
+        {
+            $SmaResources = foreach ($LocalFile in $LocalCacheFiles)
+                {
+                    $TempContent = Get-Content -Path $LocalFile | ConvertFrom-Json
+                    if ($TempContent.$ModuleName.count -gt 0)
+                        {
+                            $TempVar = @{
+                                $ModuleName = $TempContent.$ModuleName
+                            }
+                        }
+                        $TempVar
+                }
+        }
+
         $ModuleResourceCount = $SmaResources.$ModuleName.count
 
         if ($ModuleResourceCount -gt 0)
@@ -49,7 +70,7 @@ function Start-ARIResourceReporting {
 
                 $ExcelJob = $ExcelRun.BeginInvoke()
 
-                while ($ExcelJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 100 }
+                while ($ExcelJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 500 }
 
                 $ExcelRun.EndInvoke($ExcelJob)
 
@@ -58,14 +79,20 @@ function Start-ARIResourceReporting {
                 [System.GC]::GetTotalMemory($true) | out-null
             }
 
+        if($DebugEnvSize -eq 'Large')
+            {
+                Clear-Variable SmaResources
+                [System.GC]::GetTotalMemory($true) | out-null
+            }
+
         $ReportCounter ++
 
     }
 
-    if($DebugEnvSize -in ('Large','Enormous'))
+    if($DebugEnvSize -eq 'Large')
         {
-            Clear-Variable SmaResources -Scope Global
-            [System.GC]::GetTotalMemory($true) | out-null
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Cleaning Cache Files.')
+            Remove-Item -Path ($DefaultPath+'\ReportCache\') -Recurse
         }
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Resource Reporting Phase Done.')

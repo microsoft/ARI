@@ -18,7 +18,7 @@ Authors: Claudio Merola
 
 #>
 function Connect-ARILoginSession {
-    Param($AzureEnvironment,$TenantID,$SubscriptionID,$DeviceLogin,$Debug)
+    Param($AzureEnvironment, $TenantID, $SubscriptionID, $DeviceLogin, $AppId, $Secret, $Debug)
     if ($Debug.IsPresent)
         {
             $DebugPreference = 'Continue'
@@ -96,6 +96,11 @@ function Connect-ARILoginSession {
         if($DeviceLogin.IsPresent)
             {
                 Connect-AzAccount -Tenant $TenantID -UseDeviceAuthentication -Environment $AzureEnvironment | Out-Null
+            }
+        elseif($AppId -and $Secret -and $TenantID)
+            {
+                $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $AppId, $Secret
+                Connect-AzAccount -ServicePrincipal -TenantId $TenantId -Credential $Credential
             }
         else
             {

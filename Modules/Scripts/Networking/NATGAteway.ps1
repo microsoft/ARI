@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/NATGateway.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 2.2.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -43,12 +43,12 @@ If ($Task -eq 'Processing') {
                                         $t_pip_addresses = ''
                                         $t_pip_prefixes = ''
 
-                                        if (!!$data.publicipaddresses) {
+                                        if ($data.publicipaddresses) {
                                             $t_pip_addresses = [string]$data.publicipaddresses.id.split("/")[8]
                                         }
 
                                         
-                                        if (!!$data.publicipprefixes) {
+                                        if ($data.publicipprefixes) {
                                             $t_pip_prefixes = [string]$data.publicipprefixes.id.split("/")[8]
                                         }
 
@@ -79,7 +79,7 @@ If ($Task -eq 'Processing') {
 Else {
     if ($SmaResources.NATGateway) {
 
-        $TableName = ('NATGatewayTable_'+($SmaResources.NATGateway.id | Select-Object -Unique).count)
+        $TableName = ('NATGtwTable_'+($SmaResources.NATGateway.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -106,6 +106,6 @@ Else {
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'NAT Gateway' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
-    
+
     }
 }
