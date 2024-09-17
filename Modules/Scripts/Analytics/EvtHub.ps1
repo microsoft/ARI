@@ -125,15 +125,5 @@ Else
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'Event Hubs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
-
-        <######## Insert Column comments and documentations here following this model #########>
-
-
-        $excel = Open-ExcelPackage -Path $File -KillExcel
-
-        $null = $excel.'Event Hubs'.Cells["L1"].AddComment("The Auto-inflate feature of Event Hubs automatically scales up by increasing the number of throughput units, to meet usage needs. Increasing throughput units prevents throttling scenarios.", "Azure Resource Inventory")
-        $excel.'Event Hubs'.Cells["L1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-auto-inflate'
-
-        Close-ExcelPackage $excel 
     }
 }

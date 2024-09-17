@@ -101,12 +101,5 @@ Else {
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'CloudServices' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $condtxt -Numberformat '0' -Style $Style
 
-        $excel = Open-ExcelPackage -Path $File -KillExcel
-    
-        $null = $excel.'CloudServices'.Cells["F1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.")
-        $excel.'CloudServices'.Cells["F1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
-
-        Close-ExcelPackage $excel
-    
     }
 }

@@ -239,39 +239,5 @@ Else
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'AKS' -AutoSize -TableName $TableName -MaxAutoSizeRows 50 -TableStyle $tableStyle -ConditionalText $condtxt -Numberformat '0' -Style $Style,$StyleExt -NoNumberConversion $noNumberConversion 
-        
-        $excel = Open-ExcelPackage -Path $File -KillExcel
-
-        $null = $excel.'AKS'.Cells["E1"].AddComment("Microsoft recommends Free Pricing tier only for non-production workloads", "Azure Resource Inventory")
-        $excel.'AKS'.Cells["E1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/free-standard-pricing-tiers'
-
-        $null = $excel.'AKS'.Cells["F1"].AddComment("AKS follows 12 months of support for a generally available (GA) Kubernetes version. To read more about our support policy for Kubernetes versioning", "Azure Resource Inventory")
-        $excel.'AKS'.Cells["F1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/supported-kubernetes-versions?tabs=azure-cli#aks-kubernetes-release-calendar'
-
-        $null = $excel.'AKS'.Cells["J1"].AddComment("Local accounts are enabled by default. Even when you enable RBAC or Microsoft Entra integration", "Azure Resource Inventory")
-        $excel.'AKS'.Cells["J1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/manage-local-accounts-managed-azure-ad'
-
-        $null = $excel.'AKS'.Cells["T1"].AddComment("By default AKS Control Plane is exposed on a public endpoint accessible over the internet. Organizations who want to disable this public endpoint, can leverage the private cluster feature", "Azure Resource Inventory")
-        $excel.'AKS'.Cells["T1"].Hyperlink = 'https://techcommunity.microsoft.com/t5/core-infrastructure-and-security/public-and-private-aks-clusters-demystified/ba-p/3716838'
-
-        $null = $excel.'AKS'.Cells["W1"].AddComment("By enabling auto-upgrade, you can ensure your clusters are up to date and don't miss the latest features or patches from AKS and upstream Kubernetes.", "Azure Resource Inventory")
-        $excel.'AKS'.Cells["W1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/auto-upgrade-cluster?tabs=azure-cli#why-use-cluster-auto-upgrade'
-
-        $null = $excel.'AKS'.Cells["X1"].AddComment("Node-level OS security updates are released at a faster rate than Kubernetes patch or minor version updates. The node OS auto-upgrade channel grants you flexibility and enables a customized strategy for node-level OS security updates.", "Azure Resource Inventory")
-        $excel.'AKS'.Cells["X1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/auto-upgrade-node-os-image?tabs=azure-cli#interactions-between-node-os-auto-upgrade-and-cluster-auto-upgrade'
-
-        $null = $excel.'AKS'.Cells["Y1"].AddComment("Container insights collects metric data from your cluster in addition to logs. This functionality has been replaced by Azure Monitor managed service for Prometheus. You can analyze that data using built-in dashboards in Managed Grafana and alert on them using prebuilt Prometheus alert rules.", "Azure Resource Inventory")
-        $excel.'AKS'.Cells["Y1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-overview'
-
-        $null = $excel.'AKS'.Cells["AH1"].AddComment("System node pools require a VM SKU of at least 2 vCPUs and 4 GB memory. But burstable-VM(B series) isn't recommended", "Azure Resource Inventory")
-        $excel.'AKS'.Cells["AH1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/use-system-pools?tabs=azure-cli#system-and-user-node-pools'
-
-        $null = $excel.'AKS'.Cells["AI1"].AddComment("An AKS cluster distributes resources, such as nodes and storage, across logical sections of underlying Azure infrastructure. Using availability zones physically separates nodes from other nodes deployed to different availability zones. AKS clusters deployed with multiple availability zones configured across a cluster provide a higher level of availability to protect against a hardware failure or a planned maintenance event.", "Azure Resource Inventory")
-        $excel.'AKS'.Cells["AI1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/availability-zones-overview'
-
-        $null = $excel.'AKS'.Cells["AM1"].AddComment("The cluster autoscaler component can watch for pods in your cluster that can't be scheduled because of resource constraints", "Azure Resource Inventory")
-        $excel.'AKS'.Cells["AM1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/cluster-autoscaler'
-
-        Close-ExcelPackage $excel
     }
 }

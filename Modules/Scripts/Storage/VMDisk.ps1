@@ -117,15 +117,5 @@ Else
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'Disks' -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
-
-        <######## Insert Column comments and documentations here following this model #########>
-
-        $excel = Open-ExcelPackage -Path $File -KillExcel
-
-        $null = $excel.Disks.Cells["D1"].AddComment("When you delete a virtual machine (VM) in Azure, by default, any disks that are attached to the VM aren't deleted. After a VM is deleted, you will continue to pay for unattached disks.", "Azure Resource Inventory")
-        $excel.Disks.Cells["D1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/windows/find-unattached-disks'
-
-        Close-ExcelPackage $excel 
-
     }
 }

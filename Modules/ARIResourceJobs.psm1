@@ -1,5 +1,5 @@
 function Start-ARIResourceJobs {
-    Param ($Resources, $Subscriptions, $InTag, $Unsupported, $Debug)
+    Param ($Resources, $Subscriptions, $InTag, $Heavy, $Unsupported, $Debug)
     if ($Debug.IsPresent)
         {
             $DebugPreference = 'Continue'
@@ -11,17 +11,22 @@ function Start-ARIResourceJobs {
         }
     switch ($Resources.count)
         {
-            {$_ -le 1000}
+            {$_ -le 5000}
                 {
                     $EnvSizeLooper = 1000
                     $DebugEnvSize = 'Small'
                 }
-            {$_ -gt 1000 -and $_ -le 10000}
+            {$_ -gt 5000 -and $_ -le 12500}
                 {
                     $EnvSizeLooper = 2500
                     $DebugEnvSize = 'Medium'
                 }
-            {$_ -gt 10000}
+            {$_ -gt 12500 -and $_ -le 50000}
+                {
+                    $EnvSizeLooper = 5000
+                    $DebugEnvSize = 'Medium-Large'
+                }
+            {$_ -gt 50000}
                 {
                     $EnvSizeLooper = 5000
                     $DebugEnvSize = 'Large'
@@ -30,6 +35,10 @@ function Start-ARIResourceJobs {
                     Write-Host ('Jobs will be run in batches to avoid CPU Overload.')
                 }
         }
+        if($Heavy.isPresent)
+            {
+                $DebugEnvSize = 'Large'
+            }
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Processing Jobs in '+ $DebugEnvSize +' Mode.')
 
         $Loop = $Resources.count / $EnvSizeLooper
@@ -51,8 +60,6 @@ function Start-ARIResourceJobs {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Resources Being Processed in ResourceJob_'+ $LoopCountStr + ': ' + $ResourceCount)
 
             Start-Job -Name ('ResourceJob_'+$Looper) -ScriptBlock {
-
-                $Job = @()
 
                 $Subscriptions = $($args[2])
                 $InTag = $($args[3])
@@ -87,7 +94,7 @@ function Start-ARIResourceJobs {
 
                     $job += (get-variable -name ('ModJob' + $ModName)).Value
                     Start-Sleep -Milliseconds 250
-                    Clear-Variable -Name ModName
+                    Remove-Variable -Name ModName
                 }
 
                 while ($Job.Runspace.IsCompleted -contains $false) { Start-Sleep -Milliseconds 1000 }
@@ -99,13 +106,11 @@ function Start-ARIResourceJobs {
                     New-Variable -Name ('ModValue' + $ModName)
                     Set-Variable -Name ('ModValue' + $ModName) -Value (((get-variable -name ('ModRun' + $ModName)).Value).EndInvoke((get-variable -name ('ModJob' + $ModName)).Value))
 
-                    Clear-Variable -Name ('ModRun' + $ModName)
-                    Clear-Variable -Name ('ModJob' + $ModName)
+                    Remove-Variable -Name ('ModRun' + $ModName)
+                    Remove-Variable -Name ('ModJob' + $ModName)
                     Start-Sleep -Milliseconds 250
-                    Clear-Variable -Name ModName
+                    Remove-Variable -Name ModName
                 }
-
-                [System.GC]::GetTotalMemory($true) | out-null
 
                 $Hashtable = New-Object System.Collections.Hashtable
 
@@ -115,19 +120,20 @@ function Start-ARIResourceJobs {
 
                     $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
 
-                    Clear-Variable -Name ('ModValue' + $ModName)
+                    Remove-Variable -Name ('ModValue' + $ModName)
                     Start-Sleep -Milliseconds 100
 
-                    Clear-Variable -Name ModName
+                    Remove-Variable -Name ModName
                 }
 
-                [System.GC]::GetTotalMemory($true) | out-null
+            [System.GC]::Collect() | out-null
+            Start-Sleep -Milliseconds 50
 
             $Hashtable
             } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, $Resource, 'Processing', $null, $null, $null, $Unsupported | Out-Null
             $Limit = $Limit + $EnvSizeLooper
-            Start-Sleep -Milliseconds 250
-            if($DebugEnvSize -in ('Large') -and $JobLoop -eq 5)
+            Start-Sleep -Milliseconds 100
+            if($DebugEnvSize -in ('Large','Medium-Large') -and $JobLoop -eq 5)
                 {
                     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Waiting Batch of Jobs to Complete.')
 
@@ -139,14 +145,13 @@ function Start-ARIResourceJobs {
                         $jb = get-job -Name $InterJobNames
                         $c = (((($jb.count - ($jb | Where-Object { $_.State -eq 'Running' }).Count)) / $jb.Count) * 100)
                         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'initial Jobs Running: '+[string]($jb | Where-Object { $_.State -eq 'Running' }).count)
-                        $c = [math]::Round($coun)
+                        $coun = [math]::Round($c)
                         Write-Progress -Id 1 -activity "Processing Initial Resource Jobs" -Status "$coun% Complete." -PercentComplete $coun
                         Start-Sleep -Seconds 15
                     }
                     $JobLoop = 0
                 }
             $JobLoop ++
-            [System.GC]::GetTotalMemory($true) | out-null
         }
     return $DebugEnvSize
 }

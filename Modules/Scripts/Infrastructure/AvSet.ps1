@@ -100,13 +100,5 @@ Else
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'Availability Sets' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
-        <######## Insert Column comments and documentations here following this model #########>
-
-
-        #$excel = Open-ExcelPackage -Path $File -KillExcel
-
-
-        #Close-ExcelPackage $excel 
-
     }
 }

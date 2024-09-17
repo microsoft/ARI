@@ -149,5 +149,4 @@ Else {
         Export-Excel -Path $File -WorksheetName 'Stream Analytics Jobs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
 
     }
-    <######## Insert Column comments and documentations here following this model #########>
 }

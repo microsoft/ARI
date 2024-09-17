@@ -108,6 +108,5 @@ Else {
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'SupportTickets' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $cond -Numberformat '0' -Style $Style
 
-    
     }
 }

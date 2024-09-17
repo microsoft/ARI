@@ -131,5 +131,4 @@ Else {
         Export-Excel -Path $File -WorksheetName 'PostgreSQL Flexible' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }
-    <######## Insert Column comments and documentations here following this model #########>
 }

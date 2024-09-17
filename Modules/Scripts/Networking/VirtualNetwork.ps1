@@ -174,14 +174,6 @@ Else {
         $ExcelVar | 
             ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'Virtual Networks' -AutoSize -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
-        
-
-        $excel = Open-ExcelPackage -Path $File -KillExcel
-
-        $null = $excel.VirtualNetwork.Cells["F1"].AddComment("Azure DDoS Protection Standard, combined with application design best practices, provides enhanced DDoS mitigation features to defend against DDoS attacks.", "Azure Resource Inventory")
-        $excel.VirtualNetwork.Cells["F1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/ddos-protection/ddos-protection-overview'
-
-        Close-ExcelPackage $excel 
 
     }
 }

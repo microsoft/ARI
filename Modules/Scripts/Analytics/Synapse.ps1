@@ -113,5 +113,4 @@ Else {
         Export-Excel -Path $File -WorksheetName 'Synapse' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
 
     }
-    <######## Insert Column comments and documentations here following this model #########>
 }

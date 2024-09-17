@@ -228,21 +228,5 @@ Else {
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc |
         Export-Excel -Path $File -WorksheetName 'Storage Acc' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
-        <######## Insert Column comments and documentations here following this model #########>
-
-
-        $excel = Open-ExcelPackage -Path $File -KillExcel
-
-        $null = $excel.'Storage Acc'.Cells["K1"].AddComment("Is recommended that you configure your storage account to accept requests from secure connections only by setting the Secure transfer required property for the storage account.", "Azure Resource Inventory")
-        $excel.'Storage Acc'.Cells["K1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer'
-        $null = $excel.'Storage Acc'.Cells["L1"].AddComment("When a container is configured for anonymous access, any client can read data in that container. Anonymous access presents a potential security risk, so if your scenario does not require it, we recommend that you remediate anonymous access for the storage account.", "Azure Resource Inventory")
-        $excel.'Storage Acc'.Cells["L1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-configure?tabs=portal'
-        $null = $excel.'Storage Acc'.Cells["M1"].AddComment("By default, Azure Storage accounts permit clients to send and receive data with the oldest version of TLS, TLS 1.0, and above. To enforce stricter security measures, you can configure your storage account to require that clients send and receive data with a newer version of TLS", "Azure Resource Inventory")
-        $excel.'Storage Acc'.Cells["M1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version?tabs=portal'
-        $null = $excel.'Storage Acc'.Cells["I1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.", "Azure Resource Inventory")
-        $excel.'Storage Acc'.Cells["I1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
-
-        Close-ExcelPackage $excel
-
     }
 }

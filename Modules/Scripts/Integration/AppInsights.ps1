@@ -118,5 +118,4 @@ Else {
         Export-Excel -Path $File -WorksheetName 'AppInsights' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style -ConditionalText $condtxt
 
     }
-    <######## Insert Column comments and documentations here following this model #########>
 }

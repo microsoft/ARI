@@ -12,7 +12,7 @@
 RootModule = 'AzureResourceInventory.psm1'
 
 # Version number of this module.
-ModuleVersion = '3.5.1'
+ModuleVersion = '3.5.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -68,7 +68,7 @@ RequiredModules = @('ImportExcel','Az.Accounts','Az.Compute','Az.ResourceGraph',
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
 NestedModules = @('Modules/Core/ARITestPS.psm1',
                     'Modules/ARIResourceJobs.psm1',
-                    'Modules/ARIResourcesReport.psm1',
+                    'Modules/ARIReportJobs.psm1',
                     'Modules/Core/ARIExtraJobs.psm1'
                     'Modules/Core/ARILoginSession.psm1',
                     'Modules/Inventory/ARIResourceDataPull.psm1',
@@ -81,6 +81,7 @@ NestedModules = @('Modules/Core/ARITestPS.psm1',
                     'Modules/Inventory/ARISubInv.psm1',
                     'Modules/Inventory/ARIQuotaInv.psm1',
                     'Modules/Extras/ARIReportCharts.psm1',
+                    'Modules/Extras/ARIExcelDetails.psm1',
                     'Modules/Diagram/ARIDrawIODiagram.psm1',
                     'Modules/Diagram/ARIDiagramNetwork.psm1',
                     'Modules/Diagram/ARIDiagramOrganization.psm1',
@@ -91,6 +92,7 @@ NestedModules = @('Modules/Core/ARITestPS.psm1',
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = @('Invoke-ARI',
                         'Connect-ARILoginSession',
+                        'Build-ARIExcelLargeReport',
                         'Test-ARIPS',
                         'Start-AzureResourceDataPull',
                         'Get-ARISubscriptions',
@@ -118,7 +120,10 @@ FunctionsToExport = @('Invoke-ARI',
                         'Get-ARIUnsupportedData',
                         'Start-ARIQuotaJob',
                         'Start-ARIAutResourceJob',
-                        'Get-ARIAPIResources')
+                        'Get-ARIAPIResources',
+                        'Build-ARILargeReportResources',
+                        'Start-ARIExcelHeaders',
+                        'Start-ARILargeEnvOrderFiles')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()

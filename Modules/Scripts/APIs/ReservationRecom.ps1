@@ -96,6 +96,5 @@ Else {
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'Reservation Advisor' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -Style $Style
 
-    
     }
 }

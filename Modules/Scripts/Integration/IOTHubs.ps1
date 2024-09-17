@@ -107,5 +107,4 @@ Else {
         Export-Excel -Path $File -WorksheetName 'IOTHubs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
 
     }
-    <######## Insert Column comments and documentations here following this model #########>
 }

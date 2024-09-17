@@ -367,22 +367,6 @@ else
             ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
             Export-Excel -Path $File -WorksheetName 'Virtual Machines' -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $cond -Style $Style, $StyleExt -NoNumberConversion $noNumberConversion
 
-            $excel = Open-ExcelPackage -Path $File -KillExcel
-
-            $null = $excel.'Virtual Machines'.Cells["N1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.", "Azure Resource Inventory")
-            $excel.'Virtual Machines'.Cells["N1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
-            $null = $excel.'Virtual Machines'.Cells["R1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
-            $excel.'Virtual Machines'.Cells["R1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
-            $null = $excel.'Virtual Machines'.Cells["S1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
-            $excel.'Virtual Machines'.Cells["S1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
-            $null = $excel.'Virtual Machines'.Cells["T1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource's health.", "Azure Resource Inventory")
-            $excel.'Virtual Machines'.Cells["T1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
-            $null = $excel.'Virtual Machines'.Cells["AF1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
-            $excel.'Virtual Machines'.Cells["AF1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
-            $null = $excel.'Virtual Machines'.Cells["AI1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
-            $excel.'Virtual Machines'.Cells["AI1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
-
-            Close-ExcelPackage $excel
         }         
 
 }

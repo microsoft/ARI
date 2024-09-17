@@ -13,9 +13,9 @@ https://github.com/microsoft/ARI/Modules/Networking/AzureFirewall.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.0
+Version: 3.5.0
 First Release Date: 19th November, 2020
-Authors: Claudio Merola and Renato Gregio 
+Authors: Claudio Merola
 
 #>
 
@@ -54,7 +54,9 @@ If ($Task -eq 'Processing') {
                         }
                     
                     $Policy = $AzureFWPolicies | Where-Object {$_.id -eq $data.firewallpolicy.id}
+                    $Policy = if(![string]::IsNullOrEmpty($Policy)){$Policy}else{'0'}
                     $Rules = $AzureFWPoliciesRules | Where-Object {$_.id -eq $Policy.properties.rulecollectiongroups.id}
+                    $Rules = if(![string]::IsNullOrEmpty($Rules)){$Rules}else{'0'}
                     $FinalPIP = if ($PIPs.count -gt 1) { $PIPs | ForEach-Object { $_ + ' ,' } }else { $PIPs }
                     $FinalPIP = [string]$FinalPIP
                     $FinalPIP = if ($FinalPIP -like '* ,*') { $FinalPIP -replace ".$" }else { $FinalPIP }
@@ -70,9 +72,13 @@ If ($Task -eq 'Processing') {
 
                     foreach ($CoreRule in $Rules)
                         {
-                            foreach ($RuleCollection in $CoreRule.properties.rulecollections)
+                            $CoreCollections = $CoreRule.properties.rulecollections
+                            $CoreCollections = if(![string]::IsNullOrEmpty($CoreCollections)){$CoreCollections}else{'0'}
+                            foreach ($RuleCollection in $CoreCollections)
                                 {
-                                    foreach ($Rule in $RuleCollection.rules)
+                                    $RuleCoreCollections = $RuleCollection.rules
+                                    $RuleCoreCollections = if(![string]::IsNullOrEmpty($RuleCoreCollections)){$RuleCoreCollections}else{'0'}
+                                    foreach ($Rule in $RuleCoreCollections)
                                         {
                                             $FinalProtocol = if ($Rule.ipprotocols.count -gt 1) { $Rule.ipprotocols | ForEach-Object { $_ + ' ,' } }else { $Rule.ipprotocols}
                                             $FinalProtocol = [string]$FinalProtocol
@@ -210,5 +216,4 @@ Else {
         Export-Excel -Path $File -WorksheetName 'Azure Firewall' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }
-    <######## Insert Column comments and documentations here following this model #########>
 }

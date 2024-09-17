@@ -77,6 +77,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment')]
         $TagKey,
         $TagValue,
         [switch]$SecurityCenter,
+        [switch]$Heavy,
         [switch]$SkipAdvisory,
         [switch]$SkipPolicy,
         [switch]$SkipAPIs,
@@ -162,8 +163,6 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment')]
         Write-Host ""
     }
 
-    <#########################################################    END OF FUNCTIONS    ######################################################################>
-
     $TotalRunTime = Measure-Command -Expression {
 
     if ($Help.IsPresent) {
@@ -172,8 +171,11 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment')]
     }
     else {
 
-        Write-Host ('Checking for Powershell Module Updates..')
-        Update-Module -Name AzureResourceInventory -AcceptLicense
+        if ($PlatOS -ne 'Azure CloudShell' -and !$Automation.IsPresent)
+            {
+                Write-Host ('Checking for Powershell Module Updates..')
+                Update-Module -Name AzureResourceInventory -AcceptLicense
+            }
 
         $PlatOS = Test-ARIPS -Debug $Debug
 
@@ -325,7 +327,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment')]
 
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Resources Report Function.')
 
-            Build-AzureResourceReport -Subscriptions $Subscriptions -DefaultPath $DefaultPath -ExtractionRunTime $ExtractionRuntime -Resources $Resources -SecurityCenter $SecurityCenter -File $File -DDFile $DDFile -SkipDiagram $SkipDiagram -RunLite $RunLite -PlatOS $PlatOS -InTag $InTag -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -Automation $Automation -SkipAPIs $SkipAPIs, -Overview $Overview -Debug $Debug
+            Build-AzureResourceReport -Subscriptions $Subscriptions -DefaultPath $DefaultPath -ExtractionRunTime $ExtractionRuntime -Resources $Resources -SecurityCenter $SecurityCenter -File $File -DDFile $DDFile -Heavy $Heavy -SkipDiagram $SkipDiagram -RunLite $RunLite -PlatOS $PlatOS -InTag $InTag -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -Automation $Automation -SkipAPIs $SkipAPIs, -Overview $Overview -Debug $Debug
 
         if ($StorageAccount)
             {
