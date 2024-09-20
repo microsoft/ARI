@@ -93,5 +93,5 @@ function Invoke-ResourceInventoryLoop {
                 $ReportCounter ++
             }
         }
-    $LocalResults
+    return $LocalResults
 }

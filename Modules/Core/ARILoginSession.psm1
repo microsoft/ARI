@@ -99,7 +99,8 @@ function Connect-ARILoginSession {
             }
         elseif($AppId -and $Secret -and $TenantID)
             {
-                $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $AppId, $Secret
+                $SecurePassword = ConvertTo-SecureString -String $Secret
+                $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $AppId, $SecurePassword
                 Connect-AzAccount -ServicePrincipal -TenantId $TenantId -Credential $Credential
             }
         else

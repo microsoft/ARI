@@ -10,7 +10,9 @@ function Get-ARIManagementGroups {
             $ErrorActionPreference = "silentlycontinue"
         }
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Management group name supplied: ' + $ManagmentGroupName)
-    $group = az account management-group entities list --query "[?name =='$ManagementGroup']" | ConvertFrom-Json
+    $ReportCounter = 1
+    $LocalResults = @()
+    $group = Get-AzManagementGroup -GroupName $ManagementGroup
     if ($group.Count -lt 1)
     {
         Write-Host "ERROR:" -NoNewline -ForegroundColor Red
@@ -25,33 +27,19 @@ function Get-ARIManagementGroups {
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Management groups found: ' + $group.count)
         foreach ($item in $group)
         {
-            $Subscriptions = @()
             $GraphQuery = "resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$($item.name)' | summarize count()"
-            $EnvSize = az graph query -q $GraphQuery --output json --only-show-errors | ConvertFrom-Json
-            $EnvSizeNum = $EnvSize.data.'count_'
+            $QueryResult = Search-AzGraph -Query $GraphQuery -first 1000
+            $LocalResults += $QueryResult
 
-            if ($EnvSizeNum -ge 1) {
-                $Loop = $EnvSizeNum / 1000
-                $Loop = [math]::ceiling($Loop)
-                $Looper = 0
-                $Limit = 0
-
-                while ($Looper -lt $Loop) {
-                    $GraphQuery = "resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$($item.name)' | project id = subscriptionId"
-                    $Resource = (az graph query -q $GraphQuery --skip $Limit --first 1000 --output json --only-show-errors).tolower() | ConvertFrom-Json
-
-                    foreach ($Sub in $Resource.data) {
-                        $Subscriptions += az account show --subscription $Sub.id --output json --only-show-errors | ConvertFrom-Json
-                    }
-
-                    Start-Sleep 2
-                    $Looper ++
-                    Write-Progress -Id 1 -activity "Running Subscription Inventory Job" -Status "$Looper / $Loop of Subscription Jobs" -PercentComplete (($Looper / $Loop) * 100)
-                    $Limit = $Limit + 1000
-                }
+            while ($QueryResult.SkipToken) {
+                $ReportCounterVar = [string]$ReportCounter
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 1000 Subscriptions. Loop Number: ' + $ReportCounterVar)
+                $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $FSubscri -first 1000
+                $LocalResults += $QueryResult
+                $ReportCounter ++
             }
             Write-Progress -Id 1 -activity "Running Subscription Inventory Job" -Status "$Looper / $Loop of Subscription Jobs" -Completed
         }
     }
-    return $Subscriptions
+    return $LocalResults
 }
