@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Core/Connect-LoginSession.psm1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 4.0.1
+Version: 4.0.2
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -99,7 +99,7 @@ function Connect-ARILoginSession {
             }
         elseif($AppId -and $Secret -and $TenantID)
             {
-                $SecurePassword = ConvertTo-SecureString -String $Secret
+                $SecurePassword = ConvertTo-SecureString -String $Secret -AsPlainText
                 $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $AppId, $SecurePassword
                 Connect-AzAccount -ServicePrincipal -TenantId $TenantId -Credential $Credential
             }

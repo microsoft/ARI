@@ -133,6 +133,7 @@ The line must contain the following parameters:
 ````
 -TenantID
 -SkipDiagram
+-SkipAPIs
 -Automation
 -StorageAccount
 -StorageContainer

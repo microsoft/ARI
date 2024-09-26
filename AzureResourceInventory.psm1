@@ -64,14 +64,14 @@
     Official Repository: https://github.com/microsoft/ARI
 #>
 Function Invoke-ARI {
-param ([ValidateSet('AzureCloud', 'AzureUSGovernment')]
+param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
         $AzureEnvironment = 'AzureCloud',
         [ValidateSet(1, 2, 3)]
         $Overview = 1,
         $TenantID,
         $AppId,
-        [Security.SecureString]$Secret,
-        $SubscriptionID,
+        $Secret,
+        [String[]]$SubscriptionID,
         $ManagementGroup,
         [string[]]$ResourceGroup,
         $TagKey,
