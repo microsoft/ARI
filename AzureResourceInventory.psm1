@@ -181,7 +181,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
         if ($PlatOS -ne 'Azure CloudShell' -and !$Automation.IsPresent)
             {
-                $TenantID = Connect-ARILoginSession -AzureEnvironment $AzureEnvironment -TenantID $TenantID -SubscriptionID $SubscriptionID -DeviceLogin $DeviceLogin, -AppId $AppId -Secret $Secret
+                $TenantID = Connect-ARILoginSession -AzureEnvironment $AzureEnvironment -TenantID $TenantID -SubscriptionID $SubscriptionID -DeviceLogin $DeviceLogin -AppId $AppId -Secret $Secret
             }
         elseif ($Automation.IsPresent)
             {
