@@ -53,7 +53,7 @@ If ($Task -eq 'Processing') {
                             $Resource = 'None'
                         }
                     
-                    $NSG = $data.networksecuritygroup.id.split('/')[8]
+                    $NSG = if(![string]::IsNullOrEmpty($data.networksecuritygroup.id)){$data.networksecuritygroup.id.split('/')[8]}else{$null}
 
                     $DNS = if ($data.dnssettings.dnsservers.count -gt 1) { $data.dnssettings.dnsservers | ForEach-Object { $_ + ' ,' } }else { $data.dnssettings.dnsservers }
                     $DNS = [string]$DNS
@@ -64,8 +64,8 @@ If ($Task -eq 'Processing') {
                     $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($2 in $data.ipconfigurations)
                         {
-                            $VNET = $2.properties.subnet.id.split('/')[8]
-                            $Subnet = $2.properties.subnet.id.split('/')[10]
+                            $VNET = if(![string]::IsNullOrEmpty($2.properties.subnet.id)){$2.properties.subnet.id.split('/')[8]}else{$null}
+                            $Subnet = if(![string]::IsNullOrEmpty($2.properties.subnet.id)){$2.properties.subnet.id.split('/')[10]}else{$null}
                             $PIP = $PublicIP | Where-Object {$_.id -eq $2.properties.publicipaddress.id}
                             $PIPName = $PIP.Name
                             $PIPAddress = if(![string]::IsNullOrEmpty($PIP.properties.ipaddress)){$PIP.properties.ipaddress}else{'Unassigned'}

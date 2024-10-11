@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Infrastructure/StorageAcc.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.2
+Version: 3.5.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio
 
@@ -84,12 +84,12 @@ If ($Task -eq 'Processing') {
                 $PVTEndpoints = @()
                 foreach ($pvt in $data.privateEndpointConnections.properties.privateendpoint)
                     {
-                        $PVTEndpoints += $pvt.id.split('/')[8]
+                        $PVTEndpoints += if(![string]::IsNullOrEmpty($pvt.id)){$pvt.id.split('/')[8]}else{$null}
                     }
                 $DirectResources = @()
                 foreach ($DiRes in $data.networkacls.resourceaccessrules)
                     {
-                        $DirectResources += $DiRes.resourceid.split('/')[8]
+                        $DirectResources += if(![string]::IsNullOrEmpty($DiRes.resourceid)){$DiRes.resourceid.split('/')[8]}else{$null}
                     }
 
                 $FinalDirectResources = if ($DirectResources.count -gt 1) { $DirectResources | ForEach-Object { $_ + ' ,' } }else { $DirectResources }

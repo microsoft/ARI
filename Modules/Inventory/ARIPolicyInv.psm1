@@ -77,28 +77,31 @@ function Invoke-ARIPolicyProcessing {
 
 function Build-ARIPolicyReport {
     param($File ,$Pol, $TableStyle)
-    $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
+    if ($Pol)
+        {
+            $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
-    $condtxt = @()
-    $condtxt += New-ConditionalText -Range B2:B500 -ConditionalType GreaterThan 0
-    $condtxt += New-ConditionalText -Range C2:C500 -ConditionalType GreaterThan 0
-    $condtxt += New-ConditionalText -Range H2:H500 -ConditionalType GreaterThan 0
+            $condtxt = @()
+            $condtxt += New-ConditionalText -Range B2:B500 -ConditionalType GreaterThan 0
+            $condtxt += New-ConditionalText -Range C2:C500 -ConditionalType GreaterThan 0
+            $condtxt += New-ConditionalText -Range H2:H500 -ConditionalType GreaterThan 0
 
-    $Pol |
-    ForEach-Object { [PSCustomObject]$_ } |
-    Select-Object 'Initiative',
-    'Initiative Non Compliance Resources',
-    'Initiative Non Compliance Policies',
-    'Policy',
-    'Policy Type',
-    'Effect',
-    'Compliance Resources',
-    'Non Compliance Resources',
-    'Unknown Resources',
-    'Exempt Resources',
-    'Policy Mode',
-    'Policy Version',
-    'Policy Deprecated',
-    'Policy Category' | Export-Excel -Path $File -WorksheetName 'Policy' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzurePolicy' -MoveToStart -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
+            $Pol |
+            ForEach-Object { [PSCustomObject]$_ } |
+            Select-Object 'Initiative',
+            'Initiative Non Compliance Resources',
+            'Initiative Non Compliance Policies',
+            'Policy',
+            'Policy Type',
+            'Effect',
+            'Compliance Resources',
+            'Non Compliance Resources',
+            'Unknown Resources',
+            'Exempt Resources',
+            'Policy Mode',
+            'Policy Version',
+            'Policy Deprecated',
+            'Policy Category' | Export-Excel -Path $File -WorksheetName 'Policy' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzurePolicy' -MoveToStart -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
+        }
 }
 

@@ -167,7 +167,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
     if ($Help.IsPresent) {
         Get-UsageMode
-        Exit
+        Break
     }
     else {
 
@@ -311,7 +311,14 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
             {
                 $Date = get-date -Format "yyyy-MM-dd_HH_mm"
 
-                $File = ("ARI_Automation_Report_"+$Date+".xlsx")
+                if($ReportName -eq 'AzureResourceInventory')
+                    {
+                        $File = ("ARI_Automation_Report_"+$Date+".xlsx")
+                    }
+                else
+                    {
+                        $File = ($ReportName+'_'+$Date+'.xlsx')
+                    }
             }
         else
             {

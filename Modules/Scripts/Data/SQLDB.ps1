@@ -36,7 +36,7 @@ if ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $DBServer = $1.id.split("/")[8]
-                $PoolId = [string]$data.elasticPoolId.split("/")[10]
+                $PoolId = if(![string]::IsNullOrEmpty($data.elasticPoolId)){$data.elasticPoolId.split('/')[8]}else{$null}
 
                 $RestorePoint = [string](get-date($data.earliestrestoredate))
                 

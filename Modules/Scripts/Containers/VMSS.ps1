@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VMSS.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.3.0
+Version: 3.5.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -53,14 +53,14 @@ If ($Task -eq 'Processing')
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                 $Subnet = $data.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.ipConfigurations.properties.subnet.id | Select-Object -Unique
-                $VNET = $subnet.split('/')[8]
-                $Subnet = $Subnet.split('/')[10]
+                $VNET = if(![string]::IsNullOrEmpty($subnet)){$Subnet.split('/')[8]}else{$null}
+                $Subnet = if(![string]::IsNullOrEmpty($Subnet)){$Subnet.split('/')[10]}else{$null}
                 $ext = @()
                 $ext = foreach ($ex in $1.Properties.virtualMachineProfile.extensionProfile.extensions.name) 
                                 {
                                     $ex + ', '
                                 }
-                $NSG = $data.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.networkSecurityGroup.id.split('/')[8] 
+                $NSG = if(![string]::IsNullOrEmpty($data.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.networkSecurityGroup.id)){($data.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.networkSecurityGroup.id).split('/')[8]}else{'Not Configured'}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 foreach ($Tag in $Tags) {
                     $obj = @{

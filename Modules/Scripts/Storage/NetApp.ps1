@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Storage/NetApp.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 3.5.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -36,12 +36,12 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $VNET = $data.subnetId.split('/')[8]
-                $Subnet = $data.subnetId.split('/')[10]
+                $VNET = if(![string]::IsNullOrEmpty($data.subnetId)){$data.subnetId.split('/')[8]}else{$null}
+                $Subnet = if(![string]::IsNullOrEmpty($data.subnetId)){$data.subnetId.split('/')[10]}else{$null}
                 $ExportPolicy = $data.exportPolicy.rules.count
-                $NetApp = $1.Name.split('/')[0]
-                $CapacityPool = $1.Name.split('/')[1]
-                $Volume = $1.Name.split('/')[2]
+                $NetApp = if(![string]::IsNullOrEmpty($1.Name)){$1.Name.split('/')[0]}else{$null}
+                $CapacityPool = if(![string]::IsNullOrEmpty($1.Name)){$1.Name.split('/')[1]}else{$null}
+                $Volume =if(![string]::IsNullOrEmpty($1.Name)){$1.Name.split('/')[2]}else{$null}
                 $Quota = ((($data.usageThreshold/1024)/1024)/1024)/1024
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {

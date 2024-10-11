@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/DataExplorerCluster.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 3.5.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -36,10 +36,10 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
-                $VNET = $data.virtualNetworkConfiguration.subnetid.split('/')[8]
-                $Subnet = $data.virtualNetworkConfiguration.subnetid.split('/')[10]
-                $DataPIP = $data.virtualNetworkConfiguration.dataManagementPublicIpId.split('/')[8]
-                $EnginePIP = $data.virtualNetworkConfiguration.enginePublicIpId.split('/')[8]
+                $VNET = if(![string]::IsNullOrEmpty($data.virtualNetworkConfiguration.subnetid)){$data.virtualNetworkConfiguration.subnetid.split('/')[8]}else{$null}
+                $Subnet = if(![string]::IsNullOrEmpty($data.virtualNetworkConfiguration.subnetid)){$data.virtualNetworkConfiguration.subnetid.split('/')[10]}else{$null}
+                $DataPIP = if(![string]::IsNullOrEmpty($data.virtualNetworkConfiguration.dataManagementPublicIpId)){$data.virtualNetworkConfiguration.dataManagementPublicIpId.split('/')[8]}else{$null}
+                $EnginePIP = if(![string]::IsNullOrEmpty($data.virtualNetworkConfiguration.enginePublicIpId)){$data.virtualNetworkConfiguration.enginePublicIpId.split('/')[8]}else{$null}
                 $TenantPerm = if($data.trustedExternalTenants.value -eq '*'){'All Tenants'}else{$data.trustedExternalTenants.value}
                 $AutoScale = if($data.optimizedAutoscale.isEnabled -eq 'true'){'Enabled'}else{'Disabled'}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}

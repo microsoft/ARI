@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/APPServices.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.2
+Version: 3.5.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -44,8 +44,8 @@ If ($Task -eq 'Processing')
                 $RetFeature = '' 
                 if([string]::IsNullOrEmpty($data.siteConfig.ftpsState)){$FTPS = $false}else{$FTPS = $data.siteConfig.ftpsState}
                 if([string]::IsNullOrEmpty($data.Properties.SiteConfig.acrUseManagedIdentityCreds)){$MGMID = $false}else{$MGMID = $true}
-                $VNET = $data.virtualNetworkSubnetId.split("/")[8]
-                $SUBNET = $data.virtualNetworkSubnetId.split("/")[10]
+                $VNET = if(![string]::IsNullOrEmpty($data.virtualNetworkSubnetId)){$data.virtualNetworkSubnetId.split("/")[8]}else{$null}
+                $SUBNET = if(![string]::IsNullOrEmpty($data.virtualNetworkSubnetId)){$data.virtualNetworkSubnetId.split("/")[10]}else{$null}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 foreach ($2 in $data.hostNameSslStates) {
                         foreach ($Tag in $Tags) {

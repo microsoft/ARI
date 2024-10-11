@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/Purview.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.0.0
+Version: 3.5.1
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -41,8 +41,8 @@ If ($Task -eq 'Processing') {
                 $timecreated = $data.createdAt
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
-                $StorageAcc = $data.managedResources.storageAccount.split('/')[8]
-                $eventHubNamespace = $data.managedResources.eventHubNamespace.split('/')[8]
+                $StorageAcc = if(![string]::IsNullOrEmpty($data.managedResources.storageAccount)){$data.managedResources.storageAccount.split('/')[8]}else{$null}
+                $eventHubNamespace = if(![string]::IsNullOrEmpty($data.managedResources.eventHubNamespace)){($data.managedResources.eventHubNamespace.split('/')[8])}else{$null}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{

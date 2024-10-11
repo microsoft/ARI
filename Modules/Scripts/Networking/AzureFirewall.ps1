@@ -49,7 +49,7 @@ If ($Task -eq 'Processing') {
                     Foreach($2 in $data.ipConfigurations)
                         {
                             $PIPs += $2.name
-                            $VNETs += $2.properties.subnet.id.split('/')[8]
+                            $VNETs += if(![string]::IsNullOrEmpty($2.properties.subnet.id)){$2.properties.subnet.id.split('/')[8]}else{$null}
                             $PrivIPs += $2.properties.privateIPAddress
                         }
                     
