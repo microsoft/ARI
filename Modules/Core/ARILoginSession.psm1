@@ -31,18 +31,21 @@ function Connect-ARILoginSession {
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Connect-LoginSession function')
     Write-Host $AzureEnvironment -BackgroundColor Green
     if (!$TenantID) {
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Tenant ID not specified')
         write-host "Tenant ID not specified. Use -TenantID parameter if you want to specify directly. "
         write-host "Authenticating Azure"
         write-host ""
         Clear-AzContext -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -InformationAction SilentlyContinue
         if($DeviceLogin.IsPresent)
             {
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Logging with Device Login')
                 Connect-AzAccount -UseDeviceAuthentication -Environment $AzureEnvironment | Out-Null
             }
         else
             {
                 try 
                     {
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Editing Login Experience')
                         $AZConfigNewLogin = Get-AzConfig -LoginExperienceV2 -WarningAction SilentlyContinue -InformationAction SilentlyContinue
                         if ($AZConfigNewLogin.value -eq 'On' )
                             {
@@ -83,6 +86,7 @@ function Connect-ARILoginSession {
             $TenantID = ($Tenants[$defaultTenant]).Id
             if($DeviceLogin.IsPresent)
                 {
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Logging with Device Login')
                     Connect-AzAccount -Tenant $TenantID -UseDeviceAuthentication -Environment $AzureEnvironment | Out-Null
                 }
             else
@@ -92,13 +96,16 @@ function Connect-ARILoginSession {
         }
     }
     else {
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Tenant ID was informed.')
         Clear-AzContext -Force | Out-Null
         if($DeviceLogin.IsPresent)
             {
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Logging with Device Login')
                 Connect-AzAccount -Tenant $TenantID -UseDeviceAuthentication -Environment $AzureEnvironment | Out-Null
             }
         elseif($AppId -and $Secret -and $TenantID)
             {
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Logging with AppID and Secret')
                 $SecurePassword = ConvertTo-SecureString -String $Secret -AsPlainText
                 $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $AppId, $SecurePassword
                 Connect-AzAccount -ServicePrincipal -TenantId $TenantId -Credential $Credential
@@ -107,6 +114,7 @@ function Connect-ARILoginSession {
             {
                 try 
                     {
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Editing Login Experience')
                         $AZConfig = Get-AzConfig -LoginExperienceV2 -WarningAction SilentlyContinue -InformationAction SilentlyContinue
                         if ($AZConfig.value -eq 'On')
                             {
