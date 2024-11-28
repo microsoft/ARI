@@ -147,8 +147,8 @@ $ExtractionRuntime = Measure-Command -Expression {
                 }
 
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Retirements')
-            $RootPath = $PSScriptRoot.replace('Inventory','')
-            $RetirementQuery = Get-Content -Path ($RootPath + '/Extras/Retirement.txt') | Out-String
+            $RootPath = $PSScriptRoot | Split-Path
+            $RetirementQuery = Get-Content -Path ($RootPath + '/Extras/Retirement.kql') | Out-String
             $ResourceRetirements = Invoke-ResourceInventoryLoop -GraphQuery $RetirementQuery -FSubscri $Subscri -LoopName 'Retirements'
 
             $RetirementCount = $ResourceRetirements.count
