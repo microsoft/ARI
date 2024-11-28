@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Core/Start-AzureResourceExtraction.psm1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 4.0.2
+Version: 3.5.10
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -148,7 +148,7 @@ $ExtractionRuntime = Measure-Command -Expression {
 
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Retirements')
             $RootPath = $PSScriptRoot.replace('Inventory','')
-            $RetirementQuery = Get-Content -Path ($RootPath + '/Extras/Retirement.kql') | Out-String
+            $RetirementQuery = Get-Content -Path ($RootPath + '/Extras/Retirement.txt') | Out-String
             $ResourceRetirements = Invoke-ResourceInventoryLoop -GraphQuery $RetirementQuery -FSubscri $Subscri -LoopName 'Retirements'
 
             $RetirementCount = $ResourceRetirements.count
