@@ -77,37 +77,35 @@ function Start-ARIExtraJobs {
     <######################################################### SECURITY CENTER JOB ######################################################################>
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking If Should Run Security Center Job.')
-    if ($SecurityCenter.IsPresent) {
-        if (![string]::IsNullOrEmpty($Security))
-            {
-                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Security Job.')
-                if ($Automation.IsPresent)
-                    {
-                        Write-Output ('Starting SecurityCenter Job')
-                        Start-ThreadJob  -Name 'Security' -ScriptBlock {
+    if (![string]::IsNullOrEmpty($SecurityCenter))
+        {
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Security Job.')
+            if ($Automation.IsPresent)
+                {
+                    Write-Output ('Starting SecurityCenter Job')
+                    Start-ThreadJob  -Name 'Security' -ScriptBlock {
 
-                            Import-Module AzureResourceInventory
+                        Import-Module AzureResourceInventory
 
-                            $SecResult = Invoke-ARISecCenterProcessing -Subscriptions $Subscriptions -Security $Security
+                        $SecResult = Invoke-ARISecCenterProcessing -Subscriptions $($args[0]) -Security $($args[1])
 
-                            $SecResult
+                        $SecResult
 
-                        } -ArgumentList $Subscriptions , $Security | Out-Null
-                    }
-                else
-                    {
-                        Start-Job -Name 'Security' -ScriptBlock {
+                    } -ArgumentList $Subscriptions , $SecurityCenter | Out-Null
+                }
+            else
+                {
+                    Start-Job -Name 'Security' -ScriptBlock {
 
-                            Import-Module AzureResourceInventory
+                        Import-Module AzureResourceInventory
 
-                            $SecResult = Invoke-ARISecCenterProcessing -Subscriptions $Subscriptions -Security $Security
+                        $SecResult = Invoke-ARISecCenterProcessing -Subscriptions $($args[0]) -Security $($args[1])
 
-                            $SecResult
+                        $SecResult
 
-                        } -ArgumentList $Subscriptions , $Security | Out-Null
-                    }
-            }
-    }
+                    } -ArgumentList $Subscriptions , $SecurityCenter | Out-Null
+                }
+        }
 
     <######################################################### POLICY JOB ######################################################################>
 

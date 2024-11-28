@@ -1,5 +1,5 @@
 function Start-ARIResourceJobs {
-    Param ($Resources, $Subscriptions, $InTag, $Heavy, $Unsupported, $Debug)
+    Param ($Resources, $Retirements, $Subscriptions, $InTag, $Heavy, $Unsupported, $Debug)
     if ($Debug.IsPresent)
         {
             $DebugPreference = 'Continue'
@@ -64,8 +64,9 @@ function Start-ARIResourceJobs {
                 $Subscriptions = $($args[2])
                 $InTag = $($args[3])
                 $Resource = $($args[4])
-                $Task = $($args[5])
-                $Unsupported = $($args[9])
+                $Retirements = $($args[5])
+                $Task = $($args[6])
+                $Unsupported = $($args[10])
 
                 if($($args[1]) -like '*\*')
                     {
@@ -88,7 +89,7 @@ function Start-ARIResourceJobs {
                     New-Variable -Name ('ModRun' + $ModName)
                     New-Variable -Name ('ModJob' + $ModName)
 
-                    Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($PSScriptRoot).AddArgument($Subscriptions).AddArgument($InTag).AddArgument($Resource).AddArgument($Task).AddArgument($null).AddArgument($null).AddArgument($null).AddArgument($Unsupported)
+                    Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($PSScriptRoot).AddArgument($Subscriptions).AddArgument($InTag).AddArgument($Resource).AddArgument($Retirements).AddArgument($Task).AddArgument($null).AddArgument($null).AddArgument($null).AddArgument($Unsupported)
 
                     Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
 
@@ -130,7 +131,7 @@ function Start-ARIResourceJobs {
             Start-Sleep -Milliseconds 50
 
             $Hashtable
-            } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, $Resource, 'Processing', $null, $null, $null, $Unsupported | Out-Null
+            } -ArgumentList $null, $PSScriptRoot, $Subscriptions, $InTag, $Resource, $Retirements, 'Processing', $null, $null, $null, $Unsupported | Out-Null
             $Limit = $Limit + $EnvSizeLooper
             Start-Sleep -Milliseconds 100
             if($DebugEnvSize -in ('Large','Medium-Large') -and $JobLoop -eq 5)
@@ -182,7 +183,7 @@ function Start-ARIAutResourceJob {
 
             $ScriptBlock = [Scriptblock]::Create($ModuSeq)
 
-            $SmaResources[$ModName] = Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot, $Subscriptions, $InTag, $Resources, 'Processing', $null, $null, $null, $Unsupported
+            $SmaResources[$ModName] = Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot, $Subscriptions, $InTag, $Resources, $null,'Processing', $null, $null, $null, $Unsupported
 
             Start-Sleep -Milliseconds 100
 
@@ -202,20 +203,9 @@ function Get-ARIUnsupportedData {
         {
             $ErrorActionPreference = "silentlycontinue"
         }
-    if($PSScriptRoot -like '*\*')
-        {
-            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Validating file: '+$PSScriptRoot + '\Extras\Support.json')
-            $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '\Extras\Support.json')
-        }
-    else
-        {
-            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Validating file: '+$PSScriptRoot + '/Extras/Support.json')
-            $ModuSeq0 = New-Object System.IO.StreamReader($PSScriptRoot + '/Extras/Support.json')
-        }
-    $ModuSeq = $ModuSeq0.ReadToEnd()
-    $ModuSeq0.Dispose()
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Validating file: '+$PSScriptRoot + '/Extras/Support.json')
 
-    $Unsupported = $ModuSeq | ConvertFrom-Json
+    $Unsupported = Get-Content -Path ($PSScriptRoot + '/Extras/Support.json') | ConvertFrom-Json
 
     return $Unsupported
 }

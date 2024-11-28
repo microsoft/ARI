@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Extras/ARIReportCharts.psm1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 4.0.1
+Version: 3.5.9
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 

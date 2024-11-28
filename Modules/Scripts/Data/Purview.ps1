@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/Purview.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.1
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -41,6 +41,31 @@ If ($Task -eq 'Processing') {
                 $timecreated = $data.createdAt
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $StorageAcc = if(![string]::IsNullOrEmpty($data.managedResources.storageAccount)){$data.managedResources.storageAccount.split('/')[8]}else{$null}
                 $eventHubNamespace = if(![string]::IsNullOrEmpty($data.managedResources.eventHubNamespace)){($data.managedResources.eventHubNamespace.split('/')[8])}else{$null}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
@@ -53,6 +78,8 @@ If ($Task -eq 'Processing') {
                             'Location'                          = $1.LOCATION;
                             'SKU'                               = $data.sku.name;
                             'Capacity'                          = $data.sku.capacity;
+                            'Retiring Feature'                  = $RetiringFeature;
+                            'Retiring Date'                     = $RetiringDate;
                             'Friendly Name'                     = $data.friendlyName;
                             'Cloud Connectors'                  = [string]$CloudConnectors;
                             'Private Endpoints'                 = [string]$pvted;
@@ -81,6 +108,10 @@ Else {
 
         $TableName = ('PurviewATable_'+($SmaResources.Purview.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
+
+        $condtxt = @()
+        #Retirement
+        $condtxt += New-ConditionalText -Range F2:F100 -ConditionalType ContainsText
         
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -88,6 +119,8 @@ Else {
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('SKU')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Capacity')
         $Exc.Add('Friendly Name')
         $Exc.Add('Cloud Connectors')
@@ -108,7 +141,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Purview' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Purview' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
 
     }
 }

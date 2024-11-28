@@ -22,6 +22,7 @@ Function Build-AzureResourceReport {
     $ExtractionRuntime,
     $DefaultPath,
     $Resources,
+    $Retirements,
     $SecurityCenter,
     $File,
     $DDFile,
@@ -73,13 +74,13 @@ Function Build-AzureResourceReport {
 
         if ($Automation.IsPresent)
             {
-                $SmaResources = Start-ARIAutResourceJob -Resources $Resources -Subscriptions $Subscriptions -InTag $InTag -Unsupported $Unsupported
+                $SmaResources = Start-ARIAutResourceJob -Resources $Resources -Retirements $Retirements -Subscriptions $Subscriptions -InTag $InTag -Unsupported $Unsupported
             }
         else
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Resource Jobs.')
 
-                $DebugEnvSize = Start-ARIResourceJobs -Resources $Resources -Subscriptions $Subscriptions -InTag $InTag -Heavy $Heavy -Unsupported $Unsupported -Debug $Debug
+                $DebugEnvSize = Start-ARIResourceJobs -Resources $Resources -Retirements $Retirements -Subscriptions $Subscriptions -InTag $InTag -Heavy $Heavy -Unsupported $Unsupported -Debug $Debug
             }
 
         <############################################################## RESOURCES LOOP CREATION #############################################################>

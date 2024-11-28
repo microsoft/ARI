@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Analytics/MachineLearning.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.1
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -36,11 +36,34 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
-                $RetDate = ''
-                $RetFeature = '' 
                 $timecreated = $data.creationTime
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $StorageAcc = $data.storageAccount.split('/')[8]
                 $KeyVault = $data.keyVault.split('/')[8]
                 $Insight = $data.applicationInsights.split('/')[8]
@@ -54,12 +77,12 @@ If ($Task -eq 'Processing') {
                             'Name'                      = $1.NAME;
                             'Location'                  = $1.LOCATION;
                             'SKU'                       = $sku.name;
+                            'Retiring Feature'          = $RetiringFeature;
+                            'Retiring Date'             = $RetiringDate;
                             'Friendly Name'             = $data.friendlyName;
                             'Description'               = $data.description;
                             'HBI Workspace'             = $data.hbiWorkspace;
                             'Container Registry'        = $containerRegistry;
-                            'Retirement Date'           = [string]$RetDate;
-                            'Retirement Feature'        = $RetFeature;
                             'Storage HNS Enabled'       = $data.storageHnsEnabled;
                             'Private Link Count'        = $data.privateLinkCount;
                             'Public Access Behind Vnet' = $data.allowPublicAccessWhenBehindVnet;
@@ -91,8 +114,8 @@ Else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
-        $condtxt += New-ConditionalText - -Range J:J -ConditionalType ContainsText
-
+        #Retirement
+        $condtxt += New-ConditionalText -Range F2:F100 -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -100,12 +123,12 @@ Else {
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('SKU')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Friendly Name')
         $Exc.Add('Description')
         $Exc.Add('HBI Workspace')
         $Exc.Add('Container Registry')
-        $Exc.Add('Retirement Date')
-        $Exc.Add('Retirement Feature')
         $Exc.Add('Storage HNS Enabled')
         $Exc.Add('Private Link Count')
         $Exc.Add('Public Access Behind Vnet')

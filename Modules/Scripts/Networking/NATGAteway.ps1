@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/NATGateway.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.1
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $InTag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported) 
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 If ($Task -eq 'Processing') {
 
     $NATGAT = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/natgateways' }
@@ -35,6 +35,31 @@ If ($Task -eq 'Processing') {
                     $ResUCount = 1
                     $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                     $data = $1.PROPERTIES
+                    $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                    if ($Retired) 
+                        {
+                            $RetiredFeature = foreach ($Retire in $Retired)
+                                {
+                                    $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                    $tmp0 = [pscustomobject]@{
+                                            'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                            'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                        }
+                                    $tmp0
+                                }
+                            $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                            $RetiringFeature = [string]$RetiringFeature
+                            $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                            $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                            $RetiringDate = [string]$RetiringDate
+                            $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                        }
+                    else 
+                        {
+                            $RetiringFeature = $null
+                            $RetiringDate = $null
+                        }
                     $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                         foreach ($2 in $data.subnets)
                             {
@@ -59,6 +84,8 @@ If ($Task -eq 'Processing') {
                                             'Name'                  = $1.NAME;
                                             'Location'              = $1.LOCATION;
                                             'SKU'                   = $1.sku.name;
+                                            'Retiring Feature'      = $RetiringFeature;
+                                            'Retiring Date'         = $RetiringDate;
                                             'Idle Timeout (Min)'    = $data.idleTimeoutInMinutes;
                                             'Public IP'             = $t_pip_addresses;
                                             'Public Prefixes'       = $t_pip_prefixes;
@@ -83,6 +110,8 @@ Else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
+        #Retirement
+        $condtxt += New-ConditionalText -Range F2:F100 -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -90,6 +119,8 @@ Else {
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('SKU')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Idle Timeout (Min)')
         $Exc.Add('Public IP')
         $Exc.Add('Public Prefixes')

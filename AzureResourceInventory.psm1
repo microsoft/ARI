@@ -284,6 +284,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
         $ResourceContainers = $ExtractionData.ResourceContainers
         $Advisories = $ExtractionData.Advisories
         $Security = $ExtractionData.Security
+        $Retirements = $ExtractionData.Retirements
 
         Clear-Variable -Name ExtractionData
 
@@ -330,11 +331,11 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Default Jobs.')
 
-            Start-ARIExtraJobs -SkipDiagram $SkipDiagram -SkipAdvisory $SkipAdvisory -SkipPolicy $SkipPolicy -SecurityCenter $SecurityCenter -Subscriptions $Subscriptions -Resources $Resources -Advisories $Advisories -DDFile $DDFile -DiagramCache $DiagramCache -FullEnv $FullEnv -ResourceContainers $ResourceContainers -Security $Security -PolicyAssign $PolicyAssign -PolicySetDef $PolicySetDef -PolicyDef $PolicyDef -Automation $Automation -Debug $Debug
+            Start-ARIExtraJobs -SkipDiagram $SkipDiagram -SkipAdvisory $SkipAdvisory -SkipPolicy $SkipPolicy -SecurityCenter $Security -Subscriptions $Subscriptions -Resources $Resources -Advisories $Advisories -DDFile $DDFile -DiagramCache $DiagramCache -FullEnv $FullEnv -ResourceContainers $ResourceContainers -Security $Security -PolicyAssign $PolicyAssign -PolicySetDef $PolicySetDef -PolicyDef $PolicyDef -Automation $Automation -Debug $Debug
 
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Resources Report Function.')
 
-            Build-AzureResourceReport -Subscriptions $Subscriptions -DefaultPath $DefaultPath -ExtractionRunTime $ExtractionRuntime -Resources $Resources -SecurityCenter $SecurityCenter -File $File -DDFile $DDFile -Heavy $Heavy -SkipDiagram $SkipDiagram -RunLite $RunLite -PlatOS $PlatOS -InTag $InTag -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -Automation $Automation -SkipAPIs $SkipAPIs, -Overview $Overview -Debug $Debug
+            Build-AzureResourceReport -Subscriptions $Subscriptions -DefaultPath $DefaultPath -ExtractionRunTime $ExtractionRuntime -Resources $Resources -Retirements $Retirements -SecurityCenter $SecurityCenter -File $File -DDFile $DDFile -Heavy $Heavy -SkipDiagram $SkipDiagram -RunLite $RunLite -PlatOS $PlatOS -InTag $InTag -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -Automation $Automation -SkipAPIs $SkipAPIs, -Overview $Overview -Debug $Debug
 
         if ($StorageAccount)
             {

@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/POSTGREFlexible.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.2
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -36,8 +36,34 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
-                $RetDate = ($Unsupported | Where-Object {$_.Id -eq 45}).RetirementDate
-                $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 45}).RetiringFeature
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
+                $DelegatedVNET = if(![string]::IsNullOrEmpty($data.network.delegatedsubnetresourceid)){$data.network.delegatedsubnetresourceid.split('/')[8]}else{$null}
+                $DelegatedSubnet = if(![string]::IsNullOrEmpty($data.network.delegatedsubnetresourceid)){$data.network.delegatedsubnetresourceid.split('/')[10]}else{$null}
+                $PrivateDNSZone = if(![string]::IsNullOrEmpty($data.network.privatednszonearmresourceid)){$data.network.privatednszonearmresourceid.split('/')[8]}else{$null}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
@@ -46,8 +72,8 @@ If ($Task -eq 'Processing') {
                             'Resource Group'            = $1.RESOURCEGROUP;
                             'Name'                      = $1.NAME;
                             'Location'                  = $1.LOCATION;
-                            'Retirement Date'           = [string]$RetDate;
-                            'Retirement Feature'        = $RetFeature;
+                            'Retiring Feature'          = $RetiringFeature;
+                            'Retiring Date'             = $RetiringDate;
                             'FQDN'                      = $data.fullyqualifieddomainname;
                             'ADMIN Login'               = $data.administratorLogin;
                             'Version'                   = [string]($data.version+'.'+$data.minorversion);
@@ -64,9 +90,9 @@ If ($Task -eq 'Processing') {
                             'Replication Role'          = $data.replicationRole;
                             'Replication Capacity'      = $data.replicaCapacity;
                             'Public Network Access'     = $data.network.publicnetworkaccess;
-                            'Delegated VNET'            = $data.network.delegatedsubnetresourceid.split('/')[8];
-                            'Delegated Subnet'          = $data.network.delegatedsubnetresourceid.split('/')[10];
-                            'Private DNS Zone'          = $data.network.privatednszonearmresourceid.split('/')[8];
+                            'Delegated VNET'            = $DelegatedVNET;
+                            'Delegated Subnet'          = $DelegatedSubnet;
+                            'Private DNS Zone'          = $PrivateDNSZone;
                             'Resource U'                = $ResUCount;
                             'Tag Name'                  = [string]$Tag.Name;
                             'Tag Value'                 = [string]$Tag.Value
@@ -91,14 +117,16 @@ Else {
         $condtxt = @()
         $condtxt += New-ConditionalText enabled -Range V:V
         $condtxt += New-ConditionalText notenabled -Range P:P
+        #Retirement
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription') #A
         $Exc.Add('Resource Group') #B
         $Exc.Add('Name') #C
         $Exc.Add('Location') #D
-        $Exc.Add('Retirement Date') #E
-        $Exc.Add('Retirement Feature') #F
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('FQDN') #G
         $Exc.Add('ADMIN Login') #H
         $Exc.Add('Version') #I

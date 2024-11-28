@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Analytics/ContentSafety.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.2
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -43,6 +43,31 @@ If ($Task -eq 'Processing')
                 $timecreated = $data.datecreated
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $pvt = if(![string]::IsNullOrEmpty($data.privateendpointconnections)){$data.privateendpointconnections}else{'0'}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($pv in $pvt)
@@ -55,6 +80,8 @@ If ($Task -eq 'Processing')
                                     'Resource Group'                            = $1.RESOURCEGROUP;
                                     'Name'                                      = $1.NAME;
                                     'SKU'                                       = $1.sku.name;
+                                    'Retiring Feature'                          = $RetiringFeature;
+                                    'Retiring Date'                             = $RetiringDate;
                                     'Public Network Access'                     = $data.publicnetworkaccess;
                                     'Creation Time'                             = $timecreated;
                                     'Is Migrated'                               = $data.ismigrated;
@@ -91,13 +118,17 @@ Else
 
         $condtxt = @()
         $condtxt += New-ConditionalText F0 -Range D:D
-        $condtxt += New-ConditionalText enabled -Range E:E
+        #Retirement
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
+        $condtxt += New-ConditionalText enabled -Range G:G
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('SKU')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Public Network Access')
         $Exc.Add('Creation Time')
         $Exc.Add('Is Migrated')

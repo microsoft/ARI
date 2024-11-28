@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/AzureFirewall.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.0
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -40,6 +40,31 @@ If ($Task -eq 'Processing') {
                     $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                     $data = $1.PROPERTIES
                     if ($1.zones) { $Zones = $1.zones } Else { $Zones = "Not Configured" }
+                    $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                    if ($Retired) 
+                        {
+                            $RetiredFeature = foreach ($Retire in $Retired)
+                                {
+                                    $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                    $tmp0 = [pscustomobject]@{
+                                            'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                            'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                        }
+                                    $tmp0
+                                }
+                            $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                            $RetiringFeature = [string]$RetiringFeature
+                            $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                            $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                            $RetiringDate = [string]$RetiringDate
+                            $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                        }
+                    else 
+                        {
+                            $RetiringFeature = $null
+                            $RetiringDate = $null
+                        }
                     $Threat = if($data.threatintelmode -eq 'deny'){'Alert and deny'}elseif($data.threatintelmode -eq 'alert'){'Alert only'}else{'Off'}
                     $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     
@@ -129,6 +154,8 @@ If ($Task -eq 'Processing') {
                                                         'Name'                              = $1.NAME;
                                                         'Location'                          = $1.LOCATION;
                                                         'SKU'                               = $data.sku.tier;
+                                                        'Retiring Feature'                  = $RetiringFeature;
+                                                        'Retiring Date'                     = $RetiringDate;
                                                         'Threat Intel Mode'                 = $Threat;
                                                         'Zone'                              = [string]$Zones;
                                                         'Public IP Name'                    = $FinalPIP;
@@ -172,7 +199,10 @@ Else {
     if ($SmaResources.AzureFirewall) {
 
         $TableName = ('AzFirewallTable_'+($SmaResources.AzureFirewall.id | Select-Object -Unique).count)
+
         $condtxt = @()
+        #Retirement
+        $condtxt += New-ConditionalText -Range F2:F100 -ConditionalType ContainsText
 
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
@@ -182,6 +212,8 @@ Else {
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('SKU')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Threat Intel Mode')
         $Exc.Add('Zone')
         $Exc.Add('Public IP Name')

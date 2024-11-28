@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/RedisCache.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.1
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -39,12 +39,30 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $RetDate = ''
-                $RetFeature = ''
-                if($data.redisVersion -eq '4.0')
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
                     {
-                        $RetDate = ($Unsupported | Where-Object {$_.Id -eq 6}).RetirementDate
-                        $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 6}).RetiringFeature
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
                     }
                 $PvtEndP = if(![string]::IsNullOrEmpty($data.privateEndpointConnections.properties.privateEndpoint.id)){($data.privateEndpointConnections.properties.privateEndpoint.id.split('/')[8])}else{$null}
                 if ($1.ZONES) { $Zones = $1.ZONES }else { $Zones = 'Not Configured' }
@@ -58,8 +76,8 @@ If ($Task -eq 'Processing') {
                             'Name'                  = $1.NAME;
                             'Location'              = $1.LOCATION;
                             'Zone'                  = $Zones;
-                            'Retirement Date'       = [string]$RetDate;
-                            'Retirement Feature'    = $RetFeature;
+                            'Retiring Feature'      = $RetiringFeature;
+                            'Retiring Date'         = $RetiringDate;
                             'Version'               = $data.redisVersion;
                             'Public Network Access' = $data.publicNetworkAccess;
                             'FQDN'                  = $data.hostName;
@@ -100,8 +118,8 @@ Else {
         $condtxt += New-ConditionalText 1.0 -Range M:M
         $condtxt += New-ConditionalText 1.1 -Range M:M
         $condtxt += New-ConditionalText TRUE -Range L:L
-        $condtxt += New-ConditionalText VERDADEIRO -Range L:L
-        $condtxt += New-ConditionalText - -Range F:F -ConditionalType ContainsText
+        #Retirement
+        $condtxt += New-ConditionalText -Range F2:F100 -ConditionalType ContainsText
 
         $Style = @()        
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0.0 -Range M:M
@@ -114,8 +132,8 @@ Else {
         $Exc.Add('Name')                    
         $Exc.Add('Location')           
         $Exc.Add('Zone')
-        $Exc.Add('Retirement Date')
-        $Exc.Add('Retirement Feature')              
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')            
         $Exc.Add('Version')                 
         $Exc.Add('Public Network Access')
         $Exc.Add('FQDN')                    

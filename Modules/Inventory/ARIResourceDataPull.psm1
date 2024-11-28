@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Core/Start-AzureResourceExtraction.psm1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 4.0.1
+Version: 4.0.2
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -122,12 +122,18 @@ $ExtractionRuntime = Measure-Command -Expression {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Resource Containers')
             $ResourceContainers = Invoke-ResourceInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Subscriptions and Resource Groups'
 
+            $ContainerCount = $ResourceContainers.count
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Number of Resource Containers: '+ $ContainerCount)
+
             if (!($SkipAdvisory.IsPresent))
                 {
                     $GraphQuery = "advisorresources $RGQueryExtension $MGQueryExtension | where properties.impact in~ ('Medium','High') | order by id asc"
 
                     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Advisories')
                     $Advisories = Invoke-ResourceInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Advisories'
+
+                    $AdvisorCount = $Advisories.count
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Number of Advisors: '+ $AdvisorCount)
                 }
             if ($SecurityCenter.IsPresent)
                 {
@@ -135,7 +141,18 @@ $ExtractionRuntime = Measure-Command -Expression {
 
                     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Security Resources')
                     $Security = Invoke-ResourceInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Security Center'
+
+                    $SecurityCount = $Security.count
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Number of Security Center Advisors: '+ $SecurityCount)
                 }
+
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Retirements')
+            $RootPath = $PSScriptRoot.replace('Inventory','')
+            $RetirementQuery = Get-Content -Path ($RootPath + '/Extras/Retirement.kql') | Out-String
+            $ResourceRetirements = Invoke-ResourceInventoryLoop -GraphQuery $RetirementQuery -FSubscri $Subscri -LoopName 'Retirements'
+
+            $RetirementCount = $ResourceRetirements.count
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Number of Retirements: '+ $RetirementCount)
 
     Write-Progress -activity 'Azure Inventory' -Status "4% Complete." -PercentComplete 4 -CurrentOperation "Starting API Extraction.."
 
@@ -158,6 +175,7 @@ $ExtractionRuntime = Measure-Command -Expression {
         ResourceContainers     = $ResourceContainers
         Advisories             = $Advisories
         Security               = $Security
+        Retirements            = $ResourceRetirements
     }
     return $tmp
 }

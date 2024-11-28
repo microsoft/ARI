@@ -12,7 +12,9 @@ function Get-ARIManagementGroups {
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Management group name supplied: ' + $ManagmentGroupName)
     $ReportCounter = 1
     $LocalResults = @()
-    $group = Get-AzManagementGroup -GroupName $ManagementGroup
+
+    $group = Get-AzManagementGroupEntity
+    $group = $group | Where-Object { $_.DisplayName -eq $ManagementGroup }
     if ($group.Count -lt 1)
     {
         Write-Host "ERROR:" -NoNewline -ForegroundColor Red
@@ -27,7 +29,7 @@ function Get-ARIManagementGroups {
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Management groups found: ' + $group.count)
         foreach ($item in $group)
         {
-            $GraphQuery = "resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$($item.name)' | summarize count()"
+            $GraphQuery = "resourcecontainers | where type == 'microsoft.resources/subscriptions' | mv-expand managementGroupParent = properties.managementGroupAncestorsChain | where managementGroupParent.name =~ '$($item.DisplayName)'"
             $QueryResult = Search-AzGraph -Query $GraphQuery -first 1000
             $LocalResults += $QueryResult
 

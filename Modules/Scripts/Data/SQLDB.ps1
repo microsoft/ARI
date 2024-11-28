@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/SQLDB.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.1
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle) 
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 if ($Task -eq 'Processing') {
 
@@ -37,9 +37,32 @@ if ($Task -eq 'Processing') {
                 $data = $1.PROPERTIES
                 $DBServer = $1.id.split("/")[8]
                 $PoolId = if(![string]::IsNullOrEmpty($data.elasticPoolId)){$data.elasticPoolId.split('/')[8]}else{$null}
-
                 $RestorePoint = [string](get-date($data.earliestrestoredate))
-                
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
@@ -48,6 +71,8 @@ if ($Task -eq 'Processing') {
                             'Resource Group'             = $1.RESOURCEGROUP;
                             'Name'                       = $1.NAME;
                             'Location'                   = $1.LOCATION;
+                            'Retiring Feature'           = $RetiringFeature;
+                            'Retiring Date'              = $RetiringDate;
                             'Database Server'            = $DBServer;
                             'Default Secondary Location' = $data.defaultSecondaryLocation;
                             'Status'                     = $data.status;
@@ -78,12 +103,18 @@ else {
 
         $TableName = ('SQLDBTable_'+($SmaResources.SQLDB.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
+
+        $condtxt = @()
+        #Retirement
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
         
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Database Server')
         $Exc.Add('Default Secondary Location')
         $Exc.Add('Status')
@@ -108,7 +139,7 @@ else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'SQL DBs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'SQL DBs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
 
     }
 }

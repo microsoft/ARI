@@ -1,361 +1,498 @@
 [
 {
-        "Id":7
-        ,"ServiceName":"Storage Account"
-        ,"RetiringFeature":"Classic"
-        ,"RetirementDate":"2024-08-31"
-        ,"Link": "https://azure.microsoft.com/updates/classic-azure-storage-accounts-will-be-retired-on-31-august-2024/"
-    }
-,   {
-        "Id":13
-        ,"ServiceName":"App Service"
-        ,"RetiringFeature":"App Service Environment v1/v2"
-        ,"RetirementDate":"2024-08-31"
-        ,"Link": "https://azure.microsoft.com/updates/app-service-environment-v1-v2-retirement/"
-    }
-,	{
-        "Id":38
-        ,"ServiceName":"Cloud service (classic)"
-        ,"RetiringFeature":"Classic"
-        ,"RetirementDate":"2024-08-31"
-        ,"Link": "https://learn.microsoft.com/azure/cloud-services-extended-support/in-place-migration-overview"
-    }
-,   {
-        "Id":40
-        ,"ServiceName":"Machine Learning Studio (classic)"
-        ,"RetiringFeature":"Entire service"
-        ,"RetirementDate":"2024-08-31"
-        ,"Link": "https://azure.microsoft.com/updates/machine-learning-studio-classic-will-retire-on-31-august-2024/"
-    }
-,   {
-        "Id":60
-        ,"ServiceName":"Virtual Machines"
-        ,"RetiringFeature":"Av1-series"
-        ,"RetirementDate":"2024-08-31"
-        ,"Link": "https://learn.microsoft.com/azure/virtual-machines/av1-series-retirement"
-    }
-,   {
-        "Id":62
-        ,"ServiceName":"Virtual Machines"
-        ,"RetiringFeature":"HB-series"
-        ,"RetirementDate":"2024-08-31"
-        ,"Link": "https://learn.microsoft.com/azure/virtual-machines/hb-series-retirement"
-    }
-,   {
-        "Id":76
-        ,"ServiceName":"Cognitive Services"
-        ,"RetiringFeature":"QnAMaker"
-        ,"RetirementDate":"2025-03-31"
-        ,"Link": "https://azure.microsoft.com/updates/azure-qna-maker-will-be-retired-on-31-march-2025/"
-    }
-,   {
-        "Id":84
-        ,"ServiceName":"Azure Disks"
-        ,"RetiringFeature":"Unmanaged Disks"
-        ,"RetirementDate":"2025-09-30"
-        ,"Link": "https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation"
-    }
-,   {
-        "Id":86
-        ,"ServiceName":"Azure Database for PostgreSQL"
-        ,"RetiringFeature":"Single server"
-        ,"RetirementDate":"2025-03-28"
-        ,"Link": "https://azure.microsoft.com/updates/azure-database-for-postgresql-single-server-will-be-retired-migrate-to-flexible-server-by-28-march-2025/"
-    }
-,   {
-        "Id":88
-        ,"ServiceName":"Virtual Network"
-        ,"RetiringFeature":"Classic"
-        ,"RetirementDate":"2024-08-31"
-        ,"Link": "https://learn.microsoft.com/azure/virtual-network/migrate-classic-vnet-powershell"
-    }
-,   {
-        "Id":8801
-        ,"ServiceName":"Network Security Group"
-        ,"RetiringFeature":"Classic"
-        ,"RetirementDate":"2024-08-31"
-        ,"Link": "https://azure.microsoft.com/updates/five-azure-classic-networking-services-will-be-retired-on-31-august-2024/"
-    }
-,   {
-        "Id":8802
-        ,"ServiceName":"Reserved IPs"
-        ,"RetiringFeature":"Classic"
-        ,"RetirementDate":"2024-08-31"
-        ,"Link": "https://learn.microsoft.com/azure/virtual-network/ip-services/public-ip-upgrade-classic"
-    }
-, 	{
-        "Id":94
-        ,"ServiceName":"Azure Load Balancer"
-        ,"RetiringFeature":"Basic Load Balancer"
-        ,"RetirementDate":"2025-09-30"
-        ,"Link": "https://azure.microsoft.com/updates/azure-basic-load-balancer-will-be-retired-on-30-september-2025-upgrade-to-standard-load-balancer/"
-    }
-,   {
-        "Id":124
-        ,"ServiceName":"Azure Cache for Redis"
-        ,"RetiringFeature":"Classic"
-        ,"RetirementDate":"2024-08-31"
-        ,"Link": "https://learn.microsoft.com/azure/azure-cache-for-redis/cache-faq"
-    }
-,   {
-        "Id":139
-        ,"ServiceName":"Azure Logic Apps"
-        ,"RetiringFeature":"Integration Services Environment (IES)"
-        ,"RetirementDate":"2024-08-31"
-        ,"Link": "https://azure.microsoft.com/updates/integration-services-environment-will-be-retired-on-31-august-2024-transition-to-logic-apps-standard/"
-    }
-,	{
-        "Id":154
-        ,"ServiceName":"Application Insights"
-        ,"RetiringFeature":"Single URL Ping Test"
-        ,"RetirementDate":"2026-09-30"
-        ,"Link": "https://azure.microsoft.com/updates/transition-to-using-standard-tests-for-singlestep-availability-testing-in-azure-monitor-application-insights-by-30-september/"
-    }
-,   {
-        "Id":160
-        ,"ServiceName":"Cognitive Services"
-        ,"RetiringFeature":"Language Understanding (LUIS)"
-        ,"RetirementDate":"2025-10-01"
-        ,"Link": "https://azure.microsoft.com/updates/language-understanding-retirement/"
-    }
-,	{
-        "Id": "204",
-        "ServiceName": "API Management",
-        "RetiringFeature": "Compute Platform (stv1)",
-        "RetirementDate": "2024-08-31",
-        "Link": "https://docs.microsoft.com/azure/api-management/compute-infrastructure#how-do-i-migrate-to-the-stv2-platform"
-    }
-,   {
-        "Id":213
-        ,"ServiceName":"Azure Service Map"
-        ,"RetiringFeature":"Entire Service"
-        ,"RetirementDate":"2025-09-30"
-        ,"Link": "https://azure.microsoft.com/updates/migrate-to-azure-monitor-vm-insights-by-30-september-2025-when-service-map-will-be-retired/"
-    }
-,   {
-        "Id":220
-        ,"ServiceName":"Public IP address"
-        ,"RetiringFeature":"Basic Sku"
-        ,"RetirementDate":"2025-09-30"
-        ,"Link": "https://learn.microsoft.com/azure/virtual-network/ip-services/public-ip-basic-upgrade-guidance" 
-    }
-,   {
-        "Id":225
-        ,"ServiceName":"Azure Database for PostgreSQL"
-        ,"RetiringFeature":"Single Server- Version 11"
-        ,"RetirementDate":"2025-03-28"
-        ,"Link": "https://learn.microsoft.com/azure/postgresql/single-server/whats-happening-to-postgresql-single-server"
-    }
-,   {
-        "Id":243
-        ,"ServiceName":"Azure Database for MySQL"
-        ,"RetiringFeature":"Single server"
-        ,"RetirementDate":"2024-09-16"
-        ,"Link": "https://learn.microsoft.com/azure/mysql/single-server/whats-happening-to-mysql-single-server"
-    }
-,  	{
-        "Id":249
-        ,"ServiceName":"Azure Database for PostgreSQL"
-        ,"RetiringFeature":"FlexibleServers- Version 11"
-        ,"RetirementDate":"2025-11-09"
-        ,"Link": "https://learn.microsoft.com/azure/postgresql/flexible-server/concepts-version-policy#postgresql-11-support"
-    }
-,   {
-        "Id":298
-        ,"ServiceName":"Azure Application Gateway"
-        ,"RetiringFeature":"V1"
-        ,"RetirementDate":"2026-04-28"
-        ,"Link": "https://learn.microsoft.com/azure/application-gateway/migrate-v1-v2"
-    } 
-,	{
-        "Id":354
-        ,"ServiceName":"Azure API for FHIR"
-        ,"RetiringFeature":"Entire service"
-        ,"RetirementDate":"2026-09-30"
-        ,"Link": "https://azure.microsoft.com/updates/azure-api-for-fhir-retirement/"
-    }
-,	{
-        "Id":387
-        ,"ServiceName":"Azure Health Data Services"
-        ,"RetiringFeature":"SMART on FHIR proxy "
-        ,"RetirementDate":"2026-09-21"
-        ,"Link": "https://azure.microsoft.com/updates/smart-on-fhir-proxy-feature-in-azure-health-data-services-will-be-retired-on-21st-september-2026-transition-to-smart-on-fhir/"
-    }
-,	{
-        "Id":398
-        ,"ServiceName":"Azure Database for MariaDB"
-        ,"RetiringFeature":"Entire service"
-        ,"RetirementDate":"2025-09-19"
-        ,"Link": "https://azure.microsoft.com/updates/azure-database-for-mariadb-will-be-retired-on-19-september-2025-migrate-to-azure-database-for-mysql-flexible-server/"
-    }
-,	{
-        "Id":403
-        ,"ServiceName":"Azure Cache for Redis"
-        ,"RetiringFeature":"Support for TLS 1.0 and 1.1"
-        ,"RetirementDate":"2024-10-31"
-        ,"Link": "https://learn.microsoft.com/azure/azure-cache-for-redis/cache-remove-tls-10-11"
-    }
-,	{
-        "Id":405
-        ,"ServiceName":"Azure Anomaly Detector"
-        ,"RetiringFeature":"Entire service"
-        ,"RetirementDate":"2026-10-01"
-        ,"Link": "https://azure.microsoft.com/updates/ai-services-anomaly-detector-will-be-retired-on-1-october-2026/"
-    }
-,	{
-        "Id":407
-        ,"ServiceName":"Azure Metrics Advisor"
-        ,"RetiringFeature":"Entire service"
-        ,"RetirementDate":"2026-10-01"
-        ,"Link": "https://azure.microsoft.com/updates/ai-services-metrics-advisor-will-be-retired-on-1-october-2026/"
-    }
-,	{
-        "Id":408
-        ,"ServiceName":"Azure Personalizer"
-        ,"RetiringFeature":"Entire service"
-        ,"RetirementDate":"2026-10-01"
-        ,"Link": "https://azure.microsoft.com/updates/ai-services-personalizer-will-be-retired-on-1-october-2026/"
-    }
-,	{
-        "Id":465
-        ,"ServiceName":"Azure Maps"
-        ,"RetiringFeature":"Gen1 price tier"
-        ,"RetirementDate":"2026-09-15"
-        ,"Link": "https://azure.microsoft.com/updates/azure-maps-gen1-price-tier-retirement/"
-    }
-,	{
-        "Id": "481",
-        "ServiceName": "VPN Gateway",
-        "RetiringFeature": "Standard and High-Performance SKUs",
-        "RetirementDate": "2025-09-30",
-        "Link": "https://azure.microsoft.com/updates/standard-and-highperformance-vpn-gateway-skus-will-be-retired-on-30-september-2025/"
-    }
-,   {
-        "Id": "495",
-        "ServiceName": "Virtual Machines",
-        "RetiringFeature": "Standard_M192is_v2",
-        "RetirementDate": "2027-03-31",
-        "Link": "https://azure.microsoft.com/updates/community-support-for-standardm192isv2-is-ending-on-31-march-2027/"
-    }
-,   {
-        "Id": "496",
-        "ServiceName": "Virtual Machines",
-        "RetiringFeature": "Standard_M192ims_v2",
-        "RetirementDate": "2027-03-31",
-        "Link": "https://azure.microsoft.com/updates/community-support-for-standardm192imsv2-is-ending-on-31-march-2027/"
-    }
-,   {
-        "Id": "497",
-        "ServiceName": "Virtual Machines",
-        "RetiringFeature": "Standard_M192ids_v2",
-        "RetirementDate": "2027-03-31",
-        "Link": "https://azure.microsoft.com/updates/community-support-for-standardm192idsv2-is-ending-on-31-march-2027/"
-    }
-,   {
-        "Id": "498",
-        "ServiceName": "Virtual Machines",
-        "RetiringFeature": "Standard_M192idms_v2",
-        "RetirementDate": "2027-03-31",
-        "Link": "https://azure.microsoft.com/updates/support-for-standardm192idmsv2-will-be-retired-on-31-march-2027/"
-    }
-,   {
-        "Id": "500",
-        "ServiceName": "Azure HPC Cache",
-        "RetiringFeature": "Entire service",
-        "RetirementDate": "2025-09-30",
-        "Link": "https://azure.microsoft.com/updates/hpccacheretirement/"
-    }
-, 	{
-        "Id": "514",
-        "ServiceName": "Virtual Machines",
-        "RetiringFeature": "Standard_NC6s_v3, Standard_NC12s_v3, and Standard_NC24s_v3",
-        "RetirementDate": "2025-09-30",
-        "Link": "https://azure.microsoft.com/updates/standardnc6sv3-standardnc12sv3-and-standardnc24sv3-azure-virtual-machines-will-be-retired-on-september-30-2025/"
-    }
-,   {
-        "Id": "519",
-        "ServiceName": "Application Gateway",
-        "RetiringFeature": "WAF v2 Config",
-        "RetirementDate": "2027-03-31",
-        "Link": "https://azure.microsoft.com/updates/retirement-support-for-application-gateway-web-application-firewall-v2-configuration-is-ending/"
-    }
-,   {
-        "Id": "554",
-        "ServiceName": "Azure Grafana Services",
-        "RetiringFeature": "Grafana 9",
-        "RetirementDate": "2024-09-30",
-        "Link": "https://azure.microsoft.com/updates/action-recommended-update-to-using-grafana-version-10-for-azure-managed-grafana/"
-    }
-,   {
-        "Id": "561",
-        "ServiceName": "Azure AI Content Moderator",
-        "RetiringFeature": "Entire service",
-        "RetirementDate": "2027-03-15",
-        "Link": "https://azure.microsoft.com/updates/azure-content-moderator-retirement/"
-    }
-,   {
-        "Id": "562",
-        "ServiceName": "HDInsight",
-        "RetiringFeature": "4.0",
-        "RetirementDate": "2025-03-31",
-        "Link": "https://azure.microsoft.com/updates/azure-hdinsight-40-will-be-retired-on-31-march-2025-migrate-your-hdinsight-clusters-to-51/"
-    }
-,	{
-        "Id": "563",
-        "ServiceName": "HDInsight",
-        "RetiringFeature": "5.0",
-        "RetirementDate": "2025-03-31",
-        "Link": "https://azure.microsoft.com/updates/hdinsight5retire/"
-    }
-,	{
-        "Id": "582",
-        "ServiceName": "Virtual Machines",
-        "RetiringFeature": "Standard_NC24rs_v3",
-        "RetirementDate": "2025-03-31",
-        "Link": "https://azure.microsoft.com/updates/standardnc24rsv3-virtual-machines-will-be-retired-on-march-31st-2025/"
-    }
-,	{
-        "Id": "583", 																  
-        "ServiceName": "Azure Synapse",
-        "RetiringFeature": "Runtime for Apache Spark 3.2",
-        "RetirementDate": "2024-07-08",
-        "Link": "https://azure.microsoft.com/updates/azure-synapse-runtime-for-apache-spark-32-end-of-support/"
-    }
-,	{
-        "Id": "624",
-        "ServiceName": "Azure Lab Services",
-        "RetiringFeature": "V1 and V2",
-        "RetirementDate": "2027-06-28",
-        "Link": "https://azure.microsoft.com/updates/v2/Azure-Lab-Services-is-being-retired"
-    }
-,
-    {
-        "Id": "564",
-        "ServiceName": "HDInsight",
-        "RetiringFeature": "A Series",
-        "RetirementDate": "2024-08-31",
-        "Link": "https://azure.microsoft.com/updates/basic-and-standard-aseries-vms-on-hdinsight-will-retire-on-31-august-2024/"
-    }
-,
-    {
-        "Id": "643",
-        "ServiceName": "Azure Synapse",
-        "RetiringFeature": "Runtime for Apache Spark 3.3",
-        "RetirementDate": "2025-03-31",
-        "Link": "https://azure.microsoft.com/updates/v2/Azure-Synapse-runtime-Apache-Spark-3-3-EOS/"
-    }
-,	{
-        "Id": "245",
-        "ServiceName": "Azure Update Manager",
-        "RetiringFeature": "Update Management",
-        "RetirementDate": "2024-08-31",
-        "Link": "https://azure.microsoft.com/updates/updatemanagement-retired-31august2024/"
-    }
-,	{
-        "Id": "669",
-        "ServiceName": "Event Grid",
-        "RetiringFeature": "Support for TLS 1.0 and 1.1",
-        "RetirementDate": "2024-10-31",
-        "Link": "https://azure.microsoft.com/updates/v2/TLS-changes-for-Azure-Event-Grid"
-    }
+    "Id": 583,
+    "ServiceName": "Azure Synapse",
+    "RetiringFeature": "Runtime for Apache Spark 3.2",
+    "RetirementDate": "2024-07-08",
+    "Link": "https://azure.microsoft.com/updates/azure-synapse-runtime-for-apache-spark-32-end-of-support/"
+},
+{
+    "Id": 7,
+    "ServiceName": "Storage Account",
+    "RetiringFeature": "Classic",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://azure.microsoft.com/updates/classic-azure-storage-accounts-will-be-retired-on-31-august-2024/"
+},
+{
+    "Id": 13,
+    "ServiceName": "App Service",
+    "RetiringFeature": "App Service Environment v1/v2",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://azure.microsoft.com/updates/app-service-environment-v1-v2-retirement/"
+},
+{
+    "Id": 38,
+    "ServiceName": "Cloud service (classic)",
+    "RetiringFeature": "Classic",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://azure.microsoft.com/updates/cloud-services-retirement-announcement/"
+},
+{
+    "Id": 40,
+    "ServiceName": "Machine Learning Studio (classic)",
+    "RetiringFeature": "Entire service",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://azure.microsoft.com/updates/machine-learning-studio-classic-will-retire-on-31-august-2024/"
+},
+{
+    "Id": 60,
+    "ServiceName": "Virtual Machines",
+    "RetiringFeature": "Av1-series",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://azure.microsoft.com/updates/action-required-migrate-your-azure-workloads-to-av2series-vms-before-31-august-2024/"
+},
+{
+    "Id": 62,
+    "ServiceName": "Virtual Machines",
+    "RetiringFeature": "HB-series",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://azure.microsoft.com/updates/hbseries-azure-virtual-machines-will-be-retired-by-31-august-2024/"
+},
+{
+    "Id": 564,
+    "ServiceName": "HDInsight",
+    "RetiringFeature": "A Series",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://azure.microsoft.com/updates/basic-and-standard-aseries-vms-on-hdinsight-will-retire-on-31-august-2024/"
+},
+{
+    "Id": 245,
+    "ServiceName": "Azure Automation",
+    "RetiringFeature": "Update Management",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://azure.microsoft.com/updates/updatemanagement-retired-31august2024/"
+},
+{
+    "Id": 88,
+    "ServiceName": "Virtual Network",
+    "RetiringFeature": "Classic",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://learn.microsoft.com/azure/virtual-network/migrate-classic-vnet-powershell"
+},
+{
+    "Id": 8801,
+    "ServiceName": "Network Security Group",
+    "RetiringFeature": "Classic",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://azure.microsoft.com/updates/five-azure-classic-networking-services-will-be-retired-on-31-august-2024/"
+},
+{
+    "Id": 8802,
+    "ServiceName": "Reserved IPs",
+    "RetiringFeature": "Classic",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://learn.microsoft.com/azure/virtual-network/ip-services/public-ip-upgrade-classic"
+},
+{
+    "Id": 204,
+    "ServiceName": "API Management",
+    "RetiringFeature": "Compute Platform (stv1)",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://docs.microsoft.com/azure/api-management/compute-infrastructure#how-do-i-migrate-to-the-stv2-platform"
+},
+{
+    "Id": 124,
+    "ServiceName": "Azure Cache for Redis",
+    "RetiringFeature": "Classic",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://learn.microsoft.com/azure/azure-cache-for-redis/cache-faq"
+},
+{
+    "Id": 139,
+    "ServiceName": "Azure Logic Apps",
+    "RetiringFeature": "Integration Services Environment (IES)",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://azure.microsoft.com/updates/integration-services-environment-will-be-retired-on-31-august-2024-transition-to-logic-apps-standard/"
+},
+{
+    "Id": 243,
+    "ServiceName": "Azure Database for MySQL",
+    "RetiringFeature": "Single server",
+    "RetirementDate": "2024-09-16",
+    "Link": "https://learn.microsoft.com/azure/mysql/single-server/whats-happening-to-mysql-single-server"
+},
+{
+    "Id": 554,
+    "ServiceName": "Azure Grafana Services",
+    "RetiringFeature": "Grafana 9",
+    "RetirementDate": "2024-08-31",
+    "Link": "https://azure.microsoft.com/updates/action-recommended-update-to-using-grafana-version-10-for-azure-managed-grafana/"
+},
+{
+    "Id": 669,
+    "ServiceName": "Event Grid",
+    "RetiringFeature": "Support for TLS 1.0 and 1.1",
+    "RetirementDate": "2025-02-28",
+    "Link": "https://azure.microsoft.com/updates/v2/TLS-changes-for-Azure-Event-Grid"
+},
+{
+    "Id": 703,
+    "ServiceName": "Azure Cosmos DB",
+    "RetiringFeature": "Support for TLS 1.0 and 1.1",
+    "RetirementDate": "2025-08-31",
+    "Link": "https://learn.microsoft.com/azure/cosmos-db/self-serve-minimum-tls-enforcement"
+},
+{
+    "Id": 403,
+    "ServiceName": "Azure Cache for Redis",
+    "RetiringFeature": "Support for TLS 1.0 and 1.1",
+    "RetirementDate": "2025-02-28",
+    "Link": "https://learn.microsoft.com/azure/azure-cache-for-redis/cache-remove-tls-10-11"
+},
+{
+    "Id": 225,
+    "ServiceName": "Azure Database for PostgreSQL",
+    "RetiringFeature": "Single Server- Version 11",
+    "RetirementDate": "2025-03-28",
+    "Link": "https://learn.microsoft.com/azure/postgresql/single-server/whats-happening-to-postgresql-single-server"
+},
+{
+    "Id": 86,
+    "ServiceName": "Azure Database for PostgreSQL",
+    "RetiringFeature": "Single server",
+    "RetirementDate": "2025-03-28",
+    "Link": "https://azure.microsoft.com/updates/azure-database-for-postgresql-single-server-will-be-retired-migrate-to-flexible-server-by-28-march-2025/"
+},
+{
+    "Id": 623,
+    "ServiceName": "Azure Spring Apps",
+    "RetiringFeature": "Consumption Plan",
+    "RetirementDate": "2025-03-31",
+    "Link": "https://azure.microsoft.com/updates/v2/Azure-Spring-Apps-will-be-retired-on-March-31-2028 "
+},
+{
+    "Id": 582,
+    "ServiceName": "Virtual Machines",
+    "RetiringFeature": "Standard_NC24rs_v3",
+    "RetirementDate": "2025-03-31",
+    "Link": "https://azure.microsoft.com/updates/standardnc24rsv3-virtual-machines-will-be-retired-on-march-31st-2025/"
+},
+{
+    "Id": 76,
+    "ServiceName": "Cognitive Services",
+    "RetiringFeature": "QnAMaker",
+    "RetirementDate": "2025-03-31",
+    "Link": "https://azure.microsoft.com/updates/azure-qna-maker-will-be-retired-on-31-march-2025/"
+},
+{
+    "Id": 643,
+    "ServiceName": "Azure Synapse",
+    "RetiringFeature": "Runtime for Apache Spark 3.3",
+    "RetirementDate": "2025-03-31",
+    "Link": "https://azure.microsoft.com/updates/v2/Azure-Synapse-runtime-Apache-Spark-3-3-EOS/"
+},
+{
+    "Id": 563,
+    "ServiceName": "HDInsight",
+    "RetiringFeature": "5.0",
+    "RetirementDate": "2025-03-31",
+    "Link": "https://azure.microsoft.com/updates/hdinsight5retire/"
+},
+{
+    "Id": 562,
+    "ServiceName": "HDInsight",
+    "RetiringFeature": "4.0",
+    "RetirementDate": "2025-03-31",
+    "Link": "https://azure.microsoft.com/updates/azure-hdinsight-40-will-be-retired-on-31-march-2025-migrate-your-hdinsight-clusters-to-51/"
+},
+{
+    "Id": 398,
+    "ServiceName": "Azure Database for MariaDB",
+    "RetiringFeature": "Entire service",
+    "RetirementDate": "2025-09-19",
+    "Link": "https://azure.microsoft.com/updates/azure-database-for-mariadb-will-be-retired-on-19-september-2025-migrate-to-azure-database-for-mysql-flexible-server/"
+},
+{
+    "Id": 660,
+    "ServiceName": "Azure Remote Rendering",
+    "RetiringFeature": "Entire service",
+    "RetirementDate": "2025-09-30",
+    "Link": "https://azure.microsoft.com/updates/v2/azure-remote-rendering-retirement"
+},
+{
+    "Id": 94,
+    "ServiceName": "Azure Load Balancer",
+    "RetiringFeature": "Basic Load Balancer",
+    "RetirementDate": "2025-09-30",
+    "Link": "https://azure.microsoft.com/updates/azure-basic-load-balancer-will-be-retired-on-30-september-2025-upgrade-to-standard-load-balancer/"
+},
+{
+    "Id": 213,
+    "ServiceName": "Azure Service Map",
+    "RetiringFeature": "Entire Service",
+    "RetirementDate": "2025-09-30",
+    "Link": "https://azure.microsoft.com/updates/migrate-to-azure-monitor-vm-insights-by-30-september-2025-when-service-map-will-be-retired/"
+},
+{
+    "Id": 220,
+    "ServiceName": "Public IP address",
+    "RetiringFeature": "Basic Sku",
+    "RetirementDate": "2025-09-30",
+    "Link": "https://azure.microsoft.com/updates/upgrade-to-standard-sku-public-ip-addresses-in-azure-by-30-september-2025-basic-sku-will-be-retired/"
+},
+{
+    "Id": 481,
+    "ServiceName": "VPN Gateway",
+    "RetiringFeature": "Standard and High-Performance SKUs",
+    "RetirementDate": "2025-09-30",
+    "Link": "https://azure.microsoft.com/updates/standard-and-highperformance-vpn-gateway-skus-will-be-retired-on-30-september-2025/"
+},
+{
+    "Id": 514,
+    "ServiceName": "Virtual Machines",
+    "RetiringFeature": "Standard_NC6s_v3, Standard_NC12s_v3, and Standard_NC24s_v3",
+    "RetirementDate": "2025-09-30",
+    "Link": "https://azure.microsoft.com/updates/standardnc6sv3-standardnc12sv3-and-standardnc24sv3-azure-virtual-machines-will-be-retired-on-september-30-2025/"
+},
+{
+    "Id": 500,
+    "ServiceName": "Azure HPC Cache",
+    "RetiringFeature": "Entire service",
+    "RetirementDate": "2025-09-30",
+    "Link": "https://azure.microsoft.com/updates/hpccacheretirement/"
+},
+{
+    "Id": 84,
+    "ServiceName": "Azure Disks",
+    "RetiringFeature": "Unmanaged Disks",
+    "RetirementDate": "2025-09-30",
+    "Link": "https://learn.microsoft.com/azure/virtual-machines/unmanaged-disks-deprecation"
+},
+{
+    "Id": 160,
+    "ServiceName": "Cognitive Services",
+    "RetiringFeature": "Language Understanding (LUIS)",
+    "RetirementDate": "2025-10-01",
+    "Link": "https://azure.microsoft.com/updates/language-understanding-retirement/"
+},
+{
+    "Id": 249,
+    "ServiceName": "Azure Database for PostgreSQL",
+    "RetiringFeature": "FlexibleServers- Version 11",
+    "RetirementDate": "2025-11-09",
+    "Link": "https://learn.microsoft.com/azure/postgresql/flexible-server/concepts-version-policy#postgresql-11-support"
+},
+{
+    "Id": 298,
+    "ServiceName": "Azure Application Gateway",
+    "RetiringFeature": "V1",
+    "RetirementDate": "2026-04-28",
+    "Link": "https://azure.microsoft.com/updates/application-gateway-v1-will-be-retired-on-28-april-2026-transition-to-application-gateway-v2/"
+},
+{
+    "Id": 465,
+    "ServiceName": "Azure Maps",
+    "RetiringFeature": "Gen1 price tier",
+    "RetirementDate": "2026-09-15",
+    "Link": "https://azure.microsoft.com/updates/azure-maps-gen1-price-tier-retirement/"
+},
+{
+    "Id": 387,
+    "ServiceName": "Azure Health Data Services",
+    "RetiringFeature": "SMART on FHIR proxy ",
+    "RetirementDate": "2026-09-21",
+    "Link": "https://azure.microsoft.com/updates/smart-on-fhir-proxy-feature-in-azure-health-data-services-will-be-retired-on-21st-september-2026-transition-to-smart-on-fhir/"
+},
+{
+    "Id": 354,
+    "ServiceName": "Azure API for FHIR",
+    "RetiringFeature": "Entire service",
+    "RetirementDate": "2026-09-30",
+    "Link": "https://azure.microsoft.com/updates/azure-api-for-fhir-retirement/"
+},
+{
+    "Id": 154,
+    "ServiceName": "Application Insights",
+    "RetiringFeature": "Single URL Ping Test",
+    "RetirementDate": "2026-09-30",
+    "Link": "https://azure.microsoft.com/updates/transition-to-using-standard-tests-for-singlestep-availability-testing-in-azure-monitor-application-insights-by-30-september/"
+},
+{
+    "Id": 405,
+    "ServiceName": "Azure Anomaly Detector",
+    "RetiringFeature": "Entire service",
+    "RetirementDate": "2026-10-01",
+    "Link": "https://azure.microsoft.com/updates/ai-services-anomaly-detector-will-be-retired-on-1-october-2026/"
+},
+{
+    "Id": 408,
+    "ServiceName": "Azure Personalizer",
+    "RetiringFeature": "Entire service",
+    "RetirementDate": "2026-10-01",
+    "Link": "https://azure.microsoft.com/updates/ai-services-personalizer-will-be-retired-on-1-october-2026/"
+},
+{
+    "Id": 407,
+    "ServiceName": "Azure Metrics Advisor",
+    "RetiringFeature": "Entire service",
+    "RetirementDate": "2026-10-01",
+    "Link": "https://azure.microsoft.com/updates/ai-services-metrics-advisor-will-be-retired-on-1-october-2026/"
+},
+{
+    "Id": 611,
+    "ServiceName": "VPN Gateway",
+    "RetiringFeature": "Non-AZ VPNs",
+    "RetirementDate": "2026-09-30",
+    "Link": "https://azure.microsoft.com/updates/v2/vpngw1-5-non-az-skus-will-be-retired-on-30-september-2026"
+},
+{
+    "Id": 561,
+    "ServiceName": "Azure AI Content Moderator",
+    "RetiringFeature": "Entire service",
+    "RetirementDate": "2027-03-15",
+    "Link": "https://azure.microsoft.com/updates/azure-content-moderator-retirement/"
+},
+{
+    "Id": 519,
+    "ServiceName": "Application Gateway",
+    "RetiringFeature": "WAF v2 Config",
+    "RetirementDate": "2027-03-31",
+    "Link": "https://azure.microsoft.com/updates/retirement-support-for-application-gateway-web-application-firewall-v2-configuration-is-ending/"
+},
+{
+    "Id": 498,
+    "ServiceName": "Virtual Machines",
+    "RetiringFeature": "Standard_M192idms_v2",
+    "RetirementDate": "2027-03-31",
+    "Link": "https://azure.microsoft.com/updates/support-for-standardm192idmsv2-will-be-retired-on-31-march-2027/"
+},
+{
+    "Id": 497,
+    "ServiceName": "Virtual Machines",
+    "RetiringFeature": "Standard_M192ids_v2",
+    "RetirementDate": "2027-03-31",
+    "Link": "https://azure.microsoft.com/updates/community-support-for-standardm192idsv2-is-ending-on-31-march-2027/"
+},
+{
+    "Id": 496,
+    "ServiceName": "Virtual Machines",
+    "RetiringFeature": "Standard_M192ims_v2",
+    "RetirementDate": "2027-03-31",
+    "Link": "https://azure.microsoft.com/updates/community-support-for-standardm192imsv2-is-ending-on-31-march-2027/"
+},
+{
+    "Id": 495,
+    "ServiceName": "Virtual Machines",
+    "RetiringFeature": "Standard_M192is_v2",
+    "RetirementDate": "2027-03-31",
+    "Link": "https://azure.microsoft.com/updates/community-support-for-standardm192isv2-is-ending-on-31-march-2027/"
+},
+{
+    "Id": 624,
+    "ServiceName": "Azure Lab Services",
+    "RetiringFeature": "V1 and V2",
+    "RetirementDate": "2027-06-28",
+    "Link": "https://azure.microsoft.com/updates/v2/Azure-Lab-Services-is-being-retired"
+},
+{
+    "Id": 619,
+    "ServiceName": "Azure CDN",
+    "RetiringFeature": "Standard from Microsoft (classic)",
+    "RetirementDate": "2027-09-30",
+    "Link": "https://azure.microsoft.com/updates/v2/Azure-CDN-Standard-from-Microsoft-classic-will-be-retired-on-30-September-2027"
+},
+{
+    "Id": 666,
+    "ServiceName": "Azure Load Balancer",
+    "RetiringFeature": "Inbound NAT rule V1",
+    "RetirementDate": "2027-09-30",
+    "Link": "https://azure.microsoft.com/updates/v2/Retirement-notice-Azure-Load-Balancer-Inbound-NAT-rule-V1-for-Azure-VMs-and-Azure-VMSS-will-be-retired"
+},
+{
+    "Id":18
+    ,"ServiceName":"Azure Data Lake Analytics"
+    ,"RetiringFeature":"Entire Service"
+    ,"RetirementDate":"2024-02-29"
+    ,"Link": "https://azure.microsoft.com/updates/migrate-to-azure-synapse-analytics/"
+},
+{
+    "Id": "31",
+    "ServiceName": "Azure Time Series Insights",
+    "RetiringFeature": "Entire service",
+    "RetirementDate": "2024-07-07",
+    "Link": "https://azure.microsoft.com/updates/we-re-retiring-azure-time-series-insights-on-7-july-2024-transition-to-azure-data-explorer/#:~:text=We%E2%80%99re%20retiring%20Azure%20Time%20Series%20Insights%20on%207,answers%20from%20community%20experts%20in%20Microsoft%20Q%26A.%20?msockid=01047d944d226853006f69314c0f69c7"
+},
+{
+    "Id": "143",
+    "ServiceName": "Application Insights",
+    "RetiringFeature": "Trouble Shooting Guides Retirement",
+    "RetirementDate": "2024-03-31",
+    "Link": "https://github.com/microsoft/Application-Insights-Workbooks/blob/master/Documentation/LegacyAI/TroubleshootingGuidesDeprecation.md"
+},
+{
+    "Id":153
+    ,"ServiceName":"Azure Stack Edge"
+    ,"RetiringFeature":"The 'managed' IoT Edge solution"
+    ,"RetirementDate":"2024-03-31" ,"Link":"https://azure.microsoft.com/updates/the-managed-iot-edge-solution-on-azure-stack-edge-will-be-retired-on-march-31-2024-transition-your-iot-edge-workloads-to-an-i/"
+},
+{
+    "Id":181
+    ,"ServiceName":"Application Insights"
+    ,"RetiringFeature":"Classic"
+    ,"RetirementDate":"2024-02-29"
+    ,"Link": "https://azure.microsoft.com/updates/we-re-retiring-classic-application-insights-on-29-february-2024/"
+},   
+{
+    "Id":182
+    ,"ServiceName":"Azure Data Lake Storage"
+    ,"RetiringFeature":"Gen 1"
+    ,"RetirementDate":"2024-02-29"
+    ,"Link": "https://azure.microsoft.com/updates/action-required-switch-to-azure-data-lake-storage-gen2-by-29-february-2024/"
+},
+{
+    "Id":187
+    ,"ServiceName":"Azure Migrate"
+    ,"RetiringFeature":"Classic"
+    ,"RetirementDate":"2024-02-29"
+    ,"Link": "https://azure.microsoft.com/updates/we-are-retiring-classic-azure-migrate-on-29-february-2024/"
+},
+{
+    "Id":200
+    ,"ServiceName":"Azure Monitor"
+    ,"RetiringFeature":"Classic alerts for Azure Gov cloud and Azure China 21Vianet"
+    ,"RetirementDate":"2024-02-29"
+    ,"Link": "https://azure.microsoft.com/updates/start-using-new-alerts-in-azure-monitor-for-azure-government-cloud/"
+},
+{
+    "Id": "325",
+    "ServiceName": "Azure Synapse",
+    "RetiringFeature": "Runtime for Apache Spark 3.1",
+    "RetirementDate": "2024-01-26",
+    "Link": "https://learn.microsoft.com/azure/synapse-analytics/spark/apache-spark-3-runtime"
+},
+{
+    "Id": "328",
+    "ServiceName": "Azure Synapse",
+    "RetiringFeature": "Runtime for Apache Spark 2.4",
+    "RetirementDate": "2023-09-29",
+    "Link": "https://learn.microsoft.com/azure/synapse-analytics/spark/apache-spark-24-runtime"
+},
+{
+    "Id": "394",
+    "ServiceName": "Azure Media Services",
+    "RetiringFeature": "Entire service",
+    "RetirementDate": "2024-06-30",
+    "Link": "https://azure.microsoft.com/updates/retirement-notice-azure-media-services-is-being-retired-on-30-june-2024/"
+},	
+{
+    "Id": 524,
+    "ServiceName": "Network Watcher",
+    "RetiringFeature": "NSG Flow Logs",
+    "RetirementDate": "2027-09-30",
+    "Link": "https://azure.microsoft.com/updates/v2/Azure-NSG-flow-logs-Retirement"
+},
+{
+    "Id": 714,
+    "ServiceName": "Application Gateway",
+    "RetiringFeature": "Support for TLS 1.0 and 1.1",
+    "RetirementDate": "2025-08-31",
+    "Link": "https://azure.microsoft.com/updates/v2/Azure-Application-Gateway-support-for-TLS-10-and-TLS-11-will-end-by-31-August-2025"
+},
+{
+    "Id": 43502,
+    "ServiceName": "Service Bus",
+    "RetiringFeature": "Support for TLS 1.0 and 1.1",
+    "RetirementDate": "2025-02-28",
+    "Link": "https://learn.microsoft.com/azure/service-bus-messaging/transport-layer-security-configure-minimum-version"
+}
 ]

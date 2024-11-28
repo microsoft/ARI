@@ -106,7 +106,7 @@ function Connect-ARILoginSession {
         elseif($AppId -and $Secret -and $TenantID)
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Logging with AppID and Secret')
-                $SecurePassword = ConvertTo-SecureString -String $Secret -AsPlainText
+                $SecurePassword = ConvertTo-SecureString -String $Secret -AsPlainText -Force
                 $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $AppId, $SecurePassword
                 Connect-AzAccount -ServicePrincipal -TenantId $TenantId -Credential $Credential
             }

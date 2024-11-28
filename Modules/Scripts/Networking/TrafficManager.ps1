@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/TrafficManager.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.0
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -36,6 +36,31 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $Orphaned = if([string]::IsNullOrEmpty($data.endpoints.id)){$true}else{$false}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
@@ -44,6 +69,8 @@ If ($Task -eq 'Processing') {
                             'Subscription'                      = $sub1.Name;
                             'Resource Group'                    = $1.RESOURCEGROUP;
                             'Name'                              = $1.NAME;
+                            'Retiring Feature'                  = $RetiringFeature;
+                            'Retiring Date'                     = $RetiringDate;
                             'Status'                            = $data.profilestatus;
                             'Orphaned'                          = $Orphaned;
                             'DNS name'                          = $data.dnsconfig.fqdn;
@@ -70,8 +97,10 @@ Else {
         $TableName = ('TrafficManagerTable_'+($SmaResources.TrafficManager.id | Select-Object -Unique).count)
         
         $condtxt = @()
-        $condtxt += New-ConditionalText inactive -Range H:H
-        $condtxt += New-ConditionalText TRUE -Range E:E
+        $condtxt += New-ConditionalText inactive -Range J:J
+        $condtxt += New-ConditionalText TRUE -Range G:G
+        #Retirement
+        $condtxt += New-ConditionalText -Range D2:D100 -ConditionalType ContainsText
 
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
         
@@ -79,6 +108,8 @@ Else {
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Status')
         $Exc.Add('Orphaned')
         $Exc.Add('DNS name')

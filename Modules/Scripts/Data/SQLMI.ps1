@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/SQLSERVER.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.3.2
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported) 
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 if ($Task -eq 'Processing') {
 
@@ -35,7 +35,31 @@ if ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
 
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $Tags = if(!!($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
 
                 $pvteps = if(!($1.privateEndpointConnections)) {[pscustomobject]@{id = 'NONE'}} else {$1.privateEndpointConnections | Select-Object @{Name="id";Expression={$_.id.split("/")[8]}}}
@@ -48,6 +72,8 @@ if ($Task -eq 'Processing') {
                             'Resource Group'        = $1.RESOURCEGROUP;
                             'Name'                  = $1.NAME;
                             'Location'              = $1.LOCATION;
+                            'Retiring Feature'      = $RetiringFeature;
+                            'Retiring Date'         = $RetiringDate;
                             'SkuName'               = $1.sku.Name;
                             'SkuCapacity'           = $1.sku.capacity;
                             'SkuTier'               = $1.sku.tier;
@@ -78,18 +104,21 @@ else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
-        $condtxt += New-ConditionalText FALSE -Range J:J
-        $condtxt += New-ConditionalText FALSO -Range J:J
-        $condtxt += New-ConditionalText FAUX -Range J:J
-        $condtxt += New-ConditionalText NONE -Range J:J
-        $condtxt += New-ConditionalText Enabled -Range L:L
-        $condtxt += New-ConditionalText VRAI -Range L:L
+        $condtxt += New-ConditionalText FALSE -Range L:L
+        $condtxt += New-ConditionalText FAUX -Range L:L
+        $condtxt += New-ConditionalText NONE -Range L:L
+        $condtxt += New-ConditionalText Enabled -Range N:N
+        $condtxt += New-ConditionalText VRAI -Range N:N
+        #Retirement
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('SkuName')
         $Exc.Add('SkuCapacity')
         $Exc.Add('SkuTier')

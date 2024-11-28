@@ -1,16 +1,12 @@
 <br/>
 
-<br/>
-
-<br/>
-
-# Azure Resource Inventory Automation Account v4
+# Azure Resource Inventory Automation Account v3.5
 
 <br/>
 
 <br/>
 
-This section explain how to create an Automation Account to run Azure Resource Inventory automatically.  
+### This section explain how to create an Automation Account to run Azure Resource Inventory automatically.  
 
 <br/>
 
@@ -30,9 +26,7 @@ This section explain how to create an Automation Account to run Azure Resource I
 
 <br/>
 
-Once you have created the Automation Account, Storage Account and Blob Container. 
-
-## Those are the steps you have to do:
+## These are the steps you have to do after creating the Automation Account:
 
 <br/>
 
@@ -42,23 +36,17 @@ Once you have created the Automation Account, Storage Account and Blob Container
 
 <br/>
 
-<br/>
-
 <p align="center">
 <img src="images/ARIAUT_Identity.png">
 </p>
 
 <br/>
 
-<br/>
-
 #### This will create an identity in the Entra ID.
 
-### Now we are going to use that identity to give the following permissions to the Automation Account:
+#### Now we are going to use that identity to give the following permissions to the Automation Account:
 
 #### 1) Reader in the Management Group (for the script to be able to read all resources from Azure):
-
-<br/>
 
 <br/>
 
@@ -68,11 +56,7 @@ Once you have created the Automation Account, Storage Account and Blob Container
 
 <br/>
 
-<br/>
-
 #### 2) Storage Blob Data Contributor to the Storage Account
-
-<br/>
 
 <br/>
 
@@ -82,49 +66,83 @@ Once you have created the Automation Account, Storage Account and Blob Container
 
 <br/>
 
+### Now, back to the Automation Account, switch to the new Runtime Environment Experience:
+
 <br/>
 
-### Now, back in the Automation Account, the following Modules need to be imported with Runtime __7.2__:
+<p align="center">
+<img src="images/ARIAUT_Runtime.png">
+</p>
+
+<br/>
+
+### Now, create a new Runtime Environment Experience:
+
+<br/>
+
+<p align="center">
+<img src="images/ARIAUT_NewRunTime.png">
+</p>
+
+<br/>
+
+### The version must be __5.1__:
+
+<br/>
+
+<p align="center">
+<img src="images/ARIAUT_PWVersion.png">
+</p>
+
+<br/>
+
+
+### In the "Packages" pane, import the following Modules from Gallery:
+
+<br/>
+
+<p align="center">
+<img src="images/ARIAUT_RuntimePackages.png">
+</p>
+
+<br/>
 
 #### 1) "AzureResourceInventory"
 #### 2) "ImportExcel"
 #### 3) "Az.ResourceGraph"
-#### 4) "ThreadJob"
-
-<br/>
-
-<br/>
-
-#### This is done by going to the "Modules" then "Browse gallery":
-
-<br/>
-
-<br/>
-
-<p align="center">
-<img src="images/AUTv4Modules.png">
-</p>
-
-<br/>
+#### 4) "Az.Accounts"
+#### 5) "Az.Compute"
+#### 5) "PowershellGet"
+#### 7) "ThreadJob"
 
 <br/>
 
 
-#### Now just create a Powershell Runbook:
-
-<br/>
+### After the Runtime finish adding all the modules, create a Powershell Runbook:
 
 <br/>
 
 <p align="center">
-<img src="images/AUTv4Runbook.png">
+<img src="images/ARIAUT_Runbook.png">
 </p>
 
 <br/>
 
+### Now just add the "Invoke-ARI" command line inside the runbook:
+
+
 <br/>
 
-#### Then just add the "Invoke-ARI" command line inside the runbook. 
+
+<p align="center">
+<img src="images/ARIAUT_Runbookcmd.png">
+</p>
+
+<br/>
+
+````
+NOTE: Make sure to select the Runtime Environment you created.
+````
 
 <br/>
 
@@ -141,14 +159,17 @@ The line must contain the following parameters:
 
 <br/>
 
-The parameter "StorageAccount" is used to inform the Storage Account where the report will be placed and the "StorageContainer" parameter is used to pass the container within that Storage Account where the report will be placed.
+
+i.e: 
+
+**Invoke-ARI -TenantID "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX" -Automation -SkipDiagram -SkipAPIs -StorageAccount "stgaccari001" -StorageContainer "reports" -Debug**
+
 
 <br/>
 
-<p align="center">
-<img src="images/ARIAUT_RunBookScript.png">
-</p>
+The parameter "StorageAccount" is used to inform the Storage Account where the report will be placed and the "StorageContainer" parameter is used to inform the container within that Storage Account where the report will be placed.
 
+<br/>
 
 <br/>
 

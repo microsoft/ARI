@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Infrastructure/EvHub.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.1
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -41,8 +41,31 @@ If ($Task -eq 'Processing')
                 $data = $1.PROPERTIES
                 $timecreated = if($data.createdAt){[string](get-date($data.createdAt))}else{''}
                 $sku = $1.SKU
-                $RetDate = ''
-                $RetFeature = ''
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $LocalAuth = if($data.disablelocalauth -eq $false){$true}else{$false}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) { 
@@ -53,10 +76,10 @@ If ($Task -eq 'Processing')
                             'Name'                 = $1.NAME;
                             'Location'             = $1.LOCATION;
                             'SKU'                  = $sku.name;
+                            'Retiring Feature'     = $RetiringFeature;
+                            'Retiring Date'        = $RetiringDate;
                             'Status'               = $data.status;
                             'Geo-Replication'      = $data.zoneRedundant;
-                            'Retirement Date'      = [string]$RetDate;
-                            'Retirement Feature'   = $RetFeature;
                             'Throughput Units'     = $1.sku.capacity;
                             'Local Authentication' = $LocalAuth;
                             'Auto-Inflate'         = $data.isAutoInflateEnabled;
@@ -89,9 +112,10 @@ Else
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
+        #Retirement
+        $condtxt += New-ConditionalText -Range F2:F100 -ConditionalType ContainsText
         $condtxt += New-ConditionalText false -Range L:L
         $condtxt += New-ConditionalText '1.0' -Range O:O
-        $condtxt += New-ConditionalText - -Range H:H -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -99,10 +123,10 @@ Else
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('SKU')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Status')
         $Exc.Add('Geo-Rep')
-        $Exc.Add('Retirement Date')
-        $Exc.Add('Retirement Feature')
         $Exc.Add('Throughput Units')
         $Exc.Add('Local Authentication')
         $Exc.Add('Auto-Inflate')

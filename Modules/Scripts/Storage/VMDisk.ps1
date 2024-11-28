@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VMDISK.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -42,6 +42,31 @@ If ($Task -eq 'Processing')
                 $timecreated = $data.timeCreated
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $SKU = $1.SKU
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
@@ -50,6 +75,8 @@ If ($Task -eq 'Processing')
                             'Subscription'           = $sub1.Name;
                             'Resource Group'         = $1.RESOURCEGROUP;
                             'Disk Name'              = $1.NAME;
+                            'Retiring Feature'       = $RetiringFeature;
+                            'Retiring Date'          = $RetiringDate;
                             'Disk State'             = $data.diskState;
                             'Associated Resource'    = $1.MANAGEDBY.split('/')[8];
                             'Location'               = $1.LOCATION;
@@ -84,8 +111,11 @@ Else
     {
 
         $TableName = ('VMDiskT_'+($SmaResources.VMDisk.id | Select-Object -Unique).count)
+
         $condtxt = @()
-        $condtxt += New-ConditionalText Unattached -Range D:D
+        $condtxt += New-ConditionalText Unattached -Range F:F
+        #Retirement
+        $condtxt += New-ConditionalText -Range D2:D100 -ConditionalType ContainsText
 
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
@@ -93,6 +123,8 @@ Else
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Disk Name')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Disk State')
         $Exc.Add('Associated Resource')        
         $Exc.Add('Zone')

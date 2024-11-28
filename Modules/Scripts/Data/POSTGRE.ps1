@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/POSTGRE.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.1
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -36,8 +36,31 @@ If ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
-                $RetDate = ($Unsupported | Where-Object {$_.Id -eq 5}).RetirementDate
-                $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 5}).RetiringFeature
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 if(!$data.privateEndpointConnections){$PVTENDP = $false}else{$PVTENDP = $data.privateEndpointConnections.Id.split("/")[8]}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
@@ -50,8 +73,8 @@ If ($Task -eq 'Processing') {
                             'SKU'                       = $sku.name;
                             'SKU Family'                = $sku.family;
                             'Tier'                      = $sku.tier;
-                            'Retirement Date'           = [string]$RetDate;
-                            'Retirement Feature'        = $RetFeature;
+                            'Retiring Feature'          = $RetiringFeature;
+                            'Retiring Date'             = $RetiringDate;
                             'Capacity'                  = $sku.capacity;
                             'Postgre Version'           = $data.version;
                             'Private Endpoint'          = $PVTENDP;
@@ -91,12 +114,12 @@ Else {
 
         $condtxt = @()
         $condtxt += New-ConditionalText FALSE -Range L:L
-        $condtxt += New-ConditionalText FALSO -Range L:L
         $condtxt += New-ConditionalText Disabled -Range M:M
         $condtxt += New-ConditionalText Enabled -Range Q:Q
         $condtxt += New-ConditionalText TLSEnforcementDisabled -Range T:T
         $condtxt += New-ConditionalText Disabled -Range Y:Y
-        $condtxt += New-ConditionalText - -Range J:J -ConditionalType ContainsText
+        #Retirement
+        $condtxt += New-ConditionalText -Range J2:J100 -ConditionalType ContainsText
 
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -109,8 +132,8 @@ Else {
         $Exc.Add('Tier')
         $Exc.Add('Capacity')
         $Exc.Add('Postgre Version')
-        $Exc.Add('Retirement Date')
-        $Exc.Add('Retirement Feature')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Private Endpoint')
         $Exc.Add('Backup Retention Days')
         $Exc.Add('Geo-Redundant Backup')

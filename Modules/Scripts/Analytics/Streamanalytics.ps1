@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/Streamanalytics.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.2
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -37,11 +37,34 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $RetDate = ''
-                $RetFeature = ''
                 $Cluster = ''
                 $Cluster = $StreamAnalyticsCluster | Where-Object {$_.id -eq $data.cluster.id}
                 $Creadate = if($data.createdDate){[string](get-date $data.createdDate)}else{''}
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $LastOutput = if($data.lastOutputEventTime){[string](get-date $data.lastOutputEventTime)}else{''}
                 $OutputStart = if($data.outputStartTime){[string](get-date $data.outputStartTime)}else{''}
                 $ClusterDate = if($Cluster.properties.createddate){[string](get-date($Cluster.properties.createddate))}else{''}
@@ -56,6 +79,8 @@ If ($Task -eq 'Processing') {
                             'Cluster Name'                              = $Cluster.NAME;
                             'Cluster Location'                          = $Cluster.location;
                             'Cluster SKU'                               = $Cluster.sku.name;
+                            'Retiring Feature'                          = $RetiringFeature;
+                            'Retiring Date'                             = $RetiringDate;
                             'Capacity Allocated'                        = $Cluster.properties.capacityallocated;
                             'Capacity Assigned'                         = $Cluster.properties.capacityassigned;
                             'Cluster Creation Date'                     = $ClusterDate;
@@ -69,8 +94,6 @@ If ($Task -eq 'Processing') {
                             'Storage Account Auth Method'               = $data.jobstorageaccount.authenticationmode;
                             'Content Storage Policy'                    = $data.contentStoragePolicy;
                             'Created Date'                              = $Creadate;
-                            'Retirement Date'                           = [string]$RetDate;
-                            'Retirement Feature'                        = $RetFeature;
                             'Data Locale'                               = $data.dataLocale;
                             'Late Arrival Max Delay in Seconds'         = $data.eventsLateArrivalMaxDelayInSeconds;
                             'Out of Order Max Delay in Seconds'         = $data.eventsOutOfOrderMaxDelayInSeconds;
@@ -101,7 +124,9 @@ Else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
-        $condtxt += New-ConditionalText failed -Range N:N
+        #Retirement
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
+        $condtxt += New-ConditionalText failed -Range P:P
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Cluster Subscription')
@@ -109,6 +134,8 @@ Else {
         $Exc.Add('Cluster Name')
         $Exc.Add('Cluster Location')
         $Exc.Add('Cluster SKU')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Capacity Allocated')
         $Exc.Add('Capacity Assigned')
         $Exc.Add('Cluster Creation Date')
@@ -123,8 +150,6 @@ Else {
         $Exc.Add('Storage Account Auth Method')
         $Exc.Add('Content Storage Policy')
         $Exc.Add('Created Date')
-        $Exc.Add('Retirement Date')
-        $Exc.Add('Retirement Feature')
         $Exc.Add('Data Locale')
         $Exc.Add('Late Arrival Max Delay in Seconds')
         $Exc.Add('Out of Order Max Delay in Seconds')

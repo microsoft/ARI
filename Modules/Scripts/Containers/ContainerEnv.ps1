@@ -1,21 +1,21 @@
-﻿<#
+<#
 .Synopsis
-Inventory for Azure Availability Set
+Inventory for Azure Container App Environment
 
 .DESCRIPTION
-This script consolidates information for all microsoft.compute/availabilitysets and  resource provider in $Resources variable. 
-Excel Sheet Name: AvSet
+This script consolidates information for all microsoft.app/managedenvironments resource provider in $Resources variable. 
+Excel Sheet Name: Container App Env
 
 .Link
-https://github.com/microsoft/ARI/Modules/Infrastructure/AvSet.ps1
+https://github.com/microsoft/ARI/Modules/Containers/ContainerEnv.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
 Version: 3.5.9
-First Release Date: 19th November, 2020
-Authors: Claudio Merola and Renato Gregio 
+First Release Date: 27th November, 2024
+Authors: Claudio Merola
 
 #>
 
@@ -25,20 +25,22 @@ param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResourc
 
 If ($Task -eq 'Processing')
 {
+
     <######### Insert the resource extraction here ########>
 
-        $AvSet = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/availabilitysets'}
+        $CONTAINERENV = $Resources | Where-Object {$_.TYPE -eq 'microsoft.app/managedenvironments'}
+        $CONTAINER = $Resources | Where-Object {$_.TYPE -eq 'microsoft.app/containerapps'}
 
     <######### Insert the resource Process here ########>
 
-    if($AvSet)
+    if($CONTAINERENV)
         {
             $tmp = @()
 
-            foreach ($1 in $AvSet) {
-                $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
+            foreach ($1 in $CONTAINERENV) {
+                $ResUCount = 1
+                $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $Orphaned = if([string]::IsNullOrEmpty($data.virtualMachines.id)){$true}else{$false}
                 $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
                 if ($Retired) 
                     {
@@ -65,25 +67,32 @@ If ($Task -eq 'Processing')
                         $RetiringDate = $null
                     }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
-                Foreach ($vmid in $data.virtualMachines.id) {
-                    $vmIds = $vmid.split('/')[8]
+                $Apps = ($CONTAINER | Where-Object {$_.properties.environmentId -eq $1.id}).count
+
+                foreach ($2 in $data.workloadProfiles) {
                         foreach ($Tag in $Tags) {
                             $obj = @{
-                                'ID'               = $1.id;
-                                'Subscription'     = $sub1.Name;
-                                'Resource Group'   = $1.RESOURCEGROUP;
-                                'Name'             = $1.NAME;
-                                'Location'         = $1.LOCATION;
-                                'Retiring Feature' = $RetiringFeature;
-                                'Retiring Date'    = $RetiringDate;
-                                'Orphaned'         = $Orphaned;
-                                'Fault Domains'    = [string]$data.platformFaultDomainCount;
-                                'Update Domains'   = [string]$data.platformUpdateDomainCount;
-                                'Virtual Machines' = [string]$vmIds;
-                                'Tag Name'         = [string]$Tag.Name;
-                                'Tag Value'        = [string]$Tag.Value
+                                'ID'                        = $1.id;
+                                'Subscription'              = $sub1.Name;
+                                'Resource Group'            = $1.RESOURCEGROUP;
+                                'Name'                      = $1.NAME;
+                                'Location'                  = $1.LOCATION;
+                                'Retiring Feature'          = $RetiringFeature;
+                                'Retiring Date'             = $RetiringDate;
+                                'Public Access'             = $data.publicNetworkAccess;
+                                'Zone Redundant'            = $data.zoneRedundant;
+                                'Static IP'                 = $data.staticIp;
+                                'KEDA version'              = $data.kedaconfiguration.Version;
+                                'Dapr version'              = $data.daprconfiguration.Version;
+                                'Workload Profile'          = $2.name;
+                                'Workload Profile Type'     = $2.workloadProfileType;
+                                'Workload Profile Min'      = $2.minimumCount;
+                                'Workload Profile Max'      = $2.maximumCount;
+                                'Tag Name'                  = [string]$Tag.Name;
+                                'Tag Value'                 = [string]$Tag.Value
                             }
                             $tmp += $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
                         }                    
                 }
             }
@@ -97,17 +106,21 @@ Else
 {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if($SmaResources.AvSet)
+    if($SmaResources.ContainerEnv)
     {
-
-        $TableName = ('AvSetTable_'+($SmaResources.AvSet.id | Select-Object -Unique).count)
+        $TableName = ('ContEnvTb_'+($SmaResources.ContainerEnv.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
-        $condtxt += New-ConditionalText TRUE -Range G:G
         #Retirement
         $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
-            
+        #Public Network Access
+        $condtxt += New-ConditionalText Enabled -Range G:G -ConditionalType ContainsText
+        #Zone Redundant
+        $condtxt += New-ConditionalText False -Range H:H -ConditionalType ContainsText
+        #Workload Type
+        $condtxt += New-ConditionalText Consumption -Range M:M -ConditionalType ContainsText
+
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
@@ -115,21 +128,26 @@ Else
         $Exc.Add('Location')
         $Exc.Add('Retiring Feature')
         $Exc.Add('Retiring Date')
-        $Exc.Add('Orphaned')
-        $Exc.Add('Fault Domains')
-        $Exc.Add('Update Domains')
-        $Exc.Add('Virtual Machines')
+        $Exc.Add('Public Access')
+        $Exc.Add('Zone Redundant')
+        $Exc.Add('Static IP')
+        $Exc.Add('KEDA version')
+        $Exc.Add('Dapr version')
+        $Exc.Add('Workload Profile')
+        $Exc.Add('Workload Profile Type')
+        $Exc.Add('Workload Profile Min')
+        $Exc.Add('Workload Profile Max')
         if($InTag)
             {
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.AvSet  
+        $ExcelVar = $SmaResources.ContainerEnv 
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Availability Sets' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Container App Env' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
 
     }
 }

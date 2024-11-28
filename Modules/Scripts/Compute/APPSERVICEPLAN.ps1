@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/APPSERVICEPLAN.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.1
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -44,8 +44,31 @@ If ($Task -eq 'Processing')
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
                 $Orphaned = if([string]::IsNullOrEmpty($data.numberOfSites) -or $data.numberOfSites -eq 0){$true}else{$false}
-                $RetDate = ''
-                $RetFeature = ''
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $AutoScale = ($APPAutoScale | Where-Object {$_.Properties.targetResourceUri -eq $1.id})
                 if([string]::IsNullOrEmpty($AutoScale)){$AutoSc = $false}else{$AutoSc = $true}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
@@ -56,12 +79,12 @@ If ($Task -eq 'Processing')
                             'Resource Group'      = $1.RESOURCEGROUP;
                             'Name'                = $1.NAME;
                             'Location'            = $1.LOCATION;
+                            'Retiring Feature'    = $RetiringFeature;
+                            'Retiring Date'       = $RetiringDate;
                             'Pricing Tier'        = ($sku.tier+'('+$sku.name+': '+$data.currentNumberOfWorkers+')');
                             'Compute Mode'        = $data.computeMode;
                             'Intances Size'       = $data.currentWorkerSize;
                             'Current Instances'   = $data.currentNumberOfWorkers;
-                            'Retirement Date'     = [string]$RetDate;
-                            'Retirement Feature'  = $RetFeature;
                             'Autoscale Enabled'   = $AutoSc;
                             'Max Instances'       = $data.maximumNumberOfWorkers;                                                            
                             'App Plan OS'         = if ($data.reserved -eq 'true') { 'Linux' }else { 'Windows' };
@@ -95,12 +118,11 @@ Else
 
         $condtxt = @()
         $condtxt += New-ConditionalText FALSE -Range K:K
-        $condtxt += New-ConditionalText FALSO -Range K:K
         $condtxt += New-ConditionalText FALSE -Range O:O
-        $condtxt += New-ConditionalText FALSO -Range O:O
-        $condtxt += New-ConditionalText Free -Range E:E
-        $condtxt += New-ConditionalText Basic -Range E:E
-        $condtxt += New-ConditionalText - -Range F:F -ConditionalType ContainsText
+        $condtxt += New-ConditionalText Free -Range G:G
+        $condtxt += New-ConditionalText Basic -Range G:G
+        #Retirement
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
         $condtxt += New-ConditionalText TRUE -Range H:H
         
 
@@ -109,9 +131,9 @@ Else
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Pricing Tier')
-        $Exc.Add('Retirement Date')
-        $Exc.Add('Retirement Feature')
         $Exc.Add('Orphaned')
         $Exc.Add('Compute Mode')
         $Exc.Add('Intances Size')

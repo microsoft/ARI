@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VM.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.7
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -60,43 +60,30 @@ If ($Task -eq 'Processing')
                     $OSName = if(![string]::IsNullOrEmpty($data.extended.instanceView.osname)){$data.extended.instanceView.osname}else{$data.storageprofile.imagereference.offer}
                     $OSVersion = if(![string]::IsNullOrEmpty($data.extended.instanceView.osversion)){$data.extended.instanceView.osversion}else{$data.storageprofile.imagereference.sku}
 
-                    #Retirements Validation
-                    $RetDate = ''
-                    $RetFeature = '' 
-                    if($data.hardwareProfile.vmSize -in ('basic_a0','basic_a1','basic_a2','basic_a3','basic_a4','standard_a0','standard_a1','standard_a2','standard_a3','standard_a4','standard_a5','standard_a6','standard_a7','standard_a9') -or $1.sku.name -in ('basic_a0','basic_a1','basic_a2','basic_a3','basic_a4','standard_a0','standard_a1','standard_a2','standard_a3','standard_a4','standard_a5','standard_a6','standard_a7','standard_a9'))
+                    $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                    if ($Retired) 
                         {
-                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 1}).RetirementDate
-                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 1}).RetiringFeature
+                            $RetiredFeature = foreach ($Retire in $Retired)
+                                {
+                                    $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                    $tmp0 = [pscustomobject]@{
+                                            'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                            'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                        }
+                                    $tmp0
+                                }
+                            $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                            $RetiringFeature = [string]$RetiringFeature
+                            $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                            $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                            $RetiringDate = [string]$RetiringDate
+                            $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
                         }
-                    if($data.hardwareProfile.vmSize -in ('Standard_NV12','Standard_NV12_Promo','Standard_NV24','Standard_NV24_Promo','Standard_NV6','Standard_NV6_Promo') -or $1.sku.name -in ('Standard_NV12','Standard_NV12_Promo','Standard_NV24','Standard_NV24_Promo','Standard_NV6','Standard_NV6_Promo'))
+                    else 
                         {
-                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 18}).RetirementDate
-                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 18}).RetiringFeature
-                        }
-                    if($data.hardwareProfile.vmSize -in ('Standard_NC6','Standard_NC6_Promo','Standard_NC12','Standard_NC12_Promo','Standard_NC24','Standard_NC24_Promo','Standard_NC24r','Standard_NC24r_Promo') -or $1.sku.name -in ('Standard_NC6','Standard_NC6_Promo','Standard_NC12','Standard_NC12_Promo','Standard_NC24','Standard_NC24_Promo','Standard_NC24r','Standard_NC24r_Promo'))
-                        {
-                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 37}).RetirementDate
-                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 37}).RetiringFeature
-                        }
-                    if($data.hardwareProfile.vmSize -in ('Standard_NC6s_v2','Standard_NC12s_v2','Standard_NC24s_v2','Standard_NC24rs_v2') -or $1.sku.name -in ('Standard_NC6s_v2','Standard_NC12s_v2','Standard_NC24s_v2','Standard_NC24rs_v2'))
-                        {
-                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 38}).RetirementDate
-                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 38}).RetiringFeature
-                        }
-                    if($data.hardwareProfile.vmSize -in ('Standard_ND6','Standard_ND12','Standard_ND24','Standard_ND24r') -or $1.sku.name -in ('Standard_ND6','Standard_ND12','Standard_ND24','Standard_ND24r'))
-                        {
-                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 39}).RetirementDate
-                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 39}).RetiringFeature
-                        }
-                    if($data.hardwareProfile.vmSize -in ('Standard_HB60rs','Standard_HB60-45rs','Standard_HB60-30rs','Standard_HB60-15rs') -or $1.sku.name -in ('Standard_HB60rs','Standard_HB60-45rs','Standard_HB60-30rs','Standard_HB60-15rs'))
-                        {
-                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 40}).RetirementDate
-                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 40}).RetiringFeature
-                        }
-                    if(!$data.storageProfile.osDisk.managedDisk.id)
-                        {
-                            $RetDate = ($Unsupported | Where-Object {$_.Id -eq 4}).RetirementDate
-                            $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 4}).RetiringFeature
+                            $RetiringFeature = $null
+                            $RetiringDate = $null
                         }
 
                     #Extensions 
@@ -231,6 +218,8 @@ If ($Task -eq 'Processing')
                                 'Resource Group'                = $1.RESOURCEGROUP;
                                 'VM Name'                       = $1.NAME;
                                 'Location'                      = $1.LOCATION;
+                                'Retiring Feature'              = $RetiringFeature;
+                                'Retiring Date'                 = $RetiringDate;
                                 'Zone'                          = [string]$1.ZONES;
                                 'Availability Set'              = $AVSET;
                                 'VM Size'                       = $data.hardwareProfile.vmSize;
@@ -244,8 +233,6 @@ If ($Task -eq 'Processing')
                                 'OS Name'                       = $OSName;
                                 'OS Version'                    = $OSVersion;
                                 'Automatic Update'              = $Autoupdate;
-                                'Retirement Date'               = [string]$RetDate;
-                                'Retirement Feature'            = $RetFeature;
                                 'Boot Diagnostics'              = $bootdg;
                                 'Performance Agent'             = if ($azDiag -ne '') { $true }else { $false };
                                 'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
@@ -288,29 +275,31 @@ else
             $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
             $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AO:AO -Width 60 -WrapText 
 
-            $cond = @()
+            $condtxt = @()
             #Automatic Updates
-            $cond += New-ConditionalText false -Range K:K
+            $condtxt += New-ConditionalText false -Range M:M
             #Hybrid Benefit
-            $cond += New-ConditionalText None -Range P:P
+            $condtxt += New-ConditionalText None -Range P:P
             #Boot Diagnostics
-            $cond += New-ConditionalText false -Range R:R
+            $condtxt += New-ConditionalText false -Range R:R
             #Performance Agent
-            $cond += New-ConditionalText false -Range S:S
+            $condtxt += New-ConditionalText false -Range S:S
             #Azure Monitor
-            $cond += New-ConditionalText false -Range T:T
+            $condtxt += New-ConditionalText false -Range T:T
             #NSG
-            $cond += New-ConditionalText None -Range AF:AF
+            $condtxt += New-ConditionalText None -Range AF:AF
             #Acelerated Network
-            $cond += New-ConditionalText false -Range AI:AI
+            $condtxt += New-ConditionalText false -Range AI:AI
             #Retirement
-            $cond += New-ConditionalText - -Range N:N -ConditionalType ContainsText
+            $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
 
             $Exc = New-Object System.Collections.Generic.List[System.Object]
             $Exc.Add('Subscription')
             $Exc.Add('Resource Group')
             $Exc.Add('VM Name')
             $Exc.Add('VM Size')
+            $Exc.Add('Retiring Feature')
+            $Exc.Add('Retiring Date')
             $Exc.Add('vCPUs')
             $Exc.Add('RAM (GiB)')
             $Exc.Add('Location')
@@ -320,8 +309,6 @@ else
             $Exc.Add('Automatic Update')
             $Exc.Add('Image Reference')
             $Exc.Add('Image Version')
-            $Exc.Add('Retirement Date')
-            $Exc.Add('Retirement Feature')
             $Exc.Add('Hybrid Benefit')
             $Exc.Add('Admin Username')
             $Exc.Add('Boot Diagnostics')
@@ -365,7 +352,7 @@ else
 
             $ExcelVar | 
             ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-            Export-Excel -Path $File -WorksheetName 'Virtual Machines' -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $cond -Style $Style, $StyleExt -NoNumberConversion $noNumberConversion
+            Export-Excel -Path $File -WorksheetName 'Virtual Machines' -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style, $StyleExt -NoNumberConversion $noNumberConversion
 
         }         
 

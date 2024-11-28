@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/NetworkInterface.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.1
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $InTag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported) 
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 If ($Task -eq 'Processing') {
 
     $nic = $Resources | Where-Object {$_.TYPE -eq 'microsoft.network/networkinterfaces'}
@@ -36,6 +36,31 @@ If ($Task -eq 'Processing') {
                     $ResUCount = 1
                     $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                     $data = $1.PROPERTIES
+                    $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                    if ($Retired) 
+                        {
+                            $RetiredFeature = foreach ($Retire in $Retired)
+                                {
+                                    $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                    $tmp0 = [pscustomobject]@{
+                                            'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                            'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                        }
+                                    $tmp0
+                                }
+                            $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                            $RetiringFeature = [string]$RetiringFeature
+                            $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                            $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                            $RetiringDate = [string]$RetiringDate
+                            $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                        }
+                    else 
+                        {
+                            $RetiringFeature = $null
+                            $RetiringDate = $null
+                        }
 
                     if(![string]::IsNullOrEmpty($data.virtualmachine.id))
                         {
@@ -77,6 +102,8 @@ If ($Task -eq 'Processing') {
                                         'Resource Group'        = $1.RESOURCEGROUP;
                                         'Name'                  = $1.NAME;
                                         'Location'              = $1.LOCATION;
+                                        'Retiring Feature'      = $RetiringFeature;
+                                        'Retiring Date'         = $RetiringDate;
                                         'Attached Resource Type'= $ResourceType;
                                         'Attached Resource'     = $Resource;
                                         'Network Security Group'= $NSG;
@@ -114,14 +141,18 @@ Else {
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
-        $condtxt += New-ConditionalText Off -Range J:J
-        $condtxt += New-ConditionalText Underutilized -Range E:E
+        $condtxt += New-ConditionalText Off -Range L:L
+        $condtxt += New-ConditionalText Underutilized -Range G:G
+        #Retirement
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Attached Resource Type')
         $Exc.Add('Attached Resource')
         $Exc.Add('Network Security Group')

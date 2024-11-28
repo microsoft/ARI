@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Infrastructure/AutomationAcc.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.4.0
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -45,27 +45,54 @@ If ($Task -eq 'Processing')
                 $timecreated = $data0.creationTime
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 if ($null -ne $rbs) {
                     foreach ($1 in $rbs) {
                             foreach ($Tag in $Tags) {    
                                 $data = $1.PROPERTIES
                                 $obj = @{
-                                    'ID'                       = $1.id;
-                                    'Subscription'             = $sub1.Name;
-                                    'Resource Group'           = $0.RESOURCEGROUP;
-                                    'Automation Account Name'  = $0.NAME;
-                                    'Automation Account State' = $0.properties.State;
-                                    'Automation Account SKU'   = $0.properties.sku.name;
-                                    'Automation Account Created Time'  = $timecreated;   
-                                    'Location'                 = $0.LOCATION;
-                                    'Runbook Name'             = $1.Name;
-                                    'Last Modified Time'       = ([datetime]$data.lastModifiedTime).tostring('MM/dd/yyyy hh:mm') ;
-                                    'Runbook State'            = $data.state;
-                                    'Runbook Type'             = $data.runbookType;
-                                    'Runbook Description'      = $data.description;
-                                    'Resource U'               = $ResUCount;
-                                    'Tag Name'                 = [string]$Tag.Name;
-                                    'Tag Value'                = [string]$Tag.Value
+                                    'ID'                                = $1.id;
+                                    'Subscription'                      = $sub1.Name;
+                                    'Resource Group'                    = $0.RESOURCEGROUP;
+                                    'Automation Account Name'           = $0.NAME;
+                                    'Retiring Feature'                  = $RetiringFeature;
+                                    'Retiring Date'                     = $RetiringDate;
+                                    'Automation Account State'          = $0.properties.State;
+                                    'Automation Account SKU'            = $0.properties.sku.name;
+                                    'Automation Account Created Time'   = $timecreated;   
+                                    'Location'                          = $0.LOCATION;
+                                    'Runbook Name'                      = $1.Name;
+                                    'Last Modified Time'                = ([datetime]$data.lastModifiedTime).tostring('MM/dd/yyyy hh:mm') ;
+                                    'Runbook State'                     = $data.state;
+                                    'Runbook Type'                      = $data.runbookType;
+                                    'Runbook Description'               = $data.description;
+                                    'Resource U'                        = $ResUCount;
+                                    'Tag Name'                          = [string]$Tag.Name;
+                                    'Tag Value'                         = [string]$Tag.Value
                                 }
                                 $tmp += $obj
                                 if ($ResUCount -eq 1) { $ResUCount = 0 } 
@@ -75,22 +102,24 @@ If ($Task -eq 'Processing')
                 else {
                         foreach ($Tag in $Tags) {  
                             $obj = @{
-                                'ID'                       = $1.id;
-                                'Subscription'             = $sub1.name;
-                                'Resource Group'           = $0.RESOURCEGROUP;
-                                'Automation Account Name'  = $0.NAME;
-                                'Automation Account State' = $0.properties.State;
-                                'Automation Account SKU'   = $0.properties.sku.name;
-                                'Automation Account Created Time'  = $timecreated;   
-                                'Location'                 = $0.LOCATION;
-                                'Runbook Name'             = $null;
-                                'Last Modified Time'       = $null;
-                                'Runbook State'            = $null;
-                                'Runbook Type'             = $null;
-                                'Runbook Description'      = $null;
-                                'Resource U'               = $ResUCount;
-                                'Tag Name'                 = [string]$Tag.Name;
-                                'Tag Value'                = [string]$Tag.Value
+                                'ID'                                = $1.id;
+                                'Subscription'                      = $sub1.name;
+                                'Resource Group'                    = $0.RESOURCEGROUP;
+                                'Automation Account Name'           = $0.NAME;
+                                'Retiring Feature'                  = $RetiringFeature;
+                                'Retiring Date'                     = $RetiringDate;
+                                'Automation Account State'          = $0.properties.State;
+                                'Automation Account SKU'            = $0.properties.sku.name;
+                                'Automation Account Created Time'   = $timecreated;   
+                                'Location'                          = $0.LOCATION;
+                                'Runbook Name'                      = $null;
+                                'Last Modified Time'                = $null;
+                                'Runbook State'                     = $null;
+                                'Runbook Type'                      = $null;
+                                'Runbook Description'               = $null;
+                                'Resource U'                        = $ResUCount;
+                                'Tag Name'                          = [string]$Tag.Name;
+                                'Tag Value'                         = [string]$Tag.Value
                             }
                             $tmp += $obj
                             if ($ResUCount -eq 1) { $ResUCount = 0 }                         
@@ -115,11 +144,15 @@ Else
         $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range K:K -Width 80 -WrapText 
 
         $condtxt = @()
+        #Retirement
+        $condtxt += New-ConditionalText -Range D2:D100 -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Automation Account Name')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Automation Account State')
         $Exc.Add('Automation Account SKU')
         $Exc.Add('Automation Account Created Time')

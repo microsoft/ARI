@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/VirtualNetwork.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.2.2
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported) 
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 If ($Task -eq 'Processing') {
 
     $VirtualNetwork = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/virtualnetworks' }
@@ -34,8 +34,31 @@ If ($Task -eq 'Processing') {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $RetDate = ''
-                $RetFeature = '' 
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
 
                 $AddrPool = if ($data.addressSpace.addressPrefixes.count -gt 1) { $data.addressSpace.addressPrefixes | ForEach-Object { $_ + ' ,' } }else { $data.addressSpace.addressPrefixes }
@@ -97,8 +120,8 @@ If ($Task -eq 'Processing') {
                                     'Resource Group'                               = $1.RESOURCEGROUP;
                                     'Name'                                         = $1.NAME;
                                     'Location'                                     = $1.LOCATION;
-                                    'Retirement Date'                              = [string]$RetDate;
-                                    'Retirement Feature'                           = $RetFeature;
+                                    'Retiring Feature'                             = $RetiringFeature;
+                                    'Retiring Date'                                = $RetiringDate;
                                     'Address Space'                                = $AddrPool;
                                     'Enable DDOS Protection'                       = $data.enableDdosProtection;
                                     'DNS Servers'                                  = $DNSServers;
@@ -131,9 +154,12 @@ Else {
         $TableName = ('VNETTable_'+($SmaResources.VirtualNetwork.id | Select-Object -Unique).count)
 
         $condtxt = @()
+        #Enable DDOS Protection
         $condtxt += New-ConditionalText FALSE -Range F:F
-        $condtxt += New-ConditionalText - -Range H:H -ConditionalType ContainsText
-        $condtxt += New-ConditionalText -ConditionalType LessThan 20 -Range N:N
+        #Retirement
+        $condtxt += New-ConditionalText -Range G2:G100 -ConditionalType ContainsText
+        #Available IPs
+        $condtxt += New-ConditionalText -ConditionalType LessThan -Text "20" -Range N:N
 
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
@@ -144,8 +170,8 @@ Else {
         $Exc.Add('Location')
         $Exc.Add('Address Space')
         $Exc.Add('Enable DDOS Protection')
-        $Exc.Add('Retirement Date')
-        $Exc.Add('Retirement Feature')  
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('DNS Servers')
         $Exc.Add('Subnet Name')
         $Exc.Add('Private Subnet')

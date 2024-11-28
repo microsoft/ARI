@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/SQLSERVER.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.3.2
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported) 
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 if ($Task -eq 'Processing') {
 
@@ -37,22 +37,48 @@ if ($Task -eq 'Processing') {
                 $data = $1.PROPERTIES
 
                 $Tags = if(!!($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
 
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $pvteps = if(!($data.privateEndpointConnections)) {[pscustomobject]@{id = 'NONE'}} else {$data.privateEndpointConnections | Select-Object @{Name="id";Expression={$_.id.split("/")[10]}}}
 
                 foreach ($pvtep in $pvteps) {
                     foreach ($Tag in $Tags) {
                         $obj = @{
-                            'ID'                    = $1.id;
-                            'Subscription'          = $sub1.Name;
-                            'MI parent'        = $1.id.split("/")[8];
-                            'Name'                  = $1.NAME;
-                            'Collation'              = $data.collation;
-                            'CreationDate'               = $data.creationDate;
-                            'DefaultSecondaryLocation'               = $data.defaultSecondaryLocation;
-                            'Status'           = $data.status;
-                            'Tag Name'              = [string]$Tag.Name;
-                            'Tag Value'             = [string]$Tag.Value
+                            'ID'                            = $1.id;
+                            'Subscription'                  = $sub1.Name;
+                            'MI parent'                     = $1.id.split("/")[8];
+                            'Name'                          = $1.NAME;
+                            'Retiring Feature'              = $RetiringFeature;
+                            'Retiring Date'                 = $RetiringDate;
+                            'Collation'                     = $data.collation;
+                            'CreationDate'                  = $data.creationDate;
+                            'DefaultSecondaryLocation'      = $data.defaultSecondaryLocation;
+                            'Status'                        = $data.status;
+                            'Tag Name'                      = [string]$Tag.Name;
+                            'Tag Value'                     = [string]$Tag.Value
                         }
                         $tmp += $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
@@ -69,15 +95,16 @@ else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
-        $condtxt += New-ConditionalText FALSE -Range J:J
-        $condtxt += New-ConditionalText FALSO -Range J:J
-        $condtxt += New-ConditionalText FAUX -Range J:J
-        $condtxt += New-ConditionalText offline -Range G:G
+        $condtxt += New-ConditionalText offline -Range I:I
+        #Retirement
+        $condtxt += New-ConditionalText -Range D2:D100 -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('MI parent')
         $Exc.Add('Name')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Collation')
         $Exc.Add('CreationDate')
         $Exc.Add('DefaultSecondaryLocation')

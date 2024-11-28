@@ -13,13 +13,13 @@ https://github.com/microsoft/ARI/Modules/Networking/AppGW.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.3
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
 #>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported) 
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 If ($Task -eq 'Processing') {
 
     $APPGTW = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/applicationgateways' }
@@ -28,17 +28,34 @@ If ($Task -eq 'Processing') {
     if($APPGTW)
         {
             $tmp = @()
-
             foreach ($1 in $APPGTW) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $RetDate = ''
-                $RetFeature = ''
-                if($data.sku.tier -in ('Standard','WAF'))
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
                     {
-                        $RetDate = ($Unsupported | Where-Object {$_.Id -eq 17}).RetirementDate
-                        $RetFeature = ($Unsupported | Where-Object {$_.Id -eq 17}).RetiringFeature
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
                     }
                 if([string]::IsNullOrEmpty($data.autoscaleConfiguration.maxCapacity)){$MaxCap = 'Autoscale Disabled'}else{$MaxCap = $data.autoscaleConfiguration.maxCapacity}
                 if([string]::IsNullOrEmpty($data.autoscaleConfiguration.minCapacity)){$MinCap = 'Autoscale Disabled'}else{$MinCap = $data.autoscaleConfiguration.minCapacity}
@@ -53,11 +70,11 @@ If ($Task -eq 'Processing') {
                             'Resource Group'        = $1.RESOURCEGROUP;
                             'Name'                  = $1.NAME;
                             'Location'              = $1.LOCATION;
-                            'Retirement Date'       = [string]$RetDate;
-                            'Retirement Feature'    = $RetFeature;
+                            'Retiring Feature'      = $RetiringFeature;
+                            'Retiring Date'         = $RetiringDate;
                             'State'                 = $data.OperationalState;
                             'WAF Enabled'           = $WAF;
-                            'Minimum TLS Version'   = "$($PROT -Replace '_', '.' -Replace 'v', ' ' -Replace 'tls', 'TLS')";
+                            'Minimum TLS Version'   = $PROT;
                             'Autoscale Min Capacity'= $MinCap;
                             'Autoscale Max Capacity'= $MaxCap;
                             'SKU Name'              = $data.sku.tier;
@@ -80,32 +97,38 @@ If ($Task -eq 'Processing') {
         }
 }
 Else {
-    if ($SmaResources.APPGW) {
+    if ($SmaResources.AppGW) {
 
-        $TableName = ('APPGWTable_'+($SmaResources.APPGW.id | Select-Object -Unique).count)
+        $TableName = ('APPGWTb_'+($SmaResources.AppGW.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
-        $condtxt += New-ConditionalText FALSE -Range F:F
-        $condtxt += New-ConditionalText FALSO -Range F:F
-        $condtxt += New-ConditionalText Default -Range G:G
-        $condtxt += New-ConditionalText 'Autoscale Disabled' -Range H:H
-        $condtxt += New-ConditionalText 'Autoscale Disabled' -Range I:I
-        $condtxt += New-ConditionalText - -Range K:K -ConditionalType ContainsText
+        #WAF Enabled
+        $condtxt += New-ConditionalText FALSE -Range I:I
+        #TLS Version
+        $condtxt += New-ConditionalText 'Default' -Range J:J
+        $condtxt += New-ConditionalText '1.0' -Range J:J
+        $condtxt += New-ConditionalText '1.1' -Range J:J
+        #Autoscale Min
+        $condtxt += New-ConditionalText 'Autoscale Disabled' -Range K:K
+        #Autoscale Max
+        $condtxt += New-ConditionalText 'Autoscale Disabled' -Range L:L
+        #Retirement
+        $condtxt += New-ConditionalText -Range F2:F100 -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
+        $Exc.Add('SKU Name')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('State')
         $Exc.Add('WAF Enabled')
         $Exc.Add('Minimum TLS Version')
         $Exc.Add('Autoscale Min Capacity')
         $Exc.Add('Autoscale Max Capacity')
-        $Exc.Add('SKU Name')
-        $Exc.Add('Retirement Date')
-        $Exc.Add('Retirement Feature')  
         $Exc.Add('Current Instances')
         $Exc.Add('Backend')
         $Exc.Add('Frontend')
@@ -119,7 +142,7 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.APPGW
+        $ExcelVar = $SmaResources.AppGW
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 

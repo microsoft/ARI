@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/APPServices.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.1
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -40,12 +40,36 @@ If ($Task -eq 'Processing')
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $RetDate = ''
-                $RetFeature = '' 
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 if([string]::IsNullOrEmpty($data.siteConfig.ftpsState)){$FTPS = $false}else{$FTPS = $data.siteConfig.ftpsState}
                 if([string]::IsNullOrEmpty($data.Properties.SiteConfig.acrUseManagedIdentityCreds)){$MGMID = $false}else{$MGMID = $true}
                 $VNET = if(![string]::IsNullOrEmpty($data.virtualNetworkSubnetId)){$data.virtualNetworkSubnetId.split("/")[8]}else{$null}
                 $SUBNET = if(![string]::IsNullOrEmpty($data.virtualNetworkSubnetId)){$data.virtualNetworkSubnetId.split("/")[10]}else{$null}
+                $Stack = if(![string]::IsNullOrEmpty($data.SiteConfig.linuxFxVersion)){$data.SiteConfig.linuxFxVersion}else{$data.SiteConfig.windowsFxVersion}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 foreach ($2 in $data.hostNameSslStates) {
                         foreach ($Tag in $Tags) {
@@ -54,13 +78,13 @@ If ($Task -eq 'Processing')
                                 'Subscription'                  = $sub1.Name;
                                 'Resource Group'                = $1.RESOURCEGROUP;
                                 'Name'                          = $1.NAME;
+                                'SKU'                           = $data.sku;
+                                'Retiring Feature'              = $RetiringFeature;
+                                'Retiring Date'                 = $RetiringDate;
                                 'App Type'                      = $1.KIND;
                                 'Location'                      = $1.LOCATION;
                                 'Enabled'                       = $data.enabled;
                                 'State'                         = $data.state;
-                                'SKU'                           = $data.sku;
-                                'Retirement Date'               = [string]$RetDate;
-                                'Retirement Feature'            = $RetFeature;
                                 'Client Cert Enabled'           = $data.clientCertEnabled;
                                 'Client Cert Mode'              = $data.clientCertMode;
                                 'Content Availability State'    = $data.contentAvailabilityState;
@@ -73,7 +97,7 @@ If ($Task -eq 'Processing')
                                 'Availability State'            = $data.availabilityState;
                                 'HostNames'                     = $2.Name;
                                 'HostName Type'                 = $2.hostType;
-                                'Stack'                         = $data.SiteConfig.linuxFxVersion;
+                                'Stack'                         = $Stack;
                                 'Virtual Network'               = $VNET;
                                 'Subnet'                        = $SUBNET;
                                 'SSL State'                     = $2.sslState;
@@ -106,29 +130,26 @@ Else
         $TableName = ('AppSvcsTable_'+($SmaResources.APPSERVICES.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
-        $condtxt = @()
-        Foreach ($UnSupOS in $Unsupported.WebSite)
-            {                
-                $condtxt += New-ConditionalText $UnSupOS -Range W:W
-            }
-        
-        $condtxt += New-ConditionalText FALSE -Range O:O
-        $condtxt += New-ConditionalText FALSE -Range P:P
-        $condtxt += New-ConditionalText FALSE -Range K:K
-        $condtxt += New-ConditionalText FALSE -Range S:S
-        $condtxt += New-ConditionalText - -Range J:J -ConditionalType ContainsText
+        $condtxt = @()        
+        $condtxt += New-ConditionalText FALSE -Range Q:Q
+        $condtxt += New-ConditionalText FALSE -Range R:R
+        $condtxt += New-ConditionalText FALSE -Range M:M
+        $condtxt += New-ConditionalText FALSE -Range U:U
+        $condtxt += New-ConditionalText - -Range L:L -ConditionalType ContainsText
+        #Retirement
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
+        $Exc.Add('SKU')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('App Type')
         $Exc.Add('Location')
         $Exc.Add('Enabled')
         $Exc.Add('State')
-        $Exc.Add('SKU')
-        $Exc.Add('Retirement Date')
-        $Exc.Add('Retirement Feature')
         $Exc.Add('Client Cert Enabled')
         $Exc.Add('Client Cert Mode')
         $Exc.Add('Content Availability State')

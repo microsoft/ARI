@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/AKS.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.1.1
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle,$Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -39,6 +39,31 @@ If ($Task -eq 'Processing')
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 if([string]::IsNullOrEmpty($data.addonProfiles.omsagent.config.logAnalyticsWorkspaceResourceID)){$Insights = $false}else{$Insights = $data.addonProfiles.omsagent.config.logAnalyticsWorkspaceResourceID.split('/')[8]}
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 $NetworkPlugin = if($data.networkprofile.networkplugin -eq 'azure'){'Azure CNI'}else{$data.networkprofile.networkplugin}
@@ -69,6 +94,8 @@ If ($Task -eq 'Processing')
                                 'Resource Group'                                = $1.RESOURCEGROUP;
                                 'Clusters'                                      = $1.NAME;
                                 'Location'                                      = $1.LOCATION;
+                                'Retiring Feature'                              = $RetiringFeature;
+                                'Retiring Date'                                 = $RetiringDate;
                                 'AKS Pricing Tier'                              = $1.sku.tier;
                                 'Kubernetes Version'                            = [string]$data.kubernetesVersion;
                                 'Cluster Power State'                           = $data.powerstate.code;
@@ -139,49 +166,55 @@ Else
 
         $condtxt = @()
         #AKS
-        $condtxt += New-ConditionalText 1.28 -Range F:F
-        $condtxt += New-ConditionalText 1.27 -Range F:F
-        $condtxt += New-ConditionalText 1.26 -Range F:F
-        $condtxt += New-ConditionalText 1.25 -Range F:F
-        $condtxt += New-ConditionalText 1.24 -Range F:F
-        $condtxt += New-ConditionalText 1.23 -Range F:F
-        $condtxt += New-ConditionalText 1.22 -Range F:F
-        $condtxt += New-ConditionalText 1.21 -Range F:F
+        $condtxt += New-ConditionalText 1.29 -Range H:H
+        $condtxt += New-ConditionalText 1.28 -Range H:H
+        $condtxt += New-ConditionalText 1.27 -Range H:H
+        $condtxt += New-ConditionalText 1.26 -Range H:H
+        $condtxt += New-ConditionalText 1.25 -Range H:H
+        $condtxt += New-ConditionalText 1.24 -Range H:H
+        $condtxt += New-ConditionalText 1.23 -Range H:H
+        $condtxt += New-ConditionalText 1.22 -Range H:H
+        $condtxt += New-ConditionalText 1.21 -Range H:H
         #Orchestrator
-        $condtxt += New-ConditionalText 1.28 -Range AC:AC
-        $condtxt += New-ConditionalText 1.27 -Range AC:AC
-        $condtxt += New-ConditionalText 1.26 -Range AC:AC
-        $condtxt += New-ConditionalText 1.25 -Range AC:AC
-        $condtxt += New-ConditionalText 1.24 -Range AC:AC
-        $condtxt += New-ConditionalText 1.23 -Range AC:AC
-        $condtxt += New-ConditionalText 1.22 -Range AC:AC
-        $condtxt += New-ConditionalText 1.21 -Range AC:AC
+        $condtxt += New-ConditionalText 1.29 -Range AE:AE
+        $condtxt += New-ConditionalText 1.28 -Range AE:AE
+        $condtxt += New-ConditionalText 1.27 -Range AE:AE
+        $condtxt += New-ConditionalText 1.26 -Range AE:AE
+        $condtxt += New-ConditionalText 1.25 -Range AE:AE
+        $condtxt += New-ConditionalText 1.24 -Range AE:AE
+        $condtxt += New-ConditionalText 1.23 -Range AE:AE
+        $condtxt += New-ConditionalText 1.22 -Range AE:AE
+        $condtxt += New-ConditionalText 1.21 -Range AE:AE
         #Pricing Tier
-        $condtxt += New-ConditionalText Free -Range E:E
+        $condtxt += New-ConditionalText Free -Range G:G
         #Local Accounts
-        $condtxt += New-ConditionalText true -Range J:J
+        $condtxt += New-ConditionalText true -Range L:L
         #Private Cluster
-        $condtxt += New-ConditionalText false -Range T:T
+        $condtxt += New-ConditionalText false -Range V:V
         #Public Network Access
-        $condtxt += New-ConditionalText Enabled -Range V:V
+        $condtxt += New-ConditionalText Enabled -Range X:X
         #Automatic Upgrades
-        $condtxt += New-ConditionalText Disabled -Range W:W
+        $condtxt += New-ConditionalText Disabled -Range Y:Y
         #Node Security Channel
-        $condtxt += New-ConditionalText none -Range X:X
+        $condtxt += New-ConditionalText none -Range Z:Z
         #Container Insight
-        $condtxt += New-ConditionalText false -Range Y:Y
+        $condtxt += New-ConditionalText false -Range AA:AA
         #NodeSize
-        $condtxt += New-ConditionalText _b -Range AH:AH
+        $condtxt += New-ConditionalText _b -Range AJ:AJ
         #Av Zone
-        $condtxt += New-ConditionalText None -Range AI:AI
+        $condtxt += New-ConditionalText None -Range AK:AK
         #AutoScale
-        $condtxt += New-ConditionalText false -Range AM:AM
+        $condtxt += New-ConditionalText false -Range AO:AO
+        #Retirement
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Clusters')
         $Exc.Add('Location')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('AKS Pricing Tier')
         $Exc.Add('Kubernetes Version')
         $Exc.Add('Cluster Power State')

@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Networking/VirtualWAN.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.2.0
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle) 
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 If ($Task -eq 'Processing') {
 
     $VirtualWAN = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/virtualwans' }
@@ -39,6 +39,31 @@ If ($Task -eq 'Processing') {
                 $data = $1.PROPERTIES
                 $vhub = $VirtualHub | Where-Object { $_.ID -in $data.virtualHubs.id }
                 $vpn = $VPNSite | Where-Object { $_.ID -in $data.vpnSites.id }
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 if($vpn)
                     {
@@ -51,6 +76,8 @@ If ($Task -eq 'Processing') {
                                             'Resource Group'                     = $1.RESOURCEGROUP;
                                             'Name'                               = $1.NAME;
                                             'Location'                           = $1.LOCATION;
+                                            'Retiring Feature'                   = $RetiringFeature;
+                                            'Retiring Date'                      = $RetiringDate;
                                             'Allow BranchToBranch Traffic'       = $data.allowBranchToBranchTraffic;
                                             'Allow VnetToVnet Traffic'           = $data.allowVnetToVnetTraffic;
                                             'Disable Vpn Encryption'             = $data.disableVpnEncryption;
@@ -86,6 +113,8 @@ If ($Task -eq 'Processing') {
                                             'Resource Group'                     = $1.RESOURCEGROUP;
                                             'Name'                               = $1.NAME;
                                             'Location'                           = $1.LOCATION;
+                                            'Retiring Feature'                   = $RetiringFeature;
+                                            'Retiring Date'                      = $RetiringDate;
                                             'Allow BranchToBranch Traffic'       = $data.allowBranchToBranchTraffic;
                                             'Allow VnetToVnet Traffic'           = $data.allowVnetToVnetTraffic;
                                             'Disable Vpn Encryption'             = $data.disableVpnEncryption;
@@ -120,11 +149,17 @@ Else {
         $TableName = ('VWANTable_'+($SmaResources.VirtualWAN.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
+        $condtxt = @()
+        #Retirement
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
+
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
         $Exc.Add('Resource Group')
         $Exc.Add('Name')                              
-        $Exc.Add('Location')                          
+        $Exc.Add('Location')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')                
         $Exc.Add('Allow BranchToBranch Traffic')        
         $Exc.Add('Allow VnetToVnet Traffic')            
         $Exc.Add('Disable Vpn Encryption')              
@@ -150,7 +185,7 @@ Else {
 
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Virtual WAN' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Virtual WAN' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style -ConditionalText $condtxt
 
     }
 }

@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Data/Databricks.ps1
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.0.1
+Version: 3.5.9
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -41,6 +41,31 @@ If ($Task -eq 'Processing') {
                 $timecreated = $data.createdDateTime
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $PIP = if($data.parameters.enableNoPublicIp.value -eq 'False'){$true}else{$false}
                 $VNET = $data.parameters.customVirtualNetworkId.value.split('/')[8]
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
@@ -52,13 +77,13 @@ If ($Task -eq 'Processing') {
                             'Name'                      = $1.NAME;
                             'Location'                  = $1.LOCATION;
                             'Pricing Tier'              = $sku.name;
+                            'Retiring Feature'          = $RetiringFeature;
+                            'Retiring Date'             = $RetiringDate;
                             'Managed Resource Group'    = $data.managedResourceGroupId.split('/')[4];
                             'Storage Account'           = $data.parameters.storageAccountName.value;
                             'Storage Account SKU'       = $data.parameters.storageAccountSkuName.value;
                             'Infrastructure Encryption' = $data.parameters.requireInfrastructureEncryption.value;
                             'Prepare Encryption'        = $data.parameters.prepareEncryption.value;
-                            'Retirement Date'           = [string]$RetDate;
-                            'Retirement Feature'        = $RetFeature;
                             'Enable Public IP'          = $PIP;
                             'Custom Virtual Network'    = $VNET;
                             'Custom Private Subnet'     = $data.parameters.customPrivateSubnetName.value;
@@ -87,12 +112,10 @@ Else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
-        
-        $condtxt += New-ConditionalText FALSE -Range I:I
-        $condtxt += New-ConditionalText FALSO -Range I:I
-        $condtxt += New-ConditionalText FALSE -Range J:J
-        $condtxt += New-ConditionalText FALSO -Range J:J
-        $condtxt += New-ConditionalText - -Range K:K -ConditionalType ContainsText
+        #Retirement
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
+        $condtxt += New-ConditionalText FALSE -Range K:K
+        $condtxt += New-ConditionalText FALSE -Range L:L
 
 
 
@@ -101,14 +124,14 @@ Else {
         $Exc.Add('Resource Group')
         $Exc.Add('Name')
         $Exc.Add('Location')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Pricing Tier')
         $Exc.Add('Managed Resource Group')
         $Exc.Add('Storage Account')
         $Exc.Add('Storage Account SKU')
         $Exc.Add('Infrastructure Encryption')
         $Exc.Add('Prepare Encryption')
-        $Exc.Add('Retirement Date')
-        $Exc.Add('Retirement Feature')
         $Exc.Add('Enable Public IP')
         $Exc.Add('Custom Virtual Network')
         $Exc.Add('Custom Private Subnet')

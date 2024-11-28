@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/CONTAINERREGISTRIES.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 2.3.0
+Version: 3.5.9
 First Release Date: 19th November, 2022
 Authors: Claudio Merola and Renato Gregio 
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task ,$File, $SmaResources, $TableStyle)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -43,6 +43,31 @@ If ($Task -eq 'Processing')
                 $timecreated = $data.creationDate
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
+                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                if ($Retired) 
+                    {
+                        $RetiredFeature = foreach ($Retire in $Retired)
+                            {
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $tmp0 = [pscustomobject]@{
+                                        'RetiredFeature'            = $RetiredServiceID.RetiringFeature
+                                        'RetiredDate'               = $RetiredServiceID.RetirementDate 
+                                    }
+                                $tmp0
+                            }
+                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
+                        $RetiringFeature = [string]$RetiringFeature
+                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+
+                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
+                        $RetiringDate = [string]$RetiringDate
+                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                    }
+                else 
+                    {
+                        $RetiringFeature = $null
+                        $RetiringDate = $null
+                    }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 foreach ($Tag in $Tags) {
                     $obj = @{
@@ -52,6 +77,8 @@ If ($Task -eq 'Processing')
                         'Name'                      = $1.NAME;
                         'Location'                  = $1.LOCATION;
                         'SKU'                       = $1.sku.name;
+                        'Retiring Feature'          = $RetiringFeature;
+                        'Retiring Date'             = $RetiringDate;
                         'Anonymous Pull Enabled'    = $data.anonymouspullenabled;
                         'Encryption'                = $data.encryption.status;
                         'Public Network Access'     = $data.publicnetworkaccess;
@@ -84,28 +111,23 @@ Else
         $TableName = ('ContsTable_'+($SmaResources.REGISTRIES.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
-        $cond = @()
-
+        $condtxt = @()
         #Anonymous Pull Enabled
-        $cond += New-ConditionalText True -Range F:F
-
+        $condtxt += New-ConditionalText True -Range H:H
         #Encryption
-        $cond += New-ConditionalText disabled -Range G:G
-
+        $condtxt += New-ConditionalText disabled -Range I:I
         #Public Network Access
-        $cond += New-ConditionalText enabled -Range H:H
-
+        $condtxt += New-ConditionalText enabled -Range J:J
         #Zone Redundancy
-        $cond += New-ConditionalText disabled -Range I:I
-
+        $condtxt += New-ConditionalText disabled -Range K:K
         #Private Link
-        $cond += New-ConditionalText False -Range J:J
-
+        $condtxt += New-ConditionalText False -Range L:L
         #Soft Delete Policy
-        $cond += New-ConditionalText disabled -Range K:K
-
+        $condtxt += New-ConditionalText disabled -Range M:M
         #Trust Policy
-        $cond += New-ConditionalText disabled -Range L:L
+        $condtxt += New-ConditionalText disabled -Range N:N
+        #Retirement
+        $condtxt += New-ConditionalText -Range F2:F100 -ConditionalType ContainsText
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -113,6 +135,8 @@ Else
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('SKU')
+        $Exc.Add('Retiring Feature')
+        $Exc.Add('Retiring Date')
         $Exc.Add('Anonymous Pull Enabled')
         $Exc.Add('Encryption')
         $Exc.Add('Public Network Access')
@@ -131,7 +155,7 @@ Else
             
         $ExcelVar | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Registries' -AutoSize -ConditionalText $cond -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
+        Export-Excel -Path $File -WorksheetName 'Registries' -AutoSize -ConditionalText $condtxt -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
 
     }
 }
