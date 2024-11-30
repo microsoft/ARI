@@ -12,7 +12,7 @@
 RootModule = 'AzureResourceInventory.psm1'
 
 # Version number of this module.
-ModuleVersion = '3.5.11'
+ModuleVersion = '3.5.12'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -51,7 +51,7 @@ Description = 'Azure Resource Inventory - Its a Powerful tool to create EXCEL in
 # ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-RequiredModules = @('ImportExcel','PowershellGet','Az.Accounts','Az.Compute','Az.ResourceGraph','Az.Storage')
+RequiredModules = @('ImportExcel','Az.Accounts','Az.Compute','Az.ResourceGraph','Az.Storage')
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()

@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Extras/ARIReportCharts.psm1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.9
+Version: 3.5.12
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -120,7 +120,7 @@ function Build-ARIExcelChart {
             {
                 $Excel = New-Object -TypeName OfficeOpenXml.ExcelPackage $File
             }
-            $Worksheets = $Excel.Workbook.Worksheets | Where-Object { $_.name -notin 'Overview', 'Advisor', 'Policy', 'Security Center'}
+            $Worksheets = $Excel.Workbook.Worksheets | Where-Object { $_.name -notin 'Overview', 'Advisor', 'Policy', 'SecurityCenter'}
             $WS = $Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Overview' }
 
             $TabDraw = $WS.Drawings.AddShape('TP00', 'RoundRect')
