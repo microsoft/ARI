@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VMDISK.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.9
+Version: 3.5.13
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -68,6 +68,7 @@ If ($Task -eq 'Processing')
                         $RetiringDate = $null
                     }
                 $SKU = $1.SKU
+                $Hibernation = if (![string]::IsNullOrEmpty($data.supportsHibernation)) { $data.supportsHibernation }else { $false }
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
@@ -83,10 +84,16 @@ If ($Task -eq 'Processing')
                             'Zone'                   = [string]$1.ZONES;
                             'SKU'                    = $SKU.Name;
                             'Disk Size'              = $data.diskSizeGB;
-                            'Encryption'             = $data.encryption.type;
-                            'OS Type'                = $data.osType;
+                            'Performance Tier'       = $SKU.tier;
                             'Disk IOPS Read / Write' = $data.diskIOPSReadWrite;
                             'Disk MBps Read / Write' = $data.diskMBpsReadWrite;
+                            'Public Network Access'  = $data.publicNetworkAccess;
+                            'Connection Type'        = $data.networkAccessPolicy;
+                            'Hibernation Supported'  = $Hibernation;
+                            'Encryption'             = $data.encryption.type;
+                            'OS Type'                = $data.osType;
+                            'Max Shares'             = $data.maxShares;
+                            'Data Access Auth Mode'  = $data.dataAccessAuthMode;   
                             'HyperV Generation'      = $data.hyperVGeneration;
                             'Created Time'           = $timecreated;   
                             'Resource U'             = $ResUCount;
@@ -126,15 +133,21 @@ Else
         $Exc.Add('Retiring Feature')
         $Exc.Add('Retiring Date')
         $Exc.Add('Disk State')
-        $Exc.Add('Associated Resource')        
+        $Exc.Add('Associated Resource')
+        $Exc.Add('Location')  
         $Exc.Add('Zone')
         $Exc.Add('SKU')
         $Exc.Add('Disk Size')
-        $Exc.Add('Location')
-        $Exc.Add('Encryption')
-        $Exc.Add('OS Type')        
+        $Exc.Add('Performance Tier')
         $Exc.Add('Disk IOPS Read / Write')
         $Exc.Add('Disk MBps Read / Write')
+        $Exc.Add('Public Network Access')
+        $Exc.Add('Connection Type')
+        $Exc.Add('Hibernation Supported')
+        $Exc.Add('Encryption')
+        $Exc.Add('OS Type')
+        $Exc.Add('Max Shares')
+        $Exc.Add('Data Access Auth Mode')
         $Exc.Add('HyperV Generation')
         $Exc.Add('Created Time')
         if($InTag)

@@ -12,7 +12,7 @@
 RootModule = 'AzureResourceInventory.psm1'
 
 # Version number of this module.
-ModuleVersion = '3.5.12'
+ModuleVersion = '3.5.13'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
