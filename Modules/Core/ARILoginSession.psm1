@@ -118,7 +118,7 @@ function Connect-ARILoginSession {
             }
         else
             {
-                try 
+                try
                     {
                         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Editing Login Experience')
                         $AZConfig = Get-AzConfig -LoginExperienceV2 -WarningAction SilentlyContinue -InformationAction SilentlyContinue

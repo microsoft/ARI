@@ -190,7 +190,7 @@ We expect this will open doors for extra types of data to be included in the scr
 
 > ### *3) Parameters*
 
-| Parameter              | Description                                                                                                                                     |                            |
+| Parameter              | Description                                                                                                       | Usage                      |
 |------------------------|-------------------------------------------------------------------------------------------------------------------|----------------------------|
 | TenantID               | Specify the tenant ID you want to create a Resource Inventory.                                                    | `-TenantID <ID>`           |
 | SubscriptionID         | Specifies Subscription(s) to be inventoried.                                                                      | `-SubscriptionID <ID>`     |

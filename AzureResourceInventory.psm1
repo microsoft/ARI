@@ -117,7 +117,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
     Function Get-UsageMode() {
         Write-Host ""
-        Write-Host "Parameters"
+        Write-Host "Parameters:"
         Write-Host ""
         Write-Host " -TenantID <ID>           :  Specifies the Tenant to be inventoried. "
         Write-Host " -SubscriptionID <ID>     :  Specifies Subscription(s) to be inventoried. "
