@@ -107,14 +107,14 @@ function Connect-ARILoginSession {
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Logging with AppID and CertificatePath')
                 $SecurePassword = ConvertTo-SecureString -String $Secret -AsPlainText -Force
-                Connect-AzAccount -ServicePrincipal -TenantId $TenantId -ApplicationId $AppId -CertificatePath $CertificatePath -CertificatePassword $SecurePassword
+                Connect-AzAccount -ServicePrincipal -TenantId $TenantId -ApplicationId $AppId -CertificatePath $CertificatePath -CertificatePassword $SecurePassword | Out-Null
             }            
         elseif($AppId -and $Secret -and $TenantID)
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Logging with AppID and Secret')
                 $SecurePassword = ConvertTo-SecureString -String $Secret -AsPlainText -Force
                 $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $AppId, $SecurePassword
-                Connect-AzAccount -ServicePrincipal -TenantId $TenantId -Credential $Credential
+                Connect-AzAccount -ServicePrincipal -TenantId $TenantId -Credential $Credential | Out-Null
             }
         else
             {
