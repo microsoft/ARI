@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Core/Connect-LoginSession.psm1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 4.0.3
+Version: 3.5.15
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -30,12 +30,13 @@ function Connect-ARILoginSession {
         }
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Connect-LoginSession function')
     Write-Host $AzureEnvironment -BackgroundColor Green
+    $Context = Get-AzContext -ErrorAction SilentlyContinue
     if (!$TenantID) {
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Tenant ID not specified')
         write-host "Tenant ID not specified. Use -TenantID parameter if you want to specify directly. "
         write-host "Authenticating Azure"
         write-host ""
-        Clear-AzContext -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -InformationAction SilentlyContinue
+
         if($DeviceLogin.IsPresent)
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Logging with Device Login')
@@ -97,7 +98,14 @@ function Connect-ARILoginSession {
     }
     else {
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Tenant ID was informed.')
-        Clear-AzContext -Force | Out-Null
+
+        if($Context.Tenant.Id -ne $TenantID)
+        {
+            Set-AzContext -Tenant $TenantID -ErrorAction SilentlyContinue | Out-Null
+            $Context = Get-AzContext -ErrorAction SilentlyContinue
+        }
+        $Subs = Get-AzSubscription -TenantId $TenantID -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+
         if($DeviceLogin.IsPresent)
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Logging with Device Login')
@@ -118,24 +126,31 @@ function Connect-ARILoginSession {
             }
         else
             {
-                try 
+                if([string]::IsNullOrEmpty($Subs))
                     {
-                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Editing Login Experience')
-                        $AZConfig = Get-AzConfig -LoginExperienceV2 -WarningAction SilentlyContinue -InformationAction SilentlyContinue
-                        if ($AZConfig.value -eq 'On')
+                        try 
                             {
-                                Update-AzConfig -LoginExperienceV2 Off | Out-Null
-                                Connect-AzAccount -Tenant $TenantID -Environment $AzureEnvironment | Out-Null
-                                Update-AzConfig -LoginExperienceV2 On | Out-Null
+                                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Editing Login Experience')
+                                $AZConfig = Get-AzConfig -LoginExperienceV2 -WarningAction SilentlyContinue -InformationAction SilentlyContinue
+                                if ($AZConfig.value -eq 'On')
+                                    {
+                                        Update-AzConfig -LoginExperienceV2 Off | Out-Null
+                                        Connect-AzAccount -Tenant $TenantID -Environment $AzureEnvironment | Out-Null
+                                        Update-AzConfig -LoginExperienceV2 On | Out-Null
+                                    }
+                                else
+                                    {
+                                        Connect-AzAccount -Tenant $TenantID -Environment $AzureEnvironment | Out-Null
+                                    }
                             }
-                        else
+                        catch
                             {
                                 Connect-AzAccount -Tenant $TenantID -Environment $AzureEnvironment | Out-Null
                             }
                     }
-                catch
+                else
                     {
-                        Connect-AzAccount -Tenant $TenantID -Environment $AzureEnvironment | Out-Null
+                        Write-Host "Already authenticated in Tenant $TenantID"
                     }
             }
     }

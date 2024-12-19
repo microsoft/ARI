@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Compute/VMDISK.ps1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.13
+Version: 3.5.14
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -84,7 +84,7 @@ If ($Task -eq 'Processing')
                             'Zone'                   = [string]$1.ZONES;
                             'SKU'                    = $SKU.Name;
                             'Disk Size'              = $data.diskSizeGB;
-                            'Performance Tier'       = $SKU.tier;
+                            'Performance Tier'       = $data.tier;
                             'Disk IOPS Read / Write' = $data.diskIOPSReadWrite;
                             'Disk MBps Read / Write' = $data.diskMBpsReadWrite;
                             'Public Network Access'  = $data.publicNetworkAccess;
