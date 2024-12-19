@@ -190,32 +190,35 @@ We expect this will open doors for extra types of data to be included in the scr
 
 > ### *3) Parameters*
 
-| Parameter              | Description                                                                                                 |                            |
-|------------------------|-------------------------------------------------------------------------------------------------------------|----------------------------|
-| TenantID               | Specify the tenant ID you want to create a Resource Inventory.                                              | `-TenantID <ID>`           |
-| SubscriptionID         | Specifies Subscription(s) to be inventoried.                                                                | `-SubscriptionID <ID>`     |
-| ManagementGroup        | Specifies the Management Group to be inventoried(all Subscriptions on it)                                   | `-ManagementGroup <ID>`    |  
-| Lite                   | Specifies to use only the Import-Excel module and don't create the charts (using Excel's API)               | `-Lite`                    |
-| SecurityCenter         | Include Security Center Data.                                                                               | `-SecurityCenter`          |
-| SkipAdvisory           | Do not collect Azure Advisory.                                                                              | `-SkipAdvisory`            |
-| Automation             | Required when running the script with Automation Account                                                    | `-Automation`              |
-| Overview               | Used to change the Overview Sheet Charts (Available values are: 1 and 2)                                    | `-Overview`                |
-| StorageAccount         | Storage Account Name (Required when running the script with Automation Account)                             | `-StorageAccount`          |
-| StorageContainer       | Storage Account Container Name (Required when running the script with Automation Account)                   | `-StorageContainer`        |
-| IncludeTags            | Include Resource Tags.                                                                                      | `-IncludeTags`             |
-| Debug                  | Run in a Debug mode.                                                                                        | `-Debug`                   |
-| DiagramFullEnvironment | Network Diagram of the entire environment                                                                   | `-DiagramFullEnvironment`  |
-| Diagram                | Create a Draw.IO Diagram.                                                                                   | `-Diagram`                 |
-| SkipDiagram            | To skip the diagrams creation                                                                               | `-SkipDiagram`             |
-| DeviceLogin            | Authenticating on Azure using the Device login approach                                                     | `-DeviceLogin`             |
-| AzureEnvironment       | Choose between Azure environments <br> > Registered Azure Clouds. Use `az cloud list` to get the list       | `-AzureEnvironment <NAME>` |
-| ReportName             | Change the Default Name of the report. `Default name: AzureResourceInventory`                               | `-ReportName <NAME>`       |
-| ReportDir              | Change the Default path of the report.                                                                      | `-ReportDir "<Path>"`      |
-| Online                 | Use Online Modules. Scan Modules diretly in GitHub ARI Repository                                           | `-Online`                  |
-| ResourceGroup          | Specifies one unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. | `-ResourceGroup <NAME>`    |
-| TagKey                 | Specifies the tag key to be inventoried, This parameter requires the `-SubscriptionID` to work.             | `-TagKey <NAME>`           |
-| TagValue               | Specifies the tag value be inventoried, This parameter requires the `-SubscriptionID` to work.              | `-TagValue <NAME>`         |
-| QuotaUsage             | Quota Usage                                                                                                 | `-QuotaUsage`              |
+| Parameter              | Description                                                                                                       | Usage                      |
+|------------------------|-------------------------------------------------------------------------------------------------------------------|----------------------------|
+| TenantID               | Specify the tenant ID you want to create a Resource Inventory.                                                    | `-TenantID <ID>`           |
+| SubscriptionID         | Specifies Subscription(s) to be inventoried.                                                                      | `-SubscriptionID <ID>`     |
+| ManagementGroup        | Specifies the Management Group to be inventoried(all Subscriptions on it)                                         | `-ManagementGroup <ID>`    |  
+| Lite                   | Specifies to use only the Import-Excel module and don't create the charts (using Excel's API)                     | `-Lite`                    |
+| SecurityCenter         | Include Security Center Data.                                                                                     | `-SecurityCenter`          |
+| SkipAdvisory           | Do not collect Azure Advisory.                                                                                    | `-SkipAdvisory`            |
+| Automation             | Required when running the script with Automation Account                                                          | `-Automation`              |
+| Overview               | Used to change the Overview Sheet Charts (Available values are: 1 and 2)                                          | `-Overview`                |
+| StorageAccount         | Storage Account Name (Required when running the script with Automation Account)                                   | `-StorageAccount`          |
+| StorageContainer       | Storage Account Container Name (Required when running the script with Automation Account)                         | `-StorageContainer`        |
+| IncludeTags            | Include Resource Tags.                                                                                            | `-IncludeTags`             |
+| Debug                  | Run in a Debug mode.                                                                                              | `-Debug`                   |
+| DiagramFullEnvironment | Network Diagram of the entire environment                                                                         | `-DiagramFullEnvironment`  |
+| Diagram                | Create a Draw.IO Diagram.                                                                                         | `-Diagram`                 |
+| SkipDiagram            | To skip the diagrams creation                                                                                     | `-SkipDiagram`             |
+| DeviceLogin            | Authenticating on Azure using the Device login approach                                                           | `-DeviceLogin`             |
+| AzureEnvironment       | Choose between Azure environments <br> > Registered Azure Clouds. Use `az cloud list` to get the list             | `-AzureEnvironment <NAME>` |
+| ReportName             | Change the Default Name of the report. `Default name: AzureResourceInventory`                                     | `-ReportName <NAME>`       |
+| ReportDir              | Change the Default path of the report.                                                                            | `-ReportDir "<Path>"`      |
+| Online                 | Use Online Modules. Scan Modules diretly in GitHub ARI Repository                                                 | `-Online`                  |
+| ResourceGroup          | Specifies one unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work.       | `-ResourceGroup <NAME>`    |
+| AppId                  | Specifies the ApplicationID that is used to connect to Azure as service principal. This parameter requires the -TenantID and -Secret to work. | `-AppId <ID>`              |
+| Secret                 | Specifies the Secret that is used with the Application ID to connect to Azure as service principal. This parameter requires the -TenantID and -AppId to work. If -CertificatePath is also used the Secret value should be the Certifcate password instead of the Application secret. | `-Secret <VALUE>`          |
+| CertificatePath        | Specifies the Certificate path that is used with the Application ID to connect to Azure as service principal. This parameter requires the -TenantID, -AppId and -Secret to work. The required certificate format is pkcs#12.   | `-CertificatePath <PATH>`  |
+| TagKey                 | Specifies the tag key to be inventoried, This parameter requires the `-SubscriptionID` to work.                   | `-TagKey <NAME>`           |
+| TagValue               | Specifies the tag value be inventoried, This parameter requires the `-SubscriptionID` to work.                    | `-TagValue <NAME>`         |
+| QuotaUsage             | Quota Usage                                                                                                       | `-QuotaUsage`              |
 
 #### Examples
 - For CloudShell:

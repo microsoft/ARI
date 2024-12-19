@@ -71,6 +71,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
         $TenantID,
         $AppId,
         $Secret,
+        $CertificatePath,
         [String[]]$SubscriptionID,
         $ManagementGroup,
         [string[]]$ResourceGroup,
@@ -118,20 +119,23 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
         Write-Host ""
         Write-Host "Parameters"
         Write-Host ""
-        Write-Host " -TenantID <ID>        :  Specifies the Tenant to be inventoried. "
-        Write-Host " -SubscriptionID <ID>  :  Specifies Subscription(s) to be inventoried. "
-        Write-Host " -ResourceGroup  <NAME>:  Specifies one (or more) unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. "
-        Write-Host " -TagKey <NAME>        :  Specifies the tag key to be inventoried, This parameter requires the -SubscriptionID to work. "
-        Write-Host " -TagValue <NAME>      :  Specifies the tag value be inventoried, This parameter requires the -SubscriptionID to work. "
-        Write-Host " -SkipAdvisory         :  Do not collect Azure Advisory. "
-        Write-Host " -SkipPolicy           :  Do not collect Azure Policies. "
-        Write-Host " -SecurityCenter       :  Include Security Center Data. "
-        Write-Host " -IncludeTags          :  Include Resource Tags. "
-        Write-Host " -Online               :  Use Online Modules. "
-        Write-Host " -Debug                :  Run in a Debug mode. "
-        Write-Host " -AzureEnvironment     :  Change the Azure Cloud Environment. "
-        Write-Host " -ReportName           :  Change the Default Name of the report. "
-        Write-Host " -ReportDir            :  Change the Default Path of the report. "
+        Write-Host " -TenantID <ID>           :  Specifies the Tenant to be inventoried. "
+        Write-Host " -SubscriptionID <ID>     :  Specifies Subscription(s) to be inventoried. "
+        Write-Host " -ResourceGroup <NAME>    :  Specifies one (or more) unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. "
+        Write-Host " -AppId <ID>              :  Specifies the ApplicationID that is used to connect to Azure as service principal. This parameter requires the -TenantID and -Secret to work. "
+        Write-Host " -Secret <VALUE>          :  Specifies the Secret that is used with the Application ID to connect to Azure as service principal. This parameter requires the -TenantID and -AppId to work. If -CertificatePath is also used the Secret value should be the Certifcate password instead of the Application secret. "
+        Write-Host " -CertificatePath <PATH>  :  Specifies the Certificate path that is used with the Application ID to connect to Azure as service principal. This parameter requires the -TenantID, -AppId and -Secret to work. The required certificate format is pkcs#12. "
+        Write-Host " -TagKey <NAME>           :  Specifies the tag key to be inventoried, This parameter requires the -SubscriptionID to work. "
+        Write-Host " -TagValue <NAME>         :  Specifies the tag value be inventoried, This parameter requires the -SubscriptionID to work. "
+        Write-Host " -SkipAdvisory            :  Do not collect Azure Advisory. "
+        Write-Host " -SkipPolicy              :  Do not collect Azure Policies. "
+        Write-Host " -SecurityCenter          :  Include Security Center Data. "
+        Write-Host " -IncludeTags             :  Include Resource Tags. "
+        Write-Host " -Online                  :  Use Online Modules. "
+        Write-Host " -Debug                   :  Run in a Debug mode. "
+        Write-Host " -AzureEnvironment        :  Change the Azure Cloud Environment. "
+        Write-Host " -ReportName              :  Change the Default Name of the report. "
+        Write-Host " -ReportDir               :  Change the Default Path of the report. "
         Write-Host ""
         Write-Host ""
         Write-Host ""
@@ -181,7 +185,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
         if ($PlatOS -ne 'Azure CloudShell' -and !$Automation.IsPresent)
             {
-                $TenantID = Connect-ARILoginSession -AzureEnvironment $AzureEnvironment -TenantID $TenantID -SubscriptionID $SubscriptionID -DeviceLogin $DeviceLogin -AppId $AppId -Secret $Secret -Debug $Debug
+                $TenantID = Connect-ARILoginSession -AzureEnvironment $AzureEnvironment -TenantID $TenantID -SubscriptionID $SubscriptionID -DeviceLogin $DeviceLogin -AppId $AppId -Secret $Secret -CertificatePath $CertificatePath -Debug $Debug
             }
         elseif ($Automation.IsPresent)
             {
