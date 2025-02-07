@@ -86,7 +86,9 @@ Function Invoke-ARIDiagramSubscription {
         ############ Azure Container
         $Script:IconAKS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/containers/Kubernetes_Services.svg;" #width="68" height="60"
         $Script:ContRegis = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/containers/Container_Registries.svg;'
-        $Script:AzureContainerInstances = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/containers/Container_Instances.svg;' 
+        $Script:AzureContainerInstances = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/containers/Container_Instances.svg;'
+        $Script:AzureContainerApp = "image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/other/Worker_Container_App.svg;"
+        $Script:AzureContainerAppEnv = "image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/other/Container_App_Environments.svg;"
         
         ############ Azure Database
         $Script:AzureSQLDB = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/databases/SQL_Database.svg;'
@@ -469,6 +471,26 @@ Function Invoke-ARIDiagramSubscription {
                                 $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
         
                                     Icon $AzureContainerInstances $TempResLeft $TempResTop "46" "50" 1
+        
+                                $Script:XmlWriter.WriteEndElement()  
+                            }
+                        'microsoft.app/containerapps'   # Container App
+                            {
+                                $Script:XmlWriter.WriteStartElement('object')            
+                                $Script:XmlWriter.WriteAttributeString('label', ([string]$TempResourceType.Count + ' Container' + "`n" + 'Instances'))
+                                $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
+        
+                                    Icon $AzureContainerApp $TempResLeft $TempResTop "46" "50" 1
+        
+                                $Script:XmlWriter.WriteEndElement()  
+                            }
+                        'microsoft.app/managedenvironments'   # COntainer App Environment
+                            {
+                                $Script:XmlWriter.WriteStartElement('object')            
+                                $Script:XmlWriter.WriteAttributeString('label', ([string]$TempResourceType.Count + ' Container' + "`n" + 'Instances'))
+                                $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
+        
+                                    Icon $AzureContainerAppEnv $TempResLeft $TempResTop "46" "50" 1
         
                                 $Script:XmlWriter.WriteEndElement()  
                             }
