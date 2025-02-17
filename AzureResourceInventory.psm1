@@ -80,6 +80,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
         [switch]$SecurityCenter,
         [switch]$Heavy,
         [switch]$SkipAdvisory,
+        [switch]$NoAutoUpdate,
         [switch]$SkipPolicy,
         [switch]$SkipAPIs,
         [switch]$IncludeTags,
@@ -177,8 +178,11 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
         if ($PlatOS -ne 'Azure CloudShell' -and !$Automation.IsPresent)
             {
-                Write-Host ('Checking for Powershell Module Updates..')
-                Update-Module -Name AzureResourceInventory -AcceptLicense
+                if (!$NoAutoUpdate.IsPresent)
+                    {
+                        Write-Host ('Checking for Powershell Module Updates..')
+                        Update-Module -Name AzureResourceInventory -AcceptLicense
+                    }
             }
 
         $PlatOS = Test-ARIPS -Debug $Debug

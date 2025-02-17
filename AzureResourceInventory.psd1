@@ -24,10 +24,10 @@ GUID = '94bc2a7f-e865-426a-a054-cebde278a355'
 Author = 'Claudio Merola'
 
 # Company or vendor of this module
-CompanyName = 'Merola'
+CompanyName = 'Claudio Merola'
 
 # Copyright statement for this module
-Copyright = '(c) Merola. All rights reserved.'
+Copyright = '(c) Claudio Merola. All rights reserved.'
 
 # Description of the functionality provided by this module
 Description = 'Azure Resource Inventory - Its a Powerful tool to create EXCEL inventory from Azure Resources with low effort'
