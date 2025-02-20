@@ -14,7 +14,7 @@
     Use this parameter to collect a specific Subscription in a Tenant
 
 .PARAMETER ManagementGroup
-    Use this parameter to collect a all Subscriptions in a Specific Management Group in a Tenant
+    Use this parameter to collect all Subscriptions in a Specific Management Group in a Tenant
 
 .PARAMETER Lite
     Use this parameter to use only the Import-Excel module and don't create the charts (using Excel's API)
@@ -36,6 +36,63 @@
 
 .PARAMETER Debug
     Output detailed debug information.
+
+.PARAMETER AzureEnvironment
+    Specifies the Azure Cloud Environment to use. Default is 'AzureCloud'.
+
+.PARAMETER Overview
+    Specifies the overview level. Valid values are 1, 2, or 3. Default is 1.
+
+.PARAMETER AppId
+    Specifies the Application ID used to connect to Azure as a service principal. Requires TenantID and Secret.
+
+.PARAMETER Secret
+    Specifies the Secret used with the Application ID to connect to Azure as a service principal. Requires TenantID and AppId.
+
+.PARAMETER CertificatePath
+    Specifies the Certificate path used with the Application ID to connect to Azure as a service principal. Requires TenantID, AppId, and Secret.
+
+.PARAMETER ResourceGroup
+    Specifies one or more unique Resource Groups to be inventoried. Requires SubscriptionID.
+
+.PARAMETER TagKey
+    Specifies the tag key to be inventoried. Requires SubscriptionID.
+
+.PARAMETER TagValue
+    Specifies the tag value to be inventoried. Requires SubscriptionID.
+
+.PARAMETER Heavy
+    Use this parameter to enable heavy mode.
+
+.PARAMETER NoAutoUpdate
+    Use this parameter to skip automatic module updates.
+
+.PARAMETER SkipAPIs
+    Use this parameter to skip the capture of API resources.
+
+.PARAMETER Automation
+    Use this parameter to run in automation mode.
+
+.PARAMETER StorageAccount
+    Specifies the Storage Account name for storing the report.
+
+.PARAMETER StorageContainer
+    Specifies the Storage Container name for storing the report.
+
+.PARAMETER Help
+    Use this parameter to display the help information.
+
+.PARAMETER DeviceLogin
+    Use this parameter to enable device login.
+
+.PARAMETER DiagramFullEnvironment
+    Use this parameter to include the full environment in the diagram.
+
+.PARAMETER ReportName
+    Specifies the name of the report. Default is 'AzureResourceInventory'.
+
+.PARAMETER ReportDir
+    Specifies the directory where the report will be saved.
 
 .EXAMPLE
     Default utilization. Read all tenants you have privileges, select a tenant in menu and collect from all subscriptions:

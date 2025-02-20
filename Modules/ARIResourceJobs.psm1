@@ -203,9 +203,11 @@ function Get-ARIUnsupportedData {
         {
             $ErrorActionPreference = "silentlycontinue"
         }
-    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Validating file: '+$PSScriptRoot + '/Extras/Support.json')
 
-    $Unsupported = Get-Content -Path ($PSScriptRoot + '/Extras/Support.json') | ConvertFrom-Json
+    $SupportFile = Join-Path $PSScriptRoot 'Extras' 'Support.json'
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Validating file: '+$SupportFile)
+
+    $Unsupported = Get-Content -Path $SupportFile | ConvertFrom-Json
 
     return $Unsupported
 }
