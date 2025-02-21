@@ -41,7 +41,7 @@
     Specifies the Azure Cloud Environment to use. Default is 'AzureCloud'.
 
 .PARAMETER Overview
-    Specifies the overview level. Valid values are 1, 2, or 3. Default is 1.
+    Specifies the Excel overview sheet design. Each value will change the main charts in the Overview sheet. Valid values are 1, 2, or 3. Default is 1.
 
 .PARAMETER AppId
     Specifies the Application ID used to connect to Azure as a service principal. Requires TenantID and Secret.
@@ -62,13 +62,13 @@
     Specifies the tag value to be inventoried. Requires SubscriptionID.
 
 .PARAMETER Heavy
-    Use this parameter to enable heavy mode.
+    Use this parameter to enable heavy mode. This will force the job's load to be split into smaller batches. Avoiding CPU overload.
 
 .PARAMETER NoAutoUpdate
     Use this parameter to skip automatic module updates.
 
 .PARAMETER SkipAPIs
-    Use this parameter to skip the capture of API resources.
+    Use this parameter to skip the capture of resources trough REST API.
 
 .PARAMETER Automation
     Use this parameter to run in automation mode.
@@ -86,7 +86,7 @@
     Use this parameter to enable device login.
 
 .PARAMETER DiagramFullEnvironment
-    Use this parameter to include the full environment in the diagram.
+    Use this parameter to include the full environment in the diagram. By default the Network Topology Diagram will only include VNETs that are peered with other VNETs, this parameter will force the diagram to include all VNETs.
 
 .PARAMETER ReportName
     Specifies the name of the report. Default is 'AzureResourceInventory'.

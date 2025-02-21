@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Extras/ARIDiagramNetwork.psm1
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 4.0.1
+Version: 3.5.17
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -37,14 +37,14 @@ Function Invoke-ARIDiagramNetwork {
         $Script:XMLFiles  = $($args[6])
         $Script:Logfile = $($args[7])
 
-        Function Icon {    
+        Function New-ARIDiagramIcon {    
             Param($Style,$x,$y,$w,$h,$p)
             
                 $Script:XmlWriter.WriteStartElement('mxCell')
                 $Script:XmlWriter.WriteAttributeString('style', $Style)
                 $Script:XmlWriter.WriteAttributeString('vertex', "1")
                 $Script:XmlWriter.WriteAttributeString('parent', $p)
-            
+
                     $Script:XmlWriter.WriteStartElement('mxGeometry')
                     $Script:XmlWriter.WriteAttributeString('x', $x)
                     $Script:XmlWriter.WriteAttributeString('y', $y)
@@ -52,21 +52,24 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('height', $h)
                     $Script:XmlWriter.WriteAttributeString('as', "geometry")
                     $Script:XmlWriter.WriteEndElement()
-                
+
                 $Script:XmlWriter.WriteEndElement()
         }
         
-        Function VNETContainer {
+        Function New-ARIDiagramVNETContainer {
             Param($x,$y,$w,$h,$title)
+
                 $Script:ContID = (-join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})+'-'+1)
-        
+
+                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Adding VNET: ' + $title + '. ID: ' + $Script:ContID + '. Position X: ' + $x + ' Position Y: ' + $y) | Out-File -FilePath $LogFile -Append 
+
                 $Script:XmlWriter.WriteStartElement('mxCell')
                 $Script:XmlWriter.WriteAttributeString('id', $Script:ContID)
                 $Script:XmlWriter.WriteAttributeString('value', "$title")
                 $Script:XmlWriter.WriteAttributeString('style', "swimlane;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;swimlaneFillColor=#D5E8D4;rounded=1;")
                 $Script:XmlWriter.WriteAttributeString('vertex', "1")
                 $Script:XmlWriter.WriteAttributeString('parent', "1")
-            
+
                     $Script:XmlWriter.WriteStartElement('mxGeometry')
                     $Script:XmlWriter.WriteAttributeString('x', $x)
                     $Script:XmlWriter.WriteAttributeString('y', $y)
@@ -74,13 +77,14 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('height', $h)
                     $Script:XmlWriter.WriteAttributeString('as', "geometry")
                     $Script:XmlWriter.WriteEndElement()
-                
+
                 $Script:XmlWriter.WriteEndElement()
         }
-        
-        Function HubContainer {
+
+        Function New-ARIDiagramHubContainer {
             Param($x,$y,$w,$h,$title)
                 $Script:ContID = (-join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})+'-'+1)
+                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Adding HUB: ' + $title + '. ID: ' + $Script:ContID + '. Position X: ' + $x + ' Position Y: ' + $y) | Out-File -FilePath $LogFile -Append 
         
                 $Script:XmlWriter.WriteStartElement('mxCell')
                 $Script:XmlWriter.WriteAttributeString('id', $Script:ContID)
@@ -100,17 +104,19 @@ Function Invoke-ARIDiagramNetwork {
                 $Script:XmlWriter.WriteEndElement()
         }
 
-        Function BrokenContainer {
+        Function New-ARIDiagramBrokenContainer {
             Param($x,$y,$w,$h,$title)
                 $Script:ContID = (-join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})+'-'+1)
-        
+
+                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Adding Broken Container: ' + $title + '. ID: ' + $Script:ContID + '. Position X: ' + $x + ' Position Y: ' + $y) | Out-File -FilePath $LogFile -Append 
+
                 $Script:XmlWriter.WriteStartElement('mxCell')
                 $Script:XmlWriter.WriteAttributeString('id', $Script:ContID)
                 $Script:XmlWriter.WriteAttributeString('value', "$title")
                 $Script:XmlWriter.WriteAttributeString('style', "swimlane;whiteSpace=wrap;html=1;fillColor=#fad9d5;strokeColor=#ae4132;swimlaneFillColor=#FAD9D5;")
                 $Script:XmlWriter.WriteAttributeString('vertex', "1")
                 $Script:XmlWriter.WriteAttributeString('parent', "1")
-            
+
                     $Script:XmlWriter.WriteStartElement('mxGeometry')
                     $Script:XmlWriter.WriteAttributeString('x', $x)
                     $Script:XmlWriter.WriteAttributeString('y', $y)
@@ -118,15 +124,17 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('height', $h)
                     $Script:XmlWriter.WriteAttributeString('as', "geometry")
                     $Script:XmlWriter.WriteEndElement()
-                
+
                 $Script:XmlWriter.WriteEndElement()
         }
 
-        Function Connect {
+        Function New-ARIDiagramConnection {
         Param($Source,$Target,$Parent)
         
             if($Parent){$Parent = $Parent}else{$Parent = 1}
         
+            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Connecting: ' + $Source + ' to: ' + $Target + '. Parent ID: ' + $Parent) | Out-File -FilePath $LogFile -Append 
+
             $Script:XmlWriter.WriteStartElement('mxCell')
             $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
             $Script:XmlWriter.WriteAttributeString('style', "edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;")
@@ -144,9 +152,9 @@ Function Invoke-ARIDiagramNetwork {
             $Script:XmlWriter.WriteEndElement()
         
         }
-        
+
         <# Function to create the Visio document and import each stencil #>
-        Function Stensils {
+        Function Publish-ARIDiagramStensils {
             $Script:Ret = "rounded=0;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;"
         
             $Script:IconConnections = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Connections.svg;" #width="68" height="68"
@@ -208,9 +216,9 @@ Function Invoke-ARIDiagramNetwork {
             $Script:CloudOnly = "aspect=fixed;html=1;points=[];align=center;image;fontSize=56;image=img/lib/azure2/compute/Cloud_Services_Classic.svg;" #width="380.77" height="275"
         
         }
-        
+
         <# Function to begin OnPrem environment drawing. Will begin by Local network Gateway, then Express Route.#>
-        Function OnPremNet {
+        Function Invoke-ARIDiagramOnPremNetwork {
             $Script:VNETHistory = @()
             $Script:RoutsW = $AZVNETs | Select-Object -Property Name, @{N="Subnets";E={$_.properties.subnets.properties.addressPrefix.count}} | Sort-Object -Property Subnets -Descending
         
@@ -226,12 +234,12 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('label', '')
                     $Script:XmlWriter.WriteAttributeString('Status', 'This Local Network Gateway has Errors')
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-        
-                        Icon $IconError 40 ($Script:Alt+25) "25" "25" 1
-        
+
+                        New-ARIDiagramIcon $IconError 40 ($Script:Alt+25) "25" "25" 1
+
                     $Script:XmlWriter.WriteEndElement()
                 }
-            
+
                 $Con1 = $AZCONs | Where-Object {$_.properties.localNetworkGateway2.id -eq $GTW.id}
                 
                 if(!$Con1 -and $GTW.properties.provisioningState -eq 'Succeeded')
@@ -240,28 +248,28 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('label', '')
                     $Script:XmlWriter.WriteAttributeString('Status', 'No Connections were found in this Local Network Gateway')
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-        
-                        Icon $SymInfo 40 ($Script:Alt+30) "20" "20" 1
-        
+
+                        New-ARIDiagramIcon $SymInfo 40 ($Script:Alt+30) "20" "20" 1
+
                     $Script:XmlWriter.WriteEndElement()
                 }
-                
+
                 $Name = $GTW.name
                 $IP = $GTW.properties.gatewayIpAddress
-        
+
                 $Script:XmlWriter.WriteStartElement('object')            
                 $Script:XmlWriter.WriteAttributeString('label', ("`n" + [string]$Name + "`n" + [string]$IP))
                 $Script:XmlWriter.WriteAttributeString('Local_Address_Space', [string]$GTW.properties.localNetworkAddressSpace.addressPrefixes)
                 $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-        
-                    Icon $IconTraffic 50 $Script:Alt "67" "40" 1
-        
+
+                    New-ARIDiagramIcon $IconTraffic 50 $Script:Alt "67" "40" 1
+
                 $Script:XmlWriter.WriteEndElement()                  
-        
+
                 $Script:GTWAddress = ($Script:CellID+'-'+($Script:IDNum-1))
                 $Script:ConnSourceResource = 'GTW'
 
-                OnPrem $Con1
+                    Start-ARIDiagramOnPremInfra $Con1
 
                 $Script:Alt = $Script:Alt + 150
             }
@@ -277,7 +285,7 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('Status', 'This Express Route has Errors')
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                        Icon $IconError 51 ($Script:Alt+25) "25" "25" 1
+                        New-ARIDiagramIcon $IconError 51 ($Script:Alt+25) "25" "25" 1
 
                     $Script:XmlWriter.WriteEndElement()
                 }       
@@ -291,7 +299,7 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('Status', 'No Connections were found in this Express Route')
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                        Icon $SymInfo 51 ($Script:Alt+30) "20" "20" 1
+                        New-ARIDiagramIcon $SymInfo 51 ($Script:Alt+30) "20" "20" 1
 
                     $Script:XmlWriter.WriteEndElement()
                 }
@@ -307,14 +315,14 @@ Function Invoke-ARIDiagramNetwork {
                 $Script:XmlWriter.WriteAttributeString('Billing_model', $ERs.sku.family)
                 $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                    Icon $IconExpressRoute "61.5" $Script:Alt "44" "40" 1
+                    New-ARIDiagramIcon $IconExpressRoute "61.5" $Script:Alt "44" "40" 1
 
                 $Script:XmlWriter.WriteEndElement()
 
                 $Script:ERAddress = ($Script:CellID+'-'+($Script:IDNum-1))
                 $Script:ConnSourceResource = 'ER'
 
-                OnPrem $Con1
+                    Start-ARIDiagramOnPremInfram $Con1
 
                 $Script:Alt = $Script:Alt + 150
 
@@ -331,7 +339,7 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('Status', 'This VPN Site has Errors')
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                        Icon $IconError 40 ($Script:Alt+25) "25" "25" 1
+                        New-ARIDiagramIcon $IconError 40 ($Script:Alt+25) "25" "25" 1
 
                     $Script:XmlWriter.WriteEndElement()
                 }
@@ -345,7 +353,7 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('Status', 'No vWANs were found in this VPN Site')
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                        Icon $SymInfo 40 ($Script:Alt+30) "20" "20" 1
+                        New-ARIDiagramIcon $SymInfo 40 ($Script:Alt+30) "20" "20" 1
 
                     $Script:XmlWriter.WriteEndElement()
                 }
@@ -358,18 +366,17 @@ Function Invoke-ARIDiagramNetwork {
                 $Script:XmlWriter.WriteAttributeString('Link_Speed_In_Mbps', [string]$GTW.properties.deviceProperties.linkSpeedInMbps)
                 $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                    Icon $IconNAT 50 $Script:Alt "67" "40" 1
+                    New-ARIDiagramIcon $IconNAT 50 $Script:Alt "67" "40" 1
 
-                $Script:XmlWriter.WriteEndElement()            
-                #$tt = $tt + 200        
+                $Script:XmlWriter.WriteEndElement()   
 
-                vWan $wan1
+                    Start-ARIDiagramvWanInfra $wan1
 
                 $Script:Alt = $Script:Alt + 150
             }
-        
+
             ##################################### VWAN ERs #############################################
-        
+
             foreach($GTW in $AZVERs)
             {
                 if($GTW.properties.provisioningState -ne 'Succeeded')
@@ -379,7 +386,7 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('Status', 'This Express Route Circuit has Errors')
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                        Icon $IconError 40 ($Script:Alt+25) "25" "25" 1
+                        New-ARIDiagramIcon $IconError 40 ($Script:Alt+25) "25" "25" 1
 
                     $Script:XmlWriter.WriteEndElement()
                 }
@@ -393,7 +400,7 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('Status', 'No vWANs were found in this Express Route Circuit')
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                        Icon $SymInfo 40 ($Script:Alt+30) "20" "20" 1
+                        New-ARIDiagramIcon $SymInfo 40 ($Script:Alt+30) "20" "20" 1
 
                     $Script:XmlWriter.WriteEndElement()
                 }
@@ -406,12 +413,11 @@ Function Invoke-ARIDiagramNetwork {
                 $Script:XmlWriter.WriteAttributeString('LinkSpeed_In_Mbps', [string]$GTW.properties.deviceProperties.linkSpeedInMbps)
                 $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                    Icon $IconNAT 50 $Script:Alt "67" "40" 1
+                    New-ARIDiagramIcon $IconNAT 50 $Script:Alt "67" "40" 1
 
-                $Script:XmlWriter.WriteEndElement()            
-                #$tt = $tt + 200        
+                $Script:XmlWriter.WriteEndElement()     
 
-                vWan $wan1
+                    Start-ARIDiagramvWanInfra $wan1
 
                 $Script:Alt = $Script:Alt + 150
             }
@@ -425,7 +431,7 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('label', '')
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                        Icon $Ret -520 -100 "500" ($Script:Alt + 100) 1
+                        New-ARIDiagramIcon $Ret -520 -100 "500" ($Script:Alt + 100) 1
 
                     $Script:XmlWriter.WriteEndElement()
 
@@ -433,20 +439,20 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('label', ('On Premises'+ "`n" +'Environment'))
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                        Icon $OnPrem -351 (($Script:Alt + 100)/2) "168.2" "290" 1
+                        New-ARIDiagramIcon $OnPrem -351 (($Script:Alt + 100)/2) "168.2" "290" 1
 
                     $Script:XmlWriter.WriteEndElement()  
 
-                    label
+                    Set-ARIDiagramLabel
 
-                        Icon $Signature -520 ($Script:Alt + 100) "27.5" "22" 1
+                    New-ARIDiagramIcon $Signature -520 ($Script:Alt + 100) "27.5" "22" 1
 
                     $Script:XmlWriter.WriteEndElement()  
                 }
 
         }
 
-        Function OnPrem {
+        Function Start-ARIDiagramOnPremInfra {
         Param($Con1)
         foreach ($Con2 in $Con1)
                 {
@@ -470,7 +476,7 @@ Function Invoke-ARIDiagramNetwork {
 
                         $LogResName = [string]$Name2
                         ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Icon ($LogResName): " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
-                        Icon $IconConnections 250 $Script:Alt "40" "40" 1
+                        New-ARIDiagramIcon $IconConnections 250 $Script:Alt "40" "40" 1
 
                     $Script:XmlWriter.WriteEndElement()
 
@@ -478,13 +484,11 @@ Function Invoke-ARIDiagramNetwork {
 
                     if($Script:ConnSourceResource -eq 'ER')
                         {
-                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Adding ER Connection: ' + $Script:Target) | Out-File -FilePath $LogFile -Append
-                            Connect $Script:ERAddress $Script:Target
+                            New-ARIDiagramConnection $Script:ERAddress $Script:Target
                         }
                     elseif($Script:ConnSourceResource -eq 'GTW')
                         {
-                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Adding GTW Connection: ' + $Script:Target) | Out-File -FilePath $LogFile -Append
-                            Connect $Script:GTWAddress $Script:Target
+                            New-ARIDiagramConnection $Script:GTWAddress $Script:Target
                         }
 
                     $Script:Source = $Script:Target
@@ -501,14 +505,13 @@ Function Invoke-ARIDiagramNetwork {
 
                         $LogResName = [string]$VGT.Name
                         ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Icon ($LogResName): " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
-                        Icon $IconVGW2 425 ($Script:Alt-4) "31.34" "48" 1
+                        New-ARIDiagramIcon $IconVGW2 425 ($Script:Alt-4) "31.34" "48" 1
 
                     $Script:XmlWriter.WriteEndElement()
 
                     $Script:Target = ($Script:CellID+'-'+($Script:IDNum-1))
 
-                        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Connecting: ' + $Script:Source + ' and: ' + $Script:Target) | Out-File -FilePath $LogFile -Append
-                        Connect $Script:Source $Script:Target
+                    New-ARIDiagramConnection $Script:Source $Script:Target
 
                     $Script:Source = $Script:Target
 
@@ -547,7 +550,7 @@ Function Invoke-ARIDiagramNetwork {
                                             
                                             $LogResName = [string]$VNET2.Name
                                             ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Icon ($LogResName): " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
-                                            Icon $IconVNET 600 $Script:Alt "65" "39" 1
+                                            New-ARIDiagramIcon $IconVNET 600 $Script:Alt "65" "39" 1
 
                                         $Script:XmlWriter.WriteEndElement()      
 
@@ -555,7 +558,7 @@ Function Invoke-ARIDiagramNetwork {
 
                                         $Script:Target = ($Script:CellID+'-'+($Script:IDNum-1))
 
-                                            Connect $Script:Source $Script:Target
+                                            New-ARIDiagramConnection $Script:Source $Script:Target
 
                                         if($VNET2.properties.enableDdosProtection -eq $true)
                                         {
@@ -563,18 +566,18 @@ Function Invoke-ARIDiagramNetwork {
                                             $Script:XmlWriter.WriteAttributeString('label', '')
                                             $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                                                Icon $IconDDOS 580 ($Script:Alt + 15) "23" "28" 1
+                                                New-ARIDiagramIcon $IconDDOS 580 ($Script:Alt + 15) "23" "28" 1
 
                                             $Script:XmlWriter.WriteEndElement()
                                         }
 
                                         $Script:Source = $Script:Target
 
-                                            VNETCreator $Script:VNET2
+                                            New-ARIDiagramVNET $Script:VNET2
 
                                         if($VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id)
                                             {
-                                                PeerCreator $Script:VNET2
+                                                New-ARIDiagramPeerVNET $Script:VNET2
                                             }
 
                                             $tmp =@{
@@ -589,7 +592,7 @@ Function Invoke-ARIDiagramNetwork {
 
                                         $VNETDID = $VNETHistory | Where-Object {$_.VNET -eq $AZVNETs2.id}
 
-                                        Connect $Script:Source $VNETDID.VNETid 
+                                        New-ARIDiagramConnection $Script:Source $VNETDID.VNETid 
 
                                     }
 
@@ -605,8 +608,8 @@ Function Invoke-ARIDiagramNetwork {
                 }
         
         }
-        
-        Function vWan {
+
+        Function Start-ARIDiagramvWanInfra {
         Param($wan1)
         
             if([string]::IsNullOrEmpty($Script:vnetLoc))
@@ -623,13 +626,13 @@ Function Invoke-ARIDiagramNetwork {
             $Script:Source = ($Script:CellID+'-'+($Script:IDNum-1))
             $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                Icon $IconVWAN 250 $Script:Alt "40" "40" 1
+                New-ARIDiagramIcon $IconVWAN 250 $Script:Alt "40" "40" 1
 
             $Script:XmlWriter.WriteEndElement()
 
             $Script:Target = ($Script:CellID+'-'+($Script:IDNum-1))
 
-                Connect $Script:Source $Script:Target
+                New-ARIDiagramConnection $Script:Source $Script:Target
 
             $Script:Source1 = $Script:Target
 
@@ -645,13 +648,13 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('Allow_BranchToBranch_Traffic', [string]$VHUB.properties.allowBranchToBranchTraffic)
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                        Icon $IconVWAN 425 $Script:Alt "40" "40" 1
+                        New-ARIDiagramIcon $IconVWAN 425 $Script:Alt "40" "40" 1
 
                     $Script:XmlWriter.WriteEndElement()
 
                     $Script:Target = ($Script:CellID+'-'+($Script:IDNum-1))
 
-                        Connect $Script:Source1 $Script:Target
+                        New-ARIDiagramConnection $Script:Source1 $Script:Target
 
                     $Script:Source = $Script:Target
 
@@ -690,7 +693,7 @@ Function Invoke-ARIDiagramNetwork {
 
                                             $LogResName = [string]$VNET2.Name
                                             ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding VNET ($LogResName): " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
-                                            Icon $IconVNET 600 $Script:Alt "65" "39" 1
+                                            New-ARIDiagramIcon $IconVNET 600 $Script:Alt "65" "39" 1
 
                                         $Script:XmlWriter.WriteEndElement()      
                                         
@@ -699,7 +702,7 @@ Function Invoke-ARIDiagramNetwork {
                                         $Script:Target = ($Script:CellID+'-'+($Script:IDNum-1))
 
                                             ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Connecting: " + $Script:Source+' to: '+$Script:Target) | Out-File -FilePath $LogFile -Append
-                                            Connect $Script:Source $Script:Target
+                                            New-ARIDiagramConnection $Script:Source $Script:Target
 
                                         if($VNET2.properties.enableDdosProtection -eq $true)
                                         {
@@ -707,16 +710,16 @@ Function Invoke-ARIDiagramNetwork {
                                             $Script:XmlWriter.WriteAttributeString('label', '')
                                             $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                                                Icon $IconDDOS 580 ($Script:Alt + 15) "23" "28" 1
+                                                New-ARIDiagramIcon $IconDDOS 580 ($Script:Alt + 15) "23" "28" 1
 
                                             $Script:XmlWriter.WriteEndElement()
                                         }
 
-                                            VNETCreator $Script:VNET2
+                                            New-ARIDiagramVNET $Script:VNET2
 
                                         if($VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id -and $VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id -notlike ('*/HV_'+$VHUB.name+'_*'))
                                             {
-                                                PeerCreator $Script:VNET2
+                                                New-ARIDiagramPeerVNET $Script:VNET2
                                             }
 
                                             $tmp =@{
@@ -731,7 +734,7 @@ Function Invoke-ARIDiagramNetwork {
                                         $VNETDID = $VNETHistory | Where-Object {$_.VNET -eq $AZVNETs2.id}
 
                                         ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Connecting: " + $Script:Source+' to: '+$VNETDID.VNETid ) | Out-File -FilePath $LogFile -Append
-                                        Connect $Script:Source $VNETDID.VNETid 
+                                        New-ARIDiagramConnection $Script:Source $VNETDID.VNETid 
                                     }
                                 }
                         }
@@ -744,9 +747,9 @@ Function Invoke-ARIDiagramNetwork {
                 }
         
         }
-        
+
         <# Function for Cloud Only Environments #>
-        Function CloudOnly {
+        Function Invoke-ARIDiagramCloudOnly {
         $Script:RoutsW = $AZVNETs | Select-Object -Property Name, @{N="Subnets";E={$_.properties.subnets.properties.addressPrefix.count}} | Sort-Object -Property Subnets -Descending
         
         $Script:VNETHistory = @()
@@ -786,7 +789,7 @@ Function Invoke-ARIDiagramNetwork {
 
                                 $LogResName = [string]$VNET2.Name
                                 ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding VNET ($LogResName): " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
-                                Icon $IconVNET 600 $Script:Alt "65" "39" 1
+                                New-ARIDiagramIcon $IconVNET 600 $Script:Alt "65" "39" 1
 
                             $Script:XmlWriter.WriteEndElement()      
                             
@@ -800,18 +803,18 @@ Function Invoke-ARIDiagramNetwork {
                                 $Script:XmlWriter.WriteAttributeString('label', '')
                                 $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                                    Icon $IconDDOS 580 ($Script:Alt + 15) "23" "28" 1
+                                    New-ARIDiagramIcon $IconDDOS 580 ($Script:Alt + 15) "23" "28" 1
 
                                 $Script:XmlWriter.WriteEndElement()
                             }
 
                             $Script:Source = $Script:Target
 
-                                VNETCreator $Script:VNET2
+                                New-ARIDiagramVNET $Script:VNET2
 
                             if($VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id)
                                 {
-                                    PeerCreator $Script:VNET2
+                                    New-ARIDiagramPeerVNET $Script:VNET2
                                 }
 
                                 $tmp =@{
@@ -828,7 +831,7 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
                         ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Icon: " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
-                        Icon $Ret -520 -100 "500" ($Script:Alt + 100) 1
+                        New-ARIDiagramIcon $Ret -520 -100 "500" ($Script:Alt + 100) 1
 
                     $Script:XmlWriter.WriteEndElement()
 
@@ -836,19 +839,19 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('label', ('Cloud Only'+ "`n" +'Environment'))
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                        Icon $Script:CloudOnly -460 (($Script:Alt + 100)/2) "380" "275" 1
+                        New-ARIDiagramIcon $Script:CloudOnly -460 (($Script:Alt + 100)/2) "380" "275" 1
 
                     $Script:XmlWriter.WriteEndElement()  
 
-                    label
+                    Set-ARIDiagramLabel
 
-                        Icon $Signature -520 ($Script:Alt + 100) "27.5" "22" 1
+                    New-ARIDiagramIcon $Signature -520 ($Script:Alt + 100) "27.5" "22" 1
 
                     $Script:XmlWriter.WriteEndElement()  
 
         }
 
-        Function FullEnvironment {
+        Function Invoke-ARIDiagramFullEnvironment {
             foreach($AZVNETs2 in $AZVNETs)
                 {             
                     $Script:VNET2 = $AZVNETs2
@@ -861,7 +864,7 @@ Function Invoke-ARIDiagramNetwork {
                             }Else{
                                 $AddSpace = ($VNET2.properties.addressSpace.addressPrefixes | ForEach-Object {$_ + "`n"})
                             }
-        
+
                             $Script:XmlWriter.WriteStartElement('object')            
                             $Script:XmlWriter.WriteAttributeString('label', ([string]$VNET2.Name + "`n" + $AddSpace))
                             if($VNET2.properties.dhcpoptions.dnsServers)
@@ -874,50 +877,50 @@ Function Invoke-ARIDiagramNetwork {
                                     $Script:XmlWriter.WriteAttributeString('DDOS_Protection', [string]$VNET2.properties.enableDdosProtection)
                                 }
                             $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-        
+
                                 $LogResName = [string]$VNET2.Name
                                 ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding VNET ($LogResName): " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
-                                Icon $IconVNET 600 $Script:Alt "65" "39" 1
-        
+                                New-ARIDiagramIcon $IconVNET 600 $Script:Alt "65" "39" 1
+
                             $Script:XmlWriter.WriteEndElement()
-        
-                            VNETCreator $Script:VNET2
-        
+
+                            New-ARIDiagramVNET $Script:VNET2
+
                             if($VNET2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id)
                                 {
-                                    PeerCreator $Script:VNET2
+                                    New-ARIDiagramPeerVNET $Script:VNET2
                                 }  
                         }
-        
+
                         $Script:Alt = $Script:Alt + 250
                     }
-        
+
                     $Script:XmlWriter.WriteStartElement('object')            
                     $Script:XmlWriter.WriteAttributeString('label', '')
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-        
-                        Icon $Ret -520 -100 "500" ($Script:Alt + 100) 1
-        
+
+                        New-ARIDiagramIcon $Ret -520 -100 "500" ($Script:Alt + 100) 1
+
                     $Script:XmlWriter.WriteEndElement()
-        
+
                     $Script:XmlWriter.WriteStartElement('object')            
                     $Script:XmlWriter.WriteAttributeString('label', ('On Premises'+ "`n" +'Environment'))
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-        
-                        Icon $OnPrem -351 (($Script:Alt + 100)/2) "168.2" "290" 1
-        
+
+                        New-ARIDiagramIcon $OnPrem -351 (($Script:Alt + 100)/2) "168.2" "290" 1
+
                     $Script:XmlWriter.WriteEndElement()  
-        
-                    label
-        
-                        Icon $Signature -520 ($Script:Alt + 100) "27.5" "22" 1
-        
+
+                    Set-ARIDiagramLabel
+
+                    New-ARIDiagramIcon $Signature -520 ($Script:Alt + 100) "27.5" "22" 1
+
                     $Script:XmlWriter.WriteEndElement()  
-        
+
         }
-        
+
         <# Function for VNET creation #>
-        Function VNETCreator {
+        Function New-ARIDiagramVNET {
         Param($VNET2)
                 $Script:sizeL =  $VNET2.properties.subnets.properties.addressPrefix.count
 
@@ -934,27 +937,25 @@ Function Invoke-ARIDiagramNetwork {
 
                         if('gatewaysubnet' -in $VNET2.properties.subnets.name)
                             {
-                                HubContainer ($Script:vnetLoc) ($Script:Alt0 - 20) $Script:sizeL "490" $VNET2.Name
+                                New-ARIDiagramHubContainer ($Script:vnetLoc) ($Script:Alt0 - 20) $Script:sizeL "490" $VNET2.Name
                             }
                         else
                             {
-                                VNETContainer ($Script:vnetLoc) ($Script:Alt0 - 20) $Script:sizeL "490" $VNET2.Name
+                                New-ARIDiagramVNETContainer ($Script:vnetLoc) ($Script:Alt0 - 20) $Script:sizeL "490" $VNET2.Name
                             }
-        
-                            
-                        
+
                         $Script:VNETSquare = ($Script:CellID+'-'+($Script:IDNum-1))
-        
+
                         $SubName = $Subscriptions | Where-Object {$_.id -eq $VNET2.subscriptionId}
-        
+
                         $Script:XmlWriter.WriteStartElement('object')            
                         $Script:XmlWriter.WriteAttributeString('label', $SubName.name)
                         $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-        
-                            Icon $IconSubscription $Script:sizeL 460 "67" "40" $Script:ContID
-        
+
+                            New-ARIDiagramIcon $IconSubscription $Script:sizeL 460 "67" "40" $Script:ContID
+
                         $Script:XmlWriter.WriteEndElement()  
-        
+
                         $ADVS = ''
                         $ADVS = $Advisories | Where-Object {$_.Properties.Category -eq 'Cost' -and $_.Properties.resourceMetadata.resourceId -eq ('/subscriptions/'+$SubName.id)}
                         If($ADVS)
@@ -962,30 +963,32 @@ Function Invoke-ARIDiagramNetwork {
                             $Count = 1
                             $Script:XmlWriter.WriteStartElement('object')            
                             $Script:XmlWriter.WriteAttributeString('label', '')
-        
+
                             foreach ($ADV in $ADVS)
                                 {
                                     $Attr1 = ('Recommendation'+[string]$Count)
                                     $Script:XmlWriter.WriteAttributeString($Attr1, [string]$ADV.Properties.shortDescription.solution)
-        
+
                                     $Count ++
                                 }
-        
+
                             $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-        
-                                Icon $IconCostMGMT ($Script:sizeL + 150) 460 "30" "35" $Script:ContID
-        
+
+                                New-ARIDiagramIcon $IconCostMGMT ($Script:sizeL + 150) 460 "30" "35" $Script:ContID
+
                             $Script:XmlWriter.WriteEndElement()
                             
                         }
-        
-                        Subnet ($Script:vnetLoc + 15) $VNET2 $Script:IDNum $Script:DiagramCache $Script:ContID 
-        
+
+                        New-ARIDiagramSubnet ($Script:vnetLoc + 15) $VNET2 $Script:IDNum $Script:DiagramCache $Script:ContID 
+
+                        Start-Sleep -Milliseconds 100
+
                         if($Script:VNETPIP)
                             {
                                 $Script:XmlWriter.WriteStartElement('object')            
                                 $Script:XmlWriter.WriteAttributeString('label', '')
-        
+
                                 $Count = 1
                                 Foreach ($PIPDetail in $Script:VNETPIP)
                                     {
@@ -993,34 +996,33 @@ Function Invoke-ARIDiagramNetwork {
                                         $Attr2 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-IP')
                                         $Script:XmlWriter.WriteAttributeString($Attr1, [string]$PIPDetail.name)
                                         $Script:XmlWriter.WriteAttributeString($Attr2, [string]$PIPDetail.properties.ipaddress)
-        
+
                                         $Count ++
                                     }
-        
+
                                 $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-        
-                                    Icon $IconDet ($Script:sizeL + 500) 225 "42.63" "44" $Script:ContID
-        
+
+                                    New-ARIDiagramIcon $IconDet ($Script:sizeL + 500) 225 "42.63" "44" $Script:ContID
+
                                 $Script:XmlWriter.WriteEndElement()
-                                
-                                    Connect ($Script:CellID+'-'+($Script:IDNum-1)) $Script:ContID $Script:ContID
+
+                                    New-ARIDiagramConnection ($Script:CellID+'-'+($Script:IDNum-1)) $Script:ContID $Script:ContID
                             }
-        
+
                             $Script:Alt = $Script:Alt + 650
                     }
                 else
                     {
                         $Script:sizeL = (($Script:sizeL * 210) + 30)
-        
+
                         if('gatewaysubnet' -in $VNET2.properties.subnets.name)
                             {
-                                HubContainer ($Script:vnetLoc) ($Script:Alt0 - 15) $Script:sizeL "260" $VNET2.Name
+                                New-ARIDiagramHubContainer ($Script:vnetLoc) ($Script:Alt0 - 15) $Script:sizeL "260" $VNET2.Name
                             }
                         else
                             {
-                                VNETContainer ($Script:vnetLoc) ($Script:Alt0 - 15) $Script:sizeL "260" $VNET2.Name
+                                New-ARIDiagramVNETContainer ($Script:vnetLoc) ($Script:Alt0 - 15) $Script:sizeL "260" $VNET2.Name
                             }
-
 
                         $Script:VNETSquare = ($Script:CellID+'-'+($Script:IDNum-1))
 
@@ -1030,7 +1032,7 @@ Function Invoke-ARIDiagramNetwork {
                         $Script:XmlWriter.WriteAttributeString('label', $SubName.name)
                         $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                            Icon $IconSubscription $Script:sizeL 225 "67" "40" $Script:ContID
+                            New-ARIDiagramIcon $IconSubscription $Script:sizeL 225 "67" "40" $Script:ContID
 
                         $Script:XmlWriter.WriteEndElement()  
 
@@ -1052,13 +1054,15 @@ Function Invoke-ARIDiagramNetwork {
 
                             $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                                Icon $IconCostMGMT ($Script:sizeL + 150) 225 "30" "35" $Script:ContID
+                                New-ARIDiagramIcon $IconCostMGMT ($Script:sizeL + 150) 225 "30" "35" $Script:ContID
 
                             $Script:XmlWriter.WriteEndElement()
 
                         }
 
-                        Subnet ($Script:vnetLoc + 15) $VNET2 $Script:IDNum $Script:DiagramCache $Script:ContID
+                        New-ARIDiagramSubnet ($Script:vnetLoc + 15) $VNET2 $Script:IDNum $Script:DiagramCache $Script:ContID
+
+                        Start-Sleep -Milliseconds 100
 
                         if($Script:VNETPIP)
                             {
@@ -1078,11 +1082,11 @@ Function Invoke-ARIDiagramNetwork {
 
                                 $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                                    Icon $IconDet ($Script:sizeL + 500) 107 "42.63" "44" $Script:ContID
+                                    New-ARIDiagramIcon $IconDet ($Script:sizeL + 500) 107 "42.63" "44" $Script:ContID
 
                                 $Script:XmlWriter.WriteEndElement()
-                                
-                                    Connect ($Script:CellID+'-'+($Script:IDNum-1)) $Script:ContID $Script:ContID
+
+                                    New-ARIDiagramConnection ($Script:CellID+'-'+($Script:IDNum-1)) $Script:ContID $Script:ContID
                             }
                         $Script:Alt = $Script:Alt + 350 
                     }
@@ -1092,7 +1096,7 @@ Function Invoke-ARIDiagramNetwork {
         }
 
         <# Function for create peered VNETs #>
-        Function PeerCreator {
+        Function New-ARIDiagramPeerVNET {
         Param($VNET2)
 
             $Script:vnetLoc1 = $Script:Alt                                    
@@ -1152,7 +1156,7 @@ Function Invoke-ARIDiagramNetwork {
                             }
                         $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                            Icon $IconVNET $Script:vnetLoc $Script:vnetLoc1 "67" "40" 1
+                            New-ARIDiagramIcon $IconVNET $Script:vnetLoc $Script:vnetLoc1 "67" "40" 1
 
                         $Script:XmlWriter.WriteEndElement()
 
@@ -1186,7 +1190,7 @@ Function Invoke-ARIDiagramNetwork {
                                 $Script:XmlWriter.WriteAttributeString('label', '')
                                 $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                                    Icon $IconDDOS ($Script:vnetLoc - 20) ($Script:vnetLoc1 + 15) "23" "28" 1
+                                    New-ARIDiagramIcon $IconDDOS ($Script:vnetLoc - 20) ($Script:vnetLoc1 + 15) "23" "28" 1
 
                                 $Script:XmlWriter.WriteEndElement()
                             }
@@ -1200,11 +1204,11 @@ Function Invoke-ARIDiagramNetwork {
 
                                 if('gatewaysubnet' -in $VNETSUB.properties.subnets.name)
                                     {
-                                        HubContainer ($Script:vnetLoc + 100) ($Script:vnetLoc1 - 20) $Script:sizeL "490" $VNETSUB.name
+                                        New-ARIDiagramHubContainer ($Script:vnetLoc + 100) ($Script:vnetLoc1 - 20) $Script:sizeL "490" $VNETSUB.name
                                     }
                                 else
                                     {
-                                        VNETContainer ($Script:vnetLoc + 100) ($Script:vnetLoc1 - 20) $Script:sizeL "490" $VNETSUB.name
+                                        New-ARIDiagramVNETContainer ($Script:vnetLoc + 100) ($Script:vnetLoc1 - 20) $Script:sizeL "490" $VNETSUB.name
                                     }
 
                                 $Script:VNETSquare = ($Script:CellID+'-'+($Script:IDNum-1))
@@ -1214,7 +1218,7 @@ Function Invoke-ARIDiagramNetwork {
                                 $Script:XmlWriter.WriteAttributeString('label', $SubName.name)
                                 $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                                    Icon $IconSubscription $Script:sizeL 460 "67" "40" $Script:ContID
+                                    New-ARIDiagramIcon $IconSubscription $Script:sizeL 460 "67" "40" $Script:ContID
 
                                 $Script:XmlWriter.WriteEndElement()                    
 
@@ -1236,13 +1240,15 @@ Function Invoke-ARIDiagramNetwork {
 
                                         $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                                            Icon $IconCostMGMT ($Script:sizeL + 150) 460 "30" "35" $Script:ContID
+                                            New-ARIDiagramIcon $IconCostMGMT ($Script:sizeL + 150) 460 "30" "35" $Script:ContID
 
                                         $Script:XmlWriter.WriteEndElement()
                                         
                                     }
 
-                                    Subnet ($Script:vnetLoc + 120) $VNETSUB $Script:IDNum $Script:DiagramCache $Script:ContID
+                                    New-ARIDiagramSubnet ($Script:vnetLoc + 120) $VNETSUB $Script:IDNum $Script:DiagramCache $Script:ContID
+
+                                    Start-Sleep -Milliseconds 100
 
                                     $Script:vnetLoc1 = $Script:vnetLoc1 + 230 
 
@@ -1264,11 +1270,11 @@ Function Invoke-ARIDiagramNetwork {
 
                                         $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                                            Icon $IconDet ($Script:sizeL + 500) 225 "42.63" "44" $Script:ContID
+                                            New-ARIDiagramIcon $IconDet ($Script:sizeL + 500) 225 "42.63" "44" $Script:ContID
 
                                         $Script:XmlWriter.WriteEndElement()
-                                        
-                                            Connect ($Script:CellID+'-'+($Script:IDNum-1)) $Script:ContID $Script:ContID
+
+                                            New-ARIDiagramConnection ($Script:CellID+'-'+($Script:IDNum-1)) $Script:ContID $Script:ContID
                                     }  
 
                                 $Script:Alt = $Script:Alt + 650                                                                         
@@ -1281,16 +1287,16 @@ Function Invoke-ARIDiagramNetwork {
                                     {                                        
                                         if('gatewaysubnet' -in $VNETSUB.properties.subnets.name)
                                             {
-                                                HubContainer ($Script:vnetLoc + 100) ($Script:vnetLoc1 - 20) $Script:sizeL "260" $VNETSUB.name
+                                                New-ARIDiagramHubContainer ($Script:vnetLoc + 100) ($Script:vnetLoc1 - 20) $Script:sizeL "260" $VNETSUB.name
                                             }
                                         else
                                             {
-                                                VNETContainer ($Script:vnetLoc + 100) ($Script:vnetLoc1 - 20) $Script:sizeL "260" $VNETSUB.name
+                                                New-ARIDiagramVNETContainer ($Script:vnetLoc + 100) ($Script:vnetLoc1 - 20) $Script:sizeL "260" $VNETSUB.name
                                             }
                                     }
                                 else
                                     {
-                                        BrokenContainer ($Script:vnetLoc + 100) ($Script:vnetLoc1 - 20) "250" "260" 'Broken Peering'
+                                        New-ARIDiagramBrokenContainer ($Script:vnetLoc + 100) ($Script:vnetLoc1 - 20) "250" "260" 'Broken Peering'
                                         $Script:sizeL = '250'
                                     }
 
@@ -1302,7 +1308,7 @@ Function Invoke-ARIDiagramNetwork {
                                 $Script:XmlWriter.WriteAttributeString('label', $SubName.name)
                                 $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                                    Icon $IconSubscription $Script:sizeL 225 "67" "40" $Script:ContID
+                                    New-ARIDiagramIcon $IconSubscription $Script:sizeL 225 "67" "40" $Script:ContID
 
                                 $Script:XmlWriter.WriteEndElement()  
 
@@ -1324,13 +1330,15 @@ Function Invoke-ARIDiagramNetwork {
 
                                         $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                                            Icon $IconCostMGMT ($Script:sizeL + 150) 225 "30" "35" $Script:ContID
+                                            New-ARIDiagramIcon $IconCostMGMT ($Script:sizeL + 150) 225 "30" "35" $Script:ContID
 
                                         $Script:XmlWriter.WriteEndElement()
                                         
                                     }
 
-                                    Subnet ($Script:vnetLoc + 120) $VNETSUB $Script:IDNum $Script:DiagramCache $Script:ContID
+                                    New-ARIDiagramSubnet ($Script:vnetLoc + 120) $VNETSUB $Script:IDNum $Script:DiagramCache $Script:ContID
+
+                                    Start-Sleep -Milliseconds 100
 
                                 if($Script:VNETPIP)
                                     {
@@ -1350,11 +1358,11 @@ Function Invoke-ARIDiagramNetwork {
 
                                         $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                                            Icon $IconDet ($Script:sizeL+ 500) 107 "42.63" "44" $Script:ContID
+                                            New-ARIDiagramIcon $IconDet ($Script:sizeL+ 500) 107 "42.63" "44" $Script:ContID
 
                                         $Script:XmlWriter.WriteEndElement()
-                                        
-                                        Connect ($Script:CellID+'-'+($Script:IDNum-1)) $Script:ContID $Script:ContID
+
+                                            New-ARIDiagramConnection ($Script:CellID+'-'+($Script:IDNum-1)) $Script:ContID $Script:ContID
 
                                     }
 
@@ -1371,27 +1379,27 @@ Function Invoke-ARIDiagramNetwork {
                 }
             $Script:Alt = $Script:vnetLoc1
         }
-        
-        Function Subnet {
+
+        Function New-ARIDiagramSubnet {
             Param($subloc,$VNET,$IDNum,$DiagramCache,$ContID)
-        
+
             $NameString = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
-        
+
             New-Variable -Name ('Run_'+$NameString) -Scope Global
-        
-            Set-Variable -name ('Run_'+$NameString) -Value ([PowerShell]::Create()).AddScript({param($subloc,$VNET,$IDNum,$DiagramCache,$ContID,$Resources)
-            
+
+            Set-Variable -name ('Run_'+$NameString) -Value ([PowerShell]::Create()).AddScript({param($subloc,$VNET,$IDNum,$DiagramCache,$ContID,$Resources,$LogFile)
+
                 $etag = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
                 $DiagID = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
-                $CellID = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
+                $CellID2 = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
 
                 $IDNum++
 
-                $SubFile = ($DiagramCache+$CellID+'.xml')
+                $SubFile = ($DiagramCache+$CellID2+'.xml')
 
                 ###################################################### STENCILS ####################################################
 
-                Function Stensils {
+                Function Publish-ARIDiagramStensils {
                     $Script:Ret = "rounded=0;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;"
                 
                     $Script:IconConnections = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Connections.svg;" #width="68" height="68"
@@ -1454,11 +1462,12 @@ Function Invoke-ARIDiagramNetwork {
                 
                 }
 
-                ####################################################### PROCTYPE ####################################################
+                ####################################################### Subnet Components ####################################################
 
-                Function ProcType {
+                Function Set-ARIDiagramSubnetComponent {
                     Param($sub,$subloc,$Alt0,$ContainerID) 
 
+                        $CellID3 = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
                         $temp = ''
                         remove-variable TrueTemp -ErrorAction SilentlyContinue
                         remove-variable RESNames -ErrorAction SilentlyContinue
@@ -1710,28 +1719,29 @@ Function Invoke-ARIDiagramNetwork {
                         switch ($TrueTemp)
                             {
                                 'Virtual Machine' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding VM: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append
                                                     if($RESNames.count -gt 1)
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' VMs'))                                        
-                                            
+
                                                             $Count = 1
                                                             foreach ($VMName in $RESNames.Name)
                                                             {
                                                                 $Attr1 = ('VirtualMachine-'+[string]("{0:d3}" -f $Count))
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$VMName)
-                    
+
                                                                 $Count ++
                                                             }
                                                             $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconVMs ($subloc+64) ($Alt0+40) "69" "64" $ContainerID
-                                            
+
+                                                                New-ARIDiagramSubnetIcon $IconVMs ($subloc+64) ($Alt0+40) "69" "64" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()  
                                                         }
                                                     else
                                                         {
-                    
+
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', [string]$RESNames.Name)
                                                             $Script:XmlTempWriter.WriteAttributeString('VM_Size', [string]$RESNames.properties.hardwareProfile.vmSize)
@@ -1739,40 +1749,41 @@ Function Invoke-ARIDiagramNetwork {
                                                             $Script:XmlTempWriter.WriteAttributeString('OS_Disk_Size_GB', [string]$RESNames.properties.storageProfile.osDisk.diskSizeGB)
                                                             $Script:XmlTempWriter.WriteAttributeString('Image_Publisher', [string]$RESNames.properties.storageProfile.imageReference.publisher)
                                                             $Script:XmlTempWriter.WriteAttributeString('Image_SKU', [string]$RESNames.properties.storageProfile.imageReference.sku)
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))                        
-                    
-                                                                Icon2 $IconVMs ($subloc+64) ($Alt0+40) "69" "64" $ContainerID
-                                            
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))                        
+
+                                                                New-ARIDiagramSubnetIcon $IconVMs ($subloc+64) ($Alt0+40) "69" "64" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement() 
-                    
+
                                                         }                                                                                                                                    
                                                     }
-                                'AKS' {                                                
+                                'AKS' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding AKS: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append                                         
                                                     if($RESNames.count -gt 1)
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' AKS Clusters'))                                        
-                                            
+
                                                             $Count = 1
                                                             foreach ($AKSName in $RESNames.Name)
                                                             {
                                                                 $Attr1 = ('Kubernetes_Cluster-'+[string]("{0:d3}" -f $Count))
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$AKSName)
-                    
+
                                                                 $Count ++
                                                             }
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconAKS ($subloc+65) ($Alt0+40) "68" "64" $ContainerID
-                                            
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconAKS ($subloc+65) ($Alt0+40) "68" "64" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                                         }
                                                     else 
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', [string]$RESNames.name)                                        
-                                            
+
                                                             $Count = 1
                                                             foreach($Pool in $RESNames.properties.agentPoolProfiles)
                                                             {
@@ -1782,68 +1793,70 @@ Function Invoke-ARIDiagramNetwork {
                                                                 $Attr4 = ('Node_Pool-'+[string]("{0:d3}" -f $Count)+'-Version')
                                                                 $Attr5 = ('Node_Pool-'+[string]("{0:d3}" -f $Count)+'-Mode')
                                                                 $Attr6 = ('Node_Pool-'+[string]("{0:d3}" -f $Count)+'-Max_Pods')
-                    
+
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$Pool.name)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr2, [string]($Pool | Select-Object -Property 'count').count)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr3, [string]$Pool.vmSize)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr4, [string]$Pool.orchestratorVersion)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr5, [string]$Pool.mode)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr6, [string]$Pool.maxPods)
-                    
+
                                                                 $Count ++
                                                             }
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconAKS ($subloc+65) ($Alt0+40) "68" "64" $ContainerID
-                                            
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconAKS ($subloc+65) ($Alt0+40) "68" "64" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                                             }
                                                     }
-                                'virtualMachineScaleSets' {                                                                                  
+                                'virtualMachineScaleSets' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding VMSS: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append                                                                             
                                                     if($RESNames.count -gt 1)
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' Virtual Machine Scale Sets'))                                        
-                                            
+
                                                             $Count = 1
                                                             foreach ($ResName in $RESNames.Name)
                                                             {
                                                                 $Attr1 = ('VMSS-'+[string]("{0:d3}" -f $Count))
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName)
-                    
+
                                                                 $Count ++
                                                             }
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconVMSS ($subloc+65) ($Alt0+40) "68" "68" $ContainerID
-                                            
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconVMSS ($subloc+65) ($Alt0+40) "68" "68" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                                         }
                                                     else
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', [string]$RESNames.name)                                        
-                                            
+
                                                             $Script:XmlTempWriter.WriteAttributeString('VMSS_Name', [string]$RESNames.name)
                                                             $Script:XmlTempWriter.WriteAttributeString('Instances', [string]$temp[0].Count)
                                                             $Script:XmlTempWriter.WriteAttributeString('VMSS_SKU_Tier', [string]$RESNames.sku.tier)
                                                             $Script:XmlTempWriter.WriteAttributeString('VMSS_Upgrade_Policy', [string]$RESNames.Properties.upgradePolicy.mode)
-                    
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconVMSS ($subloc+65) ($Alt0+40) "68" "68" $ContainerID
-                                            
+
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconVMSS ($subloc+65) ($Alt0+40) "68" "68" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
                                                         }                                                                        
                                                     } 
-                                'loadBalancers' {                                                    
+                                'loadBalancers' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Load Balancer: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append                                           
                                                     if($RESNames.count -gt 1)
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' Load Balancers'))                                        
-                                            
+
                                                             $Count = 1
                                                             foreach ($ResName in $RESNames)
                                                             {
@@ -1853,100 +1866,102 @@ Function Invoke-ARIDiagramNetwork {
                                                                 $Attr4 = ('LB-'+[string]("{0:d3}" -f $Count)+'-Frontends')
                                                                 $Attr5 = ('LB-'+[string]("{0:d3}" -f $Count)+'-LB_Rules')
                                                                 $Attr6 = ('LB-'+[string]("{0:d3}" -f $Count)+'-Probes')
-                    
+
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr2, [string]$ResName.sku.name)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr3, [string]$ResName.properties.backendAddressPools.properties.backendIPConfigurations.id.count)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr4, [string]$ResName.properties.frontendIPConfigurations.properties.count)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr5, [string]$ResName.properties.loadBalancingRules.count)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr6, [string]$ResName.properties.probes.count)
-                    
+
                                                                 $Count ++
                                                             }
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconLBs ($subloc+65) ($Alt0+40) "72" "72" $ContainerID
-                                            
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconLBs ($subloc+65) ($Alt0+40) "72" "72" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                                         }
                                                     else 
                                                         {            
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', [string]$RESNames.Name)                                        
-                    
+
                                                             $Script:XmlTempWriter.WriteAttributeString('Load_Balancer_Name', [string]$ResNames.name)
                                                             $Script:XmlTempWriter.WriteAttributeString('Load_Balancer_SKU', [string]$ResNames.sku.name)
                                                             $Script:XmlTempWriter.WriteAttributeString('Backends', [string]$ResNames.properties.backendAddressPools.properties.backendIPConfigurations.id.count)
                                                             $Script:XmlTempWriter.WriteAttributeString('Frontends', [string]$ResNames.properties.frontendIPConfigurations.properties.count)
                                                             $Script:XmlTempWriter.WriteAttributeString('LB_Rules', [string]$ResNames.properties.loadBalancingRules.count)
                                                             $Script:XmlTempWriter.WriteAttributeString('Probes', [string]$ResNames.properties.probes.count)
-                    
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconLBs ($subloc+65) ($Alt0+40) "72" "72" $ContainerID
-                                            
+
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconLBs ($subloc+65) ($Alt0+40) "72" "72" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
                                                             
                                                         }
                                                     } 
-                                'virtualNetworkGateways' {                                                    
+                                'virtualNetworkGateways' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding VPN Gateway: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append                                                 
                                                     if($RESNames.count -gt 1)
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' Virtual Network Gateways'))                                        
-                                            
+
                                                             $Count = 1
                                                             foreach ($ResName in $RESNames)
                                                             {
                                                                 $Attr1 = ('Network_Gateway-'+[string]("{0:d3}" -f $Count)+'-Name')
-                    
+
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
-                    
+
                                                                 $Count ++
                                                             }
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconVGW ($subloc+80) ($Alt0+40) "52" "69" $ContainerID
-                                            
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconVGW ($subloc+80) ($Alt0+40) "52" "69" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                                         }
                                                     else
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', [string]$RESNames.Name)                                        
-                                            
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconVGW ($subloc+80) ($Alt0+40) "52" "69" $ContainerID
-                                            
+
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconVGW ($subloc+80) ($Alt0+40) "52" "69" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
                                                         }                                                                                                         
                                                     } 
-                                'azureFirewalls' {                                                    
+                                'azureFirewalls' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Azure Firewall: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append                                             
                                                     if($RESNames.count -gt 1)
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' Firewalls'))                                        
-                                            
+
                                                             $Count = 1
                                                             foreach ($ResName in $RESNames)
                                                             {
                                                                 $Attr1 = ('Firewall-'+[string]("{0:d3}" -f $Count)+'-Name')
                                                                 $Attr2 = ('Firewall-'+[string]("{0:d3}" -f $Count)+'-SKU')
                                                                 $Attr3 = ('Firewall-'+[string]("{0:d3}" -f $Count)+'-Threat_Intel_Mode')
-                    
+
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr2, [string]$ResName.properties.sku.tier)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr3, [string]$ResName.properties.threatIntelMode)
-                    
+
                                                                 $Count ++
                                                             }
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconFWs ($subloc+65) ($Alt0+40) "71" "60" $ContainerID
-                                            
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconFWs ($subloc+65) ($Alt0+40) "71" "60" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
                                                         }
                                                     else 
@@ -1954,57 +1969,59 @@ Function Invoke-ARIDiagramNetwork {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', [string]$RESNames.name)      
                                                             
-                    
+
                                                             $Script:XmlTempWriter.WriteAttributeString('Firewall_Name', [string]$ResNames.name)
                                                             $Script:XmlTempWriter.WriteAttributeString('SKU_Tier', [string]$ResNames.properties.sku.tier)
                                                             $Script:XmlTempWriter.WriteAttributeString('Threat_Intel_Mode', [string]$ResNames.properties.threatIntelMode)
-                    
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconFWs ($subloc+65) ($Alt0+40) "71" "60" $ContainerID
-                                            
+
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconFWs ($subloc+65) ($Alt0+40) "71" "60" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
                                                         }                                                                
                                                     } 
-                                'privateLinkServices' {                                                    
+                                'privateLinkServices' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding PrivateLink: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append                                                 
                                                     if($RESNames.count -gt 1)
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' Private Endpoints'))                                        
-                                            
+
                                                             $Count = 1
                                                             foreach ($ResName in $RESNames)
                                                             {
                                                                 $Attr1 = ('PVE-'+[string]("{0:d3}" -f $Count)+'-Name')
-                    
+
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
-                    
+
                                                                 $Count ++
                                                             }
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconPVTs ($subloc+65) ($Alt0+40) "72" "66" $ContainerID
-                                            
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconPVTs ($subloc+65) ($Alt0+40) "72" "66" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                                         }
                                                     else
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', [string]$RESNames.Name)                                        
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconPVTs ($subloc+65) ($Alt0+40) "72" "66" $ContainerID
-                                            
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconPVTs ($subloc+65) ($Alt0+40) "72" "66" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
                                                         }                                                                       
                                                     } 
-                                'applicationGateways' {                                                    
+                                'applicationGateways' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding AppGateway: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append                                            
                                                     if($RESNames.count -gt 1)
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' Application Gateways'))                                        
-                                            
+
                                                             $Count = 1
                                                             foreach ($ResName in $RESNames)
                                                             {
@@ -2012,117 +2029,120 @@ Function Invoke-ARIDiagramNetwork {
                                                                 $Attr2 = ('App_Gateway-'+[string]("{0:d3}" -f $Count)+'-SKU')
                                                                 $Attr3 = ('App_Gateway-'+[string]("{0:d3}" -f $Count)+'-Min_Capacity')
                                                                 $Attr4 = ('App_Gateway-'+[string]("{0:d3}" -f $Count)+'-Max_Capacity')
-                    
+
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr2, [string]$RESName.Properties.sku.tier)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr3, [string]$RESName.Properties.autoscaleConfiguration.minCapacity)
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr4, [string]$RESName.Properties.autoscaleConfiguration.maxCapacity)
-                    
+
                                                                 $Count ++
                                                             }
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconAppGWs ($subloc+65) ($Alt0+40) "64" "64" $ContainerID
-                                            
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconAppGWs ($subloc+65) ($Alt0+40) "64" "64" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                                         }
                                                     else
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', [string]$RESNames.Name)                                                            
-                    
+
                                                             $Script:XmlTempWriter.WriteAttributeString('App_Gateway_Name', [string]$ResNames.name)
                                                             $Script:XmlTempWriter.WriteAttributeString('App_Gateway_SKU', [string]$RESNames.Properties.sku.tier)
                                                             $Script:XmlTempWriter.WriteAttributeString('Autoscale_Min_Capacity', [string]$RESNames.Properties.autoscaleConfiguration.minCapacity)
                                                             $Script:XmlTempWriter.WriteAttributeString('Autoscale_Max_Capacity', [string]$RESNames.Properties.autoscaleConfiguration.maxCapacity)
-                    
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconAppGWs ($subloc+65) ($Alt0+40) "64" "64" $ContainerID
-                                            
+
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconAppGWs ($subloc+65) ($Alt0+40) "64" "64" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
                                                         }                                                                                                                                                                             
                                                     }
-                                'bastionHosts' {                                                    
+                                'bastionHosts' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding BastionHost: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append                                               
                                                     if($RESNames.count -gt 1)
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' Bastion Hosts'))                                        
-                                            
+
                                                             $Count = 1
                                                             foreach ($ResName in $RESNames)
                                                             {
                                                                 $Attr1 = ('Bastion-'+[string]("{0:d3}" -f $Count)+'-Name')
-                    
+
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
-                    
+
                                                                 $Count ++
                                                             }
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconBastions ($subloc+65) ($Alt0+40) "68" "67" $ContainerID
-                                            
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconBastions ($subloc+65) ($Alt0+40) "68" "67" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
                                                         }
                                                     else 
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', [string]$RESNames.name)                                                            
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconBastions ($subloc+65) ($Alt0+40) "68" "67" $ContainerID
-                                            
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconBastions ($subloc+65) ($Alt0+40) "68" "67" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                                         }                                                                        
                                                     } 
-                                'APIM' {                                
+                                'APIM' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding APIM: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append
                                                     $Script:XmlTempWriter.WriteStartElement('object')            
                                                     $Script:XmlTempWriter.WriteAttributeString('label', [string]$RESNames.Name)                                                            
-                    
+
                                                     $APIMHost = [string]($RESNames.properties.hostnameConfigurations | Where-Object {$_.defaultSslBinding -eq $true}).hostname
-                    
+
                                                     $Script:XmlTempWriter.WriteAttributeString('APIM_Name', [string]$ResNames.name)
                                                     $Script:XmlTempWriter.WriteAttributeString('SKU', [string]$RESNames.sku.name)
                                                     $Script:XmlTempWriter.WriteAttributeString('VNET_Type', [string]$RESNames.properties.virtualNetworkType)
                                                     $Script:XmlTempWriter.WriteAttributeString('Default_Hostname', $APIMHost)
-                    
-                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                        Icon2 $IconAPIMs ($subloc+65) ($Alt0+40) "65" "60" $ContainerID
-                                    
+
+                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                        New-ARIDiagramSubnetIcon $IconAPIMs ($subloc+65) ($Alt0+40) "65" "60" $ContainerID
+
                                                     $Script:XmlTempWriter.WriteEndElement()
-                                                
+
                                                     }
                                 'App Service' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding App Service: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append
                                                     if($ServiceAppNames)
                                                         {
                                                             if($RESNames.count -gt 1)
                                                                 {
                                                                     $Script:XmlTempWriter.WriteStartElement('object')            
                                                                     $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' App Services'))                                        
-                                                    
+
                                                                     $Count = 1
                                                                     foreach ($ResName in $RESNames)
                                                                     {
                                                                         $Attr1 = ('AppService-'+[string]("{0:d3}" -f $Count)+'-Name')
-                            
+
                                                                         $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
-                            
+
                                                                         $Count ++
                                                                     }
-                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                            
-                                                                        Icon2 $IconAPPs ($subloc+65) ($Alt0+40) "64" "64" $ContainerID
-                                                    
+                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                        New-ARIDiagramSubnetIcon $IconAPPs ($subloc+65) ($Alt0+40) "64" "64" $ContainerID
+
                                                                     $Script:XmlTempWriter.WriteEndElement()
                                                                 }
                                                             else
                                                                 {
                                                                     $Script:XmlTempWriter.WriteStartElement('object')            
                                                                     $Script:XmlTempWriter.WriteAttributeString('label', [string]$ResNames.name)                                                                        
-                            
+
                                                                     $Script:XmlTempWriter.WriteAttributeString('App_Name', [string]$ResNames.name)
                                                                     $Script:XmlTempWriter.WriteAttributeString('Default_Hostname', [string]$RESNames.properties.defaultHostName)
                                                                     $Script:XmlTempWriter.WriteAttributeString('Enabled', [string]$RESNames.properties.enabled)
@@ -2133,44 +2153,44 @@ Function Invoke-ARIDiagramNetwork {
                                                                     $Script:XmlTempWriter.WriteAttributeString('Workers', [string]$RESNames.properties.siteConfig.numberOfWorkers)
                                                                     $Script:XmlTempWriter.WriteAttributeString('Min_Workers', [string]$RESNames.properties.siteConfig.minimumElasticInstanceCount)
                                                                     $Script:XmlTempWriter.WriteAttributeString('Site_Properties', [string]$RESNames.properties.siteProperties.properties.value)
-                    
-                    
-                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                            
-                                                                        Icon2 $IconAPPs ($subloc+65) ($Alt0+40) "64" "64" $ContainerID
-                                                    
+
+                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                        New-ARIDiagramSubnetIcon $IconAPPs ($subloc+65) ($Alt0+40) "64" "64" $ContainerID
+
                                                                     $Script:XmlTempWriter.WriteEndElement()
                                                                 }
                                                         }                                                                                                                                  
                                                     }
-                                'Function App' {    
+                                'Function App' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Function App: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append
                                                     if($FuntionAppNames)
                                                         {                                                
                                                             if($RESNames.count -gt 1)
                                                                 {
                                                                     $Script:XmlTempWriter.WriteStartElement('object')            
                                                                     $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' Function Apps'))                                        
-                                                    
+
                                                                     $Count = 1
                                                                     foreach ($ResName in $RESNames)
                                                                     {
                                                                         $Attr1 = ('FunctionApp-'+[string]("{0:d3}" -f $Count)+'-Name')
-                            
+
                                                                         $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
-                            
+
                                                                         $Count ++
                                                                     }
-                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                            
-                                                                        Icon2 $IconFunApps ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
-                                                    
+                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                        New-ARIDiagramSubnetIcon $IconFunApps ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
+
                                                                     $Script:XmlTempWriter.WriteEndElement()
                                                                 }
                                                             else
                                                                 {
                                                                     $Script:XmlTempWriter.WriteStartElement('object')            
                                                                     $Script:XmlTempWriter.WriteAttributeString('label', [string]$ResNames.name)                                                                        
-                            
+
                                                                     $Script:XmlTempWriter.WriteAttributeString('App_Name', [string]$ResNames.name)
                                                                     $Script:XmlTempWriter.WriteAttributeString('Default_Hostname', [string]$RESNames.properties.defaultHostName)
                                                                     $Script:XmlTempWriter.WriteAttributeString('Enabled', [string]$RESNames.properties.enabled)
@@ -2181,44 +2201,45 @@ Function Invoke-ARIDiagramNetwork {
                                                                     $Script:XmlTempWriter.WriteAttributeString('Workers', [string]$RESNames.properties.siteConfig.numberOfWorkers)
                                                                     $Script:XmlTempWriter.WriteAttributeString('Min_Workers', [string]$RESNames.properties.siteConfig.minimumElasticInstanceCount)
                                                                     $Script:XmlTempWriter.WriteAttributeString('Site_Properties', [string]$RESNames.properties.siteProperties.properties.value)
-                    
-                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                            
-                                                                        Icon2 $IconFunApps ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
-                                                    
+
+                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                        New-ARIDiagramSubnetIcon $IconFunApps ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
+
                                                                     $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                                                 }
                                                         }
                                                     }
-                                'DataBricks' {      
+                                'DataBricks' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Databricks: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append
                                                     if($DatabriksNames)
                                                         {                                              
                                                         if($RESNames.count -gt 1)
                                                             {
                                                                 $Script:XmlTempWriter.WriteStartElement('object')            
                                                                 $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' Databricks'))                                        
-                                                
+
                                                                 $Count = 1
                                                                 foreach ($ResName in $RESNames)
                                                                 {
                                                                     $Attr1 = ('Databrick-'+[string]("{0:d3}" -f $Count)+'-Name')
-                        
+
                                                                     $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
-                        
+
                                                                     $Count ++
                                                                 }
-                                                                $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                        
-                                                                    Icon2 $IconBricks ($subloc+65) ($Alt0+40) "60" "68" $ContainerID
-                                                
+                                                                $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                    New-ARIDiagramSubnetIcon $IconBricks ($subloc+65) ($Alt0+40) "60" "68" $ContainerID
+
                                                                 $Script:XmlTempWriter.WriteEndElement()
                                                             }
                                                         else
                                                             {
                                                                 $Script:XmlTempWriter.WriteStartElement('object')            
                                                                 $Script:XmlTempWriter.WriteAttributeString('label', [string]$RESNames.Name)                                                                
-                        
+
                                                                 $Script:XmlTempWriter.WriteAttributeString('Databrick_Name', [string]$ResNames.name)
                                                                 $Script:XmlTempWriter.WriteAttributeString('Workspace_URL', [string]$RESNames.properties.workspaceUrl )
                                                                 $Script:XmlTempWriter.WriteAttributeString('Pricing_Tier', [string]$RESNames.sku.name)
@@ -2227,114 +2248,117 @@ Function Invoke-ARIDiagramNetwork {
                                                                 $Script:XmlTempWriter.WriteAttributeString('Relay_Namespace', [string]$RESNames.properties.parameters.relayNamespaceName.value)
                                                                 $Script:XmlTempWriter.WriteAttributeString('Require_Infrastructure_Encryption', [string]$RESNames.properties.parameters.requireInfrastructureEncryption.value)
                                                                 $Script:XmlTempWriter.WriteAttributeString('Enable_Public_IP', [string]$RESNames.properties.parameters.enableNoPublicIp.value)
-                        
-                                                                $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                        
-                                                                    Icon2 $IconBricks ($subloc+65) ($Alt0+40) "60" "68" $ContainerID
-                                                
+
+                                                                $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                    New-ARIDiagramSubnetIcon $IconBricks ($subloc+65) ($Alt0+40) "60" "68" $ContainerID
+
                                                                 $Script:XmlTempWriter.WriteEndElement()
                                                             }                                                                                               
                                                         }
                                                     }
-                                'Open Shift' {        
+                                'Open Shift' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding OpenShift: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append
                                                     if($ARONames)
                                                         {
                                                             if($RESNames.count -gt 1)
                                                                 {
                                                                     $Script:XmlTempWriter.WriteStartElement('object')            
                                                                     $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' OpenShift Clusters'))                                        
-                                                    
+
                                                                     $Count = 1
                                                                     foreach ($ResName in $RESNames)
                                                                     {
                                                                         $Attr1 = ('OpenShift_Cluster-'+[string]("{0:d3}" -f $Count)+'-Name')
-                            
+
                                                                         $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
-                            
+
                                                                         $Count ++
                                                                     }
-                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                            
-                                                                        Icon2 $IconARO ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
-                    
+                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                        New-ARIDiagramSubnetIcon $IconARO ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
+
                                                                     $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                                                 }
                                                             else
                                                                 {
                                                                     $Script:XmlTempWriter.WriteStartElement('object')            
                                                                     $Script:XmlTempWriter.WriteAttributeString('label', [string]$RESNames.Name)                                                                    
-                    
+
                                                                     $Script:XmlTempWriter.WriteAttributeString('ARO_Name', [string]$ResNames.name)
                                                                     $Script:XmlTempWriter.WriteAttributeString('OpenShift_Version', [string]$RESNames.properties.clusterProfile.version)
                                                                     $Script:XmlTempWriter.WriteAttributeString('OpenShift_Console', [string]$RESNames.properties.consoleProfile.url)
                                                                     $Script:XmlTempWriter.WriteAttributeString('Worker_VM_Count', [string]$RESNames.properties.workerprofiles.Count)
                                                                     $Script:XmlTempWriter.WriteAttributeString('Worker_VM_Size', [string]$RESNames.properties.workerprofiles.vmSize[0])
-                    
-                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                        Icon2 $IconARO ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
-                    
+
+                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                        New-ARIDiagramSubnetIcon $IconARO ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
+
                                                                     $Script:XmlTempWriter.WriteEndElement()
                                                                 }
                                                         }                                                                                               
                                                     }
                                 'Container Instance'  {
+                                                        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Container Instance: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append
                                                         if($ContainerNames)
                                                             {                                                                                                
                                                                 if($RESNames.count -gt 1)
                                                                     {
                                                                         $Script:XmlTempWriter.WriteStartElement('object')            
                                                                         $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' Container Intances'))                                        
-                    
+
                                                                         $Count = 1
                                                                         foreach ($ResName in $RESNames)
                                                                         {
                                                                             $Attr1 = ('Container_Intance-'+[string]("{0:d3}" -f $Count)+'-Name')
-                    
+
                                                                             $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
-                                
+
                                                                             $Count ++
                                                                         }
-                                                                        $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                                
-                                                                            Icon2 $IconContain ($subloc+65) ($Alt0+40) "64" "68" $ContainerID
-                                                        
+                                                                        $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                            New-ARIDiagramSubnetIcon $IconContain ($subloc+65) ($Alt0+40) "64" "68" $ContainerID
+
                                                                         $Script:XmlTempWriter.WriteEndElement()
                                                                     }
                                                                 else
                                                                     {
                                                                         $Script:XmlTempWriter.WriteStartElement('object')            
                                                                         $Script:XmlTempWriter.WriteAttributeString('label', [string]$RESNames.Name)                                        
-                                                                        $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                                
-                                                                            Icon2 $IconContain ($subloc+65) ($Alt0+40) "64" "68" $ContainerID
-                                                        
+                                                                        $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                            New-ARIDiagramSubnetIcon $IconContain ($subloc+65) ($Alt0+40) "64" "68" $ContainerID
+
                                                                         $Script:XmlTempWriter.WriteEndElement()
                                                                     }
                                                             }                                                                                               
                                                     }
                                 'NetApp' {          
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding ANF: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append
                                                     if($NetAppNames)
                                                         {                                          
                                                             if($RESNames.count -gt 1)
                                                                 {
                                                                     $Script:XmlTempWriter.WriteStartElement('object')            
                                                                     $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' NetApp Volumes'))                                        
-                                                    
+
                                                                     $Count = 1
                                                                     foreach ($ResName in $RESNames)
                                                                     {
                                                                         $Attr1 = ('NetApp_Volume-'+[string]("{0:d3}" -f $Count))
-                            
+
                                                                         $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
-                            
+
                                                                         $Count ++
                                                                     }
-                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                            
-                                                                        Icon2 $IconNetApp ($subloc+65) ($Alt0+40) "65" "52" $ContainerID
-                                                    
+                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                        New-ARIDiagramSubnetIcon $IconNetApp ($subloc+65) ($Alt0+40) "65" "52" $ContainerID
+
                                                                     $Script:XmlTempWriter.WriteEndElement()
                                                                 }
                                                             else
@@ -2342,36 +2366,37 @@ Function Invoke-ARIDiagramNetwork {
                                                                     $Script:XmlTempWriter.WriteStartElement('object')            
                                                                     $Script:XmlTempWriter.WriteAttributeString('label', ([string]1+' NetApp Volume'))                                                                        
                                                                     $Script:XmlTempWriter.WriteAttributeString('NetApp_Volume_Name', [string]$ResName.name)
-                    
-                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                            
-                                                                        Icon2 $IconNetApp ($subloc+65) ($Alt0+40) "65" "52" $ContainerID
-                                                    
+
+                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                        New-ARIDiagramSubnetIcon $IconNetApp ($subloc+65) ($Alt0+40) "65" "52" $ContainerID
+
                                                                     $Script:XmlTempWriter.WriteEndElement()
                                                                 }
                                                         }                                                                   
                                                     }
-                                'Data Explorer Clusters' {  
+                                'Data Explorer Clusters' {
+                                                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Data Explorer Cluster: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append
                                                             if($RESNames.count -gt 1)
                                                                 {
                                                                     $Script:XmlTempWriter.WriteStartElement('object')            
                                                                     $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' Data Explorer Clusters'))                                        
-                                                    
+
                                                                     $Count = 1
                                                                     foreach ($ResName in $RESNames)
                                                                     {
                                                                         $Attr1 = ('Data_Cluster-'+[string]("{0:d3}" -f $Count)+'-Name')
-                            
+
                                                                         $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
-                            
+
                                                                         $Count ++
                                                                     }
-                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                            
-                                                                        Icon2 $IconDataExplorer ($subloc+65) ($Alt0+40) "68" "68" $ContainerID
-                                                    
+                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                        New-ARIDiagramSubnetIcon $IconDataExplorer ($subloc+65) ($Alt0+40) "68" "68" $ContainerID
+
                                                                     $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                                                 }
                                                             else
                                                                 {
@@ -2383,49 +2408,50 @@ Function Invoke-ARIDiagramNetwork {
                                                                     $Script:XmlTempWriter.WriteAttributeString('SKU_Tier', [string]$ResNames.name)
                                                                     $Script:XmlTempWriter.WriteAttributeString('Computer_Specifications', [string]$ResNames.name)
                                                                     $Script:XmlTempWriter.WriteAttributeString('AutoScale_Enabled', [string]$ResNames.name)
-                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                            
-                                                                        Icon2 $IconDataExplorer ($subloc+65) ($Alt0+40) "68" "68" $ContainerID
-                                                    
+                                                                    $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                        New-ARIDiagramSubnetIcon $IconDataExplorer ($subloc+65) ($Alt0+40) "68" "68" $ContainerID
+
                                                                     $Script:XmlTempWriter.WriteEndElement()
                                                                 }                                                               
                                                     } 
-                                'Network Interface' {                                                    
+                                'Network Interface' {
+                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding NIC: " + $CellID3+'-1') | Out-File -FilePath $LogFile -Append
                                                     if($RESNames.count -gt 1)
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', ([string]$RESNames.Count + ' Network Interfaces'))                                        
-                                            
+
                                                             $Count = 1
                                                             foreach ($ResName in $RESNames)
                                                             {
                                                                 $Attr1 = ('NIC-'+[string]("{0:d3}" -f $Count)+'-Name')
-                    
+
                                                                 $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
-                    
+
                                                                 $Count ++
                                                             }
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconNIC ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
-                                            
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconNIC ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                                         }
                                                     else
                                                         {
                                                             $Script:XmlTempWriter.WriteStartElement('object')            
                                                             $Script:XmlTempWriter.WriteAttributeString('label', ([string]1+' Network Interface'))                                        
-                                            
+
                                                             $Attr1 = ('NIC-Name')
                                                             $Script:XmlTempWriter.WriteAttributeString($Attr1, [string]$ResName.name)
-                    
-                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                                                Icon2 $IconNIC ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
-                                            
+
+                                                            $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
+
+                                                                New-ARIDiagramSubnetIcon $IconNIC ($subloc+65) ($Alt0+40) "68" "60" $ContainerID
+
                                                             $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                                         }                                                                
                                                     }                                                                                                                                                                            
                                 '' {('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Not Adding ProcType: " + 'Blank Resource Type Name') | Out-File -FilePath $LogFile -Append}
@@ -2437,10 +2463,11 @@ Function Invoke-ARIDiagramNetwork {
                                     $Script:XmlTempWriter.WriteStartElement('object')            
                                     $Script:XmlTempWriter.WriteAttributeString('label', '')                                        
                                     $Script:XmlTempWriter.WriteAttributeString('Network_Security_Group', [string]$NSG)
-                                    $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                        Icon2 $IconNSG ($subloc+160) ($Alt0+15) "26.35" "32" $ContainerID
-                    
+                                    $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-2'))
+
+                                        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding NSG: " + $CellID3+'-2') | Out-File -FilePath $LogFile -Append
+                                        New-ARIDiagramSubnetIcon $IconNSG ($subloc+160) ($Alt0+15) "26.35" "32" $ContainerID
+
                                     $Script:XmlTempWriter.WriteEndElement()  
                                 }
                             if($sub.properties.routeTable.id)
@@ -2449,12 +2476,13 @@ Function Invoke-ARIDiagramNetwork {
                                     $Script:XmlTempWriter.WriteStartElement('object')            
                                     $Script:XmlTempWriter.WriteAttributeString('label', '')                                        
                                     $Script:XmlTempWriter.WriteAttributeString('Route_Table', [string]$UDR)
-                                    $Script:XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-                    
-                                        Icon2 $IconUDR ($subloc+15) ($Alt0+15) "30.97" "30" $ContainerID
-                    
+                                    $Script:XmlTempWriter.WriteAttributeString('id', ($CellID3+'-3'))
+
+                                        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding UDR: " + $CellID3+'-3') | Out-File -FilePath $LogFile -Append
+                                        New-ARIDiagramSubnetIcon $IconUDR ($subloc+15) ($Alt0+15) "30.97" "30" $ContainerID
+
                                     $Script:XmlTempWriter.WriteEndElement()
-                    
+
                                 }
                             if($sub.properties.ipconfigurations.id)
                                 {
@@ -2467,7 +2495,7 @@ Function Invoke-ARIDiagramNetwork {
 
                 ######################################################### ICON #######################################################
 
-                Function Icon2 {    
+                Function New-ARIDiagramSubnetIcon {    
                     Param($Style,$x,$y,$w,$h,$p)
                     
                         $Script:XmlTempWriter.WriteStartElement('mxCell')
@@ -2488,7 +2516,7 @@ Function Invoke-ARIDiagramNetwork {
 
                 ######################################################## SUBNET #######################################################
 
-                Stensils
+                Publish-ARIDiagramStensils
 
                 $Script:XmlTempWriter = New-Object System.XMl.XmlTextWriter($SubFile,$Null)
 
@@ -2551,6 +2579,7 @@ Function Invoke-ARIDiagramNetwork {
                                             $Script:VNETPIP = @()
                                             foreach($Sub in $VNET.properties.subnets)
                                             {
+                                                $IDNum++
                                                 if ($SubC -eq $sizeC) 
                                                 {
                                                     $Alt1 = $Alt1 + 230
@@ -2558,15 +2587,18 @@ Function Invoke-ARIDiagramNetwork {
                                                     $SubC = 0
                                                 }
 
+                                                $LoggingSubnetName = $sub.Name
+                                                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Subnet ($LoggingSubnetName): " + $CellID2+'-'+$IDNum) | Out-File -FilePath $LogFile -Append
+
                                                 $Script:XmlTempWriter.WriteStartElement('object')            
                                                 $Script:XmlTempWriter.WriteAttributeString('label', ("`n" + "`n" + "`n" + "`n" + "`n" + "`n" +[string]$sub.Name + "`n" + [string]$sub.properties.addressPrefix))
-                                                $Script:XmlTempWriter.WriteAttributeString('id', ($CellID+'-'+($IDNum++)))
+                                                $Script:XmlTempWriter.WriteAttributeString('id', ($CellID2+'-'+$IDNum))
 
-                                                    Icon2 "rounded=0;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;" $subloc0 $Alt1 "200" "200" $ContID
+                                                    New-ARIDiagramSubnetIcon "rounded=0;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;" $subloc0 $Alt1 "200" "200" $ContID
 
                                                 $Script:XmlTempWriter.WriteEndElement()      
-                                                
-                                                    ProcType $sub $subloc0 $Alt1 $ContID               
+
+                                                    Set-ARIDiagramSubnetComponent $sub $subloc0 $Alt1 $ContID               
 
                                                 $subloc = $subloc + 210
                                                 $subloc0 = $subloc0 + 210
@@ -2581,15 +2613,20 @@ Function Invoke-ARIDiagramNetwork {
                                             $Script:VNETPIP = @()
                                             foreach($Sub in $VNET.properties.subnets)
                                             {
+                                                $IDNum++
+                                                $LoggingSubnetName = $sub.Name
+                                                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Subnet ($LoggingSubnetName): " + $CellID2+'-'+$IDNum) | Out-File -FilePath $LogFile -Append
+
+
                                                 $Script:XmlTempWriter.WriteStartElement('object')            
                                                 $Script:XmlTempWriter.WriteAttributeString('label', ("`n" + "`n" + "`n" + "`n" + "`n" + "`n" +[string]$sub.Name + "`n" + [string]$sub.properties.addressPrefix))
-                                                $Script:XmlTempWriter.WriteAttributeString('id', ($CellID+'-'+($IDNum++)))
+                                                $Script:XmlTempWriter.WriteAttributeString('id', ($CellID2+'-'+$IDNum))
 
-                                                    Icon2 "rounded=0;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;" $subloc0 40 "200" "200" $ContID
+                                                    New-ARIDiagramSubnetIcon "rounded=0;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;" $subloc0 40 "200" "200" $ContID
 
                                                 $Script:XmlTempWriter.WriteEndElement()  
 
-                                                    ProcType $sub $subloc0 40 $ContID              
+                                                    Set-ARIDiagramSubnetComponent $sub $subloc0 40 $ContID              
 
                                                 $subloc = $subloc + 210
                                                 $subloc0 = $subloc0 + 210
@@ -2607,7 +2644,7 @@ Function Invoke-ARIDiagramNetwork {
                     $Script:XmlTempWriter.Flush()
                     $Script:XmlTempWriter.Close() 
 
-            }).AddArgument($subloc).AddArgument($VNET).AddArgument($IDNum).AddArgument($DiagramCache).AddArgument($ContID).AddArgument($Resources)
+            }).AddArgument($subloc).AddArgument($VNET).AddArgument($IDNum).AddArgument($DiagramCache).AddArgument($ContID).AddArgument($Resources).AddArgument($LogFile)
         
             New-Variable -Name ('Job_'+$NameString) -Scope Global
         
@@ -2624,11 +2661,11 @@ Function Invoke-ARIDiagramNetwork {
         
             #while ($Job.Runspace.IsCompleted -contains $false) {}
         
-            KillJobs
+            Remove-ARIDiagramJob
         
         }
-        
-        Function KillJobs {
+
+        Function Remove-ARIDiagramJob {
         
             foreach($job in $Script:jobs)
             {
@@ -2643,78 +2680,15 @@ Function Invoke-ARIDiagramNetwork {
         }
 
         <# Function to create the Label of Version #>
-        Function label {
+        Function Set-ARIDiagramLabel {
+            $Date = get-date -Format "yyyy-MM-dd_HH_mm"
             $Script:XmlWriter.WriteStartElement('object')            
-            $Script:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v3.5'+ "`n" +'https://github.com/microsoft/ARI'))
+            $Script:XmlWriter.WriteAttributeString('label', ('Powered by:'+ "`n" +'Azure Resource Inventory v3.5'+ "`n" +'https://github.com/microsoft/ARI' + "`n" +'Date:' + "`n" + $Date))
             $Script:XmlWriter.WriteAttributeString('author', 'Claudio Merola')
             $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
         }
 
-        Function Icon {    
-        Param($Style,$x,$y,$w,$h,$p)
-        
-            $Script:XmlWriter.WriteStartElement('mxCell')
-            $Script:XmlWriter.WriteAttributeString('style', $Style)
-            $Script:XmlWriter.WriteAttributeString('vertex', "1")
-            $Script:XmlWriter.WriteAttributeString('parent', $p)
-        
-                $Script:XmlWriter.WriteStartElement('mxGeometry')
-                $Script:XmlWriter.WriteAttributeString('x', $x)
-                $Script:XmlWriter.WriteAttributeString('y', $y)
-                $Script:XmlWriter.WriteAttributeString('width', $w)
-                $Script:XmlWriter.WriteAttributeString('height', $h)
-                $Script:XmlWriter.WriteAttributeString('as', "geometry")
-                $Script:XmlWriter.WriteEndElement()
-            
-            $Script:XmlWriter.WriteEndElement()
-        }
-
-        Function Container {
-            Param($x,$y,$w,$h,$title)
-                $Script:ContID = (-join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})+'-'+1)
-        
-                $Script:XmlWriter.WriteStartElement('mxCell')
-                $Script:XmlWriter.WriteAttributeString('id', $Script:ContID)
-                $Script:XmlWriter.WriteAttributeString('value', "$title")
-                $Script:XmlWriter.WriteAttributeString('style', "swimlane")
-                $Script:XmlWriter.WriteAttributeString('vertex', "1")
-                $Script:XmlWriter.WriteAttributeString('parent', "1")
-            
-                    $Script:XmlWriter.WriteStartElement('mxGeometry')
-                    $Script:XmlWriter.WriteAttributeString('x', $x)
-                    $Script:XmlWriter.WriteAttributeString('y', $y)
-                    $Script:XmlWriter.WriteAttributeString('width', $w)
-                    $Script:XmlWriter.WriteAttributeString('height', $h)
-                    $Script:XmlWriter.WriteAttributeString('as', "geometry")
-                    $Script:XmlWriter.WriteEndElement()
-                
-                $Script:XmlWriter.WriteEndElement()
-        }
-
-        Function Connect {
-        Param($Source,$Target,$Parent)
-        
-            if($Parent){$Parent = $Parent}else{$Parent = 1}
-        
-            $Script:XmlWriter.WriteStartElement('mxCell')
-            $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-            $Script:XmlWriter.WriteAttributeString('style', "edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;")
-            $Script:XmlWriter.WriteAttributeString('edge', "1")
-            $Script:XmlWriter.WriteAttributeString('vertex', "1")
-            $Script:XmlWriter.WriteAttributeString('parent', $Parent)
-            $Script:XmlWriter.WriteAttributeString('source', $Source)
-            $Script:XmlWriter.WriteAttributeString('target', $Target)
-        
-                $Script:XmlWriter.WriteStartElement('mxGeometry')
-                $Script:XmlWriter.WriteAttributeString('relative', "1")
-                $Script:XmlWriter.WriteAttributeString('as', "geometry")
-                $Script:XmlWriter.WriteEndElement()
-            
-            $Script:XmlWriter.WriteEndElement()
-        
-        }
-
-        Function Variables0 {
+        Function Start-ARIDiagramJob {
             Start-Job -Name 'DiagramVariables' -ScriptBlock {
                 $job = @()                
 
@@ -2909,13 +2883,15 @@ Function Invoke-ARIDiagramNetwork {
             {
                 if($SubFile.FullName -notin $XMLFiles)
                         {
+                            $LogSubFile = $SubFile.FullName
+                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Removing File: ' + $LogSubFile) | Out-File -FilePath $LogFile -Append 
                             Remove-Item -Path $SubFile.FullName
                         }
             }
         
-        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Variables0 Function') | Out-File -FilePath $LogFile -Append 
+        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Start-ARIDiagramJob Function') | Out-File -FilePath $LogFile -Append 
 
-        Variables0
+        Start-ARIDiagramJob
 
         ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting Variables Job to complete') | Out-File -FilePath $LogFile -Append 
 
@@ -3013,24 +2989,24 @@ Function Invoke-ARIDiagramNetwork {
 
                         ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Stensils') | Out-File -FilePath $LogFile -Append 
 
-                            Stensils
+                            Publish-ARIDiagramStensils
 
                             if($AZLGWs -or $AZEXPROUTEs -or $AZVERs -or $AZVPNSITES)
                                 {
                                     ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling OnPremNet') | Out-File -FilePath $LogFile -Append 
 
-                                    OnPremNet
+                                    Invoke-ARIDiagramOnPremNetwork
                                     if($Script:FullEnvironment)
                                         {
                                             ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling as FullEnvironment') | Out-File -FilePath $LogFile -Append 
 
-                                            FullEnvironment
+                                            Invoke-ARIDiagramFullEnvironment
                                         }
                                 }
                             else
                                 {
                                     ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling CloudOnly Function') | Out-File -FilePath $LogFile -Append
-                                    CloudOnly
+                                    Invoke-ARIDiagramCloudOnly
                                 }
 
 
@@ -3060,6 +3036,9 @@ Function Invoke-ARIDiagramNetwork {
                         {
                             $newxml = New-Object XML
                             $newxml.Load($SubFile.FullName)
+
+                            $LogSubFile = $SubFile.FullName
+                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Processing Subnet File: ' + $LogSubFile) | Out-File -FilePath $LogFile -Append 
 
                             $Innerxml = $newxml.mxfile.diagram.mxGraphModel.root.InnerXml
 
