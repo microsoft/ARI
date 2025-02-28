@@ -1,145 +1,182 @@
-# How to run Azure Resource Inventory
+# Azure Resource Inventory User Guide
 
-<br/>
+<div align="center">
+  <img src="images/ARI_Logo.png" width="250">
+  <h3>How to install, configure, and use ARI</h3>
+</div>
 
-## Installing ARI
----------------------
+## Table of Contents
+- [Installation](#installation)
+- [Basic Usage](#basic-usage)
+- [Command Reference](#command-reference)
+  - [Common Parameters](#common-parameters)
+  - [Common Scenarios](#common-scenarios)
+- [Multi-Tenant Support](#multi-tenant-support)
+- [Working with Network Diagrams](#working-with-network-diagrams)
 
-```
+## Installation
+
+ARI is available as a PowerShell module that can be installed directly from the PowerShell Gallery:
+
+```powershell
 Install-Module -Name AzureResourceInventory
 ```
 
-<br/>
-
 <p align="center">
-<img src="images/InstallARI.gif">
+  <img src="images/InstallARI.gif" width="700" style="border: 1px solid #ccc;">
 </p>
 
-<br/>
+## Basic Usage
 
-## Running ARI
----------------------
+Once installed, you can run ARI with a simple command:
 
-To run the script just execute "Invoke-ARI" with the regular parameters:
-
-```
-Invoke-ARI 
+```powershell
+Invoke-ARI
 ```
 
-<br/>
+This will authenticate you to Azure and begin collecting inventory data from all accessible subscriptions.
 
 <p align="center">
-<img src="images/RunningARI.gif">
+  <img src="images/RunningARI.gif" width="700" style="border: 1px solid #ccc;">
 </p>
 
-<br/>
+## Command Reference
 
-### Parameters
----------------------
+### Common Parameters
 
-| Parameter              | Description                                                                                                 |                            |
-|------------------------|-------------------------------------------------------------------------------------------------------------|----------------------------|
-| TenantID               | Specify the tenant ID you want to create a Resource Inventory.                                              | `-TenantID <ID>`           |
-| SubscriptionID         | Specifies Subscription(s) to be inventoried.                                                                | `-SubscriptionID <ID>`     |
-| ManagementGroup        | Specifies the Management Group to be inventoried(all Subscriptions on it)                                   | `-ManagementGroup <ID>`    |  
-| Lite                   | Specifies to use only the Import-Excel module and don't create the charts (using Excel's API)               | `-Lite`                    |
-| SecurityCenter         | Include Security Center Data.                                                                               | `-SecurityCenter`          |
-| SkipAdvisory           | Do not collect Azure Advisory.                                                                              | `-SkipAdvisory`            |
-| Automation             | Required when running the script with Automation Account                                                    | `-Automation`              |
-| StorageAccount         | Storage Account Name (Required when running the script with Automation Account)                             | `-StorageAccount`          |
-| StorageContainer       | Storage Account Container Name (Required when running the script with Automation Account)                   | `-StorageContainer`        |
-| IncludeTags            | Include Resource Tags.                                                                                      | `-IncludeTags`             |
-| Debug                  | Run in a Debug mode.                                                                                        | `-Debug`                   |
-| DiagramFullEnvironment | Network Diagram of the entire environment                                                                   | `-DiagramFullEnvironment`  |
-| Diagram                | Create a Draw.IO Diagram.                                                                                   | `-Diagram`                 |
-| SkipDiagram            | To skip the diagrams creation                                                                               | `-SkipDiagram`             |
-| DeviceLogin            | Authenticating on Azure using the Device login approach                                                     | `-DeviceLogin`             |
-| AzureEnvironment       | Choose between Azure environments <br> > Registered Azure Clouds. Use `az cloud list` to get the list       | `-AzureEnvironment <NAME>` |
-| ReportName             | Change the Default Name of the report. `Default name: AzureResourceInventory`                               | `-ReportName <NAME>`       |
-| ReportDir              | Change the Default path of the report.                                                                      | `-ReportDir "<Path>"`      |
-| Online                 | Use Online Modules. Scan Modules diretly in GitHub ARI Repository                                           | `-Online`                  |
-| ResourceGroup          | Specifies one unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. | `-ResourceGroup <NAME>`    |
-| TagKey                 | Specifies the tag key to be inventoried, This parameter requires the `-SubscriptionID` to work.             | `-TagKey <NAME>`           |
-| TagValue               | Specifies the tag value be inventoried, This parameter requires the `-SubscriptionID` to work.              | `-TagValue <NAME>`         |
-| QuotaUsage             | Quota Usage                                                                                                 | `-QuotaUsage`              |
+| Parameter | Description | Usage | Category |
+|-----------|-------------|-------|----------|
+| **Core Parameters** |  |  |  |
+| TenantID | Specify the tenant ID for inventory | `-TenantID <ID>` | Scope |
+| SubscriptionID | Specify subscription(s) to inventory | `-SubscriptionID <ID>` | Scope |
+| ResourceGroup | Specify resource group(s) to inventory | `-ResourceGroup <NAME>` | Scope |
+| ManagementGroup | Inventory all subscriptions in a management group | `-ManagementGroup <ID>` | Scope |
+| **Data Collection** |  |  |  |
+| IncludeTags | Include resource tags | `-IncludeTags` | Content |
+| SecurityCenter | Include Security Center data | `-SecurityCenter` | Content |
+| SkipAdvisory | Skip Azure Advisory collection | `-SkipAdvisory` | Content |
+| QuotaUsage | Include quota usage information | `-QuotaUsage` | Content |
+| **Authentication** |  |  |  |
+| DeviceLogin | Use device login authentication | `-DeviceLogin` | Auth |
+| AzureEnvironment | Specify Azure cloud environment | `-AzureEnvironment <NAME>` | Auth |
+| **Report Options** |  |  |  |
+| ReportName | Custom report filename | `-ReportName <NAME>` | Output |
+| ReportDir | Custom directory for report | `-ReportDir "<Path>"` | Output |
+| Lite | Lightweight Excel (no charts) | `-Lite` | Output |
+| Online | Use online modules from GitHub | `-Online` | Config |
+| **Diagram Options** |  |  |  |
+| Diagram | Create Draw.IO diagram | `-Diagram` | Diagram |
+| SkipDiagram | Skip diagram creation | `-SkipDiagram` | Diagram |
+| DiagramFullEnvironment | Include all network components | `-DiagramFullEnvironment` | Diagram |
+| **Automation** |  |  |  |
+| Automation | Run using Automation Account | `-Automation` | Automation |
+| StorageAccount | Storage account for automation | `-StorageAccount` | Automation |
+| StorageContainer | Container for automation output | `-StorageContainer` | Automation |
+| **Other** |  |  |  |
+| Debug | Run in debug mode | `-Debug` | Debug |
+| TagKey | Filter resources by tag key | `-TagKey <NAME>` | Filter |
+| TagValue | Filter resources by tag value | `-TagValue <NAME>` | Filter |
 
-<br/>
+### Common Scenarios
 
-#### Examples
-- For CloudShell:
-  ```bash
-  />./Invoke-ARI -Debug
-  ```
-- Powershell Desktop:
-  ```bash
-  />./Invoke-ARI -TenantID <Azure Tenant ID> 
-  ```
-  > If you do not specify the Subscription Resource Inventory will be performed on all subscriptions for the selected tenant.
-  > To perform the inventory in a specific Tenant and subscription use `-TenantID` and `-SubscriptionID` parameter
-  ```bash
-    />./Invoke-ARI -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID>
-  ```
-- Including Tags:
-   ```bash
-  />./Invoke-ARI -TenantID <Azure Tenant ID> --IncludeTags
-   ```
-  > By Default Azure Resource inventory do not include Resource Tags.
-- Collecting Security Center Data:
-  ```bash
-  />./Invoke-ARI -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SecurityCenter
-  ```
-  > By Default Azure Resource inventory do not collect Security Center Data.
-- Skipping Azure Advisor:
-  ```bash
-  />./Invoke-ARI -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SkipAdvisory
-  ```
-  > By Default Azure Resource inventory collects Azure Advisor Data.
-- Skipping Network Diagram:
-  ```bash
-  />./Invoke-ARI -TenantID <Azure Tenant ID> -SkipDiagram
-  ```
+#### Running in Azure Cloud Shell
 
-<br/>
+The simplest way to run ARI is directly in Azure Cloud Shell, where authentication is already handled:
 
-### Tenants
----------------------
+```powershell
+Invoke-ARI -Debug
+```
 
-<br/>
+#### Inventory a Specific Tenant and Subscription
 
-If you have permissions on more than one tenant, the script will prompt which Tenants do you want to run the inventory against:
+To target a specific tenant and subscription:
 
-<br/>
+```powershell
+Invoke-ARI -TenantID <Azure-Tenant-ID> -SubscriptionID <Subscription-ID>
+```
 
-![Tenants](images/multitenant.png)
+> If you do not specify a subscription, ARI will inventory all subscriptions in the selected tenant.
 
-<br/>
+#### Include Resource Tags
 
-If can also select which Tenant do you want to run the inventory against:
+By default, ARI does not include resource tags. To include them:
 
-<br/>
+```powershell
+Invoke-ARI -TenantID <Azure-Tenant-ID> -IncludeTags
+```
 
-![TenantID](images/tenantID.png)
+#### Include Security Center Data
 
-<br/>
+To include Security Center assessments:
 
-### Network Topology
----------------------
+```powershell
+Invoke-ARI -TenantID <Azure-Tenant-ID> -SecurityCenter
+```
 
-<br/>
+#### Skip Azure Advisor Data
 
+To skip collection of Azure Advisor recommendations (which can speed up the process):
 
-Draw.io .XML file will be put in the "C:\AzureResourceInventory" folder:
+```powershell
+Invoke-ARI -TenantID <Azure-Tenant-ID> -SkipAdvisory
+```
 
-<br/>
+#### Skip Network Diagram Generation
 
-![ARI Files](images/ARIFiles.png)
+To skip the creation of network diagrams (faster execution):
 
-<br/>
+```powershell
+Invoke-ARI -TenantID <Azure-Tenant-ID> -SkipDiagram
+```
 
-Now you just need to open draw.io and open the file:
+## Multi-Tenant Support
 
-<br/>
+If you have access to multiple Azure tenants, ARI will detect this and provide a menu of available tenants:
 
-![Draw.Io Open](images/drawioopen.png)
+<p align="center">
+  <img src="images/multitenant.png" width="600" style="border: 1px solid #ddd;">
+</p>
 
-<br/>
+You can either select from this menu or specify the tenant directly using the `-TenantID` parameter:
+
+<p align="center">
+  <img src="images/tenantID.png" width="600" style="border: 1px solid #ddd;">
+</p>
+
+## Working with Network Diagrams
+
+ARI can generate detailed network topology diagrams in Draw.io format (.xml).
+
+### Diagram Location
+
+By default, the diagram files are saved to:
+- Windows: `C:\AzureResourceInventory\`
+- Linux/CloudShell: `$HOME/AzureResourceInventory/`
+
+<p align="center">
+  <img src="images/ARIFiles.png" width="600" style="border: 1px solid #ddd;">
+</p>
+
+### Opening Diagrams
+
+To view the generated diagram:
+
+1. Open [draw.io](https://app.diagrams.net/) in your browser
+2. Select "Open Existing Diagram"
+3. Navigate to your ARI output folder and select the XML file
+
+<p align="center">
+  <img src="images/drawioopen.png" width="600" style="border: 1px solid #ddd;">
+</p>
+
+### Diagram Features
+
+The diagrams provide interactive features:
+- Hover over resources to see details
+- Click on components to select them
+- Zoom in/out to explore complex environments
+- Export to various formats including PNG, PDF, and SVG
+
+---
+
+For more detailed information, visit the [project repository](https://github.com/microsoft/ARI).
