@@ -1,100 +1,170 @@
----
+# Contributing to Azure Resource Inventory
 
----
+<div align="center">
+  <img src="images/ARI_Logo.png" width="250">
+  <h3>Guidelines for Community Contributions</h3>
+  
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/microsoft/ARI/pulls)
+  [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+</div>
 
-# Contributing to Azure Resource Inventory (ARI)
+## Table of Contents
+
+- [Getting Started](#getting-started)
+- [Contribution Workflow](#contribution-workflow)
+- [Development Guidelines](#development-guidelines)
+- [Project Structure](#project-structure)
+  - [Core Modules](#core-modules)
+  - [Inventory Modules](#inventory-modules)
+  - [Diagram Modules](#diagram-modules)
+  - [Extras Modules](#extras-modules)
+  - [Script File Modules](#script-file-modules)
+- [Getting Help](#getting-help)
+
+## Getting Started
 
 Thank you for considering contributing to Azure Resource Inventory (ARI)! We welcome contributions from the community and are excited to see what you can bring to the project.
 
-## How to Contribute
+Before you begin, please familiarize yourself with the [README.md](README.md) file to understand the purpose and functionality of ARI.
 
-1. **Fork the Repository**: Start by forking the repository to your GitHub account.
+## Contribution Workflow
 
-2. **Clone the Repository**: Clone your forked repository to your local machine.
-    ```sh
-    git clone https://github.com/your-username/ARI.git
-    cd ARI
-    ```
+Follow these steps to contribute to ARI:
 
-3. **Create a Branch**: Create a new branch for your feature or bug fix.
-    ```sh
-    git checkout -b feature/your-feature-name
-    ```
+<table>
+<tr>
+<td width="60%">
 
-4. **Make Changes**: Make your changes to the codebase. Ensure that your code follows the project's coding standards and includes appropriate documentation.
+1. **Fork the Repository**
+   
+   Start by forking the repository to your GitHub account using the "Fork" button at the top right of the repository page.
 
-5. **Commit Changes**: Commit your changes with a clear and concise commit message.
-    ```sh
-    git add .
-    git commit -m "Add feature: your feature description"
-    ```
+2. **Clone Your Fork**
+   
+   ```bash
+   git clone https://github.com/your-username/ARI.git
+   cd ARI
+   ```
 
-6. **Push Changes**: Push your changes to your forked repository.
-    ```sh
-    git push origin feature/your-feature-name
-    ```
+3. **Create a Branch**
+   
+   Create a new branch for your contribution:
+   
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+   
+   Use a descriptive name that reflects your contribution.
 
-7. **Create a Pull Request**: Open a pull request from your branch to the main repository. Provide a detailed description of your changes and any relevant information.
+4. **Make Your Changes**
+   
+   Implement your changes, ensuring they follow the [Development Guidelines](#development-guidelines).
 
-8. **Review Process**: Your pull request will be reviewed by the maintainers. Be prepared to make any necessary changes based on feedback.
+5. **Test Your Changes**
+   
+   Test your changes thoroughly to ensure they work as expected and don't break existing functionality.
 
-## Code of Conduct
+6. **Commit Changes**
+   
+   ```bash
+   git add .
+   git commit -m "Add feature: your feature description"
+   ```
+   
+   Write clear, concise commit messages that describe your changes.
 
-Please note that this project is released with a Contributor Code of Conduct. By participating in this project, you agree to abide by its terms.
+7. **Push to Your Fork**
+   
+   ```bash
+   git push origin feature/your-feature-name
+   ```
 
-## File Descriptions
+8. **Submit a Pull Request**
+   
+   Go to the original ARI repository and click "New Pull Request". Select your fork and branch, then provide a detailed description of your changes.
 
-Here is a brief description of each file/module in the project:
+9. **Address Review Feedback**
+   
+   Be responsive to any feedback provided by maintainers and make necessary changes.
+
+## Development Guidelines
+
+To maintain code quality and consistency:
+
+- **Follow PowerShell Best Practices**: Follow [Microsoft's PowerShell Best Practices](https://docs.microsoft.com/en-us/powershell/scripting/developer/cmdlet/cmdlet-development-guidelines)
+- **Document Your Code**: Add comments to explain complex logic and update documentation if needed
+- **Keep It Modular**: Make sure your code follows the modular approach of ARI
+- **Error Handling**: Include appropriate error handling and logging
+- **Backward Compatibility**: Ensure your changes don't break existing functionality
+- **Test Thoroughly**: Test in various environments (Windows, Linux, Cloud Shell)
+
+## Project Structure
+
+ARI follows a modular structure. Understanding the purpose of each module will help you determine where your contribution fits.
 
 ### Core Modules
 
-- **ARIInventoryLoop.psm1**: Handles looping through the Azure Resource Graph to extract resources.
-- **ARILoginSession.psm1**: Manages the authentication process using Azure CLI.
-- **ARITestPS.psm1**: Tests and validates the PowerShell environment.
-- **ARIGetSubs.psm1**: Extracts subscriptions from a specified tenant.
-- **ARIExtraJobs.psm1**: Manages additional jobs such as diagram creation and security center processing.
+| Module | Description |
+|--------|-------------|
+| **ARIInventoryLoop.psm1** | Handles looping through Azure Resource Graph to extract resources |
+| **ARILoginSession.psm1** | Manages authentication using Azure CLI |
+| **ARITestPS.psm1** | Tests and validates the PowerShell environment |
+| **ARIGetSubs.psm1** | Extracts subscriptions from a specified tenant |
+| **ARIExtraJobs.psm1** | Manages additional jobs like diagram creation and security processing |
 
 ### Inventory Modules
 
-- **ARIResourceDataPull.psm1**: Main module for resource extraction using Azure Resource Graph.
-- **ARIResourceReport.psm1**: Main module for building the Excel report.
-- **ARISubInv.psm1**: Processes and creates the subscriptions sheet based on resources and subscriptions.
-- **ARISecCenterInv.psm1**: Processes and creates the Security Center sheet based on security resources.
-- **ARIQuotaInv.psm1**: Processes and creates the quota sheet based on quotas used.
-- **ARIPolicyInv.psm1**: Processes and creates the policy sheet based on advisor resources.
-- **ARIAPIInv.psm1**: Manages API inventory for various Azure services.
-- **ARIAdvisoryInv.psm1**: Processes and creates the advisory sheet based on advisor resources.
+| Module | Description |
+|--------|-------------|
+| **ARIResourceDataPull.psm1** | Main module for resource extraction using Azure Resource Graph |
+| **ARIResourceReport.psm1** | Main module for building the Excel report |
+| **ARISubInv.psm1** | Processes subscription data and creates the subscriptions sheet |
+| **ARISecCenterInv.psm1** | Processes and creates the Security Center sheet |
+| **ARIQuotaInv.psm1** | Processes and creates the quota sheet |
+| **ARIPolicyInv.psm1** | Processes and creates the policy sheet |
+| **ARIAPIInv.psm1** | Manages API inventory for various Azure services |
+| **ARIAdvisoryInv.psm1** | Processes and creates the advisory sheet |
 
 ### Diagram Modules
 
-- **ARIDrawIODiagram.psm1**: Creates a Draw.io diagram based on resources.
-- **ARIDiagramSubscription.psm1**: Manages subscription-related diagrams.
-- **ARIDiagramOrganization.psm1**: Manages organization topology in the Draw.io diagram.
-- **ARIDiagramNetwork.psm1**: Manages network topology in the Draw.io diagram.
+| Module | Description |
+|--------|-------------|
+| **ARIDrawIODiagram.psm1** | Creates Draw.io diagrams based on resources |
+| **ARIDiagramSubscription.psm1** | Manages subscription-related diagrams |
+| **ARIDiagramOrganization.psm1** | Manages organization topology in diagrams |
+| **ARIDiagramNetwork.psm1** | Manages network topology in diagrams |
 
 ### Extras Modules
 
-- **ARIReportCharts.psm1**: Creates the main dashboard and overview sheet in the Excel report.
-- **ARIExcelDetails.psm1**: Adds header comments and additional details to the Excel report.
+| Module | Description |
+|--------|-------------|
+| **ARIReportCharts.psm1** | Creates the main dashboard and overview sheet |
+| **ARIExcelDetails.psm1** | Adds header comments and additional details to reports |
 
 ### Script File Modules
 
-- **Analytics**: The main script files, responsible for processing Azure data and create the Excel Tables for AI and Analytics resources.
-- **APIs**: The main script files, responsible for processing Azure data and create the Excel Tables for data captured trough REST API.
-- **Compute**: The main script files, responsible for processing Azure data and create the Excel Tables for main compute (VMs, VMSS..) resources.
-- **Containers**: The main script files, responsible for processing Azure data and create the Excel Tables for container resources (AKS, Azure Containers...).
-- **Data**: The main script files, responsible for processing Azure data and create the Excel Tables for SQL resources (MySQL, SQL...).
-- **Infrastructure**: The main script files, responsible for processing Azure data and create the Excel Tables for core infrastructure resources.
-- **Integration**: The main script files, responsible for processing Azure data and create the Excel Tables for service integration resources.
-- **Networking**: The main script files, responsible for processing Azure data and create the Excel Tables for core Azure Networking.
-- **Storage**: The main script files, responsible for processing Azure data and create the Excel Tables for Azure Storage Services (ANF, Storage Accounts...).
+| Category | Description |
+|----------|-------------|
+| **Analytics** | Scripts for processing AI and Analytics resources |
+| **APIs** | Scripts for processing data captured through REST API |
+| **Compute** | Scripts for processing compute resources (VMs, VMSS, etc.) |
+| **Containers** | Scripts for processing container resources (AKS, Azure Containers) |
+| **Data** | Scripts for processing SQL resources (MySQL, SQL, etc.) |
+| **Infrastructure** | Scripts for processing core infrastructure resources |
+| **Integration** | Scripts for processing service integration resources |
+| **Networking** | Scripts for processing core Azure Networking |
+| **Storage** | Scripts for processing Azure Storage Services |
 
-### Main Module
-
-- **AzureResourceInventory.psm1**: The main module that orchestrates the entire process of resource extraction, reporting, and diagram creation.
+The main module **AzureResourceInventory.psm1** orchestrates the entire process of resource extraction, reporting, and diagram creation.
 
 ## Getting Help
 
-If you have any questions or need help, feel free to open an issue on GitHub or reach out to the maintainers.
+If you have questions or need help with your contribution:
 
-Thank you for contributing to Azure Resource Inventory (ARI)! We appreciate your support and look forward to your contributions.
+- **Open an Issue**: Create a new issue in the [GitHub repository](https://github.com/microsoft/ARI/issues)
+- **Documentation**: Refer to the [README.md](README.md) and other documentation
+- **Community Discussions**: Check existing discussions in the Issues tab
+
+---
+
+Thank you for contributing to Azure Resource Inventory! Your efforts help make cloud administration easier for the entire Azure community.
