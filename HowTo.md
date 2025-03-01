@@ -6,6 +6,7 @@
 </div>
 
 ## Table of Contents
+
 - [Installation](#installation)
 - [Basic Usage](#basic-usage)
 - [Command Reference](#command-reference)
@@ -150,6 +151,7 @@ ARI can generate detailed network topology diagrams in Draw.io format (.xml).
 ### Diagram Location
 
 By default, the diagram files are saved to:
+
 - Windows: `C:\AzureResourceInventory\`
 - Linux/CloudShell: `$HOME/AzureResourceInventory/`
 
@@ -172,6 +174,7 @@ To view the generated diagram:
 ### Diagram Features
 
 The diagrams provide interactive features:
+
 - Hover over resources to see details
 - Click on components to select them
 - Zoom in/out to explore complex environments

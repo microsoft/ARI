@@ -65,6 +65,7 @@ Azure Resource Inventory (ARI) is a comprehensive PowerShell module that generat
 ## 🚀 What's New in v3.5
 
 ### PowerShell Module Installation
+
 Now available as a standard PowerShell module for easier installation and updates:
 
 ```powershell
@@ -76,6 +77,7 @@ Install-Module -Name AzureResourceInventory
 </p>
 
 ### Full Automation Account Integration
+
 The process to run ARI using Automation Accounts is now fully integrated with the new module format:
 
 <p align="center">
@@ -85,7 +87,9 @@ The process to run ARI using Automation Accounts is now fully integrated with th
 See the [Automation Guide](https://github.com/microsoft/ARI/blob/main/Automation/README.md) for implementation details.
 
 ### Azure REST API Integration
+
 We've incorporated additional data sources through the Azure REST API, including:
+
 - Azure Support Tickets
 - Azure Health Incidents
 - Azure Advisor Score Data
@@ -124,16 +128,19 @@ Invoke-ARI
 ### Basic Commands
 
 Run ARI with specific tenant:
+
 ```powershell
 Invoke-ARI -TenantID <Azure-Tenant-ID>
 ```
 
 Scope to specific subscription:
+
 ```powershell
 Invoke-ARI -TenantID <Azure-Tenant-ID> -SubscriptionID <Subscription-ID>
 ```
 
 Include resource tags in the report:
+
 ```powershell
 Invoke-ARI -TenantID <Azure-Tenant-ID> -IncludeTags
 ```
@@ -141,21 +148,25 @@ Invoke-ARI -TenantID <Azure-Tenant-ID> -IncludeTags
 ### Common Scenarios
 
 **Run in Azure Cloud Shell:**
+
 ```powershell
 Invoke-ARI -Debug
 ```
 
 **Include Security Center Data:**
+
 ```powershell
 Invoke-ARI -TenantID <Azure-Tenant-ID> -SubscriptionID <Subscription-ID> -SecurityCenter
 ```
 
 **Skip Azure Advisor Data Collection:**
+
 ```powershell
 Invoke-ARI -TenantID <Azure-Tenant-ID> -SubscriptionID <Subscription-ID> -SkipAdvisory
 ```
 
 **Skip Network Diagram Generation:**
+
 ```powershell
 Invoke-ARI -TenantID <Azure-Tenant-ID> -SkipDiagram
 ```
@@ -249,7 +260,7 @@ Interactive features allow seeing resource details on hover:
 
 ### Output Details
 
-- Default output location: 
+- Default output location:
   - Windows: `C:\AzureResourceInventory\`
   - Linux/CloudShell: `$HOME/AzureResourceInventory/`
 - Output filename format: `AzureResourceInventory_Report_yyyy-MM-dd_HH_mm.xlsx`
@@ -257,7 +268,7 @@ Interactive features allow seeing resource details on hover:
 
 ## 👥 Authors & Acknowledgments
 
-- **Claudio Merola** (claudio.merola@microsoft.com)
+- **Claudio Merola** (<claudio.merola@microsoft.com>)
 - **Renato Gregio**
 
 Special thanks to **Doug Finke**, the author of PowerShell [ImportExcel](https://github.com/dfinke/ImportExcel) module.
