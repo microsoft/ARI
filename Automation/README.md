@@ -6,7 +6,7 @@
 
 <br/>
 
-### This section explain how to create an Automation Account to run Azure Resource Inventory automatically.  
+### This section explains how to create an Automation Account to run Azure Resource Inventory automatically.  
 
 <br/>
 
@@ -18,15 +18,15 @@
 
 <br/>
 
-#### 1) Azure Automation Account
-#### 2) Azure Storage Account
-#### 3) Azure Blob Container inside the Storage Account
+#### 1) An Azure Automation Account
+#### 2) An Azure Storage Account
+#### 3) An Azure Blob Container inside the Storage Account
 
 <br/>
 
 <br/>
 
-## These are the steps you have to do after creating the Automation Account:
+## These are the steps after creating the Automation Account:
 
 <br/>
 
@@ -42,9 +42,9 @@
 
 <br/>
 
-#### This will create an identity in the Entra ID.
+#### This will create an identity in Entra ID.
 
-#### Now we are going to use that identity to give the following permissions to the Automation Account:
+#### Now using that identity, give the following permissions to the Automation Account:
 
 #### 1) Reader in the Management Group (for the script to be able to read all resources from Azure):
 
@@ -66,7 +66,7 @@
 
 <br/>
 
-### Now, back to the Automation Account, switch to the new Runtime Environment Experience:
+### Now, back in the Automation Account, switch to the new Runtime Environment Experience:
 
 <br/>
 
@@ -76,7 +76,7 @@
 
 <br/>
 
-### Now, create a new Runtime Environment Experience:
+### Next, create a new Runtime Environment Experience:
 
 <br/>
 
@@ -97,7 +97,7 @@
 <br/>
 
 
-### In the "Packages" pane, import the following Modules from Gallery:
+### In the "Packages" pane, import the following Modules from the PowerShell Gallery:
 
 <br/>
 
@@ -118,7 +118,7 @@
 <br/>
 
 
-### After the Runtime finish adding all the modules, create a Powershell Runbook:
+### After the Runtime has finished adding all the modules, create a Powershell Runbook:
 
 <br/>
 
@@ -167,7 +167,7 @@ i.e:
 
 <br/>
 
-The parameter "StorageAccount" is used to inform the Storage Account where the report will be placed and the "StorageContainer" parameter is used to inform the container within that Storage Account where the report will be placed.
+The parameter, "StorageAccount", is used to inform the Storage Account where the report will be placed and the "StorageContainer" parameter is used to select the container within that Storage Account where the report will be placed.
 
 <br/>
 

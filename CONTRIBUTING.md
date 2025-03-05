@@ -79,15 +79,15 @@ Here is a brief description of each file/module in the project:
 
 ### Script File Modules
 
-- **Analytics**: The main script files, responsible for processing Azure data and create the Excel Tables for AI and Analytics resources.
-- **APIs**: The main script files, responsible for processing Azure data and create the Excel Tables for data captured trough REST API.
-- **Compute**: The main script files, responsible for processing Azure data and create the Excel Tables for main compute (VMs, VMSS..) resources.
-- **Containers**: The main script files, responsible for processing Azure data and create the Excel Tables for container resources (AKS, Azure Containers...).
-- **Data**: The main script files, responsible for processing Azure data and create the Excel Tables for SQL resources (MySQL, SQL...).
-- **Infrastructure**: The main script files, responsible for processing Azure data and create the Excel Tables for core infrastructure resources.
-- **Integration**: The main script files, responsible for processing Azure data and create the Excel Tables for service integration resources.
-- **Networking**: The main script files, responsible for processing Azure data and create the Excel Tables for core Azure Networking.
-- **Storage**: The main script files, responsible for processing Azure data and create the Excel Tables for Azure Storage Services (ANF, Storage Accounts...).
+- **Analytics**: The main script files, responsible for processing Azure data and creating the Excel Tables for AI and Analytics resources.
+- **APIs**: The main script files, responsible for processing Azure data and creating the Excel Tables for data captured trough REST API.
+- **Compute**: The main script files, responsible for processing Azure data and creating the Excel Tables for main compute (VMs, VMSS..) resources.
+- **Containers**: The main script files, responsible for processing Azure data and creating the Excel Tables for container resources (AKS, Azure Containers...).
+- **Data**: The main script files, responsible for processing Azure data and creating the Excel Tables for SQL resources (MySQL, SQL...).
+- **Infrastructure**: The main script files, responsible for processing Azure data and creating the Excel Tables for core infrastructure resources.
+- **Integration**: The main script files, responsible for processing Azure data and creating the Excel Tables for service integration resources.
+- **Networking**: The main script files, responsible for processing Azure data and creating the Excel Tables for core Azure Networking.
+- **Storage**: The main script files, responsible for processing Azure data and creating the Excel Tables for Azure Storage Services (ANF, Storage Accounts...).
 
 ### Main Module
 
