@@ -6,7 +6,7 @@
 
 <br/>
 
-### This section explain how to create an Automation Account to run Azure Resource Inventory automatically.  
+### This section explains how to create an Automation Account to run Azure Resource Inventory automatically.  
 
 <br/>
 
@@ -42,7 +42,7 @@
 
 <br/>
 
-#### This will create an identity in the Entra ID.
+#### This will create an identity in Entra ID.
 
 #### Now we are going to use that identity to give the following permissions to the Automation Account:
 
@@ -118,7 +118,7 @@
 <br/>
 
 
-### After the Runtime finish adding all the modules, create a Powershell Runbook:
+### After the Runtime finishes adding all the modules, create a Powershell Runbook:
 
 <br/>
 
@@ -167,7 +167,7 @@ i.e:
 
 <br/>
 
-The parameter "StorageAccount" is used to inform the Storage Account where the report will be placed and the "StorageContainer" parameter is used to inform the container within that Storage Account where the report will be placed.
+The parameter "StorageAccount" is used to choose the Storage Account where the report will be placed and the "StorageContainer" parameter is used to choose the container within that Storage Account where the report will be placed.
 
 <br/>
 
