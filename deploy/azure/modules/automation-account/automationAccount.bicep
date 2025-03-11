@@ -4,7 +4,7 @@ param locations string
 param runbookName string
 param scheduleName string
 
-@description('Creates an Automation Account with a Runbook and Schedule')
+@description('Creates an Automation Account')
 resource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' = {
   name: automationAccountName
   location: locations
@@ -18,6 +18,7 @@ resource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' 
   }
 }
 
+@description('Creates an Automation Account Runbook')
 resource runbook 'Microsoft.Automation/automationAccounts/runbooks@2023-11-01' = {
   name: runbookName
   location: locations
@@ -30,6 +31,7 @@ resource runbook 'Microsoft.Automation/automationAccounts/runbooks@2023-11-01' =
   }
 }
 
+@description('Creates an Automation Account Schedule')
 resource schedule 'Microsoft.Automation/automationAccounts/schedules@2023-11-01' = {
   name: scheduleName
   parent: automationAccount
@@ -49,3 +51,4 @@ resource schedule 'Microsoft.Automation/automationAccounts/schedules@2023-11-01'
 
 output automationAccountId string = automationAccount.id
 output automationAccountPrincipalId string = automationAccount.identity.principalId
+output automationAccountName string = automationAccount.name

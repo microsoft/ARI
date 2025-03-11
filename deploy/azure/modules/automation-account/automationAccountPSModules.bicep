@@ -1,7 +1,7 @@
 @description('Parameters for the Automation Account PSModules')
 param automationAccountName string
 
-@description('Creates Automation Account PSModules')
+@description('Creates Automation Account PSModules - Azure Resource Inventory')
 resource azureResourceInventoryModule 'Microsoft.Automation/automationAccounts/modules@2023-11-01' = {
   name: '${automationAccountName}/AzureResourceInventory'
   properties: {
@@ -11,6 +11,7 @@ resource azureResourceInventoryModule 'Microsoft.Automation/automationAccounts/m
   }
 }
 
+@description('Creates Automation Account PSModules - ImportExcel')
 resource importExcelModule 'Microsoft.Automation/automationAccounts/modules@2023-11-01' = {
   name: '${automationAccountName}/ImportExcel'
   properties: {
@@ -20,6 +21,7 @@ resource importExcelModule 'Microsoft.Automation/automationAccounts/modules@2023
   }
 }
 
+@description('Creates Automation Account PSModules - Az.ResourceGraph')
 resource azResourceGraphModule 'Microsoft.Automation/automationAccounts/modules@2023-11-01' = {
   name: '${automationAccountName}/Az.ResourceGraph'
   properties: {
@@ -29,6 +31,7 @@ resource azResourceGraphModule 'Microsoft.Automation/automationAccounts/modules@
   }
 }
 
+@description('Creates Automation Account PSModules - Az.Accounts')
 resource azAccountsModule 'Microsoft.Automation/automationAccounts/modules@2023-11-01' = {
   name: '${automationAccountName}/Az.Accounts'
   properties: {
@@ -38,6 +41,7 @@ resource azAccountsModule 'Microsoft.Automation/automationAccounts/modules@2023-
   }
 }
 
+@description('Creates Automation Account PSModules - Az.Compute')
 resource azComputeModule 'Microsoft.Automation/automationAccounts/modules@2023-11-01' = {
   name: '${automationAccountName}/Az.Compute'
   properties: {
@@ -47,6 +51,7 @@ resource azComputeModule 'Microsoft.Automation/automationAccounts/modules@2023-1
   }
 }
 
+@description('Creates Automation Account PSModules - PowershellGet')
 resource powershellGetModule 'Microsoft.Automation/automationAccounts/modules@2023-11-01' = {
   name: '${automationAccountName}/PowershellGet'
   properties: {
@@ -56,6 +61,7 @@ resource powershellGetModule 'Microsoft.Automation/automationAccounts/modules@20
   }
 }
 
+@description('Creates Automation Account PSModules - ThreadJob')
 resource threadJobModule 'Microsoft.Automation/automationAccounts/modules@2023-11-01' = {
   name: '${automationAccountName}/ThreadJob'
   properties: {

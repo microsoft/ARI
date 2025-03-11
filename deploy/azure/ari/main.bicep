@@ -1,18 +1,26 @@
-targetScope = 'subscription'
+targetScope = 'managementGroup'
 
-@description('parameters from parameters.bicepparam')
+@description('parameters from deploy-prod.parameters.bicepparam')
 param abbr string
-param abbrsa string
+
 param locations string
-param resourceGroupName string
-param automationAccountName string
+
+param storageBlobDataContributorID string
+param readerID string
+
+param managementGroupID string
+param subscriptionID string
+
+@description('Construct resource names dynamically using `abbr`')
+param resourceGroupName string = '${abbr}-rg'
+param automationAccountName string = '${abbr}-aa'
 param storageAccountName string
-param runbookName string
-param scheduleName string
-param roleName string
+param runbookName string = '${abbr}-rb'
+param scheduleName string = '${abbr}-sch'
 
 module resourceGroupModule '../modules/resource-group/resourceGroup.bicep' = {
   name: 'resourceGroupModule'
+  scope: subscription(subscriptionID)
   params: {
     resourceGroupName: resourceGroupName
     locations: locations
@@ -21,53 +29,41 @@ module resourceGroupModule '../modules/resource-group/resourceGroup.bicep' = {
 
 module automationAccountModule '../modules/automation-account/automationAccount.bicep' = {
   name: 'automationAccountModule'
-  scope: resourceGroup(resourceGroupName)
+  scope: resourceGroup(subscriptionID, resourceGroupName)
   params: {
       locations: locations
       automationAccountName: automationAccountName
       runbookName: runbookName
       scheduleName: scheduleName
   }
-  dependsOn: [
-    resourceGroupModule
-  ]
 }
 
 module automationAccountPSModules '../modules/automation-account/automationAccountPSModules.bicep' = {
   name: 'automationAccountPSModules'
-  scope: resourceGroup(resourceGroupName)
+  scope: resourceGroup(subscriptionID, resourceGroupName)
   params: {
     automationAccountName: automationAccountName
   }
-  dependsOn: [
-    resourceGroupModule
-  ]
 }
 
-module customRoleModule '../modules/automation-account/customRole.bicep' = {
-  name: 'customRoleModule'
-  params: {
-    roleName: roleName
-  }
-}
-
-module roleAssignmentModule '../modules/automation-account/roleAssignment.bicep' = {
+module roleAssignmentReaderModule '../modules/automation-account/roleAssignmentReader.bicep' = {
   name: 'roleAssignmentModule'
+  scope: managementGroup(managementGroupID)
   params: {
     automationAccountId: automationAccountModule.outputs.automationAccountId
     automationAccountPrincipalId: automationAccountModule.outputs.automationAccountPrincipalId
-    customRoleDefinitionId: customRoleModule.outputs.customRoleDefinitionId
+    readerID: readerID
   }
 }
 
 module storageAccountModule '../modules/storage-account/storageAccount.bicep' = {
   name: 'storageAccountModule'
-  scope: resourceGroup(resourceGroupName)
+  scope: resourceGroup(subscriptionID, resourceGroupName)
   params: {
     storageAccountName: storageAccountName
+    automationAccountName: automationAccountName
+    automationAccountPrincipalId: automationAccountModule.outputs.automationAccountPrincipalId
     locations: locations
+    storageBlobDataContributorID: storageBlobDataContributorID
   }
-  dependsOn: [
-    resourceGroupModule
-  ]
 }

@@ -1,0 +1,1 @@
+Invoke-ARI -TenantID "ac934dd1-86d1-4053-a485-ad39d829abad" -Automation -SkipDiagram -SkipAPIs -StorageAccount "platprodweuarisa" -StorageContainer "reports" -Debug
