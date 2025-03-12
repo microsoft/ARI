@@ -10,7 +10,7 @@ param (
 
     [switch]$build,
 
-    [string]$managementGroupId = "mg-test"
+    [string]$managementGroupId = "ac934dd1-86d1-4053-a485-ad39d829abad"
 )
 
 enum Environment {
