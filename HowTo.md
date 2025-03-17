@@ -70,7 +70,7 @@ This will authenticate you to Azure and begin collecting inventory data from all
 | SkipDiagram | Skip diagram creation | `-SkipDiagram` | Diagram |
 | DiagramFullEnvironment | Include all network components | `-DiagramFullEnvironment` | Diagram |
 | **Automation** |  |  |  |
-| Automation | Run using Automation Account | `-Automation` | Automation |
+| Automation | Run using an Automation Account | `-Automation` | Automation |
 | StorageAccount | Storage account for automation | `-StorageAccount` | Automation |
 | StorageContainer | Container for automation output | `-StorageContainer` | Automation |
 | **Other** |  |  |  |

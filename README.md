@@ -46,7 +46,7 @@ Tags: PowerShell, Azure, Inventory, Excel Report, Customer Engineer
 
 ## 🔍 Overview
 
-Azure Resource Inventory (ARI) is a comprehensive PowerShell module that generates detailed Excel reports of any Azure environment you have read access to. Designed for Cloud Administrators and technical professionals who need an easy and fast way to document their Azure environments.
+Azure Resource Inventory (ARI) is a comprehensive PowerShell module that generates detailed Excel reports of any Azure environment you have read access to. It is designed for Cloud Administrators and technical professionals who need an easy and fast way to document their Azure environments.
 
 <p align="center">
   <img src="images/ARIv35-Overview.png" width="700">
@@ -222,7 +222,7 @@ Invoke-ARI -TenantID <Azure-Tenant-ID> -SkipDiagram
   <img src="images/DrawioImage.png" width="700">
 </p>
 
-Interactive features allow seeing resource details on hover:
+Interactive features show resource details on hover:
 
 <p align="center">
   <img src="images/ARIv3DrawioHover.png" width="400">
@@ -279,7 +279,7 @@ Please read our [CONTRIBUTING.md](CONTRIBUTING.md) which outlines all policies, 
 
 ## 📜 License
 
-Copyright (c) 2018 Microsoft Corporation. All rights reserved.
+Copyright (c) 2025 Microsoft Corporation. All rights reserved.
 
 Licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 

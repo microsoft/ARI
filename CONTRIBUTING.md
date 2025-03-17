@@ -107,7 +107,7 @@ ARI follows a modular structure. Understanding the purpose of each module will h
 | Module | Description |
 |--------|-------------|
 | **ARIInventoryLoop.psm1** | Handles looping through Azure Resource Graph to extract resources |
-| **ARILoginSession.psm1** | Manages authentication using Azure CLI |
+| **ARILoginSession.psm1** | Manages authentication using Azure PowerShell |
 | **ARITestPS.psm1** | Tests and validates the PowerShell environment |
 | **ARIGetSubs.psm1** | Extracts subscriptions from a specified tenant |
 | **ARIExtraJobs.psm1** | Manages additional jobs like diagram creation and security processing |
