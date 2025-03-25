@@ -32,8 +32,7 @@ If ($Task -eq 'Processing') {
 
     if($ManagedIdentities)
         {
-            $tmp = @()
-            foreach ($1 in $ManagedIdentities) {
+            $tmp = foreach ($1 in $ManagedIdentities) {
                 $ResUCount = 1
                 $SubId = $1.id.split('/')[2]
                 $sub1 = $SUB | Where-Object { $_.id -eq $SubId }
@@ -51,7 +50,7 @@ If ($Task -eq 'Processing') {
                         'Tag Name'                  = [string]$Tag.Name;
                         'Tag Value'                 = [string]$Tag.Value
                     }
-                    $tmp += $obj
+                    $obj
                     if ($ResUCount -eq 1) { $ResUCount = 0 } 
                 }
             }
@@ -64,9 +63,9 @@ If ($Task -eq 'Processing') {
 Else {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if ($SmaResources.ManagedIds) {
+    if ($SmaResources) {
 
-        $TableName = ('ManIdTable_'+($SmaResources.ManagedIds.id | Select-Object -Unique).count)
+        $TableName = ('ManIdTable_'+($SmaResources.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -81,9 +80,7 @@ Else {
             $Exc.Add('Tag Value') 
         }
 
-        $ExcelVar = $SmaResources.ManagedIds
-
-        $ExcelVar | 
+        $SmaResources | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'Managed Identity' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -Numberformat '0' -Style $Style
 

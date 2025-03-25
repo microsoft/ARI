@@ -32,8 +32,7 @@ If ($Task -eq 'Processing') {
 
     if($AdvisorScore)
         {
-            $tmp = @()
-            foreach ($1 in $AdvisorScore) {
+            $tmp = foreach ($1 in $AdvisorScore) {
                 if ($1.name -in ('Cost','OperationalExcellence','Performance','Security','HighAvailability','Advisor'))
                     {
                         $SubId = $1.id.split('/')[2]
@@ -63,7 +62,7 @@ If ($Task -eq 'Processing') {
                                     'Consumption Units'         = $Serie.consumptionUnits;
                                     'Potential Score Increase'  = $Serie.potentialScoreIncrease
                                 }
-                                $tmp += $obj
+                                $obj
                             }
                     }
             }
@@ -76,9 +75,9 @@ If ($Task -eq 'Processing') {
 Else {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if ($SmaResources.AdvisorScore) {
+    if ($SmaResources) {
 
-        $TableName = ('AdvScoreTable_'+($SmaResources.AdvisorScore.id | Select-Object -Unique).count)
+        $TableName = ('AdvScoreTable_'+($SmaResources.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -96,9 +95,7 @@ Else {
         $Exc.Add('Consumption Units')
         $Exc.Add('Potential Score Increase')
 
-        $ExcelVar = $SmaResources.AdvisorScore
-
-        $ExcelVar | 
+        $SmaResources | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'AdvisorScore' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $condtxt -Numberformat '0' -Style $Style
 

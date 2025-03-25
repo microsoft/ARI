@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task, $File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -31,8 +31,7 @@ If ($Task -eq 'Processing') {
 
     if($Synapse)
         {
-            $tmp = @()
-            foreach ($1 in $Synapse) {
+            $tmp = foreach ($1 in $Synapse) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
@@ -85,7 +84,7 @@ If ($Task -eq 'Processing') {
                             'Tag Name'                          = [string]$Tag.Name;
                             'Tag Value'                         = [string]$Tag.Value
                         }
-                        $tmp += $obj
+                        $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
                     }                
             }
@@ -97,9 +96,9 @@ If ($Task -eq 'Processing') {
 Else {
     <######## $SmaResources.Synapse ##########>
 
-    if ($SmaResources.Synapse) {
+    if ($SmaResources) {
 
-        $TableName = ('SynapseTable_'+($SmaResources.Synapse.id | Select-Object -Unique).count)
+        $TableName = ('SynapseTable_'+($SmaResources.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
         
         $condtxt = @()
@@ -129,9 +128,7 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.Synapse 
-
-        $ExcelVar | 
+        $SmaResources | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'Synapse' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
 

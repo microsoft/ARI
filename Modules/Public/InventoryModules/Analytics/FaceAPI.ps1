@@ -1,4 +1,4 @@
-﻿<#
+<#
 .Synopsis
 Inventory for Azure Face API
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task, $File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -34,16 +34,17 @@ If ($Task -eq 'Processing')
 
     if($FaceAPI)
         {
-            $tmp = @()
-
-            foreach ($1 in $FaceAPI) {
+            $tmp = foreach ($1 in $FaceAPI) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $timecreated = $data.datecreated
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
-                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                $Retired = Foreach ($Retirement in $Retirements)
+                    {
+                        if ($Retirement.id -eq $1.id) { $Retirement }
+                    }
                 if ($Retired) 
                     {
                         $RetiredFeature = foreach ($Retire in $Retired)
@@ -95,7 +96,7 @@ If ($Task -eq 'Processing')
                                     'Tag Name'                                  = [string]$Tag.Name;
                                     'Tag Value'                                 = [string]$Tag.Value
                                 }
-                                $tmp += $obj
+                                $obj
                                 if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
                         }
@@ -110,10 +111,10 @@ Else
 {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if($SmaResources.FaceAPI)
+    if($SmaResources)
     {
 
-        $TableName = ('FaceAPITable_'+($SmaResources.FaceAPI.id | Select-Object -Unique).count)
+        $TableName = ('FaceAPITable_'+($SmaResources.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -144,9 +145,7 @@ Else
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.FaceAPI 
-
-        $ExcelVar | 
+        $SmaResources | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'Face API' -AutoSize -MaxAutoSizeRows 100 -ConditionalText $condtxt -TableName $TableName -TableStyle $tableStyle -Style $Style
 

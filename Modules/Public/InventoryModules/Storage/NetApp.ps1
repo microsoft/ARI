@@ -31,8 +31,7 @@ If ($Task -eq 'Processing') {
 
     if($NetApp)
         {
-            $tmp = @()
-            foreach ($1 in $NetApp) {
+            $tmp = foreach ($1 in $NetApp) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
@@ -97,7 +96,7 @@ If ($Task -eq 'Processing') {
                             'Tag Name'                          = [string]$Tag.Name;
                             'Tag Value'                         = [string]$Tag.Value
                         }
-                        $tmp += $obj
+                        $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
                     }                
             }
@@ -109,9 +108,9 @@ If ($Task -eq 'Processing') {
 Else {
     <######## $SmaResources.NetApp ##########>
 
-    if ($SmaResources.NetApp) {
+    if ($SmaResources) {
 
-        $TableName = ('NetAppATable_'+($SmaResources.NetApp.id | Select-Object -Unique).count)
+        $TableName = ('NetAppATable_'+($SmaResources.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -147,9 +146,7 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.NetApp 
-
-        $ExcelVar | 
+        $SmaResources | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'NetApp' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style -ConditionalText $condtxt
 

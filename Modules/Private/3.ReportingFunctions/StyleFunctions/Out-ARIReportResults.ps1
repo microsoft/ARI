@@ -15,26 +15,34 @@ function Out-ARIReportResults {
         $SkipDiagram
     )
 
-    Write-Host ('Report Complete. Total Runtime was: ') -NoNewline
-    Write-Host $Measure -NoNewline -ForegroundColor Cyan
-    Write-Host (' Minutes')
+    Write-Host ('Report Complete. Total Runtime was: ') -NoNewline -ForegroundColor Green
+    Write-Host $Measure -ForegroundColor Cyan
     Write-Host ('Total Resources on Azure: ') -NoNewline
     Write-Host $ResourcesCount -ForegroundColor Cyan
     Write-Host ('Total Resources on Excel: ') -NoNewline
     Write-Host $TotalRes -ForegroundColor Cyan
     if (!$SkipAdvisory.IsPresent)
         {
-            Write-Host ('Total Advisories: ') -NoNewline
-            write-host $AdvisoryData -ForegroundColor Cyan
+            if(![string]::IsNullOrEmpty($AdvisoryData))
+            {
+                Write-Host ('Total Advisories: ') -NoNewline
+                write-host $AdvisoryData -ForegroundColor Cyan
+            }
         }
     if (!$SkipPolicy.IsPresent -and !$SkipAPIs.IsPresent)
         {
-            Write-Host ('Total Policies: ') -NoNewline
-            write-host $PolicyData -ForegroundColor Cyan
+            if(![string]::IsNullOrEmpty($PolicyData))
+                {
+                    Write-Host ('Total Policies: ') -NoNewline
+                    write-host $PolicyData -ForegroundColor Cyan
+                }
         }
     if ($SecurityCenter.IsPresent)
         {
-            Write-Host ('Total Security Advisories: ' + $SecurityCenterData)
+            if(![string]::IsNullOrEmpty($SecurityCenterData))
+                {
+                    Write-Host ('Total Security Advisories: ' + $SecurityCenterData)
+                }
         }
 
     Write-Host ''

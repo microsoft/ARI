@@ -26,8 +26,6 @@ function Start-ARIDrawIODiagram {
 
     ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Start-ARIDiagramJob Function') | Out-File -FilePath $LogFile -Append
 
-    Write-Output "Starting Draw.IO Diagram"
-
     Start-ARIDiagramJob -Resources $Resources -Automation $Automation
 
     ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Draw.IO file') | Out-File -FilePath $LogFile -Append 
@@ -41,8 +39,6 @@ function Start-ARIDrawIODiagram {
 
     ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Cleaning old files') | Out-File -FilePath $LogFile -Append 
 
-    Write-Output "Cleaning old files"
-
     foreach($File in $XMLFiles)
         {
             Remove-Item -Path $File -ErrorAction SilentlyContinue
@@ -53,15 +49,29 @@ function Start-ARIDrawIODiagram {
     if ($Automation.IsPresent) {
         ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Subscription Thread Job') | Out-File -FilePath $LogFile -Append 
         Start-ThreadJob -Name 'Diagram_Subscriptions' -ScriptBlock {
-            Start-ARIDiagramSubscription -Subscriptions $($args[0]) -Resources $($args[1]) -DiagramCache $($args[2]) -LogFile $($args[3])
+            try
+            {
+                Start-ARIDiagramSubscription -Subscriptions $($args[0]) -Resources $($args[1]) -DiagramCache $($args[2]) -LogFile $($args[3])
+            }
+            catch
+            {
+                ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $($args[3]) -Append
+            }
         } -ArgumentList $Subscriptions, $Resources, $DiagramCache, $Logfile
     }
     else
     {
         ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Subscription Job') | Out-File -FilePath $LogFile -Append 
         Start-Job -Name 'Diagram_Subscriptions' -ScriptBlock {
-            Import-Module $($args[4])
-            Start-ARIDiagramSubscription -Subscriptions $($args[0]) -Resources $($args[1]) -DiagramCache $($args[2]) -LogFile $($args[3])
+            try
+                {
+                    Import-Module $($args[4])
+                    Start-ARIDiagramSubscription -Subscriptions $($args[0]) -Resources $($args[1]) -DiagramCache $($args[2]) -LogFile $($args[3])
+                }
+            catch
+                {
+                    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $($args[3]) -Append
+                }
         } -ArgumentList $Subscriptions, $Resources, $DiagramCache, $Logfile, $ARIModule
     }
 
@@ -70,15 +80,29 @@ function Start-ARIDrawIODiagram {
     if ($Automation.IsPresent) {
         ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Organization Thread Job') | Out-File -FilePath $LogFile -Append 
         Start-ThreadJob -Name 'Diagram_Organization' -ScriptBlock {
-            Start-ARIDiagramOrganization -ResourceContainers $($args[0]) -DiagramCache $($args[1]) -LogFile $($args[2])
+            try
+            {
+                Start-ARIDiagramOrganization -ResourceContainers $($args[0]) -DiagramCache $($args[1]) -LogFile $($args[2])
+            }
+            catch
+            {
+                ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $($args[2]) -Append
+            }
         } -ArgumentList $ResourceContainers, $DiagramCache, $Logfile
     }
     else
     {
         ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Organization Job') | Out-File -FilePath $LogFile -Append 
         Start-Job -Name 'Diagram_Organization' -ScriptBlock {
-            Import-Module $($args[3])
-            Start-ARIDiagramOrganization -ResourceContainers $($args[0]) -DiagramCache $($args[1]) -LogFile $($args[2])
+            try
+            {
+                Import-Module $($args[3])
+                Start-ARIDiagramOrganization -ResourceContainers $($args[0]) -DiagramCache $($args[1]) -LogFile $($args[2])
+            }
+            catch
+            {
+                ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $($args[2]) -Append
+            }
         } -ArgumentList $ResourceContainers, $DiagramCache, $Logfile, $ARIModule
     }
 
@@ -95,15 +119,29 @@ function Start-ARIDrawIODiagram {
     if ($Automation.IsPresent) {
         ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Network Topology Thread Job') | Out-File -FilePath $LogFile -Append 
         Start-ThreadJob -Name 'Diagram_NetworkTopology' -ScriptBlock {
-            Start-ARIDiagramNetwork -Subscriptions $($args[0]) -Job $($args[1]) -Advisories $($args[2]) -DiagramCache $($args[3]) -FullEnvironment $($args[4]) -DDFile $($args[5]) -XMLFiles $($args[6]) -LogFile $($args[7]) -Automation $($args[8])
+            try
+            {
+                Start-ARIDiagramNetwork -Subscriptions $($args[0]) -Job $($args[1]) -Advisories $($args[2]) -DiagramCache $($args[3]) -FullEnvironment $($args[4]) -DDFile $($args[5]) -XMLFiles $($args[6]) -LogFile $($args[7]) -Automation $($args[8])
+            }
+            catch
+            {
+                ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $($args[7]) -Append
+            }
         } -ArgumentList $Subscriptions, $Job, $Advisories, $DiagramCache, $FullEnvironment, $DDFile, $XMLFiles, $Logfile, $Automation
     }
     else
     {
         ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Network Topology Job') | Out-File -FilePath $LogFile -Append 
         Start-Job -Name 'Diagram_NetworkTopology' -ScriptBlock {
-            Import-Module $($args[9])
-            Start-ARIDiagramNetwork -Subscriptions $($args[0]) -Job $($args[1]) -Advisories $($args[2]) -DiagramCache $($args[3]) -FullEnvironment $($args[4]) -DDFile $($args[5]) -XMLFiles $($args[6]) -LogFile $($args[7]) -Automation $($args[8]) -ARIModule $($args[9])
+            try
+            {
+                Import-Module $($args[9])
+                Start-ARIDiagramNetwork -Subscriptions $($args[0]) -Job $($args[1]) -Advisories $($args[2]) -DiagramCache $($args[3]) -FullEnvironment $($args[4]) -DDFile $($args[5]) -XMLFiles $($args[6]) -LogFile $($args[7]) -Automation $($args[8]) -ARIModule $($args[9])
+            }
+            catch
+            {
+                ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $($args[7]) -Append
+            }
         } -ArgumentList $Subscriptions, $Job, $Advisories, $DiagramCache, $FullEnvironment, $DDFile, $XMLFiles, $Logfile, $Automation, $ARIModule
     }
 
@@ -115,12 +153,24 @@ function Start-ARIDrawIODiagram {
 
     if($Automation.IsPresent)
         {
+            ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting to process files in Automation') | Out-File -FilePath $LogFile -Append 
             Start-ThreadJob -Name 'DiagramFile_Process' -ScriptBlock {
-                #Set-ARIDiagramFile -XMLFiles $($args[0]) -DDFile $($args[1]) -LogFile $($args[2])
+                try
+                    {
+                        ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Merging XML Files in a Thread') | Out-File -FilePath $($args[2]) -Append 
+                        Set-ARIDiagramFile -XMLFiles $($args[0]) -DDFile $($args[1]) -LogFile $($args[2])
+                    }
+                catch
+                    {
+                        ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $($args[2]) -Append
+                    }
             } -ArgumentList $XMLFiles, $DDFile, $LogFile
+
+            Start-Sleep -Seconds 2
         }
     else
         {
+            ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Merging XML Files in the same process') | Out-File -FilePath $LogFile -Append 
             Set-ARIDiagramFile -XMLFiles $XMLFiles -DDFile $DDFile -LogFile $LogFile
         }
 

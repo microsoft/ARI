@@ -1621,7 +1621,7 @@ Function Start-ARIDiagramSubscription {
 
         $Subs = $Resources | group-object -Property subscriptionId | Sort-Object -Property Count -Descending
 
-        $DDDFile = ($DiagramCache+'Subscriptions.xml')
+        $DDDFile = Join-Path $DiagramCache 'Subscriptions.xml'
 
         $XLeft = 100
         $XTop = 100

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .Synopsis
 Inventory for Azure EventHubs
 
@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task, $File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -34,14 +34,16 @@ If ($Task -eq 'Processing')
 
     if($evthub)
         {
-            $tmp = @()
-            foreach ($1 in $evthub) {
+            $tmp = foreach ($1 in $evthub) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $timecreated = if($data.createdAt){[string](get-date($data.createdAt))}else{''}
                 $sku = $1.SKU
-                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                $Retired = Foreach ($Retirement in $Retirements)
+                    {
+                        if ($Retirement.id -eq $1.id) { $Retirement }
+                    }
                 if ($Retired) 
                     {
                         $RetiredFeature = foreach ($Retire in $Retired)
@@ -92,7 +94,7 @@ If ($Task -eq 'Processing')
                             'Tag Name'             = [string]$Tag.Name;
                             'Tag Value'            = [string]$Tag.Value
                         }
-                        $tmp += $obj
+                        $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
                     }               
             }
@@ -106,10 +108,13 @@ Else
 {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if($SmaResources.EvtHub)
+    if($SmaResources)
     {
-        $TableName = ('EvtHubTable_'+($SmaResources.EvtHub.id | Select-Object -Unique).count)
+
+        $TableName = ('EvtHubTable_'+($SmaResources.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
+
+        $SheetName = 'Event Hubs'
 
         $condtxt = @()
         #Retirement
@@ -144,10 +149,18 @@ Else
         $noNumberConversion = @()
         $noNumberConversion += 'Minimum TLS Version'
 
-        $ExcelVar = $SmaResources.EvtHub  
-
-        $ExcelVar | 
+        $SmaResources | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Event Hubs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
+        Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
+
+
+        $excel = Open-ExcelPackage -Path $File
+
+        $null = $excel.$SheetName.Cells["L1"].AddComment("The Auto-inflate feature of Event Hubs automatically scales up by increasing the number of throughput units, to meet usage needs. Increasing throughput units prevents throttling scenarios.", "Azure Resource Inventory")
+        $excel.$SheetName.Cells["L1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-auto-inflate'
+
+        Close-ExcelPackage $excel
+
+
     }
 }

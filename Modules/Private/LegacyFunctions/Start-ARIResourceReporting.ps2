@@ -1,0 +1,100 @@
+function Start-ARIResourceReporting {
+    Param($InTag, $file, $SmaResources, $DefaultPath, $TableStyle, $Unsupported, $DebugEnvSize, $DataActive, $Debug)
+    if ($Debug.IsPresent)
+        {
+            $DebugPreference = 'Continue'
+            $ErrorActionPreference = 'Continue'
+        }
+    else
+        {
+            $ErrorActionPreference = "silentlycontinue"
+        }
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Reporting Phase.')
+    Write-Progress -activity $DataActive -Status "Processing Inventory" -PercentComplete 50
+
+    $ParentPath = (get-item $PSScriptRoot).parent.parent
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Running Asynchronous, Gathering List Of Modules.')
+
+    $InventoryModulesPath = Join-Path $ParentPath 'Public' 'InventoryModules' '*.ps1'
+    $Modules = Get-ChildItem -Path $InventoryModulesPath -Recurse
+
+
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Modules Found: ' + $Modules.Count)
+    $Lops = $Modules.count
+    $ReportCounter = 0
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Large Environment. Looking for Cached Resource Files.')
+
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting to Process Modules.')
+    foreach ($Module in $Modules) {
+
+        $c = (($ReportCounter / $Lops) * 100)
+        $c = [math]::Round($c)
+        Write-Progress -Id 1 -activity "Building Report" -Status "$c% Complete." -PercentComplete $c
+
+        $ModuSeq0 = New-Object System.IO.StreamReader($Module.FullName)
+        $ModuSeq = $ModuSeq0.ReadToEnd()
+        $ModuSeq0.Dispose()
+        $ModuleName = $Module.name.replace('.ps1','')
+
+        if ($DebugEnvSize -eq 'Large')
+            {
+                $SmaResources = @{}
+                $ModuleFileName = $ModuleName + '.json'
+                $ModuleFilePath = Join-Path $DefaultPath 'ReportCache' 'ResourceCache' $ModuleFileName
+                if (Test-Path -Path $ModuleFilePath -PathType Leaf)
+                    {
+                        $SmaResources["$ModuleName"] = Get-Content -Path $ModuleFilePath | ConvertFrom-Json
+                    }
+                else
+                    {
+                        $SmaResources["$ModuleName"] = 0
+                    }
+            }
+
+        $ModuleResourceCount = $SmaResources.$ModuleName.count
+
+        if ($ModuleResourceCount -gt 0)
+            {
+                Start-Sleep -Milliseconds 25
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Running Module: '$ModuleName'. Lines Count: $ModuleResourceCount")
+
+                $ExcelRun = ([PowerShell]::Create()).AddScript($ModuSeq).AddArgument($PSScriptRoot).AddArgument($null).AddArgument($InTag).AddArgument($null).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($SmaResources).AddArgument($TableStyle).AddArgument($Unsupported)
+
+                $ExcelJob = $ExcelRun.BeginInvoke()
+
+                while ($ExcelJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 200 }
+
+                $ExcelRun.EndInvoke($ExcelJob)
+
+                $ExcelRun.Dispose()
+                Remove-Variable -Name ExcelRun
+                Remove-Variable -Name ExcelJob
+
+            }
+
+        if ($DebugEnvSize -eq 'Large')
+            {
+                Remove-Variable -Name SmaResources
+                [System.GC]::Collect()
+                Start-Sleep -Milliseconds 50
+            }
+
+        $ReportCounter ++
+    }
+
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Cleaning Variables to Release Memory.')
+
+    if ($DebugEnvSize -eq 'Large')
+        {
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Removing Cache Files.')
+            $TargetFolder = Join-Path $DefaultPath 'ReportCache'
+            Remove-Item -Path $TargetFolder -Recurse
+        }
+    else
+        {
+            Remove-Variable -Name SmaResources
+        }
+
+    [System.GC]::GetTotalMemory($true) | out-null
+    Start-Sleep -Milliseconds 50
+}

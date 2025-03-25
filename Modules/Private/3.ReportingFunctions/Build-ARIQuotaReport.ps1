@@ -21,9 +21,8 @@ Authors: Claudio Merola
 function Build-ARIQuotaReport {
     param($File, $AzQuota, $TableStyle)
 
-    $tmp = @()
-    $Total = ($AzQuota.Data).count
-    foreach($Quota in $AzQuota)
+    $Total = ($AzQuota.properties.Data).count
+    $tmp = foreach($Quota in $AzQuota.properties)
     {
         foreach($Data in $Quota.Data)
             {
@@ -38,7 +37,7 @@ function Build-ARIQuotaReport {
                     'vCPUs Available' = $FreevCPU;
                     'Total' = $Total
                 }
-                $tmp += $obj
+                $obj
             }
     }
 
@@ -53,5 +52,5 @@ function Build-ARIQuotaReport {
     'Limit',
     'Quota',
     'vCPUs Available' |
-    Export-Excel -Path $File -WorksheetName 'Quota Usage' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Numberformat '0' -MoveToEnd
+    Export-Excel -Path $File -WorksheetName 'Quota Usage' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $TableStyle -Numberformat '0' -MoveToEnd
 }

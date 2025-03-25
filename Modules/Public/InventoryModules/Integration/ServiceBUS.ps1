@@ -33,9 +33,7 @@ If ($Task -eq 'Processing')
 
     if($svchub)
         {
-            $tmp = @()
-
-            foreach ($1 in $svchub) {
+            $tmp = foreach ($1 in $svchub) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
@@ -88,7 +86,7 @@ If ($Task -eq 'Processing')
                             'Tag Name'             = [string]$Tag.Name;
                             'Tag Value'            = [string]$Tag.Value
                         }
-                        $tmp += $obj
+                        $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
                     }               
             }
@@ -102,9 +100,9 @@ Else
 {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if($SmaResources.ServiceBUS)
+    if($SmaResources)
     {
-        $TableName = ('ServiceBUSTable_'+($SmaResources.ServiceBUS.id | Select-Object -Unique).count)
+        $TableName = ('ServiceBUSTable_'+($SmaResources.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -131,9 +129,7 @@ Else
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.ServiceBUS  
-
-        $ExcelVar | 
+        $SmaResources | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'Service BUS' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 

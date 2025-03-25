@@ -911,7 +911,7 @@ Function Start-ARIDiagramOrganization {
 
     Set-Stencil
 
-    $OrgFile = ($DiagramCache+'Organization.xml')
+    $OrgFile = Join-Path $DiagramCache 'Organization.xml'
 
     $Script:etag = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
     $Script:DiagID = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})

@@ -33,13 +33,14 @@ If ($Task -eq 'Processing')
 
     if($APIM)
         {
-            $tmp = @()
-
-            foreach ($1 in $APIM) {
+            $tmp = foreach ($1 in $APIM) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                $Retired = Foreach ($Retirement in $Retirements)
+                    {
+                        if ($Retirement.id -eq $1.id) { $Retirement }
+                    }
                 if ($Retired) 
                     {
                         $RetiredFeature = foreach ($Retire in $Retired)
@@ -91,7 +92,7 @@ If ($Task -eq 'Processing')
                             'Tag Name'             = [string]$Tag.Name;
                             'Tag Value'            = [string]$Tag.Value
                         }
-                        $tmp += $obj
+                        $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
                     }               
             }
@@ -105,10 +106,10 @@ Else
 {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if($SmaResources.APIM)
+    if($SmaResources)
     {
 
-        $TableName = ('APIMTable_'+($SmaResources.APIM.id | Select-Object -Unique).count)
+        $TableName = ('APIMTable_'+($SmaResources.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -141,9 +142,7 @@ Else
             $Exc.Add('Tag Value') 
         }
 
-        $ExcelVar = $SmaResources.APIM 
-
-        $ExcelVar | 
+        $SmaResources | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'APIM' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 

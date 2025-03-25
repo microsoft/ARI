@@ -167,11 +167,34 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Debbuging Mode: On. ErrorActionPreference was set to "Continue", every error will be presented.')
 
+    if (!$Debug.IsPresent)
+        {
+            Write-Host 'Debbuging Mode: ' -nonewline
+            Write-Host 'Off' -ForegroundColor Yellow
+            Write-Host 'Use the parameter ' -nonewline
+            Write-Host '-Debug' -nonewline -ForegroundColor Yellow
+            Write-Host ' to see debugging information during the inventory execution.'
+        }
+
     if ($IncludeTags.IsPresent) { $InTag = $true } else { $InTag = $false }
 
-    if ($Lite.IsPresent -or $Automation.IsPresent) { $RunLite = $true }else { $RunLite = $false }
+    if ($Lite.IsPresent) { $RunLite = $true }else { $RunLite = $false }
     if ($DiagramFullEnvironment.IsPresent) {$FullEnv = $true}else{$FullEnv = $false}
-    if ($Automation.IsPresent) {$SkipAPIs = $true}
+    if ($Automation.IsPresent) 
+        {
+            $SkipAPIs = $true
+            $RunLite = $true
+            if (!$StorageAccount -or !$StorageContainer)
+                {
+                    Write-Output "Storage Account and Container are required for Automation mode. Aborting."
+                    exit
+                }
+        }
+    if ($Overview -eq 1 -and $SkipAPIs)
+        {
+            $Overview = 2
+        }
+    $TableStyle = "Light19"
 
     <#########################################################          Help          ######################################################################>
 
@@ -227,155 +250,193 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
         Write-Host ""
     }
 
-    $TotalRunTime = Measure-Command -Expression {
+    $TotalRunTime = [System.Diagnostics.Stopwatch]::StartNew()
 
     if ($Help.IsPresent) {
         Get-ARIUsageMode
         Exit
     }
-    else {
 
-        if ($PlatOS -ne 'Azure CloudShell' -and !$Automation.IsPresent)
-            {
-                if (!$NoAutoUpdate.IsPresent)
-                    {
-                        Write-Host ('Checking for Powershell Module Updates..')
-                        Update-Module -Name AzureResourceInventory -AcceptLicense
-                    }
-            }
+    $PlatOS = Test-ARIPS -Debug $Debug
 
-        $PlatOS = Test-ARIPS -Debug $Debug
+    if ($PlatOS -ne 'Azure CloudShell' -and !$Automation.IsPresent)
+        {
+            $TenantID = Connect-ARILoginSession -AzureEnvironment $AzureEnvironment -TenantID $TenantID -SubscriptionID $SubscriptionID -DeviceLogin $DeviceLogin -AppId $AppId -Secret $Secret -CertificatePath $CertificatePath -Debug $Debug
 
-        if ($PlatOS -ne 'Azure CloudShell' -and !$Automation.IsPresent)
-            {
-                $TenantID = Connect-ARILoginSession -AzureEnvironment $AzureEnvironment -TenantID $TenantID -SubscriptionID $SubscriptionID -DeviceLogin $DeviceLogin -AppId $AppId -Secret $Secret -CertificatePath $CertificatePath -Debug $Debug
-            }
-        elseif ($Automation.IsPresent)
-            {
-                try {
-                    $AzureConnection = (Connect-AzAccount -Identity).context
-
-                    Set-AzContext -SubscriptionName $AzureConnection.Subscription -DefaultProfile $AzureConnection
+            if (!$NoAutoUpdate.IsPresent)
+                {
+                    Write-Host ('Checking for Powershell Module Updates..')
+                    Update-Module -Name AzureResourceInventory -AcceptLicense
                 }
-                catch {
-                    Write-Output "Failed to set Automation Account requirements. Aborting." 
-                    exit
-                }
-            }
-
-        if ($StorageAccount)
-            {
-                $StorageContext = New-AzStorageContext -StorageAccountName $StorageAccount -UseConnectedAccount
-            }
-
-        $Subscriptions = Get-ARISubscriptions -TenantID $TenantID -SubscriptionID $SubscriptionID
-
-        $ReportingPath = Set-ARIReportPath -PlatOS $PlatOS -ReportDir $ReportDir -Automation $Automation
-
-        $DefaultPath = $ReportingPath.DefaultPath
-        $DiagramCache = $ReportingPath.DiagramCache
-
-        if ($Automation.IsPresent)
-            {
-                $ReportName = 'ARI_Automation'
-            }
-
-        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking report folder: ' + $DefaultPath )
-        if ((Test-Path -Path $DefaultPath -PathType Container) -eq $false) {
-            New-Item -Type Directory -Force -Path $DefaultPath | Out-Null
         }
-        if ((Test-Path -Path $DiagramCache -PathType Container) -eq $false) {
-            New-Item -Type Directory -Force -Path $DiagramCache | Out-Null
+    elseif ($Automation.IsPresent)
+        {
+            try {
+                $AzureConnection = (Connect-AzAccount -Identity).context
+
+                Set-AzContext -SubscriptionName $AzureConnection.Subscription -DefaultProfile $AzureConnection
+            }
+            catch {
+                Write-Output "Failed to set Automation Account requirements. Aborting." 
+                exit
+            }
         }
 
-        Write-Output "Starting Resource Extraction.."
+    if ($StorageAccount)
+        {
+            $StorageContext = New-AzStorageContext -StorageAccountName $StorageAccount -UseConnectedAccount
+        }
 
-        $ExtractionData = Start-ARIResourceDataPull -ManagementGroup $ManagementGroup -Subscriptions $Subscriptions -SubscriptionID $SubscriptionID -ResourceGroup $ResourceGroup -SecurityCenter $SecurityCenter -SkipAdvisory $SkipAdvisory -IncludeTags $IncludeTags -QuotaUsage $QuotaUsage -TagKey $TagKey -TagValue $TagValue -Debug $Debug
+    $Subscriptions = Get-ARISubscriptions -TenantID $TenantID -SubscriptionID $SubscriptionID
 
-        $ExtractionRuntime = $ExtractionData.ExtractionRunTime
-        $Resources = $ExtractionData.Resources
-        $ResourceContainers = $ExtractionData.ResourceContainers
-        $Advisories = $ExtractionData.Advisories
-        $Security = $ExtractionData.Security
-        $Retirements = $ExtractionData.Retirements
+    $ReportingPath = Set-ARIReportPath -ReportDir $ReportDir
 
-        Clear-Variable -Name ExtractionData
+    $DefaultPath = $ReportingPath.DefaultPath
+    $DiagramCache = $ReportingPath.DiagramCache
+    $ReportCache = $ReportingPath.ReportCache
 
-        $ResourcesCount = [string]$Resources.Count
-        $AdvisoryCount = [string]$Advisories.Count
-        $SecCenterCount = [string]$Security.Count
+    if ($Automation.IsPresent)
+        {
+            $ReportName = 'ARI_Automation'
+        }
 
-        if(!$SkipAPIs.IsPresent)
-            {
-                $APIResults = Get-ARIAPIResources -Subscriptions $Subscriptions -AzureEnvironment $AzureEnvironment -SkipPolicy $SkipPolicy -Debug $Debug
-                $Resources += $APIResults.ResourceHealth
-                $Resources += $APIResults.ManagedIdentities
-                $Resources += $APIResults.AdvisorScore
-                $Resources += $APIResults.ReservationRecomen
-                $PolicyAssign = $APIResults.PolicyAssign
-                $PolicyDef = $APIResults.PolicyDef
-                $PolicySetDef = $APIResults.PolicySetDef
-            }
+    Set-ARIFolder -DefaultPath $DefaultPath -DiagramCache $DiagramCache -ReportCache $ReportCache -Debug $Debug
 
-        $PolicyCount = [string]$PolicyAssign.policyAssignments.Count
+    Clear-ARICacheFolder -ReportCache $ReportCache -Debug $Debug
 
-        if (!$SkipVMDetails.IsPresent)
-            {
-                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM Size Details.')
+    $ExtractionRuntime = [System.Diagnostics.Stopwatch]::StartNew()
 
-                $VMSizes = Get-ARIVMSize -Resources $Resources -Debug $Debug
+        $ExtractionData = Start-ARIExtractionOrchestration -ManagementGroup $ManagementGroup -Subscriptions $Subscriptions -SubscriptionID $SubscriptionID -ResourceGroup $ResourceGroup -SecurityCenter $SecurityCenter -SkipAdvisory $SkipAdvisory -IncludeTags $IncludeTags -TagKey $TagKey -TagValue $TagValue -SkipAPIs $SkipAPIs -SkipVMDetails $SkipVMDetails -Automation $Automation -Debug $Debug
 
-                $Resources += $VMSizes
+    $ExtractionRuntime.Stop()
 
-                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM Quota Details.')
+    $Resources = $ExtractionData.Resources
+    $Quotas = $ExtractionData.Quotas
+    $ResourceContainers = $ExtractionData.ResourceContainers
+    $Advisories = $ExtractionData.Advisories
+    $ResourcesCount = $ExtractionData.ResourcesCount
+    $AdvisoryCount = $ExtractionData.AdvisoryCount
+    $SecCenterCount = $ExtractionData.SecCenterCount
+    $Security = $ExtractionData.Security
+    $Retirements = $ExtractionData.Retirements
+    $PolicyAssign = $ExtractionData.PolicyAssign
+    $PolicyDef = $ExtractionData.PolicyDef
+    $PolicySetDef = $ExtractionData.PolicySetDef
 
-                $VMQuota = Get-AriVMQuotas -Subscriptions $Subscriptions -Resources $Resources -Debug $Debug
+    $DataActive = ('Azure Resource Inventory Reporting (' + $ResourcesCount + ') Resources')
 
-                $Quota = $VMQuota
+    $ExtractionTotalTime = $ExtractionRuntime.Elapsed.ToString("dd\:hh\:mm\:ss\:fff")
 
-                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM SKU Details.')
+    if ($Automation.IsPresent)
+        {
+            Write-Output "Extraction Phase Finished"
+            Write-Output ('Total Extraction Time: ' + $ExtractionTotalTime)
+        }
+    else
+        {
+            Write-Host "Extraction Phase Finished: " -ForegroundColor Green -NoNewline
+            Write-Host $ExtractionTotalTime -ForegroundColor Cyan
+        }
 
-                $VMSkuDetails = Get-ARIVMSkuDetails -Resources $Resources -Debug $Debug
+    #### Creating Excel file variable:
+    $FileName = ($ReportName + "_Report_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xlsx")
+    $File = Join-Path $DefaultPath $FileName
+    #$DFile = ($DefaultPath + $Global:ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".vsdx")
+    $DDName = ($ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xml")
+    $DDFile = Join-Path $DefaultPath $DDName 
 
-                $Resources += $VMSkuDetails
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Excel file: ' + $File)
 
-            }
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Default Jobs.')
 
-        #### Creating Excel file variable:
-        $File = ($DefaultPath + $ReportName + "_Report_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xlsx")
-        #$DFile = ($DefaultPath + $Global:ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".vsdx")
-        $DDFile = ($DefaultPath + $ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xml")
+    $ProcessingRunTime = [System.Diagnostics.Stopwatch]::StartNew()
 
-        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Excel file: ' + $File)
+        Start-ARIExtraJobs -SkipDiagram $SkipDiagram -SkipAdvisory $SkipAdvisory -SkipPolicy $SkipPolicy -SecurityCenter $Security -Subscriptions $Subscriptions -Resources $Resources -Advisories $Advisories -DDFile $DDFile -DiagramCache $DiagramCache -FullEnv $FullEnv -ResourceContainers $ResourceContainers -Security $Security -PolicyAssign $PolicyAssign -PolicySetDef $PolicySetDef -PolicyDef $PolicyDef -Automation $Automation -Debug $Debug
 
-        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Default Jobs.')
+        Start-ARIProcessOrchestration -Subscriptions $Subscriptions -Resources $Resources -Retirements $Retirements -File $File -InTag $InTag -Automation $Automation -DataActive $DataActive -Debug $Debug
 
-            Start-ARIExtraJobs -SkipDiagram $SkipDiagram -SkipAdvisory $SkipAdvisory -SkipPolicy $SkipPolicy -SecurityCenter $Security -Subscriptions $Subscriptions -Resources $Resources -Advisories $Advisories -DDFile $DDFile -DiagramCache $DiagramCache -FullEnv $FullEnv -ResourceContainers $ResourceContainers -Security $Security -PolicyAssign $PolicyAssign -PolicySetDef $PolicySetDef -PolicyDef $PolicyDef -Automation $Automation -Debug $Debug
+    $ProcessingRunTime.Stop()
+    
+    $ProcessingTotalTime = $ProcessingRunTime.Elapsed.ToString("dd\:hh\:mm\:ss\:fff")
 
-        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Resources Report Function.')
+    if ($Automation.IsPresent)
+        {
+            Write-Output "Processing Phase Finished"
+            Write-Output ('Total Processing Time: ' + $ProcessingTotalTime)
+        }
+    else
+        {
+            Write-Host "Processing Phase Finished: " -ForegroundColor Green -NoNewline
+            Write-Host $ProcessingTotalTime -ForegroundColor Cyan
+        }
 
-            $TotalRes = Build-ARIResourceReport -Subscriptions $Subscriptions -DefaultPath $DefaultPath -ExtractionRunTime $ExtractionRuntime -Resources $Resources -Retirements $Retirements -SecurityCenter $SecurityCenter -File $File -DDFile $DDFile -Heavy $Heavy -SkipDiagram $SkipDiagram -RunLite $RunLite -PlatOS $PlatOS -InTag $InTag -QuotaUsage $Quota -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -Automation $Automation -SkipAPIs $SkipAPIs, -Overview $Overview -Debug $Debug
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Resources Report Function.')
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Excel Table Style used: ' + $TableStyle)
 
-        if ($StorageAccount)
-            {
-                Write-Output "Sending Excel file to Storage Account:"
-                Write-Output $File
-                Set-AzStorageBlobContent -File $File -Container $StorageContainer -Context $StorageContext | Out-Null
-                if(!$SkipDiagram.IsPresent)
-                    {
-                        Write-Output "Sending Diagram file to Storage Account:"
-                        Write-Output $DDFile
-                        Set-AzStorageBlobContent -File $DDFile -Container $StorageContainer -Context $StorageContext | Out-Null
-                        if($Debug.IsPresent)
-                            {
-                                Set-AzStorageBlobContent -File "$HOME/AzureResourceInventory/DiagramLogFile.log" -Container $StorageContainer -Context $StorageContext -Force | Out-Null
-                            }
-                    }
-            }
+    $ReportingRunTime = [System.Diagnostics.Stopwatch]::StartNew()
+
+        Start-ARIReporOrchestration -ReportCache $ReportCache -SecurityCenter $SecurityCenter -File $File -Quotas $Quotas -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -Automation $Automation -TableStyle $TableStyle -DataActive $DataActive -Debug $Debug
+
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Overview sheet (Charts).')
+
+        $TotalRes = Start-ARIExcelCustomization -File $File -TableStyle $TableStyle -PlatOS $PlatOS -Subscriptions $Subscriptions -ExtractionRunTime $ExtractionRuntime -ProcessingRunTime $ProcessingRunTime -ReportingRunTime $ReportingRunTime -RunLite $RunLite -Overview $Overview -Debug $Debug
+
+    $ReportingRunTime.Stop()
+
+    $ReportingTotalTime = $ReportingRunTime.Elapsed.ToString("dd\:hh\:mm\:ss\:fff")
+
+    if ($Automation.IsPresent)
+        {
+            Write-Output "Report Building Finished"
+            Write-Output ('Total Processing Time: ' + $ReportingTotalTime)
+        }
+    else
+        {
+            Write-Host "Report Building Finished: " -ForegroundColor Green -NoNewline
+            Write-Host $ReportingTotalTime -ForegroundColor Cyan
+        }
+
+        Clear-ARIMemory
+
+        Clear-ARICacheFolder -ReportCache $ReportCache -Debug $Debug
+
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Finished Charts Phase.')
+
+    Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "100% Complete." -Completed
+
+    if(!$SkipDiagram.IsPresent -and !$Automation.IsPresent)
+    {
+        Write-Progress -activity 'Diagrams' -Status "Completing Diagram" -PercentComplete 70 -CurrentOperation "Consolidating Diagram"
+
+        $JobNames = (Get-Job | Where-Object {$_.name -eq 'DrawDiagram'}).Name
+
+        Wait-ARIJob -JobNames $JobNames -DataActive $DataActive -JobType 'Diagram' -LoopTime 5 -Debug $Debug
+
+        Write-Progress -activity 'Diagrams' -Status "Closing Diagram File" -Completed
     }
-}
 
-$Measure = $TotalRunTime.Totalminutes.ToString('#######.##')
+
+    if ($StorageAccount)
+        {
+            Write-Output "Sending Excel file to Storage Account:"
+            Write-Output $File
+            Set-AzStorageBlobContent -File $File -Container $StorageContainer -Context $StorageContext | Out-Null
+            if(!$SkipDiagram.IsPresent)
+                {
+                    Write-Output "Sending Diagram file to Storage Account:"
+                    Write-Output $DDFile
+                    Set-AzStorageBlobContent -File $DDFile -Container $StorageContainer -Context $StorageContext | Out-Null
+                    if($Debug.IsPresent)
+                        {
+                            $LogFilePath = Join-Path $DefaultPath 'DiagramLogFile.log'
+                            Set-AzStorageBlobContent -File $LogFilePath -Container $StorageContainer -Context $StorageContext -Force | Out-Null
+                        }
+                }
+        }
+
+    $TotalRunTime.Stop()
+
+    $Measure = $TotalRunTime.Elapsed.ToString("dd\:hh\:mm\:ss\:fff")
 
 Out-ARIReportResults -Measure $Measure -ResourcesCount $ResourcesCount -TotalRes $TotalRes -SkipAdvisory $SkipAdvisory -AdvisoryData $AdvisoryCount -SkipPolicy $SkipPolicy -SkipAPIs $SkipAPIs -PolicyData $PolicyCount -SecurityCenter $SecurityCenter -SecurityCenterData $SecCenterCount -File $File -SkipDiagram $SkipDiagram -DDFile $DDFile
 

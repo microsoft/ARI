@@ -9,5 +9,5 @@ function Build-ARISubsReport {
         'Resource Group',
         'Location',
         'Resource Type',
-        'Resources' | Export-Excel -Path $File -WorksheetName 'Subscriptions' -TableName $TableName -AutoSize -MaxAutoSizeRows 100 -TableStyle $tableStyle -Style $Style -Numberformat '0' -MoveToEnd
+        'Resources' | Export-Excel -Path $File -WorksheetName 'Subscriptions' -TableName $TableName -AutoSize -MaxAutoSizeRows 100 -TableStyle $TableStyle -Style $Style -Numberformat '0' -MoveToEnd
 }

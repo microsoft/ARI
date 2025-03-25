@@ -32,8 +32,7 @@ If ($Task -eq 'Processing') {
 
     if($Outages)
         {
-            $tmp = @()
-            foreach ($1 in $Outages) {
+            $tmp = foreach ($1 in $Outages) {
                 $ImpactedSubs = $1.properties.impact.impactedRegions.impactedSubscriptions | Select-Object -Unique
 
                 $Data = $1.properties
@@ -76,7 +75,7 @@ If ($Task -eq 'Processing') {
                             'How are we making incidents like this less likely or less impactful' = ($SplitDescription[4]).Split([Environment]::NewLine)[1];
                             'How can customers make incidents like this less impactful'           = ($SplitDescription[5]).Split([Environment]::NewLine)[1]
                         }
-                        $tmp += $obj
+                        $obj
                     }
                 }
             $tmp
@@ -88,9 +87,9 @@ If ($Task -eq 'Processing') {
 Else {
     <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
-    if ($SmaResources.Outages) {
+    if ($SmaResources) {
 
-        $TableName = ('OutagesTable_'+($SmaResources.Outages.id | Select-Object -Unique).count)
+        $TableName = ('OutagesTable_'+($SmaResources.id | Select-Object -Unique).count)
 
         $Style = @(
         New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -Range 'A:E'
@@ -115,9 +114,7 @@ Else {
         $Exc.Add('How are we making incidents like this less likely or less impactful')
         $Exc.Add('How can customers make incidents like this less impactful')
 
-        $ExcelVar = $SmaResources.Outages
-
-        $ExcelVar | 
+        $SmaResources | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'Outages' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -Numberformat '0' -Style $Style
 

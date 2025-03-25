@@ -15,11 +15,11 @@
     (c) Claudio Merola. All rights reserved.
 
 .VERSION
-    3.5.18
+    3.6.0
 
 #>
-$PrivateFiles = @( Get-ChildItem -Path $PSScriptRoot\Modules\Private\*.ps1 -Recurse -ErrorAction SilentlyContinue )
-$PublicFiles = @( Get-ChildItem -Path $PSScriptRoot\Modules\Public\PublicFunctions\*.ps1 -Recurse -ErrorAction SilentlyContinue )
+$PrivateFiles = @( Get-ChildItem -Path (Join-Path $PSScriptRoot "Modules" "Private" "*.ps1") -Recurse -ErrorAction SilentlyContinue )
+$PublicFiles = @( Get-ChildItem -Path (Join-Path $PSScriptRoot "Modules" "Public" "PublicFunctions" "*.ps1") -Recurse -ErrorAction SilentlyContinue )
 
 Foreach($import in @($PrivateFiles + $PublicFiles))
 {
@@ -34,3 +34,4 @@ Foreach($import in @($PrivateFiles + $PublicFiles))
 }
 
 Export-ModuleMember -Function $PublicFiles.Basename
+

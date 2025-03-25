@@ -1,0 +1,36 @@
+function Start-ARILargeEnvOrderFiles {
+    Param($DefaultPath,$Debug)
+    if ($Debug.IsPresent)
+        {
+            $DebugPreference = 'Continue'
+            $ErrorActionPreference = 'Continue'
+        }
+    else
+        {
+            $ErrorActionPreference = "silentlycontinue"
+        }
+
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Ordering Cached Files.')
+
+    $ParentPath = (get-item $PSScriptRoot).parent.parent
+    $InventoryModulesPath = Join-Path $ParentPath 'Public' 'InventoryModules' '*.ps1'
+    $Modules = Get-ChildItem -Path $InventoryModulesPath -Recurse
+    $ModFolder = Join-Path $DefaultPath 'ReportCache' 'ResourceCache'
+    if ((Test-Path -Path $ModFolder -PathType Container) -eq $false) {
+        New-Item -Type Directory -Force -Path $ModFolder | Out-Null
+    }
+
+    foreach ($Module in $Modules)
+        {
+            $ModuleName = $Module.name.replace('.ps1','')
+            $ModuleContentFile = ($ModuleName+'.json')
+            $ModuleContentPath = Join-Path $DefaultPath 'ReportCache' 'ResourceJob_*' $ModuleContentFile
+            if (Test-Path -Path $ModuleContentPath -PathType Leaf)
+                {
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Merging Cached File for: '+$ModuleName)
+                    $ModContent = Get-ChildItem -Path $ModuleContentPath  | ForEach-Object {Get-Content -Path $_ | ConvertFrom-Json}
+                    $ModFinalFile = Join-Path $ModFolder $ModuleContentFile
+                    $ModContent | ConvertTo-Json -Depth 40 | Out-File -FilePath $ModFinalFile
+                }
+        }
+}

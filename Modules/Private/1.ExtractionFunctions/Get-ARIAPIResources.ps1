@@ -12,13 +12,23 @@ function Get-ARIAPIResources {
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting API Inventory')
 
-    $Token = Get-AzAccessToken -AsSecureString -InformationAction SilentlyContinue -WarningAction SilentlyContinue
+    try
+        {
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Adquiring Token')
+            $Token = Get-AzAccessToken -AsSecureString -InformationAction SilentlyContinue -WarningAction SilentlyContinue
 
-    $TokenData = $Token.Token | ConvertFrom-SecureString -AsPlainText
+            $TokenData = $Token.Token | ConvertFrom-SecureString -AsPlainText
 
-    $header = @{
-        'Authorization' = 'Bearer ' + $TokenData
-    }
+            $header = @{
+                'Authorization' = 'Bearer ' + $TokenData
+            }
+        }
+    catch
+        {
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
+            return
+        }
+    
 
     if ($AzureEnvironment -eq 'AzureCloud') {
         $AzURL = 'management.azure.com'
@@ -45,48 +55,57 @@ function Get-ARIAPIResources {
             Write-Host $SubName -ForegroundColor Cyan
 
             #ResourceHealth Events
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting ResourceHealth Events')
             $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.ResourceHealth/events?api-version=2022-10-01&queryStartTime=' + $ResourceHealthHistoryDate)
             try {
                 $ResourceHealth = Invoke-RestMethod -Uri $url -Headers $header -Method GET
             }
             catch {
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
                 $ResourceHealth = ""
             }
             
             Start-Sleep -Milliseconds 200
 
             #Managed Identities
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting Managed Identities')
             $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.ManagedIdentity/userAssignedIdentities?api-version=2023-01-31')
             try {
                 $Identities = Invoke-RestMethod -Uri $url -Headers $header -Method GET
             }
             catch {
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
                 $Identities = ""
             }
             Start-Sleep -Milliseconds 200
 
             #Advisor Score
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting Advisor Score')
             $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.Advisor/advisorScore?api-version=2023-01-01')
             try {
                 $ADVScore = Invoke-RestMethod -Uri $url -Headers $header -Method GET
             }
             catch {
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
                 $ADVScore = ""
             }
             Start-Sleep -Milliseconds 200
 
             #VM Reservation Recomentation
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM Reservation Recomentation')
             $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.Consumption/reservationRecommendations?api-version=2023-05-01')
             try {
                 $ReservationRecon = Invoke-RestMethod -Uri $url -Headers $header -Method GET
             }
             catch {
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
                 $ReservationRecon = ""
             }
             Start-Sleep -Milliseconds 200
 
             if (!$SkipPolicy.isPresent)
                 {
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting Policies')
                     #Policies
                     try {
                         $url = ('https://'+ $AzURL +'/subscriptions/'+$sub+'/providers/Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01')
@@ -99,24 +118,13 @@ function Get-ARIAPIResources {
                         $PolicyDef = (Invoke-RestMethod -Uri $url -Headers $header -Method GET).value
                     }
                     catch {
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
                         $PolicyAssign = ""
                         $PolicySetDef = ""
                         $PolicyDef = ""
                     }
                 }
 
-            #Diagnostic Settings
-            $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.Quota/usages?api-version=2023-02-01')
-            /subscriptions/55ff7d2d-5550-4674-924c-e141deb33e68/resourceGroups/rg-shd-network-hub-brazilsouth/providers/Microsoft.Network/azureFirewalls/fw-shd-hub-brazilsouth-001
-            try {
-                $DiagSet = Invoke-RestMethod -Uri $url -Headers $header -Method GET
-            }
-            catch {
-                $DiagSet = ""
-            }
-
-            $DiagSet.value
-            
             Start-Sleep 1
 
             $tmp = @{

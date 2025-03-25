@@ -1,0 +1,81 @@
+function Build-ARILargeReportResources {
+    Param($DefaultPath, $Debug)
+    if ($Debug.IsPresent)
+        {
+            $DebugPreference = 'Continue'
+            $ErrorActionPreference = 'Continue'
+        }
+    else
+        {
+            $ErrorActionPreference = "silentlycontinue"
+        }
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Looking for Cache Files.')
+    $LocalCacheFilePath = Join-Path $DefaultPath 'ReportCache' '*.json'
+    $LocalCacheFiles = Get-ChildItem -Path $LocalCacheFilePath 
+
+    $Looper = 0
+
+    foreach ($LocalFile in $LocalCacheFiles)
+        {
+            $Looper ++
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Resource Excel Data Processing Jobs.')
+            Start-job -Name ('ExcelJob_'+$Looper) -ScriptBlock {
+
+                $LocalFile = $($args[1])
+                $DefaultPath = $($args[2])
+                $LocalFolder = $LocalFile.Name.replace(".json","")
+
+                $ParentPath = (get-item $($args[0])).parent.parent
+                $InventoryModulesPath = Join-Path $ParentPath 'Public' 'InventoryModules' '*.ps1'
+                $Modules = Get-ChildItem -Path $InventoryModulesPath -Recurse
+
+                $ModFolder = Join-Path $DefaultPath 'ReportCache' $LocalFolder
+                if ((Test-Path -Path $ModFolder -PathType Container) -eq $false) {
+                    New-Item -Type Directory -Force -Path $ModFolder | Out-Null
+                }
+
+                $TempContent = Get-Content -Path $LocalFile | ConvertFrom-Json
+
+                $job = @()
+
+                $Modules | ForEach-Object {
+                    $ModName = $_.Name.replace(".ps1","")
+                    if($TempContent.$ModName.count -gt 0)
+                        {
+                            $TempVal = $TempContent.$ModName
+                            $ModNameFile = ($ModName+'.json')
+                            Start-Sleep -Milliseconds 100
+
+                            New-Variable -Name ('ModRun' + $ModName)
+                            New-Variable -Name ('ModJob' + $ModName)
+
+                            Set-Variable -Name ('ModRun' + $ModName) -Value ([PowerShell]::Create()).AddScript({Param($ModFolder,$TempVal,$ModNameFile)$TempVal | ConvertTo-Json -Depth 50 | Out-File -FilePath ($ModFolder+$ModNameFile)}).AddArgument($ModFolder).AddArgument($TempVal).AddArgument($ModNameFile)
+
+                            Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
+
+                            Start-Sleep -Milliseconds 100
+
+                            $job += (get-variable -name ('ModJob' + $ModName)).Value
+                            Remove-Variable -Name ModName
+                        }
+                }
+
+                while ($Job.Runspace.IsCompleted -contains $false) { Start-Sleep -Milliseconds 1000 }
+
+                $Modules | ForEach-Object {
+                    $ModName = $_.Name.replace(".ps1","")
+                    if($TempContent.$ModName.count -gt 0)
+                        {
+                            Remove-Variable -Name ('ModRun' + $ModName)
+                            Remove-Variable -Name ('ModJob' + $ModName)
+                            Remove-Variable -Name ModName
+                        }
+                }
+
+                [System.GC]::Collect() | out-null
+                Start-Sleep -Milliseconds 50
+
+            } -ArgumentList $PSScriptRoot, $LocalFile, $DefaultPath
+        }
+
+}

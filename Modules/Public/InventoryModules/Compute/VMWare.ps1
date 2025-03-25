@@ -31,8 +31,7 @@ If ($Task -eq 'Processing') {
 
     if($VMWare)
         {
-            $tmp = @()
-            foreach ($1 in $VMWare) {
+            $tmp = foreach ($1 in $VMWare) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
@@ -93,7 +92,7 @@ If ($Task -eq 'Processing') {
                             'Tag Name'                          = [string]$Tag.Name;
                             'Tag Value'                         = [string]$Tag.Value
                         }
-                        $tmp += $obj
+                        $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
                     }                
             }
@@ -105,9 +104,9 @@ If ($Task -eq 'Processing') {
 Else {
     <######## $SmaResources.VMWare ##########>
 
-    if ($SmaResources.VMWare) {
+    if ($SmaResources) {
 
-        $TableName = ('VMWareTable_'+($SmaResources.VMWare.id | Select-Object -Unique).count)
+        $TableName = ('VMWareTable_'+($SmaResources.id | Select-Object -Unique).count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -143,9 +142,7 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
-        $ExcelVar = $SmaResources.VMWare 
-
-        $ExcelVar | 
+        $SmaResources | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
         Export-Excel -Path $File -WorksheetName 'VMWare' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
 

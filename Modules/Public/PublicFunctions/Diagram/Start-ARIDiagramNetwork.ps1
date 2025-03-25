@@ -1627,7 +1627,9 @@ Function Start-ARIDiagramNetwork {
                             $xml.Save($DDFile)
 
                             ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Deleting Subnet File: ' + $LogSubFile) | Out-File -FilePath $LogFile -Append
-                            Remove-Item -Path $SubFile.FullName -Force
+                            Remove-Item -Path $SubFile.FullName
+
+                            Start-Sleep -Milliseconds 100
                         }
 
                     ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - End of Network Diagram') | Out-File -FilePath $LogFile -Append 

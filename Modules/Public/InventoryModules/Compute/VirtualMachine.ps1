@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task, $File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -31,13 +31,13 @@ If ($Task -eq 'Processing')
         $vmexp = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachines/extensions'}
         $disk = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/disks'}
         $VirtualNetwork = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/virtualnetworks' }
-        $vmsizemap = ($Resources | Where-Object { $_.TYPE -eq 'ARI/VM/Size' }).Sizes
+        $VMExtraDetails = $Resources | Where-Object { $_.TYPE -eq 'ARI/VM/SKU' }
+        $VMQuotas = $Resources | Where-Object { $_.TYPE -eq 'ARI/VM/Quotas' }
 
     if($vm)
         {    
-            $tmp = @()
 
-            foreach ($1 in $vm) 
+            $tmp = foreach ($1 in $vm) 
                 {
                     $ResUCount = 1
                     $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
@@ -50,13 +50,36 @@ If ($Task -eq 'Processing')
                     $OSName = if(![string]::IsNullOrEmpty($data.extended.instanceView.osname)){$data.extended.instanceView.osname}else{$data.storageprofile.imagereference.offer}
                     $OSVersion = if(![string]::IsNullOrEmpty($data.extended.instanceView.osversion)){$data.extended.instanceView.osversion}else{$data.storageprofile.imagereference.sku}
 
-                    $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                    # Extra VM Details
+                    $VMExtraDetail = $VMExtraDetails.properties | Where-Object {$_.Location -eq $1.location}
+                    $VMExtraDetail = $VMExtraDetail.SKUs | Where-Object {$_.Name -eq $data.hardwareProfile.vmSize}
+
+                    foreach ($Capability in $VMExtraDetail.Capabilities) {
+                        if ($Capability.Name -eq 'vCPUs') {$vCPUs = $Capability.Value}
+                        if ($Capability.Name -eq 'vCPUsPerCore') {$vCPUsPerCore = $Capability.Value}
+                        if ($Capability.Name -eq 'MemoryGB') {$RAM = $Capability.Value}
+                        if ($Capability.Name -eq 'MaxDataDiskCount') {$MaxDataDiskCount = $Capability.Value}
+                        if ($Capability.Name -eq 'UncachedDiskIOPS') {$UncachedDiskIOPS = $Capability.Value}
+                        if ($Capability.Name -eq 'UncachedDiskBytesPerSecond') {$UncachedDiskBytesPerSecond = ([math]::Round($Capability.Value / 1024) / 1024)}
+                        if ($Capability.Name -eq 'MaxNetworkInterfaces') {$MaxNetworkInterfaces = $Capability.Value}
+                    }
+
+                    # Quotas
+                    $Size = $VMExtraDetail.Family
+                    $Quota = $VMQuotas.properties | Where-Object {$_.SubId -eq $1.subscriptionId}
+                    $Quota = $Quota | Where-Object {$_.Location -eq $1.location}
+                    $RemainingQuota = (($Quota.Data | Where-Object {$_.Name.Value -eq $Size}).Limit - ($Quota.Data | Where-Object {$_.Name.Value -eq $Size}).CurrentValue)
+
+                    $Retired = Foreach ($Retirement in $Retirements)
+                        {
+                            if ($Retirement.id -eq $1.id) { $Retirement }
+                        }
                     if ($Retired) 
                         {
                             $RetiredFeature = foreach ($Retire in $Retired)
                                 {
                                     $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
-                                    $tmp0 = [pscustomobject]@{
+                                    $tmp0 = [PSCustomObject]@{
                                             'RetiredFeature'            = $RetiredServiceID.RetiringFeature
                                             'RetiredDate'               = $RetiredServiceID.RetirementDate 
                                         }
@@ -88,7 +111,10 @@ If ($Task -eq 'Processing')
                         default { $data.licenseType }
                     }
                     $Lic = if($Lic){$Lic}else{'None'}
-                    $ext = ($vmexp | Where-Object { ($_.id -split "/")[8] -eq $1.name }).properties.Publisher
+                    $ext = foreach ($vmextension in $vmexp)
+                        {
+                            if (($vmextension.id -split "/")[8] -eq $1.name) { $vmextension.properties.Publisher }
+                        }
                     if ($null -ne $ext) 
                         {
                             $ext = foreach ($ex in $ext) 
@@ -128,42 +154,73 @@ If ($Task -eq 'Processing')
                     if ($data.diagnosticsProfile.bootDiagnostics.enabled -eq $true) { $bootdg = $true }else { $bootdg = $false }
 
                     #Storage
-                    if($data.storageProfile.osDisk.managedDisk.id) 
+                    if($data.storageProfile.osDisk.vhd.uri)
                         {
-                            $OSDisk = ($disk | Where-Object {$_.id -eq $data.storageProfile.osDisk.managedDisk.id} | Select-Object -Unique).sku.name
-                            $OSDiskSize = ($disk | Where-Object {$_.id -eq $data.storageProfile.osDisk.managedDisk.id} | Select-Object -Unique).Properties.diskSizeGB
+                            $OSDisk = 'Custom VHD'
+                            $OSDiskSize = $data.storageProfile.osDisk.diskSizeGB
                         }
                     else
                         {
-                            $OSDisk = if($data.storageProfile.osDisk.vhd.uri){'Custom VHD'}else{''}
-                            $OSDiskSize = $data.storageProfile.osDisk.diskSizeGB
+                            foreach ($VMDisk in $disk)
+                                {
+                                    if ($VMDisk.id -eq $data.storageProfile.osDisk.managedDisk.id)
+                                        {
+                                            $OSDisk = $VMDisk.sku.name
+                                        }
+                                    if ($VMDisk.id -eq $data.storageProfile.dataDisks.managedDisk.id)
+                                        {
+                                            $OSDiskSize = $VMDisk.properties.diskSizeGB
+                                        }
+                                }
                         }
-                    $StorAcc = if ($data.storageProfile.dataDisks.managedDisk.id.count -ge 2) 
-                                { 
-                                    ($data.storageProfile.dataDisks.managedDisk.id.count.ToString() + ' Disks found.') 
-                                }
-                                else 
-                                { 
-                                    ($disk | Where-Object {$_.id -eq $data.storageProfile.dataDisks.managedDisk.id} | Select-Object -Unique).sku.name
-                                }
-                    $dataSize = if ($data.storageProfile.dataDisks.managedDisk.storageAccountType.count -ge 2) 
-                                { 
-                                    (($disk | Where-Object {$_.id -in $data.storageProfile.dataDisks.managedDisk.id}).properties.diskSizeGB | Measure-Object -Sum).Sum
-                                }
-                                else 
-                                { 
-                                    ($disk | Where-Object {$_.id -eq $data.storageProfile.dataDisks.managedDisk.id}).properties.diskSizeGB
-                                }
+
+                    if ($data.storageProfile.dataDisks.managedDisk.id)
+                        {
+                            if ($data.storageProfile.dataDisks.managedDisk.id.count -ge 2) 
+                            { 
+                                $StorAcc = ($data.storageProfile.dataDisks.managedDisk.id.count.ToString() + ' Disks found.')
+                                foreach ($VMDisk in $disk)
+                                    {
+                                        if ($VMDisk.id -in $data.storageProfile.dataDisks.managedDisk.id)
+                                            {
+                                                $dataSize = ($VMDisk.properties.diskSizeGB | Measure-Object -Sum).Sum
+                                            }
+                                    }
+                            }
+                            else 
+                            {
+                                foreach ($VMDisk in $disk)
+                                    {
+                                        if ($VMDisk.id -eq $data.storageProfile.dataDisks.managedDisk.id)
+                                            {
+                                                $StorAcc = $VMDisk.sku.name
+                                                $dataSize = $VMDisk.properties.diskSizeGB
+                                            }
+                                    }
+                            }
+                        }
+                    else
+                        {
+                            $StorAcc = 'None'
+                            $dataSize = '0'
+                        }
 
                     $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     $VMNICS = if(![string]::IsNullOrEmpty($data.networkProfile.networkInterfaces.id)){$data.networkProfile.networkInterfaces.id}else{'0'}
                     foreach ($2 in $VMNICS) {
 
-                        $vmnic = $nic | Where-Object { $_.ID -eq $2 } | Select-Object -Unique
+                        $vmnic = foreach ($netinterface in $nic) 
+                            {
+                                if ($netinterface.id -eq $2) { $netinterface }
+                            }
+                        $vmnic = $vmnic | Select-Object -Unique
                         $PIP = if(![string]::IsNullOrEmpty($vmnic.properties.ipConfigurations.properties.publicIPAddress.id)){$vmnic.properties.ipConfigurations.properties.publicIPAddress.id.split('/')[8]}else{''}
                         $VNET = if(![string]::IsNullOrEmpty($vmnic.properties.ipConfigurations.properties.subnet.id)){$vmnic.properties.ipConfigurations.properties.subnet.id.split('/')[8]}else{''}
                         $Subnet = if(![string]::IsNullOrEmpty($vmnic.properties.ipConfigurations.properties.subnet.id)){$vmnic.properties.ipConfigurations.properties.subnet.id.split('/')[10]} else {''}
-                        $vmnet = $VirtualNetwork | Where-Object {$_.properties.subnets.id -eq $vmnic.properties.ipConfigurations.properties.subnet.id}
+                        $vmnet = foreach ($VMVnet in $VirtualNetwork)
+                            {
+                                if ($VMVnet.subnets.id -eq $vmnic.properties.ipConfigurations.properties.subnet.id) { $VMVnet }
+                            }
                         $vmnetsubnet = $vmnet.properties.subnets | Where-Object {$_.id -eq $vmnic.properties.ipConfigurations.properties.subnet.id}
 
                         if(![string]::IsNullOrEmpty($vmnic.properties.dnsSettings.dnsServers))
@@ -199,99 +256,128 @@ If ($Task -eq 'Processing')
                             {
                                 $vmnsg = 'None'
                             }
+                        if(![string]::IsNullOrEmpty($vmnic.properties.enableAcceleratedNetworking))
+                            {
+                                $AcceleratedNetwork = $true
+                            }
+                        else
+                            {
+                                $AcceleratedNetwork = $false
+                            }
 
                         foreach ($Tag in $Tags) 
                             {
                                 $obj = @{
-                                'ID'                            = $1.id;
-                                'Subscription'                  = $sub1.Name;
-                                'Resource Group'                = $1.RESOURCEGROUP;
-                                'VM Name'                       = $1.NAME;
-                                'Location'                      = $1.LOCATION;
-                                'Retiring Feature'              = $RetiringFeature;
-                                'Retiring Date'                 = $RetiringDate;
-                                'Zone'                          = [string]$1.ZONES;
-                                'Availability Set'              = $AVSET;
-                                'VM Size'                       = $data.hardwareProfile.vmSize;
-                                'vCPUs'                         = $vmsizemap[$data.hardwareProfile.vmSize].CPU;
-                                'RAM (GiB)'                     = $vmsizemap[$data.hardwareProfile.vmSize].RAM;
-                                'Image Reference'               = $data.storageProfile.imageReference.publisher;
-                                'Image Version'                 = $data.storageProfile.imageReference.exactVersion;
-                                'Hybrid Benefit'                = $Lic;
-                                'Admin Username'                = $data.osProfile.adminUsername;
-                                'OS Type'                       = $data.storageProfile.osDisk.osType;
-                                'OS Name'                       = $OSName;
-                                'OS Version'                    = $OSVersion;
-                                'Automatic Update'              = $Autoupdate;
-                                'Boot Diagnostics'              = $bootdg;
-                                'Performance Agent'             = if ($azDiag -ne '') { $true }else { $false };
-                                'Azure Monitor'                 = if ($Azinsights -ne '') { $true }else { $false };
-                                'OS Disk Storage Type'          = $OSDisk;
-                                'OS Disk Size (GB)'             = $OSDiskSize;
-                                'Data Disk Storage Type'        = $StorAcc;
-                                'Data Disk Size (GB)'           = $dataSize;
-                                'VM generation'                 = $data.extended.instanceview.hypervgeneration;
-                                'Power State'                   = $data.extended.instanceView.powerState.displayStatus;
-                                'NIC Name'                      = [string]$vmnic.name;
-                                'NIC Type'                      = [string]$vmnic.properties.nicType;
-                                'DNS Servers'                   = $FinalDNS;
-                                'Public IP'                     = $PIP;
-                                'Virtual Network'               = $VNET;
-                                'Subnet'                        = $Subnet;
-                                'NSG'                           = $vmnsg;
-                                'Accelerated Networking'        = [string]$vmnic.properties.enableAcceleratedNetworking;
-                                'IP Forwarding'                 = [string]$vmnic.properties.enableIPForwarding;
-                                'Private IP Address'            = [string]$vmnic.properties.ipConfigurations.properties.privateIPAddress;
-                                'Private IP Allocation'         = [string]$vmnic.properties.ipConfigurations.properties.privateIPAllocationMethod;
-                                'Created Time'                  = $timecreated;
-                                'VM Extensions'                 = $ext;
-                                'Resource U'                    = $ResUCount;
-                                'Tag Name'                      = [string]$Tag.Name;
-                                'Tag Value'                     = [string]$Tag.Value
+                                'ID'                                    = $1.id;
+                                'Subscription'                          = $sub1.Name;
+                                'Resource Group'                        = $1.RESOURCEGROUP;
+                                'VM Name'                               = $1.NAME;
+                                'Location'                              = $1.LOCATION;
+                                'Retiring Feature'                      = $RetiringFeature;
+                                'Retiring Date'                         = $RetiringDate;
+                                'Availability Zone'                     = [string]$1.ZONES;
+                                'Zones Available in the Region'         = [string]$VMExtraDetail.LocationInfo.ZoneDetails.Name;
+                                'Availability Set'                      = $AVSET;
+                                'VM Size'                               = $data.hardwareProfile.vmSize;
+                                'Remaining Quota (vCPUs)'               = [string]$RemainingQuota;
+                                'vCPUs'                                 = $vCPUs;
+                                'vCPUs Per Core'                        = $vCPUsPerCore;
+                                'RAM (GiB)'                             = $RAM;
+                                'Max Remote Storage Disks'              = $MaxDataDiskCount;
+                                'Uncached Disk IOPS Limit'              = $UncachedDiskIOPS;
+                                'Uncached Disk Throughput Limit (MB/s)' = $UncachedDiskBytesPerSecond;
+                                'Max Network Interfaces'                = $MaxNetworkInterfaces;
+                                'Image Reference'                       = $data.storageProfile.imageReference.publisher;
+                                'Image Version'                         = $data.storageProfile.imageReference.exactVersion;
+                                'Capabilities'                          = [string]$VMExtraDetail.LocationInfo.ZoneDetails.Capabilities.Name;
+                                'Hybrid Benefit'                        = $Lic;
+                                'Admin Username'                        = $data.osProfile.adminUsername;
+                                'OS Type'                               = $data.storageProfile.osDisk.osType;
+                                'OS Name'                               = $OSName;
+                                'OS Version'                            = $OSVersion;
+                                'Automatic Update'                      = $Autoupdate;
+                                'Boot Diagnostics'                      = $bootdg;
+                                'Performance Agent'                     = if ($azDiag -ne '') { $true }else { $false };
+                                'Azure Monitor'                         = if ($Azinsights -ne '') { $true }else { $false };
+                                'OS Disk Storage Type'                  = $OSDisk;
+                                'OS Disk Size (GB)'                     = $OSDiskSize;
+                                'Data Disk Storage Type'                = $StorAcc;
+                                'Data Disk Size (GB)'                   = $dataSize;
+                                'VM generation'                         = $data.extended.instanceview.hypervgeneration;
+                                'Power State'                           = $data.extended.instanceView.powerState.displayStatus;
+                                'NIC Name'                              = [string]$vmnic.name;
+                                'NIC Type'                              = [string]$vmnic.properties.nicType;
+                                'DNS Servers'                           = $FinalDNS;
+                                'Public IP'                             = $PIP;
+                                'Virtual Network'                       = $VNET;
+                                'Subnet'                                = $Subnet;
+                                'NSG'                                   = $vmnsg;
+                                'Accelerated Networking'                = $AcceleratedNetwork;
+                                'IP Forwarding'                         = [string]$vmnic.properties.enableIPForwarding;
+                                'Private IP Address'                    = [string]$vmnic.properties.ipConfigurations.properties.privateIPAddress;
+                                'Private IP Allocation'                 = [string]$vmnic.properties.ipConfigurations.properties.privateIPAllocationMethod;
+                                'Creation Time'                         = $timecreated;
+                                'VM Extensions'                         = $ext;
+                                'Resource U'                            = $ResUCount;
+                                'Tag Name'                              = [string]$Tag.Name;
+                                'Tag Value'                             = [string]$Tag.Value
                                 }
-                                $tmp += $obj
-                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                if ($ResUCount -eq 1) { $ResUCount = 0 }
+                                $obj
                             }
                         }
                     }
-                    $tmp
+                $tmp
         }
 }
 else
 {
-    If($SmaResources.VirtualMachine)
+    If($SmaResources)
         {
-            $TableName = ('VMTable_'+($SmaResources.VirtualMachine.id | Select-Object -Unique).count)
-            $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
-            $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range AO:AO -Width 60 -WrapText 
+
+            $TableName = ('VMTable_'+($SmaResources.id | Select-Object -Unique).count)
+            $Style = @()
+            $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
+            $Style += New-ExcelStyle -HorizontalAlignment Left -Range AW:AW -Width 60 -WrapText
+
+            $SheetName = 'Virtual Machines'
 
             $condtxt = @()
             #Automatic Updates
-            $condtxt += New-ConditionalText false -Range M:M
+            $condtxt += New-ConditionalText false -Range V:V
             #Hybrid Benefit
-            $condtxt += New-ConditionalText None -Range P:P
+            $condtxt += New-ConditionalText None -Range Y:Y
             #Boot Diagnostics
-            $condtxt += New-ConditionalText false -Range R:R
+            $condtxt += New-ConditionalText false -Range AA:AA
             #Performance Agent
-            $condtxt += New-ConditionalText false -Range S:S
+            $condtxt += New-ConditionalText false -Range AB:AB
             #Azure Monitor
-            $condtxt += New-ConditionalText false -Range T:T
+            $condtxt += New-ConditionalText false -Range AC:AC
             #NSG
-            $condtxt += New-ConditionalText None -Range AF:AF
+            $condtxt += New-ConditionalText None -Range AN:AN
             #Acelerated Network
-            $condtxt += New-ConditionalText false -Range AI:AI
+            $condtxt += New-ConditionalText false -Range AQ:AQ
             #Retirement
-            $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
+            $condtxt += New-ConditionalText -Range M2:M100 -ConditionalType ContainsText
 
             $Exc = New-Object System.Collections.Generic.List[System.Object]
             $Exc.Add('Subscription')
             $Exc.Add('Resource Group')
             $Exc.Add('VM Name')
             $Exc.Add('VM Size')
+            $Exc.Add('Remaining Quota (vCPUs)')
+            $Exc.Add('vCPUs')
+            $Exc.Add('vCPUs Per Core')
+            $Exc.Add('RAM (GiB)')
+            $Exc.Add('Max Remote Storage Disks')
+            $Exc.Add('Uncached Disk IOPS Limit')
+            $Exc.Add('Uncached Disk Throughput Limit (MB/s)')
+            $Exc.Add('Max Network Interfaces')
             $Exc.Add('Retiring Feature')
             $Exc.Add('Retiring Date')
-            $Exc.Add('vCPUs')
-            $Exc.Add('RAM (GiB)')
+            $Exc.Add('Availability Zone')
+            $Exc.Add('Zones Available in the Region')
+            $Exc.Add('Capabilities')
             $Exc.Add('Location')
             $Exc.Add('OS Type')
             $Exc.Add('OS Name')
@@ -311,7 +397,6 @@ else
             $Exc.Add('VM generation')
             $Exc.Add('Power State')
             $Exc.Add('Availability Set')
-            $Exc.Add('Zone')    
             $Exc.Add('Virtual Network')
             $Exc.Add('Subnet')
             $Exc.Add('DNS Servers')
@@ -323,7 +408,7 @@ else
             $Exc.Add('Private IP Address')
             $Exc.Add('Private IP Allocation')
             $Exc.Add('Public IP')
-            $Exc.Add('Created Time')                
+            $Exc.Add('Creation Time')                
             $Exc.Add('VM Extensions')
             $Exc.Add('Resource U')
             if($InTag)
@@ -338,12 +423,35 @@ else
             $noNumberConversion += 'Private IP Address'
             $noNumberConversion += 'DNS Servers'
 
-            $ExcelVar = $SmaResources.VM
-
-            $ExcelVar | 
+            $SmaResources | 
             ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-            Export-Excel -Path $File -WorksheetName 'Virtual Machines' -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style, $StyleExt -NoNumberConversion $noNumberConversion
+            Export-Excel -Path $File -WorksheetName $SheetName -TableName $TableName -TableStyle $tableStyle -MaxAutoSizeRows 100 -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
 
-        }         
 
+            $excel = Open-ExcelPackage -Path $File
+
+            $sheet = $excel.Workbook.Worksheets[$SheetName]
+
+            Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue 50 -ConditionValue2 100 -Address E:E -BackgroundColor "Yellow"
+            Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue 1 -ConditionValue2 50 -Address E:E -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
+
+            $null = $excel.$SheetName.Cells["AA1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
+            $excel.$SheetName.Cells["AA1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
+
+            $null = $excel.$SheetName.Cells["AB1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
+            $excel.$SheetName.Cells["AB1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
+
+            $null = $excel.$SheetName.Cells["AC1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource's health.", "Azure Resource Inventory")
+            $excel.$SheetName.Cells["AC1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
+
+            $null = $excel.$SheetName.Cells["AN1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
+            $excel.$SheetName.Cells["AN1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
+
+            $null = $excel.$SheetName.Cells["AQ1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
+            $excel.$SheetName.Cells["AQ1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
+
+            Close-ExcelPackage $excel
+
+
+        }
 }

@@ -16,6 +16,8 @@ function Set-ARIDiagramFile {
             $oldxml.Save($DDFile)
 
             Remove-Item -Path $File
+
+            Start-Sleep -Milliseconds 200
         }
     }
     catch
