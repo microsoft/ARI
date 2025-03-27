@@ -3,16 +3,16 @@
 Organization Module for Draw.io Diagram
 
 .DESCRIPTION
-This module is use for the Organization topology in the Draw.io Diagram.
+This module is used for the Organization topology in the Draw.io Diagram.
 
 .Link
-https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Start-ARIDiagramOrganization.psm1
+https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Start-ARIDiagramOrganization.ps1
 
 .COMPONENT
-This powershell Module is part of Azure Resource Inventory (ARI)
+This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.1
+Version: 3.6.0
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -285,9 +285,9 @@ Function Start-ARIDiagramOrganization {
                     }
                 
                 $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))                        
-    
+
                     Add-Icon $Script:IconSubscription ($LocalLeft+140) ($LocalTop+40) '31' '51' $Script:ContID0
-    
+
                 $Script:XmlWriter.WriteEndElement()
 
                 $LocalTop = $LocalTop + 90

@@ -1,28 +1,27 @@
 <#
 .Synopsis
-Azure Resource Graph loop module
+Module responsible for looping through Azure Resource Graph queries.
 
 .DESCRIPTION
-This module is use to loop trough the Azure Resource Graph.
+This module is used to loop through Azure Resource Graph queries and retrieve resources in batches.
 
 .Link
-https://github.com/microsoft/ARI/Modules/Core/ARIInventoryLoop.psm1
+https://github.com/microsoft/ARI/Modules/Private/1.ExtractionFunctions/Invoke-ARIInventoryLoop.ps1
 
 .COMPONENT
-This powershell Module is part of Azure Resource Inventory (ARI)
+This PowerShell Module is part of Azure Resource Inventory (ARI).
 
 .NOTES
-Version: 4.0.1
+Version: 3.6.0
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
-
 #>
-function Invoke-ResourceInventoryLoop {
-    param($GraphQuery,$FSubscri,$LoopName)
+function Invoke-ARIInventoryLoop {
+    param($GraphQuery, $FSubscri, $LoopName, $Debug)
 
     $DebugPreference = 'SilentlyContinue'
 
-    Write-Progress -activity 'Azure Inventory' -Status "10% Complete." -PercentComplete 10 -CurrentOperation ('Extracting: ' + $LoopName)
+    Write-Progress -Id 1 -activity 'Azure Inventory' -Status "1% Complete." -PercentComplete 1 -CurrentOperation ('Extracting: ' + $LoopName)
     $ReportCounter = 1
     $LocalResults = @()
     if($FSubscri.count -gt 200)
@@ -37,12 +36,12 @@ function Invoke-ResourceInventoryLoop {
                     try
                         {
                             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting First 1000 Resources')
-                            $QueryResult = Search-AzGraph -Query $GraphQuery -first 1000 -Subscription $Sub
+                            $QueryResult = Search-AzGraph -Query $GraphQuery -first 1000 -Subscription $Sub -InformationAction SilentlyContinue -ProgressAction SilentlyContinue
                         }
                     catch
                         {
                             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting First 200 Resources')
-                            $QueryResult = Search-AzGraph -Query $GraphQuery -first 200 -Subscription $Sub
+                            $QueryResult = Search-AzGraph -Query $GraphQuery -first 200 -Subscription $Sub -InformationAction SilentlyContinue -ProgressAction SilentlyContinue
                         }
                     $LocalResults += $QueryResult
                     while ($QueryResult.SkipToken) {
@@ -50,12 +49,14 @@ function Invoke-ResourceInventoryLoop {
                         try
                             {
                                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 1000 Resources. Loop Number: ' + $ReportCounterVar)
-                                $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $Sub -first 1000
+                                Write-Progress -Id 1 -activity 'Azure Inventory' -CurrentOperation ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
+                                $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $Sub -first 1000 -InformationAction SilentlyContinue -ProgressAction SilentlyContinue
                             }
                         catch
                             {
                                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 200 Resources. Loop Number: ' + $ReportCounterVar)
-                                $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $Sub -first 200
+                                Write-Progress -Id 1 -activity 'Azure Inventory' -CurrentOperation ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
+                                $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $Sub -first 200 -InformationAction SilentlyContinue -ProgressAction SilentlyContinue
                             }
                         $LocalResults += $QueryResult
                     }
@@ -84,11 +85,13 @@ function Invoke-ResourceInventoryLoop {
                 try
                     {
                         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 1000 Resources. Loop Number: ' + $ReportCounterVar)
+                        Write-Progress -Id 1 -activity 'Azure Inventory' -CurrentOperation ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
                         $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $FSubscri -first 1000 -InformationAction SilentlyContinue -ProgressAction SilentlyContinue
                     }
                 catch
                     {
                         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 200 Resources. Loop Number: ' + $ReportCounterVar)
+                        Write-Progress -Id 1 -activity 'Azure Inventory' -CurrentOperation ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
                         $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $FSubscri -first 200 -InformationAction SilentlyContinue -ProgressAction SilentlyContinue
                     }
                 $LocalResults += $QueryResult

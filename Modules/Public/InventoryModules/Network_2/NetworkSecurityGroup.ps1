@@ -7,16 +7,15 @@ This script consolidates information for all microsoft.network/Netowrksecuritygr
 Excel Sheet Name: NetworkSecuritytGroup
 
 .Link
-https://github.com/microsoft/ARI/Modules/Networking/NetworkSecurityGroup.ps1
+https://github.com/microsoft/ARI/Modules/Public/InventoryModules/Network_2/NetworkSecurityGroup.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.9
-First Release Date: 2021.10.05
-Authors: Christopher Lewis, 
-        Claudio Merola
+Version: 3.6.0
+First Release Date: 19th November, 2020
+Authors: Christopher Lewis, Claudio Merola 
 
 #>
 
@@ -28,6 +27,8 @@ If ($Task -eq 'Processing') {
     $NSGs = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/networksecuritygroups' }
     $nic = $Resources | Where-Object {$_.TYPE -eq 'microsoft.network/networkinterfaces'}
     $vmss = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachinescalesets'}
+    $flowlogs = $Resources | Where-Object {$_.TYPE -eq 'microsoft.network/networkwatchers/flowlogs'}
+
 
     if ($NSGs) {
         $tmp = foreach ($1 in $NSGs) {
@@ -59,6 +60,14 @@ If ($Task -eq 'Processing') {
                         $RetiringFeature = $null
                         $RetiringDate = $null
                     }
+
+            $NSGFlows = foreach ($flow in $flowlogs)
+                {
+                    if ($flow.properties.targetResourceId -eq $1.id) { $flow }
+                }
+            $FlowLogsEnabled = if ($NSGFlows.properties.enabled -eq 'true') { $true }else { $false }
+            $FlowLogsRetention = if (![string]::IsNullOrEmpty($NSGFlows.properties.retentionPolicy.days)) { $NSGFlows.properties.retentionPolicy.days }else { 'Not Enabled' }
+            $FlowLogsStorage = if (![string]::IsNullOrEmpty($NSGFlows.properties.storageId)) { ($NSGFlows.properties.storageId).split('/')[8] }else { 'Not Enabled' }
             $Tags = if (![string]::IsNullOrEmpty($1.tags.psobject.properties)) { $1.tags.psobject.properties }else { '0' }
             $RelatedNics = @()
             $RelatedSubs = @()
@@ -205,6 +214,9 @@ If ($Task -eq 'Processing') {
                         'Destination Port'             = $DestinationPort;
                         'Related NICs'                 = $FinalNICs;
                         'Related VNETs and Subnets'    = $FinalSUBs;
+                        'Flow Logs Enabled'            = $FlowLogsEnabled;
+                        'Flow Logs Retention Days'     = $FlowLogsRetention;
+                        'Flow Logs Storage Account'    = $FlowLogsStorage;
                         'Tag Name'                     = [string]$Tag.Name;
                         'Tag Value'                    = [string]$Tag.Value
                     }
@@ -227,6 +239,8 @@ If ($Task -eq 'Processing') {
 
         $condtxt = @()
         $condtxt += New-ConditionalText TRUE -Range G:G
+        #Flowlogs
+        $condtxt += New-ConditionalText FALSE -Range R:R
         #Retirement
         $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
 
@@ -249,6 +263,9 @@ If ($Task -eq 'Processing') {
         $Exc.Add('Destination Port')
         $Exc.Add('Related NICs')
         $Exc.Add('Related VNETs and Subnets')
+        $Exc.Add('Flow Logs Enabled')
+        $Exc.Add('Flow Logs Retention Days')
+        $Exc.Add('Flow Logs Storage Account')
 
         if ($InTag) {
             $Exc.Add('Tag Name')

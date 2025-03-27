@@ -1,3 +1,22 @@
+<#
+.Synopsis
+Module for Initial Block in Excel Report
+
+.DESCRIPTION
+This script creates the initial block with metadata and summary information in the Excel report.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/3.ReportingFunctions/StyleFunctions/Build-ARIExcelinitialBlock.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
+
 function Build-ARIInitialBlock {
     Param($Excel, $ExtractionRunTime, $ProcessingRunTime, $ReportingRunTime, $PlatOS, $ScriptVersion, $TotalRes, $Debug)
     if ($Debug.IsPresent)

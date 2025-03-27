@@ -1,21 +1,20 @@
 <#
 .Synopsis
-vCPU Quotas Module
+Module for Quota Report
 
 .DESCRIPTION
-This script process and creates the Quota sheet based on Quotas Used.
+This script processes and creates the Quota Usage sheet in the Excel report.
 
 .Link
-https://github.com/microsoft/ARI/Modules/Inventory/ARIQuotaInv.psm1
+https://github.com/microsoft/ARI/Modules/Private/3.ReportingFunctions/Build-ARIQuotaReport.ps1
 
 .COMPONENT
-This powershell Module is part of Azure Resource Inventory (ARI)
+This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 4.0.1
+Version: 3.6.0
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
-
 #>
 
 function Build-ARIQuotaReport {

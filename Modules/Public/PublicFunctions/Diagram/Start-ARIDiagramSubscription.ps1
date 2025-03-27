@@ -3,13 +3,13 @@
 Subscription Module for Draw.io Diagram
 
 .DESCRIPTION
-This module is use for the Subscription topology in the Draw.io Diagram.
+This module is used for the Subscription topology in the Draw.io Diagram.
 
 .Link
-https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Start-ARIDiagramSubscription.psm1
+https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Start-ARIDiagramSubscription.ps1
 
 .COMPONENT
-This powershell Module is part of Azure Resource Inventory (ARI)
+This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
 Version: 3.6.0
@@ -128,7 +128,7 @@ Function Start-ARIDiagramSubscription {
         $Script:AzureIntegrationAcc = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/integration/Integration_Accounts.svg;'  
         $Script:AzureEvtGridTopics = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/integration/Event_Grid_Topics.svg;'  
         $Script:AzureAPIMangement = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/integration/API_Management_Services.svg;'
-        $Script:AzureEvtGridDomain = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/integration/Event_Grid_Subscriptions.svg;' 
+        $Script:AzureEvtGridDomain = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/integration/Event_Grid_Subscriptions.svg;'  
         
         ########### Azure IoT
         $Script:AzureEvtHubs = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/iot/Event_Hubs.svg;'
@@ -1797,7 +1797,7 @@ Function Start-ARIDiagramSubscription {
                                                             else
                                                                 {
                                                                     $ResTypeLeft = $ResTypeLeft + 110
-                                                                    $YCounter++
+                                                                    $YCounter++ 
                                                                 }
 
                                                         }
@@ -1834,7 +1834,7 @@ Function Start-ARIDiagramSubscription {
                                                             else
                                                                 {
                                                                     $ResTypeLeft = $ResTypeLeft + 110
-                                                                    $YCounter++
+                                                                    $YCounter++ 
                                                                 }
 
                                                         }

@@ -1,5 +1,24 @@
+<#
+.Synopsis
+Extraction orchestration for Azure Resource Inventory
+
+.DESCRIPTION
+This module orchestrates the extraction of resources for Azure Resource Inventory.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/0.MainFunctions/Start-ARIExtractionOrchestration.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+
+#>
 function Start-ARIExtractionOrchestration {
-    Param($ManagementGroup, $Subscriptions, $SubscriptionID, $ResourceGroup, $SecurityCenter, $SkipAdvisory, $IncludeTags, $TagKey, $TagValue, $SkipAPIs, $SkipVMDetails, $Automation, $Debug)
+    Param($ManagementGroup, $Subscriptions, $SubscriptionID, $SkipPolicy, $ResourceGroup, $SecurityCenter, $SkipAdvisory, $IncludeTags, $TagKey, $TagValue, $SkipAPIs, $SkipVMDetails, $Automation, $Debug)
     if ($Debug.IsPresent)
         {
             $DebugPreference = 'Continue'
@@ -26,6 +45,7 @@ function Start-ARIExtractionOrchestration {
 
     if(!$SkipAPIs.IsPresent)
         {
+            Write-Progress -activity 'Azure Inventory' -Status "12% Complete." -PercentComplete 12 -CurrentOperation "Starting API Extraction.."
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting API Resources.')
             $APIResults = Get-ARIAPIResources -Subscriptions $Subscriptions -AzureEnvironment $AzureEnvironment -SkipPolicy $SkipPolicy -Debug $Debug
             $Resources += $APIResults.ResourceHealth
@@ -35,12 +55,14 @@ function Start-ARIExtractionOrchestration {
             $PolicyAssign = $APIResults.PolicyAssign
             $PolicyDef = $APIResults.PolicyDef
             $PolicySetDef = $APIResults.PolicySetDef
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'API Resource Inventory Finished.')
         }
 
     $PolicyCount = [string]$PolicyAssign.policyAssignments.Count
 
     if (!$SkipVMDetails.IsPresent)
         {
+            Write-Progress -activity 'Azure Inventory' -Status "13% Complete." -PercentComplete 13 -CurrentOperation "Starting VM Details Extraction.."
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM Quota Details.')
 
             $VMQuotas = Get-AriVMQuotas -Subscriptions $Subscriptions -Resources $Resources -Debug $Debug
@@ -65,6 +87,7 @@ function Start-ARIExtractionOrchestration {
         SecCenterCount = $SecCenterCount
         Security = $Security
         Retirements = $Retirements
+        PolicyCount = $PolicyCount
         PolicyAssign = $PolicyAssign
         PolicyDef = $PolicyDef
         PolicySetDef = $PolicySetDef

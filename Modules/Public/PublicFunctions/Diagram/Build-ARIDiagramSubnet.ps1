@@ -1,3 +1,23 @@
+<#
+.Synopsis
+Subnet Module for Draw.io Diagram
+
+.DESCRIPTION
+This module is used for building subnet components in the Draw.io Diagram.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Build-ARIDiagramSubnet.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+
+#>
+
 Function Build-ARIDiagramSubnet {
     Param($SubnetLocation,$VNET,$IDNum,$DiagramCache,$ContainerID,$LogFile)
 

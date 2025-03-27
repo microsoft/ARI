@@ -6,7 +6,7 @@ Network Module for Draw.io Diagram
 This module is use for the Network topology in the Draw.io Diagram.
 
 .Link
-https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Start-ARIDiagramNetwork.psm1
+https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Start-ARIDiagramNetwork.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)

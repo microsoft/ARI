@@ -1,5 +1,25 @@
+<#
+.Synopsis
+Process orchestration for Azure Resource Inventory
+
+.DESCRIPTION
+This module orchestrates the processing of resources for Azure Resource Inventory.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/0.MainFunctions/Start-ARIProcessOrchestration.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+
+#>
+
 function Start-ARIProcessOrchestration {
-    Param($Subscriptions, $Resources, $Retirements, $File, $InTag, $Automation, $DataActive, $Debug)
+    Param($Subscriptions, $Resources, $Retirements, $File, $InTag, $Automation, $Debug)
     if ($Debug.IsPresent)
         {
             $DebugPreference = 'Continue'
@@ -40,8 +60,13 @@ function Start-ARIProcessOrchestration {
 
         $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
 
-        Wait-ARIJob -JobNames $JobNames -DataActive $DataActive -JobType 'Resource' -LoopTime 5 -Debug $Debug
+        if(![string]::IsNullOrEmpty($JobNames))
+            {
+                Wait-ARIJob -JobNames $JobNames -JobType 'Resource' -LoopTime 5 -Debug $Debug
 
-        Build-ARICacheFiles -ReportCache $ReportCache -DataActive $DataActive -JobNames $JobNames -Debug $Debug
+                Build-ARICacheFiles -ReportCache $ReportCache -JobNames $JobNames -Debug $Debug
+            }
+
+        Write-Progress -activity 'Azure Inventory' -Status "60% Complete." -PercentComplete 60 -CurrentOperation "Completed Data Processing Phase.."
 
 }

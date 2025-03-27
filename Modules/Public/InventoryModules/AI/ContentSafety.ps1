@@ -3,20 +3,19 @@
 Inventory for Azure Content Safety
 
 .DESCRIPTION
-This script consolidates information for all microsoft.operationalinsights/workspaces and  resource provider in $Resources variable. 
+This script consolidates information for all microsoft.cognitiveservices/accounts and resource provider in $Resources variable. 
 Excel Sheet Name: Content Safety
 
 .Link
-https://github.com/microsoft/ARI/Modules/Analytics/ContentSafety.ps1
+https://github.com/microsoft/ARI/Modules/Public/InventoryModules/AI/ContentSafety.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.9
+Version: 3.6.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola
-
 #>
 
 <######## Default Parameters. Don't modify this ########>

@@ -29,6 +29,8 @@ function Start-ARIExcelCustomization {
             $ErrorActionPreference = "silentlycontinue"
         }
 
+    Write-Progress -activity 'Azure Inventory' -Status "85% Complete." -PercentComplete 85 -CurrentOperation "Starting Excel Customization.."
+
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Excel Charts Customization.')
 
     if ($RunLite)
@@ -53,17 +55,19 @@ function Start-ARIExcelCustomization {
     $Excel = Open-ExcelPackage -Path $File
     $Worksheets = $Excel.Workbook.Worksheets
 
-    $Table = @()
     $TotalRes = 0
-    Foreach ($WorkS in $Worksheets) {
-        $Number = $WorkS.Tables.Name.split('_')
-        $tmp = @{
-            'Name' = $WorkS.name;
-            'Size' = [int]$Number[1];
-            'Size2' = if ($WorkS.name -in ('Subscriptions', 'Quota Usage', 'AdvisorScore', 'Outages', 'SupportTickets', 'Reservation Advisor')) {0}else{[int]$Number[1]}
-        }
-        $TotalRes = $TotalRes + ([int]$Number[1])
-        $Table += $tmp
+    $Table = Foreach ($WorkS in $Worksheets) {
+        if(![string]::IsNullOrEmpty($WorkS.Tables.Name))
+            {
+                $Number = $WorkS.Tables.Name.split('_')
+                $tmp = @{
+                    'Name' = $WorkS.name;
+                    'Size' = [int]$Number[1];
+                    'Size2' = if ($WorkS.name -in ('Subscriptions', 'Quota Usage', 'AdvisorScore', 'Outages', 'SupportTickets', 'Reservation Advisor')) {0}else{[int]$Number[1]}
+                }
+                $TotalRes = $TotalRes + ([int]$Number[1])
+                $tmp
+            }
     }
 
     Close-ExcelPackage $Excel

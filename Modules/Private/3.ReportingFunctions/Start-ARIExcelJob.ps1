@@ -1,5 +1,24 @@
+<#
+.Synopsis
+Module for Excel Job Processing
+
+.DESCRIPTION
+This script processes inventory modules and builds the Excel report.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/3.ReportingFunctions/Start-ARIExcelJob.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
+
 function Start-ARIExcelJob {
-    Param($ReportCache, $File, $DataActive, $TableStyle, $Debug)
+    Param($ReportCache, $File, $TableStyle, $Debug)
     if ($Debug.IsPresent)
         {
             $DebugPreference = 'Continue'
@@ -14,7 +33,7 @@ function Start-ARIExcelJob {
     $InventoryModulesPath = Join-Path $ParentPath 'Public' 'InventoryModules'
     $ModuleFolders = Get-ChildItem -Path $InventoryModulesPath -Directory
 
-    Write-Progress -activity $DataActive -Status "Processing Inventory" -PercentComplete 50
+    Write-Progress -activity 'Azure Inventory' -Status "68% Complete." -PercentComplete 68 -CurrentOperation "Starting the Report Loop.."
 
     $ModulesCount = [string](Get-ChildItem -Path $InventoryModulesPath -Recurse -Filter "*.ps1").count
 
@@ -30,8 +49,8 @@ function Start-ARIExcelJob {
             $ModuleFiles = Get-ChildItem -Path $ModulePath
 
             $CacheFiles = Get-ChildItem -Path $ReportCache -Recurse
-            $JSONFileName = $ModuleFolder.Name
-            $CacheFile = $CacheFiles | Where-Object { $_.Name -like "*$JSONFileName*" }
+            $JSONFileName = ($ModuleFolder.Name + '.json')
+            $CacheFile = $CacheFiles | Where-Object { $_.Name -like "*$JSONFileName" }
 
             if ($CacheFile)
                 {

@@ -1,3 +1,22 @@
+<#
+.Synopsis
+Module responsible for invoking subscription processing jobs.
+
+.DESCRIPTION
+This module starts jobs to process Azure subscriptions and their associated resources, either in automation or manual mode.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/2.ProcessingFunctions/Invoke-ARISubJob.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI).
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
+
 function Invoke-ARISubJob {
     Param($Subscriptions, $Automation, $Resources, $ARIModule, $Debug)
     if ($Debug.IsPresent)

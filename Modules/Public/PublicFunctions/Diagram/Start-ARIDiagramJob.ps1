@@ -1,3 +1,23 @@
+<#
+.Synopsis
+Job Module for Draw.io Diagram
+
+.DESCRIPTION
+This module is used for managing jobs in the Draw.io Diagram.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Start-ARIDiagramJob.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+
+#>
+
 Function Start-ARIDiagramJob {
     Param($Resources,$Automation)
 

@@ -7,13 +7,13 @@ This script consolidates information for all microsoft.network/virtualnetworkgat
 Excel Sheet Name: VNETGTW
 
 .Link
-https://github.com/microsoft/ARI/Modules/Networking/VNETGTW.ps1
+https://github.com/microsoft/ARI/Modules/Public/InventoryModules/Network_2/VirtualNetworkGateways.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.9
+Version: 3.6.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 

@@ -100,62 +100,165 @@ To maintain code quality and consistency:
 
 ## Project Structure
 
-ARI follows a modular structure. Understanding the purpose of each module will help you determine where your contribution fits.
+The main module **AzureResourceInventory.psm1** is only responsible for dot sourcing all the .ps1 modules.
 
-### Core Modules
+### Public Modules
 
-| Module | Description |
-|--------|-------------|
-| **ARIInventoryLoop.psm1** | Handles looping through Azure Resource Graph to extract resources |
-| **ARILoginSession.psm1** | Manages authentication using Azure PowerShell |
-| **ARITestPS.psm1** | Tests and validates the PowerShell environment |
-| **ARIGetSubs.psm1** | Extracts subscriptions from a specified tenant |
-| **ARIExtraJobs.psm1** | Manages additional jobs like diagram creation and security processing |
+This modules will be loaded and the functions will be exposed to the user session
 
-### Inventory Modules
 
-| Module | Description |
-|--------|-------------|
-| **ARIResourceDataPull.psm1** | Main module for resource extraction using Azure Resource Graph |
-| **ARIResourceReport.psm1** | Main module for building the Excel report |
-| **ARISubInv.psm1** | Processes subscription data and creates the subscriptions sheet |
-| **ARISecCenterInv.psm1** | Processes and creates the Security Center sheet |
-| **ARIQuotaInv.psm1** | Processes and creates the quota sheet |
-| **ARIPolicyInv.psm1** | Processes and creates the policy sheet |
-| **ARIAPIInv.psm1** | Manages API inventory for various Azure services |
-| **ARIAdvisoryInv.psm1** | Processes and creates the advisory sheet |
+#### PublicFunctions
 
-### Diagram Modules
+| Script File         | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| `Invoke-ARI.ps1`    | Entry point script to invoke Azure Resource Inventory operations.          |
 
-| Module | Description |
-|--------|-------------|
-| **ARIDrawIODiagram.psm1** | Creates Draw.io diagrams based on resources |
-| **ARIDiagramSubscription.psm1** | Manages subscription-related diagrams |
-| **ARIDiagramOrganization.psm1** | Manages organization topology in diagrams |
-| **ARIDiagramNetwork.psm1** | Manages network topology in diagrams |
 
-### Extras Modules
+#### Diagram
 
-| Module | Description |
-|--------|-------------|
-| **ARIReportCharts.psm1** | Creates the main dashboard and overview sheet |
-| **ARIExcelDetails.psm1** | Adds header comments and additional details to reports |
+| Script File                        | Description                                                                 |
+|------------------------------------|-----------------------------------------------------------------------------|
+| `Build-ARIDiagramSubnet.ps1`       | Builds diagrams for Azure subnets.                                         |
+| `Set-ARIDiagramFile.ps1`           | Configures the file settings for diagram generation.                       |
+| `Start-ARIDiagramJob.ps1`          | Initiates the job for creating diagrams.                                   |
+| `Start-ARIDiagramNetwork.ps1`      | Starts the process for generating network diagrams.                        |
+| `Start-ARIDiagramOrganization.ps1` | Generates diagrams for organizational structures.                          |
+| `Start-ARIDiagramSubscription.ps1` | Creates diagrams for Azure subscriptions.                                  |
+| `Start-ARIDrawIODiagram.ps1`       | Generates diagrams compatible with Draw.io.                                |
 
-### Script File Modules
 
-| Category | Description |
-|----------|-------------|
-| **Analytics** | Scripts for processing AI and Analytics resources |
-| **APIs** | Scripts for processing data captured through REST API |
-| **Compute** | Scripts for processing compute resources (VMs, VMSS, etc.) |
-| **Containers** | Scripts for processing container resources (AKS, Azure Containers) |
-| **Data** | Scripts for processing SQL resources (MySQL, SQL, etc.) |
-| **Infrastructure** | Scripts for processing core infrastructure resources |
-| **Integration** | Scripts for processing service integration resources |
-| **Networking** | Scripts for processing core Azure Networking |
-| **Storage** | Scripts for processing Azure Storage Services |
+#### Jobs
 
-The main module **AzureResourceInventory.psm1** orchestrates the entire process of resource extraction, reporting, and diagram creation.
+| Script File                     | Description                                                                 |
+|---------------------------------|-----------------------------------------------------------------------------|
+| `Start-ARIAdvisoryJob.ps1`      | Initiates the advisory-related job for ARI operations.                      |
+| `Start-ARIPolicyJob.ps1`        | Starts the job for processing Azure Policy-related tasks.                   |
+| `Start-ARISecCenterJob.ps1`     | Initiates the job for handling Azure Security Center insights.              |
+| `Start-ARISubscriptionJob.ps1`  | Starts the job for processing subscription-specific tasks.                  |
+| `Wait-ARIJob.ps1`               | Waits for the completion of ARI jobs and monitors their status.             |
+
+
+### Private Modules
+
+#### 0.MainFunctions
+
+| Script File                          | Description                                                                 |
+|--------------------------------------|-----------------------------------------------------------------------------|
+| `Clear-ARICacheFolder.ps1`           | Clears the ARI cache folder to ensure a clean state for operations.         |
+| `Clear-ARIMemory.ps1`                | Frees up memory used by ARI during operations.                              |
+| `Connect-ARILoginSession.ps1`        | Establishes a login session with Azure for ARI operations.                  |
+| `Get-ARIUnsupportedData.ps1`         | Retrieves data that is not currently supported by ARI.                      |
+| `Set-ARIFolder.ps1`                  | Configures the folder structure for ARI operations.                         |
+| `Set-ARIReportPath.ps1`              | Sets the path for storing ARI-generated reports.                            |
+| `Start-ARIExtractionOrchestration.ps1` | Initiates the orchestration process for resource extraction.                |
+| `Start-ARIProcessOrchestration.ps1`  | Starts the orchestration of ARI's processing tasks.                         |
+| `Start-ARIReporOrchestration.ps1`    | Begins the orchestration for generating ARI reports.                        |
+| `Test-ARIPS.ps1`                     | Tests the PowerShell environment and prerequisites for ARI operations.      |
+
+
+#### 1.ExtractionFunctions
+
+| Script File                          | Description                                                                 |
+|--------------------------------------|-----------------------------------------------------------------------------|
+| `Get-ARIAPIResources.ps1`            | Extracts resources using Azure APIs.                                        |
+| `Get-ARIManagementGroups.ps1`        | Retrieves Azure Management Group data.                                      |
+| `Get-ARISubscriptions.ps1`           | Retrieves subscription details from Azure.                                  |
+| `Invoke-ARIInventoryLoop.ps1`        | Executes the inventory loop for resource extraction.                        |
+| `Start-ARIGraphExtraction.ps1`       | Initiates the extraction of Azure Resource Graph data.                      |
+
+
+#### 1.ExtractionFunctions/ResourceDetails
+
+| Script File                          | Description                                                                 |
+|--------------------------------------|-----------------------------------------------------------------------------|
+| `Get-ARIVMQuotas.ps1`                | Retrieves quota details for Azure Virtual Machines.                         |
+| `Get-ARIVMSkuDetails.ps1`            | Retrieves SKU details for Azure Virtual Machines.                           |
+
+
+#### 2.ProcessingFunctions
+
+| Script File                          | Description                                                                 |
+|--------------------------------------|-----------------------------------------------------------------------------|
+| `Build-ARICacheFiles.ps1`            | Builds cache files for ARI operations.                                      |
+| `Invoke-ARIAdvisoryJob.ps1`          | Executes advisory-related processing jobs.                                  |
+| `Invoke-ARIDrawIOJob.ps1`            | Executes jobs for generating Draw.io diagrams.                              |
+| `Invoke-ARIPolicyJob.ps1`            | Executes policy-related processing jobs.                                    |
+| `Invoke-ARISecurityCenterJob.ps1`    | Executes jobs related to Azure Security Center insights.                    |
+| `Invoke-ARISubJob.ps1`               | Executes subscription-specific processing jobs.                             |
+| `Start-ARIAutProcessJob.ps1`         | Initiates automated processing jobs for ARI.                                |
+| `Start-ARIExtraJobs.ps1`             | Starts additional processing jobs for extended functionality.               |
+| `Start-ARIProcessJob.ps1`            | Initiates the main processing jobs for ARI operations.                      |
+
+
+#### 3.ReportingFunctions
+
+| Script File                          | Description                                                                 |
+|--------------------------------------|-----------------------------------------------------------------------------|
+| `Build-ARIAdvisoryReport.ps1`        | Generates advisory reports based on processed data.                         |
+| `Build-ARIPolicyReport.ps1`          | Generates policy compliance reports.                                        |
+| `Build-ARIQuotaReport.ps1`           | Generates quota usage reports.                                              |
+| `Build-ARISecCenterReport.ps1`       | Generates reports for Azure Security Center insights.                       |
+| `Build-ARISubsReport.ps1`            | Generates subscription-specific reports.                                    |
+| `Start-ARIExcelJob.ps1`              | Initiates Excel-related reporting jobs.                                     |
+| `Start-ARIExtraReports.ps1`          | Starts additional reporting jobs for extended functionality.                |
+
+#### 3.ReportingFunctions/StyleFunctions
+
+| Script File                          | Description                                                                 |
+|--------------------------------------|-----------------------------------------------------------------------------|
+| `Build-ARIExcelChart.ps1`            | Creates Excel charts for visualizing report data.                           |
+| `Build-ARIExcelComObject.ps1`        | Manages Excel COM objects for report generation.                            |
+| `Build-ARIExcelinitialBlock.ps1`     | Sets up the initial block for Excel report customization.                   |
+| `Out-ARIReportResults.ps1`           | Outputs the final report results to Excel or other formats.                 |
+| `Retirement.kql`                     | Contains KQL queries for data retirement analysis.                          |
+| `Start-ARIExcelCustomization.ps1`    | Customizes Excel reports with specific formatting and styles.               |
+| `Start-ARIExcelOrdening.ps1`         | Orders and organizes data in Excel reports.                                 |
+| `Support.json`                       | Provides configuration or metadata support for reporting functions.         |
+
+
+
+
+
+Each module is designed to handle specific tasks, ensuring a clean and modular approach to ARI's functionality.
+
+
+
+### Resource Types
+
+#### Resource Type Modules
+
+The supported resource types by Azure Resource Inventory are defined by the "Resource Type Modules", we made sure to create this structure to be as simple as possible. 
+
+So anyone could contribute by creating new modules for new resource types.
+
+There is a Resource Type Module file for every single resource type supported by ARI, the structure of resource type module itself is explained in the "Module-template.tpl", located in Modules/Public/InventoryModules.
+
+Once you create the module file, it must be placed in the correct folder structure under Modules/Public/InventoryModules. The subfolder structure follows the official Azure documentation for Resource Providers: [azure-services-resource-providers](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/azure-services-resource-providers)
+
+
+#### Resource Type Subfolders
+
+| Category       | Description                                                                 |
+|----------------|-----------------------------------------------------------------------------|
+| **AI**         | Scripts for processing AI services like Azure AI, Computer Vision, and more. |
+| **Analytics**  | Scripts for processing analytics services like Databricks, Data Explorer, and Purview. |
+| **APIs**       | Scripts for processing data captured through REST APIs.                    |
+| **Compute**    | Scripts for processing compute resources such as VMs and VM Scale Sets.    |
+| **Container**  | Scripts for processing container resources like AKS and Azure Container Instances. |
+| **Database**   | Scripts for processing database services like SQL, MySQL, and Cosmos DB.   |
+| **Hybrid**     | Scripts for processing hybrid cloud resources like Azure Arc.              |
+| **Integration**| Scripts for processing service integration resources like Logic Apps and Service Bus. |
+| **IoT**        | Scripts for processing IoT resources like IoT Hub and Azure Digital Twins. |
+| **Management** | Scripts for processing management and governance resources like Azure Policy. |
+| **Monitoring** | Scripts for processing monitoring services like Azure Monitor and Log Analytics. |
+| **Network_1**  | Scripts for processing core networking resources like VNets and NSGs.      |
+| **Network_2**  | Scripts for processing advanced networking resources like Azure Firewall and WAF. |
+| **Security**   | Scripts for processing security services like Azure Security Center and Sentinel. |
+| **Storage**    | Scripts for processing Azure Storage services like Blob, File, and Queue.  |
+| **Web**        | Scripts for processing web services like App Services and Azure Functions. |
+
+
+
 
 ## Getting Help
 

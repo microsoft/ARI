@@ -1,3 +1,21 @@
+<#
+.Synopsis
+Module responsible for retrieving Azure API resources.
+
+.DESCRIPTION
+This module retrieves Azure API resources, including Resource Health, Managed Identities, Advisor Scores, and Policies.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/1.ExtractionFunctions/Get-ARIAPIResources.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI).
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
 function Get-ARIAPIResources {
     Param($Subscriptions, $AzureEnvironment, $SkipPolicy, $Debug )
     if ($Debug.IsPresent)

@@ -1,3 +1,22 @@
+<#
+.Synopsis
+Module for Reporting Results Output
+
+.DESCRIPTION
+This script outputs the results of the Azure Resource Inventory report generation.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/3.ReportingFunctions/StyleFunctions/Out-ARIReportResults.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
+
 function Out-ARIReportResults {
     param (
         [string]$Measure,

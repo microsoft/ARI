@@ -7,13 +7,13 @@ This script consolidates information for all microsoft.compute/virtualmachinesca
 Excel Sheet Name: VMSS
 
 .Link
-https://github.com/microsoft/ARI/Modules/Compute/VMSS.ps1
+https://github.com/microsoft/ARI/Modules/Public/InventoryModules/Compute/VirtualMachineScaleSet.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.9
+Version: 3.6.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -31,6 +31,8 @@ If ($Task -eq 'Processing')
         $AutoScale = $Resources | Where-Object {$_.TYPE -eq "microsoft.insights/autoscalesettings" -and $_.Properties.enabled -eq 'true'} 
         $AKS = $Resources | Where-Object {$_.TYPE -eq 'microsoft.containerservice/managedclusters'}
         $SFC = $Resources | Where-Object {$_.TYPE -eq 'microsoft.servicefabric/clusters'}
+        $VMExtraDetails = $Resources | Where-Object { $_.TYPE -eq 'ARI/VM/SKU' }
+        $VMQuotas = $Resources | Where-Object { $_.TYPE -eq 'ARI/VM/Quotas' }
 
     <######### Insert the resource Process here ########>
 
@@ -47,6 +49,29 @@ If ($Task -eq 'Processing')
                 if([string]::IsNullOrEmpty($Scaling)){$AutoSc = $false}else{$AutoSc = $true}
                 $Diag = if($data.virtualMachineProfile.diagnosticsProfile){'Enabled'}else{'Disabled'}
                 if($OS -eq 'Linux'){$PWD = $data.virtualMachineProfile.osProfile.linuxConfiguration.disablePasswordAuthentication}Else{$PWD = 'N/A'}
+                $AcceleratedNet = if(![string]::IsNullOrEmpty($data.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.enableAcceleratedNetworking)){$true}else{$false} 
+
+                # Extra Hardware Details
+                $VMExtraDetail = $VMExtraDetails.properties | Where-Object {$_.Location -eq $1.location}
+                $VMExtraDetail = $VMExtraDetail.SKUs | Where-Object {$_.Name -eq $1.sku.name}
+
+                foreach ($Capability in $VMExtraDetail.Capabilities) {
+                    if ($Capability.Name -eq 'vCPUs') {$vCPUs = $Capability.Value}
+                    if ($Capability.Name -eq 'vCPUsPerCore') {$vCPUsPerCore = $Capability.Value}
+                    if ($Capability.Name -eq 'MemoryGB') {$RAM = $Capability.Value}
+                    if ($Capability.Name -eq 'MaxDataDiskCount') {$MaxDataDiskCount = $Capability.Value}
+                    if ($Capability.Name -eq 'UncachedDiskIOPS') {$UncachedDiskIOPS = $Capability.Value}
+                    if ($Capability.Name -eq 'UncachedDiskBytesPerSecond') {$UncachedDiskBytesPerSecond = ([math]::Round($Capability.Value / 1024) / 1024)}
+                    if ($Capability.Name -eq 'MaxNetworkInterfaces') {$MaxNetworkInterfaces = $Capability.Value}
+                }
+
+                # Quotas
+                $Size = $VMExtraDetail.Family
+                $Quota = $VMQuotas.properties | Where-Object {$_.SubId -eq $1.subscriptionId}
+                $Quota = $Quota | Where-Object {$_.Location -eq $1.location}
+                $RemainingQuota = (($Quota.Data | Where-Object {$_.Name.Value -eq $Size}).Limit - ($Quota.Data | Where-Object {$_.Name.Value -eq $Size}).CurrentValue)
+
+
                 $timecreated = $data.timeCreated
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
@@ -104,6 +129,10 @@ If ($Task -eq 'Processing')
                         'Diagnostics'                   = $Diag;
                         'VM Size'                       = $1.sku.name;
                         'Instances'                     = $1.sku.capacity;
+                        'vCPUs (per Instance)'          = $vCPUs;
+                        'vCPUs per Core (per Instance)' = $vCPUsPerCore;
+                        'Memory (GB) (per Instance)'    = $RAM;
+                        'Remaining Quota'               = $RemainingQuota;
                         'Autoscale Enabled'             = $AutoSc;
                         'VM OS'                         = $OS;
                         'OS Image'                      = $data.virtualMachineProfile.storageProfile.imageReference.offer;
@@ -114,7 +143,7 @@ If ($Task -eq 'Processing')
                         'Custom DNS Servers'            = [string]$data.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.dnsSettings.dnsServers;
                         'Virtual Network'               = $VNET;
                         'Subnet'                        = $Subnet;
-                        'Accelerated Networking Enabled'= $data.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.enableAcceleratedNetworking; 
+                        'Accelerated Networking Enabled'= $AcceleratedNet; 
                         'Network Security Group'        = $NSG;
                         'Extensions'                    = [string]$ext;
                         'Admin Username'                = $data.virtualMachineProfile.osProfile.adminUsername;
@@ -140,6 +169,7 @@ Else
 
     if($SmaResources)
     {
+        $SheetName = 'Virtual Machine Scale Sets'
 
         $TableName = ('VMSSTable_'+($SmaResources.id | Select-Object -Unique).count)
         $Style = @()        
@@ -148,9 +178,9 @@ Else
         $Style += New-ExcelStyle -HorizontalAlignment Left -Range W:W -Width 60 -WrapText
 
         $condtxt = @()
-        $condtxt += New-ConditionalText FALSE -Range N:N
+        $condtxt += New-ConditionalText FALSE -Range R:R
         $condtxt += New-ConditionalText Disabled -Range K:K
-        $condtxt += New-ConditionalText FALSE -Range X:X
+        $condtxt += New-ConditionalText FALSE -Range AB:AB
         #Retirement
         $condtxt += New-ConditionalText -Range G2:G100 -ConditionalType ContainsText
 
@@ -169,6 +199,10 @@ Else
         $Exc.Add('Diagnostics')
         $Exc.Add('VM Size')
         $Exc.Add('Instances')
+        $Exc.Add('vCPUs (per Instance)')
+        $Exc.Add('vCPUs per Core (per Instance)')
+        $Exc.Add('Memory (GB) (per Instance)')
+        $Exc.Add('Remaining Quota')
         $Exc.Add('Autoscale Enabled')
         $Exc.Add('VM OS')
         $Exc.Add('OS Image')
@@ -193,7 +227,18 @@ Else
 
         $SmaResources | 
         ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'VM Scale Sets' -AutoSize -MaxAutoSizeRows 50 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+        Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -MaxAutoSizeRows 50 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
+
+
+        $excel = Open-ExcelPackage -Path $File
+
+        $sheet = $excel.Workbook.Worksheets[$SheetName]
+
+        #Remaining Quota
+        Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue 50 -ConditionValue2 100 -Address Q:Q -BackgroundColor "Yellow"
+        Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue 1 -ConditionValue2 50 -Address Q:Q -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
+
+        Close-ExcelPackage $excel
 
     }
 }

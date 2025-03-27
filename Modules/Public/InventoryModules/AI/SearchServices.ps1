@@ -3,20 +3,19 @@
 Inventory for Azure Search Services
 
 .DESCRIPTION
-This script consolidates information for all microsoft.operationalinsights/workspaces and  resource provider in $Resources variable. 
+This script consolidates information for all microsoft.search/searchservices and resource provider in $Resources variable. 
 Excel Sheet Name: SearchServices
 
 .Link
-https://github.com/microsoft/ARI/Modules/Analytics/SearchServices.ps1
+https://github.com/microsoft/ARI/Modules/Public/InventoryModules/AI/SearchServices.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.9
+Version: 3.6.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
-
 #>
 
 <######## Default Parameters. Don't modify this ########>

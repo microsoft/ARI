@@ -3,13 +3,13 @@
 Test Powershell environment
 
 .DESCRIPTION
-This module is use to test and validate the Powershell environment.
+This module is used to test and validate the Powershell environment.
 
 .Link
-https://github.com/microsoft/ARI/Modules/Core/Test-ARIPS.psm1
+https://github.com/microsoft/ARI/Modules/Private/0.MainFunctions/Test-ARIPS.ps1
 
 .COMPONENT
-This powershell Module is part of Azure Resource Inventory (ARI)
+This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
 Version: 3.6.0

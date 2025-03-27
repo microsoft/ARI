@@ -306,7 +306,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
     $ExtractionRuntime = [System.Diagnostics.Stopwatch]::StartNew()
 
-        $ExtractionData = Start-ARIExtractionOrchestration -ManagementGroup $ManagementGroup -Subscriptions $Subscriptions -SubscriptionID $SubscriptionID -ResourceGroup $ResourceGroup -SecurityCenter $SecurityCenter -SkipAdvisory $SkipAdvisory -IncludeTags $IncludeTags -TagKey $TagKey -TagValue $TagValue -SkipAPIs $SkipAPIs -SkipVMDetails $SkipVMDetails -Automation $Automation -Debug $Debug
+        $ExtractionData = Start-ARIExtractionOrchestration -ManagementGroup $ManagementGroup -Subscriptions $Subscriptions -SubscriptionID $SubscriptionID -ResourceGroup $ResourceGroup -SecurityCenter $SecurityCenter -SkipAdvisory $SkipAdvisory -SkipPolicy $SkipPolicy -IncludeTags $IncludeTags -TagKey $TagKey -TagValue $TagValue -SkipAPIs $SkipAPIs -SkipVMDetails $SkipVMDetails -Automation $Automation -Debug $Debug
 
     $ExtractionRuntime.Stop()
 
@@ -319,11 +319,10 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
     $SecCenterCount = $ExtractionData.SecCenterCount
     $Security = $ExtractionData.Security
     $Retirements = $ExtractionData.Retirements
+    $PolicyCount = $ExtractionData.PolicyCount
     $PolicyAssign = $ExtractionData.PolicyAssign
     $PolicyDef = $ExtractionData.PolicyDef
     $PolicySetDef = $ExtractionData.PolicySetDef
-
-    $DataActive = ('Azure Resource Inventory Reporting (' + $ResourcesCount + ') Resources')
 
     $ExtractionTotalTime = $ExtractionRuntime.Elapsed.ToString("dd\:hh\:mm\:ss\:fff")
 
@@ -353,7 +352,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
         Start-ARIExtraJobs -SkipDiagram $SkipDiagram -SkipAdvisory $SkipAdvisory -SkipPolicy $SkipPolicy -SecurityCenter $Security -Subscriptions $Subscriptions -Resources $Resources -Advisories $Advisories -DDFile $DDFile -DiagramCache $DiagramCache -FullEnv $FullEnv -ResourceContainers $ResourceContainers -Security $Security -PolicyAssign $PolicyAssign -PolicySetDef $PolicySetDef -PolicyDef $PolicyDef -Automation $Automation -Debug $Debug
 
-        Start-ARIProcessOrchestration -Subscriptions $Subscriptions -Resources $Resources -Retirements $Retirements -File $File -InTag $InTag -Automation $Automation -DataActive $DataActive -Debug $Debug
+        Start-ARIProcessOrchestration -Subscriptions $Subscriptions -Resources $Resources -Retirements $Retirements -File $File -InTag $InTag -Automation $Automation -Debug $Debug
 
     $ProcessingRunTime.Stop()
     
@@ -375,11 +374,13 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
     $ReportingRunTime = [System.Diagnostics.Stopwatch]::StartNew()
 
-        Start-ARIReporOrchestration -ReportCache $ReportCache -SecurityCenter $SecurityCenter -File $File -Quotas $Quotas -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -Automation $Automation -TableStyle $TableStyle -DataActive $DataActive -Debug $Debug
+        Start-ARIReporOrchestration -ReportCache $ReportCache -SecurityCenter $SecurityCenter -File $File -Quotas $Quotas -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -Automation $Automation -TableStyle $TableStyle -Debug $Debug
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Overview sheet (Charts).')
 
         $TotalRes = Start-ARIExcelCustomization -File $File -TableStyle $TableStyle -PlatOS $PlatOS -Subscriptions $Subscriptions -ExtractionRunTime $ExtractionRuntime -ProcessingRunTime $ProcessingRunTime -ReportingRunTime $ReportingRunTime -RunLite $RunLite -Overview $Overview -Debug $Debug
+
+        Write-Progress -activity 'Azure Inventory' -Status "95% Complete." -PercentComplete 95 -CurrentOperation "Excel Customization Completed.."
 
     $ReportingRunTime.Stop()
 
@@ -402,15 +403,13 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Finished Charts Phase.')
 
-    Write-Progress -activity 'Azure Resource Inventory Reporting Charts' -Status "100% Complete." -Completed
-
     if(!$SkipDiagram.IsPresent -and !$Automation.IsPresent)
     {
         Write-Progress -activity 'Diagrams' -Status "Completing Diagram" -PercentComplete 70 -CurrentOperation "Consolidating Diagram"
 
         $JobNames = (Get-Job | Where-Object {$_.name -eq 'DrawDiagram'}).Name
 
-        Wait-ARIJob -JobNames $JobNames -DataActive $DataActive -JobType 'Diagram' -LoopTime 5 -Debug $Debug
+        Wait-ARIJob -JobNames $JobNames -JobType 'Diagram' -LoopTime 5 -Debug $Debug
 
         Write-Progress -activity 'Diagrams' -Status "Closing Diagram File" -Completed
     }
@@ -437,6 +436,8 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
     $TotalRunTime.Stop()
 
     $Measure = $TotalRunTime.Elapsed.ToString("dd\:hh\:mm\:ss\:fff")
+
+Write-Progress -activity 'Azure Inventory' -Status "100% Complete." -Completed
 
 Out-ARIReportResults -Measure $Measure -ResourcesCount $ResourcesCount -TotalRes $TotalRes -SkipAdvisory $SkipAdvisory -AdvisoryData $AdvisoryCount -SkipPolicy $SkipPolicy -SkipAPIs $SkipAPIs -PolicyData $PolicyCount -SecurityCenter $SecurityCenter -SecurityCenterData $SecCenterCount -File $File -SkipDiagram $SkipDiagram -DDFile $DDFile
 

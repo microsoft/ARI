@@ -6,13 +6,13 @@ Azure Login Session Module for Azure Resource Inventory
 This module is used to invoke the authentication process that is handle by Azure PowerShell.
 
 .Link
-https://github.com/microsoft/ARI/Core/Connect-LoginSession.psm1
+https://github.com/microsoft/ARI/Modules/Private/0.MainFunctions/Connect-LoginSession.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.15
+Version: 3.6.0
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 

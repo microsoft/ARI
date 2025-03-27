@@ -3,18 +3,18 @@
 Diagram Module for Draw.io
 
 .DESCRIPTION
-This script process and creates a Draw.io Diagram based on resources present in the extraction variable $Resources. 
+This script processes and creates a Draw.io Diagram based on resources present in the extraction variable $Resources.
 
 .Link
-https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Start-ARIDrawIODiagram.psm1
+https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Start-ARIDrawIODiagram.ps1
 
 .COMPONENT
-This powershell Module is part of Azure Resource Inventory (ARI)
+This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
 Version: 3.6.0
 First Release Date: 15th Oct, 2024
-Authors: Claudio Merola 
+Authors: Claudio Merola
 
 #>
 function Start-ARIDrawIODiagram {

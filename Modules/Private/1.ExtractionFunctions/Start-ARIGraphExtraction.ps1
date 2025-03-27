@@ -1,18 +1,18 @@
 <#
 .Synopsis
-Main module for Resource Extraction
+Module responsible for coordinate the extraction of Resource and build the Graph queries
 
 .DESCRIPTION
 This module is the main module for the Azure Resource Graphs that will be run against the environment.
 
 .Link
-https://github.com/microsoft/ARI/Core/Start-AzureResourceExtraction.psm1
+https://github.com/microsoft/ARI/Modules/Private/1.ExtractionFunctions/Start-ARIGraphExtraction.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.18
+Version: 3.6.0
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -46,7 +46,7 @@ Function Start-ARIGraphExtraction {
 
     <###################################################### Subscriptions ######################################################################>
 
-    Write-Progress -activity 'Azure Inventory' -Status "1% Complete." -PercentComplete 2 -CurrentOperation 'Discovering Subscriptions..'
+    Write-Progress -activity 'Azure Inventory' -Status "2% Complete." -PercentComplete 2 -CurrentOperation 'Discovering Subscriptions..'
 
     if (![string]::IsNullOrEmpty($ManagementGroup))
         {
@@ -59,8 +59,6 @@ Function Start-ARIGraphExtraction {
     Write-Progress -activity 'Azure Inventory' -Status "3% Complete." -PercentComplete 3 -CurrentOperation "$SubCount Subscriptions found.."
 
     <######################################################## INVENTORY LOOPs #######################################################################>
-
-    Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "1% Complete." -Completed
 
     Write-Progress -activity 'Azure Inventory' -Status "4% Complete." -PercentComplete 4 -CurrentOperation "Starting Resources extraction jobs.."
 
@@ -98,32 +96,32 @@ Function Start-ARIGraphExtraction {
             $GraphQuery = "resources $RGQueryExtension $TagQueryExtension $MGQueryExtension $ExcludedTypes | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Resources')
-            $Resources += Invoke-ResourceInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Resources'
+            $Resources += Invoke-ARIInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Resources' -Debug $Debug
 
             $GraphQuery = "networkresources $RGQueryExtension $TagQueryExtension $MGQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Network Resources')
-            $Resources += Invoke-ResourceInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Network Resources'
+            $Resources += Invoke-ARIInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Network Resources' -Debug $Debug
 
             $GraphQuery = "SupportResources $RGQueryExtension $TagQueryExtension $MGQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Support Tickets')
-            $Resources += Invoke-ResourceInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'SupportTickets'
+            $Resources += Invoke-ARIInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'SupportTickets' -Debug $Debug
 
             $GraphQuery = "recoveryservicesresources $RGQueryExtension $TagQueryExtension | where type =~ 'microsoft.recoveryservices/vaults/backupfabrics/protectioncontainers/protecteditems' or type =~ 'microsoft.recoveryservices/vaults/backuppolicies' $MGQueryExtension  | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Backup Resources')
-            $Resources += Invoke-ResourceInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Backup Items'
+            $Resources += Invoke-ARIInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Backup Items' -Debug $Debug
 
             $GraphQuery = "desktopvirtualizationresources $RGQueryExtension $MGQueryExtension| project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for AVD Resources')
-            $Resources += Invoke-ResourceInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Virtual Desktop'
+            $Resources += Invoke-ARIInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Virtual Desktop' -Debug $Debug
 
             $GraphQuery = "resourcecontainers $RGQueryExtension $TagQueryExtension $MGContainerExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Resource Containers')
-            $ResourceContainers = Invoke-ResourceInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Subscriptions and Resource Groups'
+            $ResourceContainers = Invoke-ARIInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Subscriptions and Resource Groups' -Debug $Debug
 
             $ContainerCount = $ResourceContainers.count
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Number of Resource Containers: '+ $ContainerCount)
@@ -133,7 +131,7 @@ Function Start-ARIGraphExtraction {
                     $GraphQuery = "advisorresources $RGQueryExtension $MGQueryExtension | where properties.impact in~ ('Medium','High') | order by id asc"
 
                     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Advisories')
-                    $Advisories = Invoke-ResourceInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Advisories'
+                    $Advisories = Invoke-ARIInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Advisories' -Debug $Debug
 
                     $AdvisorCount = $Advisories.count
                     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Number of Advisors: '+ $AdvisorCount)
@@ -143,7 +141,7 @@ Function Start-ARIGraphExtraction {
                     $GraphQuery = "securityresources $RGQueryExtension | where type =~ 'microsoft.security/assessments' and properties['status']['code'] == 'Unhealthy' $MGQueryExtension | order by id asc"
 
                     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Security Resources')
-                    $Security = Invoke-ResourceInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Security Center'
+                    $Security = Invoke-ARIInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Security Center' -Debug $Debug
 
                     $SecurityCount = $Security.count
                     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Number of Security Center Advisors: '+ $SecurityCount)
@@ -157,20 +155,13 @@ Function Start-ARIGraphExtraction {
 
     $RetirementQuery = Get-Content -Path $RetirementPath | Out-String
 
-    $ResourceRetirements = Invoke-ResourceInventoryLoop -GraphQuery $RetirementQuery -FSubscri $Subscri -LoopName 'Retirements'
+    $ResourceRetirements = Invoke-ARIInventoryLoop -GraphQuery $RetirementQuery -FSubscri $Subscri -LoopName 'Retirements'
 
     $RetirementCount = $ResourceRetirements.count
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Number of Retirements: '+ $RetirementCount)
 
-    Write-Progress -activity 'Azure Inventory' -Status "4% Complete." -PercentComplete 4 -CurrentOperation "Starting API Extraction.."
-
-
-    <######################################################### QUOTA JOB ######################################################################>
-
-    Write-Progress -activity 'Azure Inventory' -PercentComplete 20
-
-    Write-Progress -Id 1 -activity "Running Inventory Jobs" -Status "100% Complete." -Completed
+    Write-Progress -activity 'Azure Inventory' -PercentComplete 10
 
     $tmp = [PSCustomObject]@{
         Resources              = $Resources

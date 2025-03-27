@@ -1,3 +1,22 @@
+<#
+.Synopsis
+Set the report path for Azure Resource Inventory
+
+.DESCRIPTION
+This module sets the default paths for report generation in Azure Resource Inventory.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/0.MainFunctions/Set-ARIReportPath.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+
+#>
 function Set-ARIReportPath {
     Param($ReportDir)
 
@@ -22,7 +41,7 @@ function Set-ARIReportPath {
 
     $ReportPath = @{
         'DefaultPath' = $DefaultPath;
-        'DiagramCache' = $DiagramCache;;
+        'DiagramCache' = $DiagramCache;
         'ReportCache' = $ReportCache
     }
     

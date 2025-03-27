@@ -1,3 +1,22 @@
+<#
+.Synopsis
+File Module for Draw.io Diagram
+
+.DESCRIPTION
+This module is used for setting and managing files in the Draw.io Diagram.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Set-ARIDiagramFile.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+
+#>
 function Set-ARIDiagramFile {
     Param ($XMLFiles, $DDFile, $LogFile)
     try 

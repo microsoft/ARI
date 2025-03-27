@@ -1,3 +1,21 @@
+<#
+.Synopsis
+Module responsible for retrieving Azure VM SKU details.
+
+.DESCRIPTION
+This module retrieves details about Azure VM SKUs available in specific locations.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/1.ExtractionFunctions/ResourceDetails/Get-ARIVMSkuDetails.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI).
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
 function Get-ARIVMSkuDetails {
     Param ($Resources, $Debug)
     if ($Debug.IsPresent)

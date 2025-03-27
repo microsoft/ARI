@@ -1,5 +1,24 @@
+<#
+.Synopsis
+Wait for ARI Jobs to Complete
+
+.DESCRIPTION
+This script waits for the completion of specified ARI jobs.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Jobs/Wait-ARIJob.ps1
+
+.COMPONENT
+    This powershell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+
+#>
 function Wait-ARIJob {
-    Param($JobNames, $JobType, $DataActive, $LoopTime, $Debug)
+    Param($JobNames, $JobType, $LoopTime, $Debug)
     if ($Debug.IsPresent)
         {
             $DebugPreference = 'Continue'
@@ -11,8 +30,6 @@ function Wait-ARIJob {
         }
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Jobs Collector.')
-
-    Write-Progress -activity $DataActive -Status "Processing Jobs" -PercentComplete 50
 
     $c = 0
 

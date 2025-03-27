@@ -7,13 +7,13 @@ This script consolidates information for all microsoft.network/privatednszones a
 Excel Sheet Name: PrivateDNS
 
 .Link
-https://github.com/microsoft/ARI/Modules/Networking/PrivateDNS.ps1
+https://github.com/microsoft/ARI/Modules/Public/InventoryModules/Network_2/PrivateDNS.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.9
+Version: 3.6.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 

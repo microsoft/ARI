@@ -1,22 +1,21 @@
 <#
 .Synopsis
-Inventory for Azure MySQLF lexible Server
+Inventory for Azure MySQL Flexible Server
 
 .DESCRIPTION
 This script consolidates information for all  resource provider in $Resources variable. 
 Excel Sheet Name: MySQL flexible
 
 .Link
-https://github.com/microsoft/ARI/Modules/Data/MySQLFlexible.ps1
+https://github.com/microsoft/ARI/Modules/Public/InventoryModules/Database/MySQLflexible.ps1
 
 .COMPONENT
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.9
+Version: 3.6.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
-
 #>
 
 <######## Default Parameters. Don't modify this ########>

@@ -1,3 +1,22 @@
+<#
+.Synopsis
+Module for Excel COM Object Customizations
+
+.DESCRIPTION
+This script applies additional customizations to the Excel report using the Excel COM object.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/3.ReportingFunctions/StyleFunctions/Build-ARIExcelComObject.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
+
 function Build-ARIExcelComObject {
     param($File, $Debug)
     if($Debug.IsPresent)

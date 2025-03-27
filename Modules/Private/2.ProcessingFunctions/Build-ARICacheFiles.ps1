@@ -1,5 +1,24 @@
+<#
+.Synopsis
+Module responsible for creating the local cache files for the report.
+
+.DESCRIPTION
+This module receives the job names for the Azure Resources that were processed previously and creates the local cache files that will be used to build the Excel report.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/2.ProcessingFunctions/Build-ARICacheFiles.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI).
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
+
 function Build-ARICacheFiles {
-    Param($ReportCache, $DataActive, $JobNames,$Debug)
+    Param($ReportCache, $JobNames, $Debug)
     if ($Debug.IsPresent)
         {
             $DebugPreference = 'Continue'
@@ -10,8 +29,6 @@ function Build-ARICacheFiles {
             $ErrorActionPreference = "silentlycontinue"
         }
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking Cache Folder.')
-
-    Write-Progress -activity $DataActive -Status "Processing Jobs" -PercentComplete 50
 
     $Lops = $JobNames.count
     $Counter = 0
@@ -24,7 +41,6 @@ function Build-ARICacheFiles {
 
             $NewJobName = ($Job -replace 'ResourceJob_','')
             $TempJob = Receive-Job -Name $Job
-            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Resource Job '+ $NewJobName +' Returned: ' + ($TempJob.values | Where-Object {$_ -ne $null}).Count + ' Resources')
             if (![string]::IsNullOrEmpty($TempJob.values))
                 {
                     $JobJSONName = ($NewJobName+'.json')

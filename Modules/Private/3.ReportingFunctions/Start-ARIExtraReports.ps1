@@ -1,3 +1,22 @@
+<#
+.Synopsis
+Module for Extra Reports
+
+.DESCRIPTION
+This script processes and creates additional report sheets such as Quotas, Security Center, Policies, and Advisory.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/3.ReportingFunctions/Start-ARIExtraReports.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
+
 function Start-ARIExtraReports {
     Param($File, $Quotas, $SecurityCenter, $SkipPolicy, $SkipAdvisory, $TableStyle, $Debug)
     if ($Debug.IsPresent)
@@ -10,16 +29,18 @@ function Start-ARIExtraReports {
             $ErrorActionPreference = "silentlycontinue"
         }
 
+    Write-Progress -activity 'Azure Inventory' -Status "70% Complete." -PercentComplete 70 -CurrentOperation "Reporting Extra Resources.."
+
     <################################################ QUOTAS #######################################################>
 
     if(![string]::IsNullOrEmpty($Quotas))
         {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Quota Usage Sheet.')
-            Write-Progress -activity 'Azure Resource Inventory Quota Usage' -Status "50% Complete." -PercentComplete 50 -CurrentOperation "Building Quota Sheet"
+            Write-Progress -Id 1 -activity 'Azure Resource Inventory Quota Usage' -Status "50% Complete." -PercentComplete 50 -CurrentOperation "Building Quota Sheet"
 
             Build-ARIQuotaReport -File $File -AzQuota $Quotas -TableStyle $TableStyle
 
-            Write-Progress -activity 'Azure Resource Inventory Quota Usage' -Status "100% Complete." -Completed
+            Write-Progress -Id 1 -activity 'Azure Resource Inventory Quota Usage' -Status "100% Complete." -Completed
         }
 
     <################################################ SECURITY CENTER #######################################################>
@@ -34,11 +55,12 @@ function Start-ARIExtraReports {
                     Write-Progress -Id 1 -activity 'Processing Security Center Advisories' -Status "50% Complete." -PercentComplete 50
                     Start-Sleep -Seconds 2
                 }
-                Write-Progress -Id 1 -activity 'Processing Security Center Advisories'  -Status "100% Complete." -Completed
 
                 $Sec = Receive-Job -Name 'Security'
 
                 Build-ARISecCenterReport -File $File -Sec $Sec -TableStyle $TableStyle
+
+                Write-Progress -Id 1 -activity 'Processing Security Center Advisories'  -Status "100% Complete." -Completed
             }
 
     }
@@ -55,11 +77,12 @@ function Start-ARIExtraReports {
                     Write-Progress -Id 1 -activity 'Processing Policies' -Status "50% Complete." -PercentComplete 50
                     Start-Sleep -Seconds 2
                 }
-                Write-Progress -Id 1 -activity 'Processing Policies'  -Status "100% Complete." -Completed
 
                 $Pol = Receive-Job -Name 'Policy'
 
                 Build-ARIPolicyReport -File $File -Pol $Pol -TableStyle $TableStyle
+
+                Write-Progress -Id 1 -activity 'Processing Policies'  -Status "100% Complete." -Completed
 
                 Start-Sleep -Milliseconds 200
             }
@@ -77,11 +100,12 @@ function Start-ARIExtraReports {
                     Write-Progress -Id 1 -activity 'Processing Advisories' -Status "50% Complete." -PercentComplete 50
                     Start-Sleep -Seconds 2
                 }
-                Write-Progress -Id 1 -activity 'Processing Advisories'  -Status "100% Complete." -Completed
 
                 $Adv = Receive-Job -Name 'Advisory'
 
                 Build-ARIAdvisoryReport -File $File -Adv $Adv -TableStyle $TableStyle
+
+                Write-Progress -Id 1 -activity 'Processing Advisories'  -Status "100% Complete." -Completed
 
                 Start-Sleep -Milliseconds 200
             }
@@ -105,4 +129,6 @@ function Start-ARIExtraReports {
     Clear-ARIMemory
 
     Write-Progress -activity 'Azure Resource Inventory Subscriptions' -Status "100% Complete." -Completed
+
+    Write-Progress -activity 'Azure Inventory' -Status "80% Complete." -PercentComplete 80 -CurrentOperation "Completed Extra Resources Reporting.."
 }

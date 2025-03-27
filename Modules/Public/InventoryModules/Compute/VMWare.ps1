@@ -7,13 +7,13 @@ This script consolidates information for all Microsoft.AVS/privateClouds resourc
 Excel Sheet Name: VMWare
 
 .Link
-https://github.com/microsoft/ARI/Modules/Compute/VMWare.ps1
+https://github.com/microsoft/ARI/Modules/Public/InventoryModules/Compute/VMWare.ps1
 
 .COMPONENT
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.9
+Version: 3.6.0
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 

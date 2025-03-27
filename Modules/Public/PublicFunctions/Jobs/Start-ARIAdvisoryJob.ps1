@@ -1,18 +1,18 @@
 <#
 .Synopsis
-Advisory Module
+Public Advisory Job Module
 
 .DESCRIPTION
-This script process and creates the Advisory sheet based on advisorresources.
+This script creates the job to process the Advisory data.
 
 .Link
-https://github.com/microsoft/ARI/Extras/ARIAdvisoryInv.psm1
+https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Jobs/Start-ARIAdvisoryJob.ps1
 
 .COMPONENT
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 4.0.1
+Version: 3.6.0
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 

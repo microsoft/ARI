@@ -1,3 +1,22 @@
+<#
+.Synopsis
+Module responsible for invoking policy evaluation jobs.
+
+.DESCRIPTION
+This module starts jobs to evaluate Azure policies, including policy definitions, assignments, and set definitions, either in automation or manual mode.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/2.ProcessingFunctions/Invoke-ARIPolicyJob.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI).
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
+
 function Invoke-ARIPolicyJob {
     Param($Subscriptions, $PolicySetDef, $PolicyAssign, $PolicyDef, $ARIModule, $Automation, $Debug)
     if ($Debug.IsPresent)

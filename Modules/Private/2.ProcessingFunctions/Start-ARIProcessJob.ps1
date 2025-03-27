@@ -1,3 +1,22 @@
+<#
+.Synopsis
+Module responsible for starting the processing jobs for Azure Resources.
+
+.DESCRIPTION
+This module creates and manages jobs to process Azure Resources in batches based on the environment size. It ensures efficient resource processing and avoids CPU overload.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/2.ProcessingFunctions/Start-ARIProcessJob.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI).
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
+
 function Start-ARIProcessJob {
     Param($Resources, $Retirements, $Subscriptions, $InTag, $Unsupported, $Debug)
     if ($Debug.IsPresent)
@@ -10,24 +29,25 @@ function Start-ARIProcessJob {
             $ErrorActionPreference = "silentlycontinue"
         }
 
-
-    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting to Create Jobs to Process the Resources.')
+    Write-Progress -activity 'Azure Inventory' -Status "22% Complete." -PercentComplete 22 -CurrentOperation "Creating Jobs to Process Data.."
 
     switch ($Resources.count)
     {
         {$_ -le 12500}
             {
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Regular Size Environment. Jobs will be run in parallel.')
                 $EnvSizeLooper = 20
             }
         {$_ -gt 12500 -and $_ -le 50000}
             {
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Medium Size Environment. Jobs will be run in batches of 8.')
                 $EnvSizeLooper = 8
             }
         {$_ -gt 50000}
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Large Environment Detected.')
                 $EnvSizeLooper = 5
-                Write-Host ('Jobs will be run in batches to avoid CPU Overload.')
+                Write-Host ('Jobs will be run in small batches to avoid CPU and Memory Overload.') -ForegroundColor Red
             }
     }
 
@@ -36,6 +56,12 @@ function Start-ARIProcessJob {
     $ModuleFolders = Get-ChildItem -Path $InventoryModulesPath -Directory
 
     $JobLoop = 1
+    $TotalFolders = $ModuleFolders.count
+
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Converting Resource data to JSON for Jobs')
+    $NewResources = ($Resources | ConvertTo-Json -Depth 50 -Compress)
+
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting to Create Jobs to Process the Resources.')
 
     Foreach ($ModuleFolder in $ModuleFolders)
         {
@@ -44,6 +70,10 @@ function Start-ARIProcessJob {
             $ModuleFiles = Get-ChildItem -Path $ModulePath
 
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Creating Job: '+$ModuleName)
+
+            $c = (($JobLoop / $TotalFolders) * 100)
+            $c = [math]::Round($c)
+            Write-Progress -Id 1 -activity "Creating Jobs" -Status "$c% Complete." -PercentComplete $c
 
             Start-Job -Name ('ResourceJob_'+$ModuleName) -ScriptBlock {
 
@@ -90,6 +120,9 @@ function Start-ARIProcessJob {
                         Remove-Variable -Name ModName
                     }
 
+                [System.GC]::Collect() | out-null
+                Start-Sleep -Milliseconds 50
+
                 $Hashtable = New-Object System.Collections.Hashtable
 
                 Foreach ($Module in $ModuleFiles)
@@ -109,7 +142,7 @@ function Start-ARIProcessJob {
 
                 $Hashtable
 
-            } -ArgumentList $ModuleFiles, $PSScriptRoot, $Subscriptions, $InTag, ($Resources | ConvertTo-Json -Depth 100), $Retirements, 'Processing', $null, $null, $null, $Unsupported | Out-Null
+            } -ArgumentList $ModuleFiles, $PSScriptRoot, $Subscriptions, $InTag, $NewResources , $Retirements, 'Processing', $null, $null, $null, $Unsupported | Out-Null
 
         if($JobLoop -eq $EnvSizeLooper)
             {
@@ -121,7 +154,7 @@ function Start-ARIProcessJob {
 
                 $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
 
-                Build-ARICacheFiles -ReportCache $ReportCache -DataActive $DataActive -JobNames $JobNames -Debug $Debug
+                Build-ARICacheFiles -ReportCache $ReportCache -JobNames $JobNames -Debug $Debug
 
                 $JobLoop = 0
             }

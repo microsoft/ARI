@@ -1,3 +1,22 @@
+<#
+.Synopsis
+Module for Excel Sheet Ordering
+
+.DESCRIPTION
+This script organizes the order of sheets in the Excel report.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/3.ReportingFunctions/StyleFunctions/Start-ARIExcelOrdening.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
+
 function Start-ARIExcelOrdening {
     Param($File, $Debug)
     if ($Debug.IsPresent)

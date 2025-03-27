@@ -1,6 +1,6 @@
 <br/>
 
-# Azure Resource Inventory Automation Account v3.5
+# Azure Resource Inventory Automation Account v3.6
 
 <br/>
 
@@ -86,13 +86,7 @@
 
 <br/>
 
-### The version must be __5.1__:
-
-<br/>
-
-<p align="center">
-<img src="images/ARIAUT_PWVersion.png">
-</p>
+### The only tested (and supported) version was __7.4__:
 
 <br/>
 
@@ -111,9 +105,10 @@
 #### 2) "ImportExcel"
 #### 3) "Az.ResourceGraph"
 #### 4) "Az.Accounts"
-#### 5) "Az.Compute"
-#### 5) "PowershellGet"
-#### 7) "ThreadJob"
+#### 5) "Az.Storage"
+#### 6) "Az.Compute"
+#### 7) "PowershellGet" (This is not really necessary)
+#### 8) "ThreadJob"
 
 <br/>
 
@@ -150,8 +145,6 @@ The line must contain the following parameters:
 
 ````
 -TenantID
--SkipDiagram
--SkipAPIs
 -Automation
 -StorageAccount
 -StorageContainer
@@ -162,7 +155,7 @@ The line must contain the following parameters:
 
 i.e: 
 
-**Invoke-ARI -TenantID "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX" -Automation -SkipDiagram -SkipAPIs -StorageAccount "stgaccari001" -StorageContainer "reports" -Debug**
+**Invoke-ARI -TenantID "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX" -Automation -StorageAccount "stgaccari001" -StorageContainer "reports"**
 
 
 <br/>

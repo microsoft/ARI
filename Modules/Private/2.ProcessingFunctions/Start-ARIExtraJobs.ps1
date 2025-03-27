@@ -1,3 +1,22 @@
+<#
+.Synopsis
+Module responsible for starting additional processing jobs for Azure Resources.
+
+.DESCRIPTION
+This module handles the execution of extra jobs such as Draw.IO diagrams, Security Center processing, Policy evaluations, and Advisory processing for Azure Resources.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/2.ProcessingFunctions/Start-ARIExtraJobs.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI).
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
+
 function Start-ARIExtraJobs {
     Param ($SkipDiagram, 
             $SkipAdvisory, 
@@ -27,8 +46,9 @@ function Start-ARIExtraJobs {
             $ErrorActionPreference = "silentlycontinue"
         }
 
-    $ARIModule = 'AzureResourceInventory'
+    #$ARIModule = 'AzureResourceInventory'
     #$ARIModule = 'C:\usr\src\PSModules\AzureResourceInventory\AzureResourceInventory'
+    $ARIModule = 'C:\Users\clvieira\OneDrive - Microsoft\Repos\ARI\ARI\AzureResourceInventory'
 
     <######################################################### DRAW IO DIAGRAM JOB ######################################################################>
 

@@ -1,3 +1,22 @@
+<#
+.Synopsis
+Set up folders for Azure Resource Inventory
+
+.DESCRIPTION
+This module creates and validates the necessary folders for Azure Resource Inventory.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/0.MainFunctions/Set-ARIFolder.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI)
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+
+#>
 function Set-ARIFolder {
     Param($DefaultPath, $DiagramCache, $ReportCache, $Debug)
     if ($Debug.IsPresent)

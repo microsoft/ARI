@@ -1,18 +1,18 @@
 <#
 .Synopsis
-Policy Module
+Start Policy Job Module
 
 .DESCRIPTION
-This script process and creates the Policy sheet based on advisorresources.
+This script processes and creates the Policy sheet based on advisor resources.
 
 .Link
-https://github.com/microsoft/ARI/Extras/ARIPolicyInv.psm1
+https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Jobs/Start-ARIPolicyJob.ps1
 
 .COMPONENT
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 4.0.2
+Version: 3.6.0
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 

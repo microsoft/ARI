@@ -1,3 +1,21 @@
+<#
+.Synopsis
+Module responsible for retrieving Azure Management Groups.
+
+.DESCRIPTION
+This module retrieves Azure Management Groups and their associated subscriptions.
+
+.Link
+https://github.com/microsoft/ARI/Modules/Private/1.ExtractionFunctions/Get-ARIManagementGroups.ps1
+
+.COMPONENT
+This PowerShell Module is part of Azure Resource Inventory (ARI).
+
+.NOTES
+Version: 3.6.0
+First Release Date: 15th Oct, 2024
+Authors: Claudio Merola
+#>
 function Get-ARIManagementGroups {
     Param ($ManagementGroup, $Debug)
     if ($Debug.IsPresent)

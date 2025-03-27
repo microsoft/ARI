@@ -6,13 +6,13 @@ Main module for Excel Report Building
 This module is the main module for building the Excel Report.
 
 .Link
-https://github.com/microsoft/ARI/Modules/Inventory/ARIResourceReport.psm1
+https://github.com/microsoft/ARI/Modules/Private/0.MainFunctions/Start-ARIReporOrchestration.ps1
 
 .COMPONENT
-This powershell Module is part of Azure Resource Inventory (ARI)
+This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.5.1
+Version: 3.6.0
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -25,7 +25,6 @@ Function Start-ARIReporOrchestration {
     $SkipPolicy,
     $SkipAdvisory,
     $Automation,
-    $DataActive,
     $TableStyle,
     $Debug)
 
@@ -39,10 +38,12 @@ Function Start-ARIReporOrchestration {
             $ErrorActionPreference = "silentlycontinue"
         }
 
+    Write-Progress -activity 'Azure Inventory' -Status "65% Complete." -PercentComplete 65 -CurrentOperation "Starting the Report Phase.."
+
     <############################################################## REPORT CREATION ###################################################################>
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Resource Reporting Cache.')
-    Start-ARIExcelJob -ReportCache $ReportCache -DataActive $DataActive -TableStyle $TableStyle -File $File -Debug $Debug
+    Start-ARIExcelJob -ReportCache $ReportCache -TableStyle $TableStyle -File $File -Debug $Debug
 
     <############################################################## EXTRA REPORTS ###################################################################>
 
