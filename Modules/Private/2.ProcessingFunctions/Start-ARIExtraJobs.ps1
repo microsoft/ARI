@@ -46,9 +46,8 @@ function Start-ARIExtraJobs {
             $ErrorActionPreference = "silentlycontinue"
         }
 
-    #$ARIModule = 'AzureResourceInventory'
+    $ARIModule = 'AzureResourceInventory'
     #$ARIModule = 'C:\usr\src\PSModules\AzureResourceInventory\AzureResourceInventory'
-    $ARIModule = 'C:\Users\clvieira\OneDrive - Microsoft\Repos\ARI\ARI\AzureResourceInventory'
 
     <######################################################### DRAW IO DIAGRAM JOB ######################################################################>
 
