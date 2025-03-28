@@ -107,7 +107,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('POSTGRETable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('POSTGRETable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $SheetName = 'PostgreSQL'
@@ -155,7 +155,7 @@ Else {
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
 

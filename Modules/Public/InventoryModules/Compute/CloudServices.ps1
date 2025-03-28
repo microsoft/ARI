@@ -98,7 +98,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('CloudServicesTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('CloudServicesTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -122,7 +122,7 @@ Else {
         }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'CloudServices' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $condtxt -Numberformat '0' -Style $Style
 
     }

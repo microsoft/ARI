@@ -47,12 +47,7 @@ function Build-ARIExcelComObject {
                     {
                         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error Opening Excel File.')
                         Write-Error $_
-                        $application.Quit()
-                        if (Get-Process -Name "excel" -ErrorAction Ignore | Where-Object { $_.CommandLine -like '*/automation*' } )
-                            {
-                                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss') + ' - Stopping Excel process.')
-                                Get-Process -Name "excel" -ErrorAction Ignore | Where-Object { $_.CommandLine -like '*/automation*' } | Stop-Process -Force
-                            }
+                        Remove-ARIExcelProcess -Debug $Debug
                         return
                     }
 
@@ -98,11 +93,7 @@ function Build-ARIExcelComObject {
                 $Ex.Save()
                 $Ex.Close()
                 $application.Quit()
-                if (Get-Process -Name "excel" -ErrorAction Ignore | Where-Object { $_.CommandLine -like '*/automation*' } )
-                    {
-                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss') + ' - Stopping Excel process.')
-                        Get-Process -Name "excel" -ErrorAction Ignore | Where-Object { $_.CommandLine -like '*/automation*' } | Stop-Process -Force
-                    }
+                Remove-ARIExcelProcess -Debug $Debug
 
                 $Excel = New-Object OfficeOpenXml.ExcelPackage $File
 
@@ -133,12 +124,7 @@ function Build-ARIExcelComObject {
         {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error Interacting with Excel COM Object.')
             Write-Error $_
-            $Ex.Close()
-            $application.Quit()
-            if (Get-Process -Name "excel" -ErrorAction Ignore | Where-Object { $_.CommandLine -like '*/automation*' } )
-                {
-                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss') + ' - Stopping Excel process.')
-                    Get-Process -Name "excel" -ErrorAction Ignore | Where-Object { $_.CommandLine -like '*/automation*' } | Stop-Process -Force
-                }
+            Remove-ARIExcelProcess -Debug $Debug
+            return
         }
 }

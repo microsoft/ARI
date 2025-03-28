@@ -130,7 +130,7 @@ Else {
 
         $SheetName = 'Load Balancers'
 
-        $TableName = ('LBTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('LBTable_'+($SmaResources.'Resource U').count)
 
         $condtxt = @()
         #Retirement
@@ -164,7 +164,7 @@ Else {
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
 

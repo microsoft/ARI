@@ -89,6 +89,7 @@ If ($Task -eq 'Processing') {
                             'HCX Cloud Manager'                 = $data.endpoints.hcxCloudManager;
                             'NSXT Manager'                      = $data.endpoints.nsxtManager;
                             'VCSA'                              = $data.endpoints.vcsa;
+                            'Resource U'                        = $ResUCount;
                             'Tag Name'                          = [string]$Tag.Name;
                             'Tag Value'                         = [string]$Tag.Value
                         }
@@ -106,7 +107,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('VMWareTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('VMWareTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -143,7 +144,7 @@ Else {
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'VMWare' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
 
     }

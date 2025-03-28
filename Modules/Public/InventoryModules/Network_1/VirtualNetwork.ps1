@@ -155,7 +155,7 @@ If ($Task -eq 'Processing') {
 Else {
     if ($SmaResources) {
 
-        $TableName = ('VNETTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('VNETTable_'+($SmaResources.'Resource U').count)
 
         $SheetName = 'Virtual Networks'
 
@@ -201,7 +201,7 @@ Else {
         $noNumberConversion += 'Subnet Prefix'
 
         $SmaResources | 
-            ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+            ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
 
 

@@ -81,6 +81,7 @@ If ($Task -eq 'Processing') {
                             'Prevent Data Exfiltration'         = [string]$data.managedVirtualNetworkSettings.preventDataExfiltration;
                             'Managed Virtual Network'           = $data.managedVirtualNetwork;                            
                             'Managed ResourceGroup'             = $data.managedResourceGroupName;
+                            'Resource U'                             = $ResUCount
                             'Tag Name'                          = [string]$Tag.Name;
                             'Tag Value'                         = [string]$Tag.Value
                         }
@@ -98,7 +99,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('SynapseTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('SynapseTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
         
         $condtxt = @()
@@ -129,7 +130,7 @@ Else {
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Synapse' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
 
     }

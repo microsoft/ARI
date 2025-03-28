@@ -103,6 +103,7 @@ If ($Task -eq 'Processing') {
                         'Private Link Target Resource'    = [string]$data.privatelinkserviceconnections.properties.privatelinkserviceid;
                         'IP Address'                      = $IPAddress;
                         'FQDN'                            = $FQDN;
+                        'Resource U'                        = $ResUCount;
                         'Tag Name'                        = [string]$Tag.Name;
                         'Tag Value'                       = [string]$Tag.Value;
                     }
@@ -116,7 +117,7 @@ If ($Task -eq 'Processing') {
 Else {
     if ($SmaResources) {
 
-        $TableName = ('PvtEndpointTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('PvtEndpointTable_'+($SmaResources.'Resource U').count)
         $Style = @()
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
@@ -147,7 +148,7 @@ Else {
 
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Private Endpoint' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
 
     }   

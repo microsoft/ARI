@@ -61,6 +61,9 @@ function Start-ARIProcessJob {
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Converting Resource data to JSON for Jobs')
     $NewResources = ($Resources | ConvertTo-Json -Depth 50 -Compress)
 
+    Clear-Variable -Name Resources
+    Clear-ARIMemory
+
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting to Create Jobs to Process the Resources.')
 
     Foreach ($ModuleFolder in $ModuleFolders)
@@ -146,11 +149,12 @@ function Start-ARIProcessJob {
 
         if($JobLoop -eq $EnvSizeLooper)
             {
-                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Waiting Batch of Jobs to Complete.')
+                Write-Host 'Waiting Batch Jobs' -ForegroundColor Cyan -NoNewline
+                Write-Host '. This step may take several minutes to finish' -ForegroundColor Cyan
 
                 $InterJobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*' -and $_.State -eq 'Running'}).Name
 
-                Wait-ARIJob -JobNames $InterJobNames -JobType 'Initial Resource' -LoopTime 5 -Debug $Debug
+                Wait-ARIJob -JobNames $InterJobNames -JobType 'Resource Batch' -LoopTime 5 -Debug $Debug
 
                 $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
 

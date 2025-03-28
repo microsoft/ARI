@@ -99,5 +99,6 @@ function Start-ARIExcelJob {
                     $ReportCounter ++
 
                 }
+                Write-Progress -Id 1 -activity "Building Report" -Status "100% Complete." -Completed
         }
     }

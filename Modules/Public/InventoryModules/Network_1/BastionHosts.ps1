@@ -79,6 +79,7 @@ If ($Task -eq 'Processing')
                             'Virtual Network' = $BastVNET;
                             'Public IP'       = $BastPIP;
                             'Scale Units'     = $data.scaleUnits;
+                            'Resource U'       = $ResUCount;
                             'Tag Name'        = [string]$Tag.Name;
                             'Tag Value'       = [string]$Tag.Value
                         }
@@ -99,7 +100,7 @@ Else
     if($SmaResources)
     {
 
-        $TableName = ('BASTIONTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('BASTIONTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -125,7 +126,7 @@ Else
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Bastion Hosts' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
 
     }

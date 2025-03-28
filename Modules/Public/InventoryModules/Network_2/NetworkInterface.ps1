@@ -4,7 +4,7 @@ Inventory for Azure Network Interfaces
 
 .DESCRIPTION
 This script consolidates information for all microsoft.network/natgateways and  resource provider in $Resources variable. 
-Excel Sheet Name: NIC
+Excel Sheet Name: Network Interface
 
 .Link
 https://github.com/microsoft/ARI/Modules/Public/InventoryModules/Network_2/NetworkInterface.ps1
@@ -137,7 +137,7 @@ If ($Task -eq 'Processing') {
 Else {
     if ($SmaResources) {
 
-        $TableName = ('NICTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('NICTable_'+($SmaResources.'Resource U').count)
         $Style = @()
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
@@ -183,8 +183,8 @@ Else {
         $noNumberConversion += 'Public IP'
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'NIC' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
+        Export-Excel -Path $File -WorksheetName 'Network Interface' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
 
     }
 }

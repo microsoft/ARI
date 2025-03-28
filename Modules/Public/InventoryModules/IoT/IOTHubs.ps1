@@ -83,6 +83,7 @@ If ($Task -eq 'Processing') {
                                     'Events Path'                       = [string]$data.eventHubEndpoints.events.path;
                                     'Max Delivery Count'                = [string]$data.cloudToDevice.maxDeliveryCount;
                                     'Host Name'                         = $data.hostName;
+                                    'Resource U'                       = $ResUCount;
                                     'Tag Name'                          = [string]$Tag.Name;
                                     'Tag Value'                         = [string]$Tag.Value
                                 }
@@ -101,7 +102,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('IOTHubsTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('IOTHubsTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -133,7 +134,7 @@ Else {
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'IOTHubs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style -ConditionalText $condtxt
 
     }

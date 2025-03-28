@@ -49,13 +49,13 @@ function Invoke-ARIInventoryLoop {
                         try
                             {
                                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 1000 Resources. Loop Number: ' + $ReportCounterVar)
-                                Write-Progress -Id 1 -activity 'Azure Inventory' -CurrentOperation ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
+                                Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
                                 $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $Sub -first 1000 -InformationAction SilentlyContinue -ProgressAction SilentlyContinue
                             }
                         catch
                             {
                                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 200 Resources. Loop Number: ' + $ReportCounterVar)
-                                Write-Progress -Id 1 -activity 'Azure Inventory' -CurrentOperation ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
+                                Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
                                 $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $Sub -first 200 -InformationAction SilentlyContinue -ProgressAction SilentlyContinue
                             }
                         $LocalResults += $QueryResult
@@ -85,18 +85,19 @@ function Invoke-ARIInventoryLoop {
                 try
                     {
                         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 1000 Resources. Loop Number: ' + $ReportCounterVar)
-                        Write-Progress -Id 1 -activity 'Azure Inventory' -CurrentOperation ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
+                        Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
                         $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $FSubscri -first 1000 -InformationAction SilentlyContinue -ProgressAction SilentlyContinue
                     }
                 catch
                     {
                         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 200 Resources. Loop Number: ' + $ReportCounterVar)
-                        Write-Progress -Id 1 -activity 'Azure Inventory' -CurrentOperation ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
+                        Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
                         $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $FSubscri -first 200 -InformationAction SilentlyContinue -ProgressAction SilentlyContinue
                     }
                 $LocalResults += $QueryResult
                 $ReportCounter ++
             }
         }
+        Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "100% Complete." -Completed
     return $LocalResults
 }

@@ -18,7 +18,7 @@ Authors: Claudio Merola
 
 #>
 function Start-ARIExtractionOrchestration {
-    Param($ManagementGroup, $Subscriptions, $SubscriptionID, $SkipPolicy, $ResourceGroup, $SecurityCenter, $SkipAdvisory, $IncludeTags, $TagKey, $TagValue, $SkipAPIs, $SkipVMDetails, $Automation, $Debug)
+    Param($ManagementGroup, $Subscriptions, $SubscriptionID, $SkipPolicy, $ResourceGroup, $SecurityCenter, $SkipAdvisory, $IncludeTags, $TagKey, $TagValue, $SkipAPIs, $SkipVMDetails, $IncludeCosts, $Automation, $Debug)
     if ($Debug.IsPresent)
         {
             $DebugPreference = 'Continue'
@@ -28,6 +28,11 @@ function Start-ARIExtractionOrchestration {
         {
             $ErrorActionPreference = "silentlycontinue"
         }
+
+    if ($IncludeCosts.IsPresent) {
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting Cost Inventory.')
+        Get-ARICostInventory -Subscriptions $Subscriptions -Days 60 -Debug $Debug -Granularity 'Monthly'
+    }
 
     $GraphData = Start-ARIGraphExtraction -ManagementGroup $ManagementGroup -Subscriptions $Subscriptions -SubscriptionID $SubscriptionID -ResourceGroup $ResourceGroup -SecurityCenter $SecurityCenter -SkipAdvisory $SkipAdvisory -IncludeTags $IncludeTags -TagKey $TagKey -TagValue $TagValue -Debug $Debug
 
@@ -62,6 +67,8 @@ function Start-ARIExtractionOrchestration {
 
     if (!$SkipVMDetails.IsPresent)
         {
+            Write-Host 'Gathering VM Extra Details: ' -NoNewline
+            Write-Host 'Quotas' -ForegroundColor Cyan
             Write-Progress -activity 'Azure Inventory' -Status "13% Complete." -PercentComplete 13 -CurrentOperation "Starting VM Details Extraction.."
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM Quota Details.')
 
@@ -70,6 +77,9 @@ function Start-ARIExtractionOrchestration {
             $Resources += $VMQuotas
 
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM SKU Details.')
+
+            Write-Host 'Gathering VM Extra Details: ' -NoNewline
+            Write-Host 'Size SKU' -ForegroundColor Cyan
 
             $VMSkuDetails = Get-ARIVMSkuDetails -Resources $Resources -Debug $Debug
 

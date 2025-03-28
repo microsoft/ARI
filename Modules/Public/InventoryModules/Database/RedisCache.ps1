@@ -111,7 +111,7 @@ Else {
 
         $SheetName = 'Redis Cache'
 
-        $TableName = ('RedisCacheTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('RedisCacheTable_'+($SmaResources.'Resource U').count)
         $condtxt = @()
         $condtxt += New-ConditionalText "Not Configured" -Range E:E
         $condtxt += New-ConditionalText Default -Range M:M
@@ -156,7 +156,7 @@ Else {
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
 

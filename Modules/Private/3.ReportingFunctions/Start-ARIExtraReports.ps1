@@ -18,7 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Start-ARIExtraReports {
-    Param($File, $Quotas, $SecurityCenter, $SkipPolicy, $SkipAdvisory, $TableStyle, $Debug)
+    Param($File, $Quotas, $SecurityCenter, $SkipPolicy, $SkipAdvisory, $IncludeCosts, $TableStyle, $Debug)
     if ($Debug.IsPresent)
         {
             $DebugPreference = 'Continue'
@@ -123,8 +123,9 @@ function Start-ARIExtraReports {
     }
 
     $AzSubs = Receive-Job -Name 'Subscriptions'
+    Remove-Job -Name 'Subscriptions' | Out-Null
 
-    Build-ARISubsReport -File $File -Sub $AzSubs -TableStyle $TableStyle
+    Build-ARISubsReport -File $File -Sub $AzSubs -IncludeCosts $IncludeCosts -TableStyle $TableStyle
 
     Clear-ARIMemory
 

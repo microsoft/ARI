@@ -18,7 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Invoke-ARISubJob {
-    Param($Subscriptions, $Automation, $Resources, $ARIModule, $Debug)
+    Param($Subscriptions, $Automation, $Resources, $CostData, $ARIModule, $Debug)
     if ($Debug.IsPresent)
         {
             $DebugPreference = 'Continue'
@@ -36,11 +36,11 @@ function Invoke-ARISubJob {
 
                 import-module $($args[2])
 
-                $SubResult = Start-ARISubscriptionJob -Subscriptions $($args[0]) -Resources $($args[1])
+                $SubResult = Start-ARISubscriptionJob -Subscriptions $($args[0]) -Resources $($args[1]) -CostData $($args[3])
 
                 $SubResult
 
-            } -ArgumentList $Subscriptions, $Resources, $ARIModule | Out-Null
+            } -ArgumentList $Subscriptions, $Resources, $ARIModule, $CostData | Out-Null
         }
     else
         {
@@ -49,11 +49,12 @@ function Invoke-ARISubJob {
 
                 import-module $($args[2])
 
-                $SubResult = Start-ARISubscriptionJob -Subscriptions $($args[0]) -Resources $($args[1])
+                $SubResult = Start-ARISubscriptionJob -Subscriptions $($args[0]) -Resources $($args[1]) -CostData $($args[3])
 
                 $SubResult
 
-            } -ArgumentList $Subscriptions, $Resources, $ARIModule | Out-Null
+            } -ArgumentList $Subscriptions, $Resources, $ARIModule, $CostData | Out-Null
         }
 
 }
+

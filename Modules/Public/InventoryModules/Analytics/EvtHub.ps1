@@ -111,7 +111,7 @@ Else
     if($SmaResources)
     {
 
-        $TableName = ('EvtHubTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('EvtHubTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $SheetName = 'Event Hubs'
@@ -150,7 +150,7 @@ Else
         $noNumberConversion += 'Minimum TLS Version'
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
 
 

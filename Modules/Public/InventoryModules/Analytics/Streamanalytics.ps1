@@ -102,6 +102,7 @@ If ($Task -eq 'Processing') {
                             'Last Output Event Time'                    = $LastOutput;
                             'Output Start Time'                         = $OutputStart;
                             'Output Error Policy'                       = $data.outputErrorPolicy;
+                            'Resource U'                               = $ResUCount;
                             'Tag Name'                                  = [string]$Tag.Name;
                             'Tag Value'                                 = [string]$Tag.Value
                         }
@@ -119,7 +120,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('StreamsATable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('StreamsATable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -168,7 +169,7 @@ Else {
 
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Stream Analytics Jobs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
 
     }

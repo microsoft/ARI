@@ -26,6 +26,7 @@ function Get-AriVMQuotas {
 
     $Quotas = Foreach($Sub in $Subscriptions)
         {
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM Quota Details: '+$Sub.name)
             $Locs = ($Resources | Where-Object {$_.subscriptionId -eq $Sub.id -and $_.Type -in 'microsoft.compute/virtualmachines','microsoft.compute/virtualmachinescalesets'} | Group-Object -Property Location).name
             if (![string]::IsNullOrEmpty($Locs))
                 {

@@ -35,6 +35,7 @@ If ($Task -eq 'Processing')
     if($BackupPolicies)
         {
             $tmp = foreach ($1 in $BackupPolicies) {
+                $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
@@ -94,10 +95,12 @@ If ($Task -eq 'Processing')
                                 'Protection State'                          = $ProtectedItem.properties.protectionstate;
                                 'Protection State (Secondary Region)'       = $ProtectedItem.properties.protectionstateinsecondaryregion;
                                 'Soft Delete Retention Period'              = $ProtectedItem.properties.softdeleteretentionperiod;
+                                'Resource U'                               = $ResUCount;
                                 'Tag Name'                                  = [string]$Tag.Name;
                                 'Tag Value'                                 = [string]$Tag.Value
                             }
                             $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 }
                         }
                     }
             }
@@ -114,7 +117,7 @@ Else
     if($SmaResources)
     {
 
-        $TableName = ('BackupTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('BackupTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -159,7 +162,7 @@ Else
         }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Backup' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }

@@ -92,7 +92,8 @@ If ($Task -eq 'Processing') {
                             'VMWare Solution'                   = $data.avsDataStore;
                             'LDAP'                              = $data.ldapEnabled;
                             'VNET Name'                         = [string]$VNET;
-                            'Subnet Name'                       = [string]$Subnet;                            
+                            'Subnet Name'                       = [string]$Subnet;
+                            'Resource U'                       = $ResUCount;
                             'Tag Name'                          = [string]$Tag.Name;
                             'Tag Value'                         = [string]$Tag.Value
                         }
@@ -110,7 +111,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('NetAppATable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('NetAppATable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -147,7 +148,7 @@ Else {
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'NetApp' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style -ConditionalText $condtxt
 
     }

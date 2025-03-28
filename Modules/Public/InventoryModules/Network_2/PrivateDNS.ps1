@@ -80,6 +80,7 @@ If ($Task -eq 'Processing') {
                             'Network Links with Registration' = $data.numberOfVirtualNetworkLinksWithRegistration;
                             'Tag Name'                        = [string]$Tag.Name;
                             'Tag Value'                       = [string]$Tag.Value;
+                            'Resource U'                        = $ResUCount;
                             'Virtual Network'                 = $2.id
                         }
                         $obj
@@ -93,7 +94,7 @@ If ($Task -eq 'Processing') {
 Else {
     if ($SmaResources) {
 
-        $TableName = ('PrivDNSTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('PrivDNSTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -119,8 +120,7 @@ Else {
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Private DNS' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
-    
-    }   
+    }
 }

@@ -55,9 +55,6 @@ function Start-ARIProcessOrchestration {
 
         <############################################################## RESOURCES PROCESSING #############################################################>
 
-        Clear-Variable -Name Resources
-        Clear-ARIMemory
-
         $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
 
         if(![string]::IsNullOrEmpty($JobNames))

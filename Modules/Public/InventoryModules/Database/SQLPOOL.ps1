@@ -77,10 +77,10 @@ if ($Task -eq 'Processing') {
                             'DB Max DTU'                 = $data.perDatabaseSettings.maxCapacity;
                             'DB Min DTU'                 = $data.perDatabaseSettings.minCapacity;
                             'Zone Redundant'             = $data.zoneRedundant;
+                            'Resource U'                = $ResUCount;
                             'Tag Name'                   = [string]$Tag.Name;
                             'Tag Value'                  = [string]$Tag.Value;
                         }
-                        
                         $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
                     }               
@@ -91,7 +91,7 @@ if ($Task -eq 'Processing') {
 else {
     if ($SmaResources) {
 
-        $TableName = ('SqlPoolTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('SqlPoolTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -121,7 +121,7 @@ else {
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'SQL Pools' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
     }
 }

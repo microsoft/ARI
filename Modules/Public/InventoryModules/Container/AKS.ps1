@@ -188,7 +188,7 @@ Else
     {
         $SheetName = 'AKS'
 
-        $TableName = ('AKSTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('AKSTable_'+($SmaResources.'Resource U').count)
 
         $Style = @()
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize
@@ -259,7 +259,7 @@ Else
         $noNumberConversion += 'Node Pool Version'
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -TableName $TableName -MaxAutoSizeRows 50 -TableStyle $tableStyle -ConditionalText $condtxt -Numberformat '0' -Style $Style -NoNumberConversion $noNumberConversion 
 
 

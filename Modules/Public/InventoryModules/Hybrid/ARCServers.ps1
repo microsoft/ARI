@@ -21,7 +21,7 @@ Authors: Claudio Merola and Renato Gregio
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$ReportCache, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task ,$File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing')
 {
@@ -91,13 +91,27 @@ If ($Task -eq 'Processing')
                         $Subnet = $data.networkprofile.networkinterfaces.ipaddresses.subnet.addressprefix
                     }
 
-                    $LastStatus = $data.laststatuschange
-                    $LastStatus = [datetime]$LastStatus
-                    $LastStatus = $LastStatus.ToString("yyyy-MM-dd HH:mm")
+                    if(![string]::IsNullOrEmpty($data.laststatuschange))
+                        {
+                            $LastStatus = $data.laststatuschange
+                            $LastStatus = [datetime]$LastStatus
+                            $LastStatus = $LastStatus.ToString("yyyy-MM-dd HH:mm")
+                        }
+                    else
+                        {
+                            $LastStatus = $null
+                        }
 
-                    $InstallDate = $data.osinstalldate
-                    $InstallDate = [datetime]$InstallDate
-                    $InstallDate = $InstallDate.ToString("yyyy-MM-dd HH:mm")
+                    if(![string]::IsNullOrEmpty($data.osinstalldate))
+                        {
+                            $InstallDate = $data.osinstalldate
+                            $InstallDate = [datetime]$InstallDate
+                            $InstallDate = $InstallDate.ToString("yyyy-MM-dd HH:mm")
+                        }
+                    else
+                        {
+                            $InstallDate = $null
+                        }
 
                     foreach ($Tag in $Tags) { 
                         $obj = @{
@@ -155,7 +169,7 @@ Else
     if($SmaResources)
     {
 
-        $TableName = ('ARCServer_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('ARCServer_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -201,7 +215,7 @@ Else
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'ARC Servers' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }

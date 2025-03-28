@@ -174,6 +174,41 @@ function Get-ARIAPIResources {
 
         $Carbon = Invoke-RestMethod -Uri $url -Headers $header -Body ($Body | ConvertTo-Json) -Method POST -ContentType 'application/json'
 
+        
+
+        $Today = Get-Date
+        $EndDate = Get-Date -Year $Today.Year -Month $Today.Month -Day $Today.Day -Hour 23 -Minute 59 -Second 59 -Millisecond 0
+        $Days = 60
+        $StartDate = ($EndDate).AddDays(-$Days)
+
+        $Hash = @{name="PreTaxCost";function="Sum"}
+        $MHash = @{totalCost=$Hash}
+        $Granularity = 'Monthly'
+
+        $Grouping = @()
+        $GTemp = @{Name='ResourceType';Type='Dimension'}
+        $Grouping += $GTemp
+        $GTemp = @{Name='ResourceGroup';Type='Dimension'}
+        $Grouping += $GTemp
+
+        $Body = @{
+                type = "ActualCost"
+                timeframe = "Custom"
+                dataset = @{
+                    granularity = $Granularity
+                    aggregation = @($MHash)
+                    }
+                grouping = $Grouping
+                timePeriod = @{
+                    startDate = $StartDate
+                    endDate = $EndDate
+                }
+        }
+
+        $url = 'https://management.azure.com/subscriptions/$sub/providers/Microsoft.CostManagement/query?api-version=2019-11-01'
+
+        $Cost = Invoke-RestMethod -Uri $url -Headers $header -Body ($Body | ConvertTo-Json -Depth 10) -Method POST -ContentType 'application/json'
+
         #>
 
         return $APIResults

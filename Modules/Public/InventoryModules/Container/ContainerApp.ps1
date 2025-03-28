@@ -94,6 +94,7 @@ If ($Task -eq 'Processing')
                                 'Memory Size (Gi)'          = $2.containers.resources.memory;
                                 'Ephemeral Storage (Gi)'    = $2.containers.resources.ephemeralStorage;
                                 'Container Image'           = $2.containers.image;
+                                'Resource U'                = $ResUCount;
                                 'Tag Name'                  = [string]$Tag.Name;
                                 'Tag Value'                 = [string]$Tag.Value
                             }
@@ -114,7 +115,7 @@ Else
 
     if($SmaResources)
     {
-        $TableName = ('ContsTb_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('ContsTb_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -154,7 +155,7 @@ Else
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Container Apps' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
 
     }

@@ -121,7 +121,7 @@ Else
 
         $SheetName = 'Disks'
 
-        $TableName = ('VMDiskT_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('VMDiskT_'+($SmaResources.'Resource U').count)
 
         $condtxt = @()
         $condtxt += New-ConditionalText Unattached -Range F:F
@@ -161,7 +161,7 @@ Else
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
 

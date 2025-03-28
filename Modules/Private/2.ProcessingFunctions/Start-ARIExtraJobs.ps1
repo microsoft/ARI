@@ -33,7 +33,8 @@ function Start-ARIExtraJobs {
             $PolicyDef, 
             $PolicySetDef, 
             $PolicyAssign, 
-            $Automation, 
+            $Automation,
+            $IncludeCosts,
             $Debug)
 
     if ($Debug.IsPresent)
@@ -123,5 +124,12 @@ function Start-ARIExtraJobs {
     <######################################################### SUBSCRIPTIONS JOB ######################################################################>
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Subscriptions Processing job.')
-    Invoke-ARISubJob -Subscriptions $Subscriptions -Automation $Automation -Resources $Resources -ARIModule $ARIModule -Debug $Debug
+    $CostData = ''
+    if ($IncludeCosts.IsPresent) {
+        Get-Job -Name 'Cost Inventory' | Wait-Job | Out-Null
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting Cost Inventory Data.')
+        $CostData = Receive-job -Name 'Cost Inventory' -ErrorAction SilentlyContinue
+        Remove-Job -Name 'Cost Inventory' | Out-Null
+    }
+    Invoke-ARISubJob -Subscriptions $Subscriptions -Automation $Automation -Resources $Resources -CostData $CostData -ARIModule $ARIModule -Debug $Debug
 }

@@ -75,6 +75,7 @@ if ($Task -eq 'Processing') {
                             'CreationDate'                  = $data.creationDate;
                             'DefaultSecondaryLocation'      = $data.defaultSecondaryLocation;
                             'Status'                        = $data.status;
+                            'Resource U'                 = $ResUCount;
                             'Tag Name'                      = [string]$Tag.Name;
                             'Tag Value'                     = [string]$Tag.Value
                         }
@@ -89,7 +90,7 @@ if ($Task -eq 'Processing') {
 else {
     if ($SmaResources) {
 
-        $TableName = ('SQLMIDBTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('SQLMIDBTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -114,7 +115,7 @@ else {
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'SQL MI DBs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }

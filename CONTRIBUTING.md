@@ -14,11 +14,20 @@
 - [Contribution Workflow](#contribution-workflow)
 - [Development Guidelines](#development-guidelines)
 - [Project Structure](#project-structure)
-  - [Core Modules](#core-modules)
-  - [Inventory Modules](#inventory-modules)
-  - [Diagram Modules](#diagram-modules)
-  - [Extras Modules](#extras-modules)
-  - [Script File Modules](#script-file-modules)
+   - [Public Modules](#Public-Modules)
+      - [PublicFunctions](#PublicFunctions)
+      - [Diagram](#Diagram)
+      - [Jobs](#Jobs)
+   - [Private Modules](#Private-Modules)
+      - [0.MainFunctions](#0.MainFunctions)
+      - [1.ExtractionFunctions](#1.ExtractionFunctions)
+         - [ResourceDetails](#1.ExtractionFunctions/ResourceDetails)
+      - [2.ProcessingFunctions](#2.ProcessingFunctions)
+      - [3.ReportingFunctions](#3.ReportingFunctions)
+         - [StyleFunctions](#3.ReportingFunctions/StyleFunctions)
+   - [Resource Types](#Resource-Types)
+      - [Resource Type Modules](#Resource-Type-Modules)
+      - [Resource Type Subfolders](#Resource-Type-Subfolders)
 - [Getting Help](#getting-help)
 
 ## Getting Started
@@ -26,6 +35,8 @@
 Thank you for considering contributing to Azure Resource Inventory (ARI)! We welcome contributions from the community and are excited to see what you can bring to the project.
 
 Before you begin, please familiarize yourself with the [README.md](README.md) file to understand the purpose and functionality of ARI.
+
+If you wish to contribute by adding a new Resource Type to ARI, you may jump to the [Resource Types](#Resource-Types) section of this document.
 
 ## Contribution Workflow
 
@@ -139,6 +150,8 @@ This modules will be loaded and the functions will be exposed to the user sessio
 
 
 ### Private Modules
+
+This modules will be loaded and the functions will be available for the script and other functions to consume, but will not be exposed to the user session
 
 #### 0.MainFunctions
 

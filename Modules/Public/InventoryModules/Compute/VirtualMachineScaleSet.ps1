@@ -171,7 +171,7 @@ Else
     {
         $SheetName = 'Virtual Machine Scale Sets'
 
-        $TableName = ('VMSSTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('VMSSTable_'+($SmaResources.'Resource U').count)
         $Style = @()        
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -Range A:W
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0.0' -Range Y:AA
@@ -181,6 +181,8 @@ Else
         $condtxt += New-ConditionalText FALSE -Range R:R
         $condtxt += New-ConditionalText Disabled -Range K:K
         $condtxt += New-ConditionalText FALSE -Range AB:AB
+        # Quota = 0
+        $condtxt += New-ConditionalText 0 -Range Q:Q
         #Retirement
         $condtxt += New-ConditionalText -Range G2:G100 -ConditionalType ContainsText
 
@@ -226,7 +228,7 @@ Else
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -MaxAutoSizeRows 50 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
 

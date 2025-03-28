@@ -191,7 +191,7 @@ Else {
 
         $SheetName = 'Storage Accounts'
 
-        $TableName = ('StorAccTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('StorAccTable_'+($SmaResources.'Resource U').count)
         $Style = @(
         New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
         New-ExcelStyle -HorizontalAlignment Center -Width 80 -WrapText -NumberFormat '0' -Range "X:X"
@@ -252,7 +252,7 @@ Else {
             }
 
         $SmaResources |
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc |
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc |
         Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
 

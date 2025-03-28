@@ -217,6 +217,7 @@ If ($Task -eq 'Processing') {
                         'Flow Logs Enabled'            = $FlowLogsEnabled;
                         'Flow Logs Retention Days'     = $FlowLogsRetention;
                         'Flow Logs Storage Account'    = $FlowLogsStorage;
+                        'Resource U'               = $ResUCount;
                         'Tag Name'                     = [string]$Tag.Name;
                         'Tag Value'                    = [string]$Tag.Value
                     }
@@ -230,7 +231,7 @@ If ($Task -eq 'Processing') {
 } Else {
     if ($SmaResources) {
 
-        $TableName = ('NSGTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('NSGTable_'+($SmaResources.'Resource U').count)
         $Style = @()
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
         $Style += New-ExcelStyle -HorizontalAlignment Center -WrapText -NumberFormat 0 -Range "M:M" -Width 70
@@ -277,7 +278,7 @@ If ($Task -eq 'Processing') {
         $noNumberConversion += 'Destination'
 
         $SmaResources |
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc |
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc |
         Export-Excel -Path $File -WorksheetName 'Network Security Groups' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
 
     }

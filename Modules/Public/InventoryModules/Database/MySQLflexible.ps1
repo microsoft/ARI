@@ -87,6 +87,7 @@ If ($Task -eq 'Processing') {
                             'High Availability'                 = $data.highAvailability.mode;
                             'High Availability State'           = $data.highAvailability.state;                            
                             'FQDN'                              = $data.fullyQualifiedDomainName;
+                            'Resource U'              = $ResUCount;
                             'Tag Name'                          = [string]$Tag.Name;
                             'Tag Value'                         = [string]$Tag.Value
                         }
@@ -104,7 +105,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('MySQLFlexTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('MySQLFlexTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -143,7 +144,7 @@ Else {
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'MySQL Flexible' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
 
     }

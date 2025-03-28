@@ -87,7 +87,8 @@ If ($Task -eq 'Processing') {
                             'Managed Event Hub'                 = [string]$eventHubNamespace;
                             'Public Network Access'             = $data.publicNetworkAccess;
                             'Created By'                        = $data.createdBy;      
-                            'Created Time'                      = $timecreated;                      
+                            'Created Time'                      = $timecreated;
+                            'Resource U'                       = $ResUCount;
                             'Tag Name'                          = [string]$Tag.Name;
                             'Tag Value'                         = [string]$Tag.Value
                         }
@@ -105,7 +106,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('PurviewATable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('PurviewATable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -133,11 +134,11 @@ Else {
         if($InTag)
             {
                 $Exc.Add('Tag Name')
-                $Exc.Add('Tag Value') 
+                $Exc.Add('Tag Value')
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Purview' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
 
     }

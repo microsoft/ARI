@@ -86,6 +86,7 @@ If ($Task -eq 'Processing')
                                 'Workload Profile Type'     = $2.workloadProfileType;
                                 'Workload Profile Min'      = $2.minimumCount;
                                 'Workload Profile Max'      = $2.maximumCount;
+                                'Resource U'            = $ResUCount;
                                 'Tag Name'                  = [string]$Tag.Name;
                                 'Tag Value'                 = [string]$Tag.Value
                             }
@@ -106,7 +107,7 @@ Else
 
     if($SmaResources)
     {
-        $TableName = ('ContEnvTb_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('ContEnvTb_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -142,7 +143,7 @@ Else
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Container App Env' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
 
     }

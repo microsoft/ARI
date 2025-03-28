@@ -335,7 +335,7 @@ else
     If($SmaResources)
         {
 
-            $TableName = ('VMTable_'+($SmaResources.id | Select-Object -Unique).count)
+            $TableName = ('VMTable_'+($SmaResources.'Resource U').count)
             $Style = @()
             $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
             $Style += New-ExcelStyle -HorizontalAlignment Left -Range AW:AW -Width 60 -WrapText
@@ -424,7 +424,7 @@ else
             $noNumberConversion += 'DNS Servers'
 
             $SmaResources | 
-            ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+            ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
             Export-Excel -Path $File -WorksheetName $SheetName -TableName $TableName -TableStyle $tableStyle -MaxAutoSizeRows 100 -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
 
 

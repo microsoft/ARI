@@ -102,7 +102,7 @@ Else
     if($SmaResources)
     {
 
-        $TableName = ('WorkSpaceTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('WorkSpaceTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0.0'
 
         $condtxt = @()
@@ -135,7 +135,7 @@ Else
         $noNumberConversion += 'Daily Cap (GB)'
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Workspaces' -AutoSize -MaxAutoSizeRows 100 -ConditionalText $condtxt -TableName $TableName -TableStyle $tableStyle -Style $Style -NoNumberConversion $noNumberConversion
 
     }

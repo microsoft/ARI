@@ -26,6 +26,7 @@ Function Start-ARIReporOrchestration {
     $SkipAdvisory,
     $Automation,
     $TableStyle,
+    $IncludeCosts,
     $Debug)
 
     if ($Debug.IsPresent)
@@ -49,6 +50,6 @@ Function Start-ARIReporOrchestration {
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Default Data Reporting.')
 
-    Start-ARIExtraReports -File $File -Quotas $Quotas -SecurityCenter $SecurityCenter -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -TableStyle $TableStyle -Debug $Debug
+    Start-ARIExtraReports -File $File -Quotas $Quotas -SecurityCenter $SecurityCenter -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -IncludeCosts $IncludeCosts -TableStyle $TableStyle -Debug $Debug
 
 }

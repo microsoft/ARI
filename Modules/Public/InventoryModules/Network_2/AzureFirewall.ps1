@@ -199,7 +199,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('AzFirewallTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('AzFirewallTable_'+($SmaResources.'Resource U').count)
 
         $condtxt = @()
         #Retirement
@@ -243,7 +243,7 @@ Else {
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Azure Firewall' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
     }

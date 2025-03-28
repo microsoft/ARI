@@ -85,7 +85,8 @@ If ($Task -eq 'Processing') {
                             'Ingestion Mode'                    = $data.IngestionMode;
                             'Public Access For Ingestion'       = $data.publicNetworkAccessForIngestion;
                             'Public Access For Query'           = $data.publicNetworkAccessForQuery;    
-                            'Created Time'                      = $timecreated;                            
+                            'Created Time'                      = $timecreated;     
+                            'Resource U'                       = $ResUCount;                       
                             'Tag Name'                          = [string]$Tag.Name;
                             'Tag Value'                         = [string]$Tag.Value
                         }
@@ -103,7 +104,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('AppInsightsTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('AppInsightsTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -137,7 +138,7 @@ Else {
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'AppInsights' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style -ConditionalText $condtxt
 
     }
