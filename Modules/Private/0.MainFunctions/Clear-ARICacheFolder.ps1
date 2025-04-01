@@ -19,16 +19,7 @@ Authors: Claudio Merola
 #>
 
 function Clear-ARICacheFolder {
-    Param($ReportCache, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($ReportCache)
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Clearing Cache Folder.')
     $CacheFiles = Get-ChildItem -Path $ReportCache -Recurse

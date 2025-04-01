@@ -121,54 +121,54 @@
     Official Repository: https://github.com/microsoft/ARI
 #>
 Function Invoke-ARI {
-param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
-        $AzureEnvironment = 'AzureCloud',
+    [CmdletBinding(PositionalBinding=$false)]
+    param (
         [ValidateSet(1, 2, 3)]
-        $Overview = 1,
-        $TenantID,
-        $AppId,
-        $Secret,
-        $CertificatePath,
+        [int]$Overview = 1,    
+        [ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
+        [string]$AzureEnvironment = 'AzureCloud',
+        [string]$TenantID,
+        [string]$AppId,
+        [string]$Secret,
+        [string]$CertificatePath,
+        [string]$ReportName = 'AzureResourceInventory',
+        [string]$ReportDir,
+        [string]$StorageAccount,
+        [string]$StorageContainer,
         [String[]]$SubscriptionID,
-        $ManagementGroup,
+        [string[]]$ManagementGroup,
         [string[]]$ResourceGroup,
-        $TagKey,
-        $TagValue,
+        [string[]]$TagKey,
+        [string[]]$TagValue,
         [switch]$SecurityCenter,
         [switch]$Heavy,
+        [Alias("SkipAdvisories","NoAdvisory")]
         [switch]$SkipAdvisory,
+        [Alias("DisableAutoUpdate","SkipAutoUpdate")]
         [switch]$NoAutoUpdate,
+        [Alias("NoPolicy","SkipPolicies")]
         [switch]$SkipPolicy,
+        [Alias("NoAPI","SkipAPI")]
         [switch]$SkipAPIs,
+        [Alias("IncludeTag","AddTags")]
         [switch]$IncludeTags,
+        [Alias("SkipVMDetail","NoVMDetails")]
         [switch]$SkipVMDetails,
+        [Alias("Costs","IncludeCost")]
         [switch]$IncludeCosts,
         [switch]$QuotaUsage,
         [switch]$SkipDiagram,
         [switch]$Automation,
-        $StorageAccount,
-        $StorageContainer,
+        [Alias("Low","Light")]
         [switch]$Lite,
-        [switch]$Debug,
         [switch]$Help,
         [switch]$DeviceLogin,
-        [switch]$DiagramFullEnvironment,
-        $ReportName = 'AzureResourceInventory',
-        $ReportDir)
-
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+        [switch]$DiagramFullEnvironment
+        )
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Debbuging Mode: On. ErrorActionPreference was set to "Continue", every error will be presented.')
 
-    if (!$Debug.IsPresent)
+    if ($DebugPreference -eq 'SilentlyContinue')
         {
             Write-Host 'Debbuging Mode: ' -nonewline
             Write-Host 'Off' -ForegroundColor Yellow
@@ -259,11 +259,11 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
         Exit
     }
 
-    $PlatOS = Test-ARIPS -Debug $Debug
+    $PlatOS = Test-ARIPS
 
     if ($PlatOS -ne 'Azure CloudShell' -and !$Automation.IsPresent)
         {
-            $TenantID = Connect-ARILoginSession -AzureEnvironment $AzureEnvironment -TenantID $TenantID -SubscriptionID $SubscriptionID -DeviceLogin $DeviceLogin -AppId $AppId -Secret $Secret -CertificatePath $CertificatePath -Debug $Debug
+            $TenantID = Connect-ARILoginSession -AzureEnvironment $AzureEnvironment -TenantID $TenantID -SubscriptionID $SubscriptionID -DeviceLogin $DeviceLogin -AppId $AppId -Secret $Secret -CertificatePath $CertificatePath
 
             if (!$NoAutoUpdate.IsPresent)
                 {
@@ -302,18 +302,19 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
             $ReportName = 'ARI_Automation'
         }
 
-    Set-ARIFolder -DefaultPath $DefaultPath -DiagramCache $DiagramCache -ReportCache $ReportCache -Debug $Debug
+    Set-ARIFolder -DefaultPath $DefaultPath -DiagramCache $DiagramCache -ReportCache $ReportCache
 
-    Clear-ARICacheFolder -ReportCache $ReportCache -Debug $Debug
+    Clear-ARICacheFolder -ReportCache $ReportCache
 
     $ExtractionRuntime = [System.Diagnostics.Stopwatch]::StartNew()
 
-        $ExtractionData = Start-ARIExtractionOrchestration -ManagementGroup $ManagementGroup -Subscriptions $Subscriptions -SubscriptionID $SubscriptionID -ResourceGroup $ResourceGroup -SecurityCenter $SecurityCenter -SkipAdvisory $SkipAdvisory -SkipPolicy $SkipPolicy -IncludeTags $IncludeTags -TagKey $TagKey -TagValue $TagValue -SkipAPIs $SkipAPIs -SkipVMDetails $SkipVMDetails -IncludeCosts $IncludeCosts -Automation $Automation -Debug $Debug
+        $ExtractionData = Start-ARIExtractionOrchestration -ManagementGroup $ManagementGroup -Subscriptions $Subscriptions -SubscriptionID $SubscriptionID -ResourceGroup $ResourceGroup -SecurityCenter $SecurityCenter -SkipAdvisory $SkipAdvisory -SkipPolicy $SkipPolicy -IncludeTags $IncludeTags -TagKey $TagKey -TagValue $TagValue -SkipAPIs $SkipAPIs -SkipVMDetails $SkipVMDetails -IncludeCosts $IncludeCosts -Automation $Automation
 
     $ExtractionRuntime.Stop()
 
     $Resources = $ExtractionData.Resources
     $Quotas = $ExtractionData.Quotas
+    $CostData = $ExtractionData.Costs
     $ResourceContainers = $ExtractionData.ResourceContainers
     $Advisories = $ExtractionData.Advisories
     $ResourcesCount = $ExtractionData.ResourcesCount
@@ -325,6 +326,8 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
     $PolicyAssign = $ExtractionData.PolicyAssign
     $PolicyDef = $ExtractionData.PolicyDef
     $PolicySetDef = $ExtractionData.PolicySetDef
+
+    Remove-Variable -Name ExtractionData -ErrorAction SilentlyContinue
 
     $ExtractionTotalTime = $ExtractionRuntime.Elapsed.ToString("dd\:hh\:mm\:ss\:fff")
 
@@ -352,9 +355,9 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
     $ProcessingRunTime = [System.Diagnostics.Stopwatch]::StartNew()
 
-        Start-ARIExtraJobs -SkipDiagram $SkipDiagram -SkipAdvisory $SkipAdvisory -SkipPolicy $SkipPolicy -SecurityCenter $Security -Subscriptions $Subscriptions -Resources $Resources -Advisories $Advisories -DDFile $DDFile -DiagramCache $DiagramCache -FullEnv $FullEnv -ResourceContainers $ResourceContainers -Security $Security -PolicyAssign $PolicyAssign -PolicySetDef $PolicySetDef -PolicyDef $PolicyDef -IncludeCosts $IncludeCosts -Automation $Automation -Debug $Debug
+        Start-ARIExtraJobs -SkipDiagram $SkipDiagram -SkipAdvisory $SkipAdvisory -SkipPolicy $SkipPolicy -SecurityCenter $Security -Subscriptions $Subscriptions -Resources $Resources -Advisories $Advisories -DDFile $DDFile -DiagramCache $DiagramCache -FullEnv $FullEnv -ResourceContainers $ResourceContainers -Security $Security -PolicyAssign $PolicyAssign -PolicySetDef $PolicySetDef -PolicyDef $PolicyDef -IncludeCosts $IncludeCosts -CostData $CostData -Automation $Automation
 
-        Start-ARIProcessOrchestration -Subscriptions $Subscriptions -Resources $Resources -Retirements $Retirements -File $File -InTag $InTag -Automation $Automation -Debug $Debug
+        Start-ARIProcessOrchestration -Subscriptions $Subscriptions -Resources $Resources -Retirements $Retirements -File $File -InTag $InTag -Automation $Automation
 
     $ProcessingRunTime.Stop()
     
@@ -376,11 +379,11 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
     $ReportingRunTime = [System.Diagnostics.Stopwatch]::StartNew()
 
-        Start-ARIReporOrchestration -ReportCache $ReportCache -SecurityCenter $SecurityCenter -File $File -Quotas $Quotas -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -IncludeCosts $IncludeCosts -Automation $Automation -TableStyle $TableStyle -Debug $Debug
+        Start-ARIReporOrchestration -ReportCache $ReportCache -SecurityCenter $SecurityCenter -File $File -Quotas $Quotas -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -IncludeCosts $IncludeCosts -Automation $Automation -TableStyle $TableStyle
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Overview sheet (Charts).')
 
-        $TotalRes = Start-ARIExcelCustomization -File $File -TableStyle $TableStyle -PlatOS $PlatOS -Subscriptions $Subscriptions -ExtractionRunTime $ExtractionRuntime -ProcessingRunTime $ProcessingRunTime -ReportingRunTime $ReportingRunTime -RunLite $RunLite -Overview $Overview -Debug $Debug
+        $TotalRes = Start-ARIExcelCustomization -File $File -TableStyle $TableStyle -PlatOS $PlatOS -Subscriptions $Subscriptions -ExtractionRunTime $ExtractionRuntime -ProcessingRunTime $ProcessingRunTime -ReportingRunTime $ReportingRunTime -IncludeCosts $IncludeCosts -RunLite $RunLite -Overview $Overview
 
         Write-Progress -activity 'Azure Inventory' -Status "95% Complete." -PercentComplete 95 -CurrentOperation "Excel Customization Completed.."
 
@@ -403,10 +406,10 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
         Clear-ARIMemory
 
         # Clear Cache Folder for future runs
-        Clear-ARICacheFolder -ReportCache $ReportCache -Debug $Debug
+        Clear-ARICacheFolder -ReportCache $ReportCache
 
         # Kills any automated Excel process that might be running
-        Remove-ARIExcelProcess -Debug $Debug
+        Remove-ARIExcelProcess
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Finished Charts Phase.')
 
@@ -416,7 +419,7 @@ param ([ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
 
         $JobNames = (Get-Job | Where-Object {$_.name -eq 'DrawDiagram'}).Name
 
-        Wait-ARIJob -JobNames $JobNames -JobType 'Diagram' -LoopTime 5 -Debug $Debug
+        Wait-ARIJob -JobNames $JobNames -JobType 'Diagram' -LoopTime 5
 
         Write-Progress -activity 'Diagrams' -Status "Closing Diagram File" -Completed
     }

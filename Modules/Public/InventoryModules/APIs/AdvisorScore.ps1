@@ -35,6 +35,7 @@ If ($Task -eq 'Processing') {
             $tmp = foreach ($1 in $AdvisorScore) {
                 if ($1.name -in ('Cost','OperationalExcellence','Performance','Security','HighAvailability','Advisor'))
                     {
+                        $ResUCount = 1
                         $SubId = $1.id.split('/')[2]
                         $sub1 = $SUB | Where-Object { $_.id -eq $SubId }
                         $data = $1.PROPERTIES
@@ -60,9 +61,11 @@ If ($Task -eq 'Processing') {
                                     'Score'                     = $Serie.score;
                                     'Impacted Resources'        = $Serie.impactedResourceCount;
                                     'Consumption Units'         = $Serie.consumptionUnits;
-                                    'Potential Score Increase'  = $Serie.potentialScoreIncrease
+                                    'Potential Score Increase'  = $Serie.potentialScoreIncrease;
+                                    'Resource U'                = $ResUCount;
                                 }
                                 $obj
+                                if ($ResUCount -eq 1) { $ResUCount = 0 } 
                             }
                     }
             }
@@ -77,7 +80,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('AdvScoreTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('AdvScoreTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -96,7 +99,7 @@ Else {
         $Exc.Add('Potential Score Increase')
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'AdvisorScore' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $condtxt -Numberformat '0' -Style $Style
 
     }

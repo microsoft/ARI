@@ -25,7 +25,8 @@ function Build-ARISubsReport {
         {
             $Style = @() 
             $Style += New-ExcelStyle -AutoSize -HorizontalAlignment Center -NumberFormat '0'
-            $Style += New-ExcelStyle -Width 80 -NumberFormat '$#,#######0.0000000' -Range I:I
+            $Style += New-ExcelStyle -Width 55 -NumberFormat '$#,#######0.0000000' -Range J:J
+            $Style += New-ExcelStyle -AutoSize -NumberFormat '$#,##0.00' -Range I:I
             $Sub |
                 ForEach-Object { [PSCustomObject]$_ } |
                 Select-Object 'Subscription',
@@ -36,7 +37,8 @@ function Build-ARISubsReport {
                 'Currency',
                 'Month',
                 'Year',
-                'Cost' | Export-Excel -Path $File -WorksheetName 'Subscriptions' -TableName $TableName -TableStyle $TableStyle -Style $Style
+                'Cost',
+                'Detailed Cost' | Export-Excel -Path $File -WorksheetName 'Subscriptions' -TableName $TableName -TableStyle $TableStyle -Style $Style
 
         }
     else
@@ -48,7 +50,7 @@ function Build-ARISubsReport {
                 'Resource Group',
                 'Location',
                 'Resource Type',
-                'Resources Count' | Export-Excel -Path $File -WorksheetName 'Subscriptions' -TableName $TableName -AutoSize -MaxAutoSizeRows 100 -TableStyle $TableStyle -Style $Style -MoveToEnd
+                'Resources Count' | Export-Excel -Path $File -WorksheetName 'Subscriptions' -TableName $TableName -AutoSize -MaxAutoSizeRows 100 -TableStyle $TableStyle -Style $Style
         }
 
 }

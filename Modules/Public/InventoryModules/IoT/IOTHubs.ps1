@@ -118,7 +118,6 @@ Else {
         $Exc.Add('Retiring Date')
         $Exc.Add('SKU')
         $Exc.Add('SKU Tier')
-        $Exc.Add('Location')
         $Exc.Add('Role')
         $Exc.Add('State')
         $Exc.Add('IP Filter Rules')

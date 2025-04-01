@@ -18,16 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Build-ARIInitialBlock {
-    Param($Excel, $ExtractionRunTime, $ProcessingRunTime, $ReportingRunTime, $PlatOS, $ScriptVersion, $TotalRes, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($Excel, $ExtractionRunTime, $ProcessingRunTime, $ReportingRunTime, $PlatOS, $ScriptVersion, $TotalRes)
 
     $Date = (get-date -Format "MM/dd/yyyy")
     $Font = 'Segoe UI'
@@ -36,7 +27,9 @@ function Build-ARIInitialBlock {
     $ProcessingTime = if($ProcessingRunTime.Elapsed.Totalminutes -lt 1){($ProcessingRunTime.Elapsed.Seconds.ToString()+' Seconds')}else{($ProcessingRunTime.Elapsed.Totalminutes.ToString('#######.##')+' Minutes')}
     $ReportTime = if($ReportingRunTime.Elapsed.Totalminutes -lt 1){($ReportingRunTime.Elapsed.Seconds.ToString()+' Seconds')}else{($ReportingRunTime.Elapsed.Totalminutes.ToString('#######.##')+' Minutes')}
 
+    $DebugPreference = 'SilentlyContinue'
     $User = (get-azcontext -WarningAction SilentlyContinue -InformationAction SilentlyContinue | Select-Object -Property Account -Unique).Account.Id
+    $DebugPreference = 'Continue'
 
     $WS = $Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Overview' }
 
@@ -60,47 +53,47 @@ function Build-ARIInitialBlock {
 
     $TabDraw = $WS.Drawings.AddShape('TP1', 'RoundRect')
     $TabDraw.SetSize(125, 25)
-    $TabDraw.SetPosition(0, 10, 55, 0)
+    $TabDraw.SetPosition(0, 10, 58, 0)
     $TabDraw.TextAlignment = 'Center'
 
     $TabDraw = $WS.Drawings.AddShape('TP2', 'RoundRect')
     $TabDraw.SetSize(125, 25)
-    $TabDraw.SetPosition(0, 10, 58, 0)
+    $TabDraw.SetPosition(0, 10, 64, 0)
     $TabDraw.TextAlignment = 'Center'
 
     $TabDraw = $WS.Drawings.AddShape('TP3', 'RoundRect')
     $TabDraw.SetSize(125, 25)
-    $TabDraw.SetPosition(0, 10, 61, 0)
+    $TabDraw.SetPosition(0, 10, 71, 0)
     $TabDraw.TextAlignment = 'Center'
 
     $TabDraw = $WS.Drawings.AddShape('TP4', 'RoundRect')
     $TabDraw.SetSize(125, 25)
-    $TabDraw.SetPosition(0, 10, 64, 0)
+    $TabDraw.SetPosition(0, 10, 77, 0)
     $TabDraw.TextAlignment = 'Center'
 
     $TabDraw = $WS.Drawings.AddShape('TP5', 'RoundRect')
     $TabDraw.SetSize(125, 25)
-    $TabDraw.SetPosition(0, 10, 67, 0)
+    $TabDraw.SetPosition(0, 10, 83, 0)
     $TabDraw.TextAlignment = 'Center'
 
     $TabDraw = $WS.Drawings.AddShape('TP6', 'RoundRect')
     $TabDraw.SetSize(125, 25)
-    $TabDraw.SetPosition(0, 10, 70, 0)
+    $TabDraw.SetPosition(0, 10, 89, 0)
     $TabDraw.TextAlignment = 'Center'
 
     $TabDraw = $WS.Drawings.AddShape('TP7', 'RoundRect')
     $TabDraw.SetSize(125, 25)
-    $TabDraw.SetPosition(0, 10, 73, 0)
+    $TabDraw.SetPosition(0, 10, 95, 0)
     $TabDraw.TextAlignment = 'Center'
 
     $TabDraw = $WS.Drawings.AddShape('TP8', 'RoundRect')
     $TabDraw.SetSize(125, 25)
-    $TabDraw.SetPosition(0, 10, 76, 0)
+    $TabDraw.SetPosition(0, 10, 102, 0)
     $TabDraw.TextAlignment = 'Center'
 
     $TabDraw = $WS.Drawings.AddShape('TP9', 'RoundRect')
     $TabDraw.SetSize(125, 25)
-    $TabDraw.SetPosition(0, 10, 79, 0)
+    $TabDraw.SetPosition(0, 10, 108, 0)
     $TabDraw.TextAlignment = 'Center'
 
     $Draw = $WS.Drawings.AddShape('ARI', 'RoundRect')

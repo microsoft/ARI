@@ -18,16 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Invoke-ARIPolicyJob {
-    Param($Subscriptions, $PolicySetDef, $PolicyAssign, $PolicyDef, $ARIModule, $Automation, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($Subscriptions, $PolicySetDef, $PolicyAssign, $PolicyDef, $ARIModule, $Automation)
 
     if ($Automation.IsPresent)
         {

@@ -114,7 +114,7 @@ Else
     if($SmaResources)
     {
 
-        $TableName = ('CustomViTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('CustomViTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -147,7 +147,7 @@ Else
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Custom Vision' -AutoSize -MaxAutoSizeRows 100 -ConditionalText $condtxt -TableName $TableName -TableStyle $tableStyle -Style $Style
 
     }

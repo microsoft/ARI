@@ -18,16 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Start-ARIProcessJob {
-    Param($Resources, $Retirements, $Subscriptions, $InTag, $Unsupported, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($Resources, $Retirements, $Subscriptions, $InTag, $Unsupported)
 
     Write-Progress -activity 'Azure Inventory' -Status "22% Complete." -PercentComplete 22 -CurrentOperation "Creating Jobs to Process Data.."
 
@@ -59,15 +50,16 @@ function Start-ARIProcessJob {
     $TotalFolders = $ModuleFolders.count
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Converting Resource data to JSON for Jobs')
-    $NewResources = ($Resources | ConvertTo-Json -Depth 50 -Compress)
+    $NewResources = ($Resources | ConvertTo-Json -Depth 25 -Compress)
 
-    Clear-Variable -Name Resources
+    Remove-Variable -Name Resources
     Clear-ARIMemory
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting to Create Jobs to Process the Resources.')
 
-    Foreach ($ModuleFolder in $ModuleFolders)
-        {
+    #Foreach ($ModuleFolder in $ModuleFolders)
+    $ModuleFolders | ForEach-Object -Process {
+            $ModuleFolder = $_
             $ModulePath = Join-Path $ModuleFolder.FullName '*.ps1'
             $ModuleName = $ModuleFolder.Name
             $ModuleFiles = Get-ChildItem -Path $ModulePath
@@ -123,9 +115,6 @@ function Start-ARIProcessJob {
                         Remove-Variable -Name ModName
                     }
 
-                [System.GC]::Collect() | out-null
-                Start-Sleep -Milliseconds 50
-
                 $Hashtable = New-Object System.Collections.Hashtable
 
                 Foreach ($Module in $ModuleFiles)
@@ -140,9 +129,6 @@ function Start-ARIProcessJob {
                         Remove-Variable -Name ModName
                     }
 
-                [System.GC]::Collect() | out-null
-                Start-Sleep -Milliseconds 50
-
                 $Hashtable
 
             } -ArgumentList $ModuleFiles, $PSScriptRoot, $Subscriptions, $InTag, $NewResources , $Retirements, 'Processing', $null, $null, $null, $Unsupported | Out-Null
@@ -154,15 +140,18 @@ function Start-ARIProcessJob {
 
                 $InterJobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*' -and $_.State -eq 'Running'}).Name
 
-                Wait-ARIJob -JobNames $InterJobNames -JobType 'Resource Batch' -LoopTime 5 -Debug $Debug
+                Wait-ARIJob -JobNames $InterJobNames -JobType 'Resource Batch' -LoopTime 5
 
                 $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
 
-                Build-ARICacheFiles -ReportCache $ReportCache -JobNames $JobNames -Debug $Debug
+                Build-ARICacheFiles -ReportCache $ReportCache -JobNames $JobNames
 
                 $JobLoop = 0
             }
         $JobLoop ++
 
         }
+
+        Remove-Variable -Name NewResources
+        Clear-ARIMemory
 }

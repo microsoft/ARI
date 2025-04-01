@@ -17,16 +17,7 @@ First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
 function Build-ARIExcelChart {
-    Param($Excel, $Overview, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($Excel, $Overview, $IncludeCosts)
 
     $WS = $Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Overview' }
 
@@ -34,10 +25,39 @@ function Build-ARIExcelChart {
     $P00Name = 'Reported Resources'
     $DrawP00.RichText.Add($P00Name).Size = 16
 
-    if ($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Reservation Advisor' }) {
+    if($IncludeCosts.IsPresent)
+        {
+            $PTParams = @{
+                PivotTableName          = "P00"
+                Address                 = $excel.Overview.cells["BA5"] # top-left corner of the table
+                SourceWorkSheet         = $excel.'Subscriptions'
+                PivotRows               = @("Subscription")
+                PivotData               = @{"Cost" = "Sum" }
+                PivotColumns            = @("Month")
+                PivotTableStyle         = $TableStyle
+                IncludePivotChart       = $true
+                ChartType               = "ColumnStacked3D"
+                ChartRow                = 1 # place the chart below row 22nd
+                ChartColumn             = 9
+                Activate                = $true
+                PivotNumberFormat       = 'Currency'
+                PivotFilter             = 'Resource Type'
+                PivotTotals             = 'Rows'
+                ShowCategory            = $false
+                NoLegend                = $true
+                ChartTitle              = 'Azure Cost per Month'
+                ShowPercent             = $true
+                ChartHeight             = 400
+                ChartWidth              = 950
+                ChartRowOffSetPixels    = 0
+                ChartColumnOffSetPixels = 5
+            }
+            Add-PivotTable @PTParams
+        }
+    elseif ($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Reservation Advisor' }) {
         $PTParams = @{
             PivotTableName          = "P00"
-            Address                 = $excel.Overview.cells["CV5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["BA5"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Reservation Advisor'
             PivotRows               = @("Subscription")
             PivotData               = @{"Net Savings" = "Sum" }
@@ -67,11 +87,38 @@ function Build-ARIExcelChart {
             Add-ExcelChart -Worksheet $excel.Overview -ChartType Area3D -XRange "AzureTabs[Name]" -YRange "AzureTabs[Size]" -SeriesHeader 'Resources', 'Count' -Column 9 -Row 1 -Height 400 -Width 950 -RowOffSetPixels 0 -ColumnOffSetPixels 5 -NoLegend
         }
 
-    if (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Outages' }) -and $Overview -eq 1) {
+    if($IncludeCosts.IsPresent)
+        {
+            $P0Name = 'CostPerRegion'
+            $PTParams = @{
+                PivotTableName          = "P0"
+                Address                 = $excel.Overview.cells["BG5"] # top-left corner of the table
+                SourceWorkSheet         = $excel.'Subscriptions'
+                PivotRows               = @("Location")
+                PivotData               = @{"Cost" = "Sum" }
+                PivotColumns            = @("Month")
+                PivotTableStyle         = $tableStyle
+                IncludePivotChart       = $true
+                ChartType               = "BarStacked3D"
+                ChartRow                = 13 # place the chart below row 22nd
+                ChartColumn             = 2
+                Activate                = $true
+                PivotNumberFormat       = 'Currency'
+                PivotFilter             = 'Subscription'
+                ChartTitle              = 'Cost by Azure Region'
+                ShowPercent             = $true
+                ChartHeight             = 275
+                ChartWidth              = 445
+                ChartRowOffSetPixels    = 5
+                ChartColumnOffSetPixels = 5
+            }
+            Add-PivotTable @PTParams -NoLegend
+    }
+    elseif (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Outages' }) -and $Overview -eq 1) {
         $P0Name = 'Outages'
         $PTParams = @{
             PivotTableName          = "P0"
-            Address                 = $excel.Overview.cells["BA5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["BG5"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Outages'
             PivotRows               = @("Impacted Services")
             PivotData               = @{"Impacted Services" = "Count" }
@@ -95,7 +142,7 @@ function Build-ARIExcelChart {
         $P0Name = 'Advisories'
         $PTParams = @{
             PivotTableName          = "P0"
-            Address                 = $excel.Overview.cells["BA5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["BG5"] # top-left corner of the table
             SourceWorkSheet         = $excel.Advisor
             PivotRows               = @("Category")
             PivotData               = @{"Category" = "Count" }
@@ -119,7 +166,7 @@ function Build-ARIExcelChart {
         $P0Name = 'Public IPs'
         $PTParams = @{
             PivotTableName          = "P0"
-            Address                 = $excel.Overview.cells["BA5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["BG5"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Public IPs'
             PivotRows               = @("Use")
             PivotData               = @{"Use" = "Count" }
@@ -142,13 +189,40 @@ function Build-ARIExcelChart {
 
     $DrawP0 = $WS.Drawings | Where-Object { $_.Name -eq 'TP0' }
     $DrawP0.RichText.Add($P0Name) | Out-Null
-    #>
 
-    if (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'AdvisorScore' }) -and $Overview -eq 1) {
+    if($IncludeCosts.IsPresent)
+        {
+            $P1Name = 'TotalCostsPerSubscription'
+            $PTParams = @{
+                PivotTableName          = "P1"
+                Address                 = $excel.Overview.cells["DK6"] # top-left corner of the table
+                SourceWorkSheet         = $excel.'Subscriptions'
+                PivotRows               = @('Month')
+                PivotColumns            = @("Resource Type")
+                PivotData               = @{"Cost" = "Sum" }
+                PivotTableStyle         = $tableStyle
+                IncludePivotChart       = $true
+                ChartType               = "BarClustered"
+                ChartRow                = 27 # place the chart below row 22nd
+                ChartColumn             = 2
+                Activate                = $true
+                PivotNumberFormat       = 'Currency'
+                ShowCategory            = $false
+                ChartTitle              = 'Cost by Resource Type'
+                NoLegend                = $true
+                ShowPercent             = $true
+                ChartHeight             = 655
+                ChartWidth              = 570
+                ChartRowOffSetPixels    = 5
+                ChartColumnOffSetPixels = 5
+            }
+            Add-PivotTable @PTParams
+        }
+    elseif (($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'AdvisorScore' }) -and $Overview -eq 1) {
         $P1Name = 'AdvisorScore'
         $PTParams = @{
             PivotTableName          = "P1"
-            Address                 = $excel.Overview.cells["BD6"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["DK6"] # top-left corner of the table
             SourceWorkSheet         = $excel.AdvisorScore
             PivotRows               = @("Category")
             PivotData               = @{"Latest Score (%)" = "average" }
@@ -175,10 +249,10 @@ function Build-ARIExcelChart {
         $P1Name = 'Subscriptions'
         $PTParams = @{
             PivotTableName          = "P1"
-            Address                 = $excel.Overview.cells["BD6"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["DK6"] # top-left corner of the table
             SourceWorkSheet         = $excel.Subscriptions
             PivotRows               = @("Subscription")
-            PivotData               = @{"Resources" = "sum" }
+            PivotData               = @{"Resources Count" = "sum" }
             PivotTableStyle         = $tableStyle
             IncludePivotChart       = $true
             ChartType               = "BarClustered"
@@ -200,7 +274,7 @@ function Build-ARIExcelChart {
         $P1Name = 'Quota Usage'
         $PTParams = @{
             PivotTableName          = "P1"
-            Address                 = $excel.Overview.cells["BD6"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["DK6"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Quota Usage'
             PivotRows               = @("Region")
             PivotData               = @{"vCPUs Available" = "Sum" }
@@ -225,7 +299,7 @@ function Build-ARIExcelChart {
         $P1Name = 'Virtual Networks'
         $PTParams = @{
             PivotTableName          = "P1"
-            Address                 = $excel.Overview.cells["BD6"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["DK6"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Virtual Networks'
             PivotRows               = @("Name")
             PivotData               = @{"Available IPs" = "Sum" }
@@ -253,7 +327,7 @@ function Build-ARIExcelChart {
         $P2Name = 'Policy'
         $PTParams = @{
             PivotTableName          = "P2"
-            Address                 = $excel.Overview.cells["BG5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["BT5"] # top-left corner of the table
             SourceWorkSheet         = $excel.Policy
             PivotRows               = @("Policy Category")
             PivotData               = @{"Policy" = "Count" }
@@ -277,7 +351,7 @@ function Build-ARIExcelChart {
         $P2Name = 'Annual Savings'
         $PTParams = @{
             PivotTableName          = "P2"
-            Address                 = $excel.Overview.cells["BG5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["BT5"] # top-left corner of the table
             SourceWorkSheet         = $excel.Advisor
             PivotRows               = @("Savings Currency")
             PivotData               = @{"Annual Savings" = "Sum" }
@@ -302,7 +376,7 @@ function Build-ARIExcelChart {
         $P2Name = 'Virtual Networks'
         $PTParams = @{
             PivotTableName          = "P2"
-            Address                 = $excel.Overview.cells["BG5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["BT5"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Virtual Networks'
             PivotRows               = @("Location")
             PivotData               = @{"Location" = "Count" }
@@ -330,7 +404,7 @@ function Build-ARIExcelChart {
         $P3Name = 'Support Tickets'
         $PTParams = @{
             PivotTableName          = "P3"
-            Address                 = $excel.Overview.cells["BJ5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["BZ5"] # top-left corner of the table
             SourceWorkSheet         = $excel.SupportTickets
             PivotRows               = @("Status")
             PivotData               = @{"Status" = "Count" }
@@ -354,7 +428,7 @@ function Build-ARIExcelChart {
         $P3Name = 'Azure Kubernetes'
         $PTParams = @{
             PivotTableName          = "P3"
-            Address                 = $excel.Overview.cells["BJ5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["BZ5"] # top-left corner of the table
             SourceWorkSheet         = $excel.AKS
             PivotRows               = @("Kubernetes Version")
             PivotData               = @{"Clusters" = "Count" }
@@ -378,7 +452,7 @@ function Build-ARIExcelChart {
         $P3Name = 'Storage Accounts'
         $PTParams = @{
             PivotTableName          = "P3"
-            Address                 = $excel.Overview.cells["BJ5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["BZ5"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Storage Accounts'
             PivotRows               = @("Tier")
             PivotData               = @{"Tier" = "Count" }
@@ -405,7 +479,7 @@ function Build-ARIExcelChart {
         $P4Name = 'Outages'
         $PTParams = @{
             PivotTableName          = "P4"
-            Address                 = $excel.Overview.cells["BM5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["CF5"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Outages'
             PivotRows               = @("Subscription")
             PivotData               = @{"Outage ID" = "Count" }
@@ -429,7 +503,7 @@ function Build-ARIExcelChart {
         $P4Name = 'Quota Usage'
         $PTParams = @{
             PivotTableName          = "P4"
-            Address                 = $excel.Overview.cells["BM5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["CF5"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Quota Usage'
             PivotRows               = @("Region")
             PivotData               = @{"vCPUs Available" = "Sum" }
@@ -453,7 +527,7 @@ function Build-ARIExcelChart {
         $P4Name = 'VM Disks'
         $PTParams = @{
             PivotTableName          = "P4"
-            Address                 = $excel.Overview.cells["BM5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["CF5"] # top-left corner of the table
             SourceWorkSheet         = $excel.Disks
             PivotRows               = @("Disk State")
             PivotData               = @{"Disk State" = "Count" }
@@ -481,7 +555,7 @@ function Build-ARIExcelChart {
         $P5Name = 'Virtual Machines'
         $PTParams = @{
             PivotTableName          = "P5"
-            Address                 = $excel.Overview.cells["BP7"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["CL7"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Virtual Machines'
             PivotRows               = @("VM Size")
             PivotData               = @{"Resource U" = "Sum" }
@@ -505,7 +579,7 @@ function Build-ARIExcelChart {
         $P5Name = 'Virtual Networks'
         $PTParams = @{
             PivotTableName          = "P5"
-            Address                 = $excel.Overview.cells["BP7"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["CL7"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Virtual Networks'
             PivotRows               = @("Name")
             PivotData               = @{"Available IPs" = "Sum" }
@@ -533,10 +607,10 @@ function Build-ARIExcelChart {
     $P6Name = 'Resources by Location'
     $PTParams = @{
         PivotTableName          = "P6"
-        Address                 = $excel.Overview.cells["BS5"] # top-left corner of the table
+        Address                 = $excel.Overview.cells["CR5"] # top-left corner of the table
         SourceWorkSheet         = $excel.Subscriptions
         PivotRows               = @("Location")
-        PivotData               = @{"Resources" = "sum" }
+        PivotData               = @{"Resources Count" = "sum" }
         PivotTableStyle         = $tableStyle
         IncludePivotChart       = $true
         ChartType               = "ColumnStacked3D"
@@ -561,7 +635,7 @@ function Build-ARIExcelChart {
         $P7Name = 'Virtual Machines'
         $PTParams = @{
             PivotTableName          = "P7"
-            Address                 = $excel.Overview.cells["BV5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["CY5"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Virtual Machines'
             PivotRows               = @("OS Type")
             PivotData               = @{"Resource U" = "Sum" }
@@ -590,7 +664,7 @@ function Build-ARIExcelChart {
         $P8Name = 'Advisories'
         $PTParams = @{
             PivotTableName          = "P8"
-            Address                 = $excel.Overview.cells["BY5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["DE5"] # top-left corner of the table
             SourceWorkSheet         = $excel.Advisor
             PivotRows               = @("Impact")
             PivotData               = @{"Impact" = "Count" }
@@ -614,7 +688,7 @@ function Build-ARIExcelChart {
         $P8Name = 'Load Balancers'
         $PTParams = @{
             PivotTableName          = "P8"
-            Address                 = $excel.Overview.cells["BY5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["DE5"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Load Balancers'
             PivotRows               = @("Usage")
             PivotData               = @{"Usage" = "Count" }
@@ -642,7 +716,7 @@ function Build-ARIExcelChart {
         $P9Name = 'Virtual Machines'
         $PTParams = @{
             PivotTableName          = "P9"
-            Address                 = $excel.Overview.cells["CB5"] # top-left corner of the table
+            Address                 = $excel.Overview.cells["BM5"] # top-left corner of the table
             SourceWorkSheet         = $excel.'Virtual Machines'
             PivotRows               = @("Boot Diagnostics")
             PivotData               = @{"Resource U" = "Sum" }

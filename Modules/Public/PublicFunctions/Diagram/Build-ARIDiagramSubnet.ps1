@@ -19,15 +19,13 @@ Authors: Claudio Merola
 #>
 
 Function Build-ARIDiagramSubnet {
-    Param($SubnetLocation,$VNET,$IDNum,$DiagramCache,$ContainerID,$LogFile)
+    Param($SubnetLocation,$VNET,$IDNum,$DiagramCache,$ContainerID,$Job,$LogFile)
 
     try
         {
         $etag = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
         $DiagID = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
         $CellID2 = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
-
-        $IDNum++
 
         $SubFileName = ($CellID2 + '.xml')
 
@@ -38,65 +36,65 @@ Function Build-ARIDiagramSubnet {
         ###################################################### STENCILS ####################################################
 
         Function Publish-ARIDiagramStensils {
-            $Script:Ret = "rounded=0;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;"
-        
-            $Script:IconConnections = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Connections.svg;" #width="68" height="68"
-            $Script:IconExpressRoute = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/ExpressRoute_Circuits.svg;" #width="70" height="64"
-            $Script:IconVGW = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Virtual_Network_Gateways.svg;" #width="52" height="69"
-            $Script:IconVGW2 = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_Network_Gateways.svg;" #width="52" height="69"
-            $Script:IconVNET = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_Networks.svg;" #width="67" height="40"
-            $Script:IconTraffic = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Local_Network_Gateways.svg;" #width="68" height="68"
-            $Script:IconNIC = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Network_Interfaces.svg;" #width="68" height="60"
-            $Script:IconLBs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Load_Balancers.svg;" #width="72" height="72"
-            $Script:IconPVTs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Private_Endpoint.svg;" #width="72" height="66"
-            $Script:IconNSG = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Network_Security_Groups.svg;" # width="26.35" height="32"
-            $Script:IconUDR =  "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Route_Tables.svg;" #width="30.97" height="30"
-            $Script:IconDDOS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/DDoS_Protection_Plans.svg;" # width="23" height="28"
-            $Script:IconPIP = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Public_IP_Addresses.svg;" # width="65" height="52"  
-            $Script:IconNAT = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/NAT.svg;" # width="65" height="52"            
+            $Job.Ret = "rounded=0;whiteSpace=wrap;fontSize=16;html=1;sketch=0;fontFamily=Helvetica;"
+
+            $Job.IconConnections = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Connections.svg;" #width="68" height="68"
+            $Job.IconExpressRoute = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/ExpressRoute_Circuits.svg;" #width="70" height="64"
+            $Job.IconVGW = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Virtual_Network_Gateways.svg;" #width="52" height="69"
+            $Job.IconVGW2 = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_Network_Gateways.svg;" #width="52" height="69"
+            $Job.IconVNET = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_Networks.svg;" #width="67" height="40"
+            $Job.IconTraffic = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Local_Network_Gateways.svg;" #width="68" height="68"
+            $Job.IconNIC = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Network_Interfaces.svg;" #width="68" height="60"
+            $Job.IconLBs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Load_Balancers.svg;" #width="72" height="72"
+            $Job.IconPVTs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Private_Endpoint.svg;" #width="72" height="66"
+            $Job.IconNSG = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Network_Security_Groups.svg;" # width="26.35" height="32"
+            $Job.IconUDR =  "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Route_Tables.svg;" #width="30.97" height="30"
+            $Job.IconDDOS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/DDoS_Protection_Plans.svg;" # width="23" height="28"
+            $Job.IconPIP = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Public_IP_Addresses.svg;" # width="65" height="52"  
+            $Job.IconNAT = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/NAT.svg;" # width="65" height="52"            
         
             <########################## Azure Generic Stencils #############################>
         
-            $Script:SymError = "sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.mscae.enterprise.not_allowed;fillColor=#EA1C24;" #width="50" height="50"
-            $Script:SymInfo = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/general/Information.svg;" #width="64" height="64"
-            $Script:IconSubscription = "aspect=fixed;html=1;points=[];align=center;image;fontSize=20;image=img/lib/azure2/general/Subscriptions.svg;" #width="44" height="71"
-            $Script:IconRG = "image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/mscae/ResourceGroup.svg;" # width="37.5" height="30"
-            $Script:IconBastions = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/general/Launch_Portal.svg;" #width="68" height="67"
-            $Script:IconContain = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Container_Instances.svg;" #width="64" height="68"
-            $Script:IconVWAN = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_WANs.svg;" #width="65" height="64"
-            $Script:IconCostMGMT = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/general/Cost_Analysis.svg;" #width="60" height="70"
+            $Job.SymError = "sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.mscae.enterprise.not_allowed;fillColor=#EA1C24;" #width="50" height="50"
+            $Job.SymInfo = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/general/Information.svg;" #width="64" height="64"
+            $Job.IconSubscription = "aspect=fixed;html=1;points=[];align=center;image;fontSize=20;image=img/lib/azure2/general/Subscriptions.svg;" #width="44" height="71"
+            $Job.IconRG = "image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/mscae/ResourceGroup.svg;" # width="37.5" height="30"
+            $Job.IconBastions = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/general/Launch_Portal.svg;" #width="68" height="67"
+            $Job.IconContain = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Container_Instances.svg;" #width="64" height="68"
+            $Job.IconVWAN = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_WANs.svg;" #width="65" height="64"
+            $Job.IconCostMGMT = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/general/Cost_Analysis.svg;" #width="60" height="70"
         
             <########################## Azure Computing Stencils #############################>
         
-            $Script:IconVMs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Virtual_Machine.svg;" #width="69" height="64"
-            $Script:IconAKS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/containers/Kubernetes_Services.svg;" #width="68" height="60"
-            $Script:IconVMSS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/VM_Scale_Sets.svg;" # width="68" height="68"
-            $Script:IconARO = "sketch=0;aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/mscae/OpenShift.svg;" #width="50" height="46"
-            $Script:IconFunApps = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Function_Apps.svg;" # width="68" height="60"
+            $Job.IconVMs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Virtual_Machine.svg;" #width="69" height="64"
+            $Job.IconAKS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/containers/Kubernetes_Services.svg;" #width="68" height="60"
+            $Job.IconVMSS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/VM_Scale_Sets.svg;" # width="68" height="68"
+            $Job.IconARO = "sketch=0;aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/mscae/OpenShift.svg;" #width="50" height="46"
+            $Job.IconFunApps = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Function_Apps.svg;" # width="68" height="60"
         
             <########################## Azure Service Stencils #############################>
         
-            $Script:IconAPIMs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/app_services/API_Management_Services.svg;" #width="65" height="60"
-            $Script:IconAPPs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/containers/App_Services.svg;" #width="64" height="64"                   
+            $Job.IconAPIMs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/app_services/API_Management_Services.svg;" #width="65" height="60"
+            $Job.IconAPPs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/containers/App_Services.svg;" #width="64" height="64"                   
         
             <########################## Azure Storage Stencils #############################>
         
-            $Script:IconNetApp = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/storage/Azure_NetApp_Files.svg;" #width="65" height="52"
+            $Job.IconNetApp = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/storage/Azure_NetApp_Files.svg;" #width="65" height="52"
         
             <########################## Azure Storage Stencils #############################>
         
-            $Script:IconDataExplorer = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/databases/Azure_Data_Explorer_Clusters.svg;" #width="68" height="68"
+            $Job.IconDataExplorer = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/databases/Azure_Data_Explorer_Clusters.svg;" #width="68" height="68"
         
             <########################## Other Stencils #############################>
             
-            $Script:IconFWs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Firewalls.svg;" #width="71" height="60"
-            $Script:IconDet =  "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/other/Detonation.svg;" #width="42.63" height="44"
-            $Script:IconAppGWs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Application_Gateways.svg;" #width="64" height="64"
-            $Script:IconBricks = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/analytics/Azure_Databricks.svg;" #width="60" height="68"   
-            $Script:IconError = "sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.mscae.enterprise.not_allowed;fillColor=#EA1C24;" #width="30" height="30"
-            $Script:OnPrem = "sketch=0;aspect=fixed;html=1;points=[];align=center;image;fontSize=56;image=img/lib/mscae/Exchange_On_premises_Access.svg;" #width="168.2" height="290"
-            $Script:Signature = "aspect=fixed;html=1;points=[];align=left;image;fontSize=22;image=img/lib/azure2/general/Dev_Console.svg;" #width="27.5" height="22"
-            $Script:CloudOnly = "aspect=fixed;html=1;points=[];align=center;image;fontSize=56;image=img/lib/azure2/compute/Cloud_Services_Classic.svg;" #width="380.77" height="275"
+            $Job.IconFWs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Firewalls.svg;" #width="71" height="60"
+            $Job.IconDet =  "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/other/Detonation.svg;" #width="42.63" height="44"
+            $Job.IconAppGWs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Application_Gateways.svg;" #width="64" height="64"
+            $Job.IconBricks = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/analytics/Azure_Databricks.svg;" #width="60" height="68"   
+            $Job.IconError = "sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.mscae.enterprise.not_allowed;fillColor=#EA1C24;" #width="30" height="30"
+            $Job.OnPrem = "sketch=0;aspect=fixed;html=1;points=[];align=center;image;fontSize=56;image=img/lib/mscae/Exchange_On_premises_Access.svg;" #width="168.2" height="290"
+            $Job.Signature = "aspect=fixed;html=1;points=[];align=left;image;fontSize=22;image=img/lib/azure2/general/Dev_Console.svg;" #width="27.5" height="22"
+            $Job.CloudOnly = "aspect=fixed;html=1;points=[];align=center;image;fontSize=56;image=img/lib/azure2/compute/Cloud_Services_Classic.svg;" #width="380.77" height="275"
         
         }
 
@@ -178,8 +176,7 @@ Function Build-ARIDiagramSubnet {
 
                 if([string]::IsNullOrEmpty($TrueTemp))
                     {
-                        $AKS = $Script:AKS
-                        if($sub.id -in $AKS.properties.agentPoolProfiles.vnetSubnetID)
+                        if($sub.id -in $Job.AKS.properties.agentPoolProfiles.vnetSubnetID)
                             {
                                 $TrueTemp = 'AKS'
                             }
@@ -187,7 +184,6 @@ Function Build-ARIDiagramSubnet {
                 if([string]::IsNullOrEmpty($TrueTemp))
                     {
                         $Types = @()
-                        
                         Foreach($type in $sub.properties.ipconfigurations.id)
                             {
                                 if($type.Split("/")[8] -like 'aks-*')
@@ -212,7 +208,7 @@ Function Build-ARIDiagramSubnet {
 
                 if([string]::IsNullOrEmpty($TrueTemp))
                     {
-                        if ($sub.id -in ($Script:VMSS).properties.virtualMachineProfile.networkprofile.networkInterfaceConfigurations.properties.ipconfigurations.properties.subnet.id)
+                        if ($sub.id -in ($Job.VMSS).properties.virtualMachineProfile.networkprofile.networkInterfaceConfigurations.properties.ipconfigurations.properties.subnet.id)
                             {
                                 $TrueTemp = 'virtualMachineScaleSets'
                             }
@@ -222,30 +218,53 @@ Function Build-ARIDiagramSubnet {
 
                 if($TrueTemp -eq 'networkInterfaces')
                     {
-                        $NIcNames = $Script:NIC | Where-Object {$_.properties.ipConfigurations.properties.subnet.id -eq $sub.id}
-            
+                        $NICNames = foreach ($nic in $Job.NIC)
+                            {
+                                if($nic.properties.ipConfigurations.properties.subnet.id -eq $sub.id)
+                                    {
+                                        $nic
+                                    }
+                            }
                         if($sub.properties.privateEndpoints.id)
                             {
-                                $PrivEndNames = $Script:PrivEnd | Where-Object {$_.properties.networkInterfaces.id -in $NIcNames.id}
+                                $PrivEndNames = foreach ($privt in $Job.PrivEnd)
+                                    {
+                                        if($privt.properties.networkInterfaces.id -eq $NICNames.id)
+                                            {
+                                                $privt
+                                            }
+                                    }
                                 $TrueTemp = 'privateLinkServices'
                                 $RESNames = $PrivEndNames
                             }
                         else
-                            {                    
-                                $VMNamesAro = $Script:VM | Where-Object {$_.properties.networkprofile.networkInterfaces.id -in $NIcNames.id}
+                            {
+                                $VMNamesAro = foreach ($VMNameAro in $Job.VM)
+                                    {
+                                        if ($VMNameAro.properties.networkprofile.networkInterfaces.id -in $NICNames.id)
+                                            {
+                                                $VMNameAro
+                                            }
+                                    }
                                 if($VMNamesAro.properties.storageprofile.imageReference.offer -like 'aro*')
                                     {
-                                        $ARONames = $Script:ARO | Where-Object {$_.properties.masterprofile.subnetId -eq $sub.id -or $_.properties.workerProfiles.subnetId -eq $sub.id}
+                                        $ARONames = foreach ($aro in $Job.ARO)
+                                            {
+                                                if($aro.properties.masterprofile.subnetId -eq $sub.id -or $aro.properties.workerProfiles.subnetId -eq $sub.id)
+                                                    {
+                                                        $aro
+                                                    }
+                                            }
                                         $TrueTemp = 'Open Shift'
                                         $RESNames = $ARONames
                                     }
                                 if($TrueTemp -ne 'Open Shift')
                                     {
                                         $VMs = @()
-                                        $VMNames = ($Script:VM).properties.networkprofile.networkInterfaces.id | Where-Object {$_ -in $NIcNames.id}
+                                        $VMNames = ($Job.VM).properties.networkprofile.networkInterfaces.id | Where-Object {$_ -in $NIcNames.id}
                                         $VMs = foreach($NIC in $VMNames)
                                             {
-                                                $Script:VM| Where-Object {$NIC -in $_.properties.networkprofile.networkInterfaces.id}
+                                                $Job.VM | Where-Object {$NIC -in $_.properties.networkprofile.networkInterfaces.id}
                                             }
                                         if($VMs)
                                             {
@@ -262,24 +281,40 @@ Function Build-ARIDiagramSubnet {
                     }
                 if($TrueTemp -eq 'AKS')
                     {
-                        $AKSNames = $Script:AKS | Where-Object {$_.properties.agentPoolProfiles.vnetSubnetID -eq $sub.id}
+                        $AKSNames = foreach ($AKS in $Job.AKS)
+                            {
+                                if($AKS.properties.agentPoolProfiles.vnetSubnetID -eq $sub.id)
+                                    {
+                                        $AKS
+                                    }
+                            }
                         $RESNames = $AKSNames            
                     }
                 if($TrueTemp -eq 'Data Explorer Clusters')
                     {
-                        $KustoNames = $Script:Kusto | Where-Object {$_.properties.virtualNetworkConfiguration.subnetid -eq $sub.id}
+                        $KustoNames = foreach ($Kusto in $Job.Kusto)
+                            {
+                                if($Kusto.properties.virtualNetworkConfiguration.subnetid -eq $sub.id)
+                                    {
+                                        $Kusto
+                                    }
+                            }
                         $RESNames = $KustoNames
                     }
                 if($TrueTemp -eq 'applicationGateways')
                     {
-                        $AppGTWNames = $Script:AppGtw| Where-Object {$_.properties.gatewayIPConfigurations.id -in $sub.properties.applicationGatewayIPConfigurations.id}
+                        $AppGTWNames = foreach ($AppGtw in $Job.AppGtw)
+                            {
+                                if($AppGtw.properties.gatewayIPConfigurations.id -in $sub.properties.applicationGatewayIPConfigurations.id)
+                                    {
+                                        $AppGtw
+                                    }
+                            }
                         $RESNames = $AppGTWNames
                     }
                 if($TrueTemp -eq 'DataBricks')
                     {
-                        $DatabriksNames = @()
-                        $Databricks = $Script:Databricks
-                        $DatabriksNames = Foreach($Data in $Databricks)
+                        $DatabriksNames = Foreach($Data in $Job.Databricks)
                             {                 
                                 if($Data.properties.parameters.customVirtualNetworkId.value+'/subnets/'+$Data.properties.parameters.customPrivateSubnetName.value -eq $sub.id -or $Data.properties.parameters.customVirtualNetworkId.value+'/subnets/'+$Data.properties.parameters.custompublicSubnetName.value -eq $sub.id)
                                     {                         
@@ -290,7 +325,13 @@ Function Build-ARIDiagramSubnet {
                     }
                 if($TrueTemp -eq 'App Service')
                     {
-                        $Apps = $Script:AppWeb | Where-Object {$_.properties.virtualNetworkSubnetId -eq $Sub.id}
+                        $Apps = foreach ($App in $Job.AppWeb)
+                            {
+                                if($App.properties.virtualNetworkSubnetId -eq $sub.id)
+                                    {
+                                        $App
+                                    }
+                            }
                         if($Apps.kind -like 'functionapp*')
                             {
                                 $FuntionAppNames = $Apps
@@ -305,55 +346,73 @@ Function Build-ARIDiagramSubnet {
                     }                   
                 if($TrueTemp -eq 'APIM')
                     {
-                        $APIMNames = $Script:APIM | Where-Object {$_.properties.virtualNetworkConfiguration.subnetResourceId -eq $sub.id}
+                        $APIMNames = foreach ($APIM in $Job.APIM)
+                            {
+                                if($APIM.properties.virtualNetworkConfiguration.subnetResourceId -eq $sub.id)
+                                    {
+                                        $APIM
+                                    }
+                            }
                         $RESNames = $APIMNames
                     }
                 if($TrueTemp -eq 'loadBalancers')
                     {
-                        $LBNames = $Script:LB | Where-Object {$_.properties.frontendIPConfigurations.id -in $sub.properties.ipconfigurations.id}
+                        $LBNames = foreach ($LB in $Job.LB)
+                            {
+                                if($LB.properties.frontendIPConfigurations.id -in $sub.properties.ipconfigurations.id)
+                                    {
+                                        $LB
+                                    }
+                            }
                         $RESNames = $LBNames
                     }
                 if($TrueTemp -eq 'virtualMachineScaleSets')
                     {
-                        $VMSSNames = $Script:VMSS | Where-Object {$_.properties.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.ipconfigurations.properties.subnet.id -eq $sub.id }
+                        $VMSSNames = foreach ($VMSS in $Job.VMSS)
+                            {
+                                if($VMSS.properties.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.ipconfigurations.properties.subnet.id -eq $sub.id)
+                                    {
+                                        $VMSS
+                                    }
+                            }
                         $RESNames = $VMSSNames
                     }
                 if($TrueTemp -eq 'virtualNetworkGateways')
                     {
-                        $VPNGTWNames = $Script:AZVGWs | Where-Object {$_.properties.ipconfigurations.properties.subnet.id -eq $sub.id }
+                        $VPNGTWNames = $Job.AZVGWs | Where-Object {$_.properties.ipconfigurations.properties.subnet.id -eq $sub.id }
                         $RESNames = $VPNGTWNames
                     }
                 if($TrueTemp -eq 'bastionHosts')
                     {
-                        $BastionNames = $Script:Bastion | Where-Object {$_.properties.ipConfigurations.properties.subnet.id -eq $sub.id }
+                        $BastionNames = $Job.Bastion | Where-Object {$_.properties.ipConfigurations.properties.subnet.id -eq $sub.id }
                         $RESNames = $BastionNames
                     }
                 if($TrueTemp -eq 'azureFirewalls')
                     {
-                        $AzFWNames = $Script:FW | Where-Object {$_.properties.ipConfigurations.properties.subnet.id -eq $sub.id }
+                        $AzFWNames = $Job.FW | Where-Object {$_.properties.ipConfigurations.properties.subnet.id -eq $sub.id }
                         $RESNames = $AzFWNames
                     }
                 if($TrueTemp -eq 'Container Instance')
                     {
                         $ContainerNames = ''
-                        $ContNICs = $Script:NetProf | Where-Object {$_.properties.containerNetworkInterfaceConfigurations.properties.ipconfigurations.properties.subnet.id -eq $sub.id}
-                        $ContainerNames = $Script:Container | Where-Object {$_.properties.networkprofile.id -in $ContNICs.id}
+                        $ContNICs = $Job.NetProf | Where-Object {$_.properties.containerNetworkInterfaceConfigurations.properties.ipconfigurations.properties.subnet.id -eq $sub.id}
+                        $ContainerNames = $Job.Container | Where-Object {$_.properties.networkprofile.id -in $ContNICs.id}
                         $RESNames = $ContainerNames
                         if([string]::IsNullOrEmpty($ContainerNames))
                             {
-                                $ARONames = $Script:ARO | Where-Object {$_.properties.masterprofile.subnetId -eq $sub.id -or $_.properties.workerProfiles.subnetId -eq $sub.id}
+                                $ARONames = $Job.ARO | Where-Object {$_.properties.masterprofile.subnetId -eq $sub.id -or $_.properties.workerProfiles.subnetId -eq $sub.id}
                                 $TrueTemp = 'Open Shift'
                                 $RESNames = $ARONames
                             }
                     }
                 if($TrueTemp -eq 'NetApp')
                     {
-                        $NetAppNames = $Script:ANF | Where-Object {$_.properties.subnetId -eq $sub.id }
+                        $NetAppNames = $Job.ANF | Where-Object {$_.properties.subnetId -eq $sub.id }
                         $RESNames = $NetAppNames
                     }               
-            
+
                 <###################################################### DROP THE ICONS ######################################################>
-            
+
                 switch ($TrueTemp)
                     {
                         'Virtual Machine' {
@@ -371,7 +430,7 @@ Function Build-ARIDiagramSubnet {
 
                                                         $Count ++
                                                     }
-                                                    $XmlTempWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
+                                                    $XmlTempWriter.WriteAttributeString('id', ($CellID3+'-1'))
 
                                                         New-ARIDiagramSubnetIcon $IconVMs ($SubnetLocation+64) ($Alt0+40) "69" "64" $ContainerID
 
@@ -1126,7 +1185,7 @@ Function Build-ARIDiagramSubnet {
                         {
                             Foreach($SubIPs in $sub.properties.ipconfigurations)
                                 {
-                                    $Script:VNETPIP += $Script:CleanPIPs | Where-Object {$_.properties.ipConfiguration.id -eq $SubIPs.id}
+                                    $Job.VNETPIP += $Job.CleanPIPs | Where-Object {$_.properties.ipConfiguration.id -eq $SubIPs.id}
                                 }
                         }
             }
@@ -1214,7 +1273,7 @@ Function Build-ARIDiagramSubnet {
                                     $SubnetLocation0 = 20
                                     $SubC = 0
                                     $alt1 = 40
-                                    $Script:VNETPIP = @()
+                                    $Job.VNETPIP = @()
                                     foreach($Sub in $VNET.properties.subnets)
                                     {
                                         $IDNum++
@@ -1248,7 +1307,7 @@ Function Build-ARIDiagramSubnet {
                                 {
                                     $sizeL = (($sizeL * 210) + 30)
                                     $SubnetLocation0 = 20
-                                    $Script:VNETPIP = @()
+                                    $Job.VNETPIP = @()
                                     foreach($Sub in $VNET.properties.subnets)
                                     {
                                         $IDNum++
@@ -1286,4 +1345,5 @@ Function Build-ARIDiagramSubnet {
         {
             ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $LogFile -Append 
         }
+    return $IDNum
 }

@@ -18,20 +18,12 @@ Authors: Claudio Merola
 #>
 
 function Start-ARIAutProcessJob {
-    Param($Resources, $Retirements, $Subscriptions, $InTag, $Unsupported, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($Resources, $Retirements, $Subscriptions, $InTag, $Unsupported)
 
     $ParentPath = (get-item $PSScriptRoot).parent.parent
     $InventoryModulesPath = Join-Path $ParentPath 'Public' 'InventoryModules'
     $Modules = Get-ChildItem -Path $InventoryModulesPath -Directory
+    $NewResources = ($Resources | ConvertTo-Json -Depth 50 -Compress)
 
     Foreach ($ModuleFolder in $Modules)
         {
@@ -47,7 +39,6 @@ function Start-ARIAutProcessJob {
                 $Resources = $($args[4]) | ConvertFrom-Json
                 $Retirements = $($args[5])
                 $Unsupported = $($args[10])
-
 
                 Foreach ($Module in $ModuleFiles)
                     {
@@ -66,6 +57,6 @@ function Start-ARIAutProcessJob {
 
                 $SmaResources
 
-            } -ArgumentList $ModuleFiles, $PSScriptRoot, $Subscriptions, $InTag, ($Resources | ConvertTo-Json -Depth 100), $Retirements, 'Processing', $null, $null, $null, $Unsupported | Out-Null
+            } -ArgumentList $ModuleFiles, $PSScriptRoot, $Subscriptions, $InTag, $NewResources, $Retirements, 'Processing', $null, $null, $null, $Unsupported -ThrottleLimit 8 | Out-Null
         }
 }

@@ -1377,7 +1377,7 @@ Function Start-ARIDiagramNetwork {
                     {
                         ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Creating Subnet in Automation') | Out-File -FilePath $LogFile -Append 
 
-                        Build-ARIDiagramSubnet -SubnetLocation $subloc -VNET $VNET -IDNum $IDNum -DiagramCache $DiagramCache -ContainerID $ContID -LogFile $LogFile
+                        $Script:IDNum = Build-ARIDiagramSubnet -SubnetLocation $subloc -VNET $VNET -IDNum $IDNum -DiagramCache $DiagramCache -ContainerID $ContID -Job $Job -LogFile $LogFile
                     }
                 else
                     {
@@ -1394,7 +1394,7 @@ Function Start-ARIDiagramNetwork {
 
                                     Import-Module $ARIModule
 
-                                    Build-ARIDiagramSubnet -SubnetLocation $subloc -VNET $VNET -IDNum $IDNum -DiagramCache $DiagramCache -ContainerID $ContID -LogFile $LogFile
+                                    $Script:IDNum = Build-ARIDiagramSubnet -SubnetLocation $subloc -VNET $VNET -IDNum $IDNum -DiagramCache $DiagramCache -ContainerID $ContID -Job $Job -LogFile $LogFile
                                 }
                             catch
                                 {
@@ -1464,35 +1464,6 @@ Function Start-ARIDiagramNetwork {
                     }
 
                 ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting Variables') | Out-File -FilePath $LogFile -Append 
-
-                $Script:AZVGWs = $Job.AZVGWs
-                $Script:AZLGWs = $Job.AZLGWs
-                $Script:AZVNETs = $Job.AZVNETs
-                $Script:AZCONs = $Job.AZCONs
-                $Script:AZEXPROUTEs = $Job.AZEXPROUTEs
-                $Script:PIPs = $Job.PIPs
-                $Script:AZVWAN = $Job.AZVWAN
-                $Script:AZVHUB = $Job.AZVHUB
-                $Script:AZVPNSITES = $Job.AZVPNSITES
-                $Script:AZVERs = $Job.AZVERs
-                $Script:CleanPIPs = $Job.CleanPIPs
-                $Script:AKS = $Job.AKS
-                $Script:VMSS = $Job.VMSS
-                $Script:NIC = $Job.NIC
-                $Script:PrivEnd = $Job.PrivEnd
-                $Script:VM = $Job.VM
-                $Script:ARO = $Job.ARO
-                $Script:Kusto = $Job.Kusto
-                $Script:AppGtw = $Job.AppGtw
-                $Script:Databricks = $Job.DW
-                $Script:AppWeb = $Job.AppWeb
-                $Script:APIM = $Job.APIM
-                $Script:LB = $Job.LB
-                $Script:Bastion = $Job.Bastion
-                $Script:FW = $Job.FW
-                $Script:NetProf = $Job.NetProf
-                $Script:Container = $Job.Container
-                $Script:ANF = $Job.ANF
 
                 $Script:etag = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
                 $Script:DiagID = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})

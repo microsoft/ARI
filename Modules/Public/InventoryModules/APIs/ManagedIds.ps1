@@ -65,7 +65,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('ManIdTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('ManIdTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -81,7 +81,7 @@ Else {
         }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Managed Identity' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -Numberformat '0' -Style $Style
 
     }

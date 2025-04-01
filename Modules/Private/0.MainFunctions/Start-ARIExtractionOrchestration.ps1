@@ -18,23 +18,9 @@ Authors: Claudio Merola
 
 #>
 function Start-ARIExtractionOrchestration {
-    Param($ManagementGroup, $Subscriptions, $SubscriptionID, $SkipPolicy, $ResourceGroup, $SecurityCenter, $SkipAdvisory, $IncludeTags, $TagKey, $TagValue, $SkipAPIs, $SkipVMDetails, $IncludeCosts, $Automation, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($ManagementGroup, $Subscriptions, $SubscriptionID, $SkipPolicy, $ResourceGroup, $SecurityCenter, $SkipAdvisory, $IncludeTags, $TagKey, $TagValue, $SkipAPIs, $SkipVMDetails, $IncludeCosts, $Automation)
 
-    if ($IncludeCosts.IsPresent) {
-        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting Cost Inventory.')
-        Get-ARICostInventory -Subscriptions $Subscriptions -Days 60 -Debug $Debug -Granularity 'Monthly'
-    }
-
-    $GraphData = Start-ARIGraphExtraction -ManagementGroup $ManagementGroup -Subscriptions $Subscriptions -SubscriptionID $SubscriptionID -ResourceGroup $ResourceGroup -SecurityCenter $SecurityCenter -SkipAdvisory $SkipAdvisory -IncludeTags $IncludeTags -TagKey $TagKey -TagValue $TagValue -Debug $Debug
+    $GraphData = Start-ARIGraphExtraction -ManagementGroup $ManagementGroup -Subscriptions $Subscriptions -SubscriptionID $SubscriptionID -ResourceGroup $ResourceGroup -SecurityCenter $SecurityCenter -SkipAdvisory $SkipAdvisory -IncludeTags $IncludeTags -TagKey $TagKey -TagValue $TagValue
 
     $Resources = $GraphData.Resources
     $ResourceContainers = $GraphData.ResourceContainers
@@ -42,7 +28,7 @@ function Start-ARIExtractionOrchestration {
     $Security = $GraphData.Security
     $Retirements = $GraphData.Retirements
 
-    Clear-Variable -Name GraphData
+    Remove-Variable -Name GraphData -ErrorAction SilentlyContinue
 
     $ResourcesCount = [string]$Resources.Count
     $AdvisoryCount = [string]$Advisories.Count
@@ -52,7 +38,7 @@ function Start-ARIExtractionOrchestration {
         {
             Write-Progress -activity 'Azure Inventory' -Status "12% Complete." -PercentComplete 12 -CurrentOperation "Starting API Extraction.."
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting API Resources.')
-            $APIResults = Get-ARIAPIResources -Subscriptions $Subscriptions -AzureEnvironment $AzureEnvironment -SkipPolicy $SkipPolicy -Debug $Debug
+            $APIResults = Get-ARIAPIResources -Subscriptions $Subscriptions -AzureEnvironment $AzureEnvironment -SkipPolicy $SkipPolicy
             $Resources += $APIResults.ResourceHealth
             $Resources += $APIResults.ManagedIdentities
             $Resources += $APIResults.AdvisorScore
@@ -61,9 +47,14 @@ function Start-ARIExtractionOrchestration {
             $PolicyDef = $APIResults.PolicyDef
             $PolicySetDef = $APIResults.PolicySetDef
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'API Resource Inventory Finished.')
+            Remove-Variable APIResults -ErrorAction SilentlyContinue
         }
 
     $PolicyCount = [string]$PolicyAssign.policyAssignments.Count
+
+    if ($IncludeCosts.IsPresent) {
+        $Costs = Get-ARICostInventory -Subscriptions $Subscriptions -Days 60 -Granularity 'Monthly'
+    }
 
     if (!$SkipVMDetails.IsPresent)
         {
@@ -72,24 +63,29 @@ function Start-ARIExtractionOrchestration {
             Write-Progress -activity 'Azure Inventory' -Status "13% Complete." -PercentComplete 13 -CurrentOperation "Starting VM Details Extraction.."
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM Quota Details.')
 
-            $VMQuotas = Get-AriVMQuotas -Subscriptions $Subscriptions -Resources $Resources -Debug $Debug
+            $VMQuotas = Get-AriVMQuotas -Subscriptions $Subscriptions -Resources $Resources
 
             $Resources += $VMQuotas
+
+            Remove-Variable -Name VMQuotas -ErrorAction SilentlyContinue
 
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM SKU Details.')
 
             Write-Host 'Gathering VM Extra Details: ' -NoNewline
             Write-Host 'Size SKU' -ForegroundColor Cyan
 
-            $VMSkuDetails = Get-ARIVMSkuDetails -Resources $Resources -Debug $Debug
+            $VMSkuDetails = Get-ARIVMSkuDetails -Resources $Resources
 
             $Resources += $VMSkuDetails
+
+            Remove-Variable -Name VMSkuDetails -ErrorAction SilentlyContinue
 
         }
 
     $ReturnData = [PSCustomObject]@{
         Resources = $Resources
         Quotas = $VMQuotas
+        Costs = $Costs
         ResourceContainers = $ResourceContainers
         Advisories = $Advisories
         ResourcesCount = $ResourcesCount

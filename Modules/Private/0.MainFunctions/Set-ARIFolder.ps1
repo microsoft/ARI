@@ -18,16 +18,8 @@ Authors: Claudio Merola
 
 #>
 function Set-ARIFolder {
-    Param($DefaultPath, $DiagramCache, $ReportCache, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($DefaultPath, $DiagramCache, $ReportCache)
+
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking report folder: ' + $DefaultPath )
     try {
         if ((Test-Path -Path $DefaultPath -PathType Container) -eq $false) {
