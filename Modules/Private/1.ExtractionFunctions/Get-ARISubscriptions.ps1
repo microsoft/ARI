@@ -18,11 +18,10 @@ Authors: Claudio Merola
 #>
 function Get-ARISubscriptions {
     Param ($TenantID,$SubscriptionID)
-    $DebugPreference = 'SilentlyContinue'
     Write-Host "Extracting Subscriptions from Tenant $TenantID"
     try
         {
-            $Subscriptions = Get-AzSubscription -TenantId $TenantID -WarningAction SilentlyContinue -InformationAction SilentlyContinue
+            $Subscriptions = Get-AzSubscription -TenantId $TenantID -WarningAction SilentlyContinue -Debug:$false
         }
     catch
         {

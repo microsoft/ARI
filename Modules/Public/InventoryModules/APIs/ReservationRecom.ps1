@@ -33,6 +33,7 @@ If ($Task -eq 'Processing') {
     if($Reserv)
         {
             $tmp = foreach ($1 in $Reserv) {
+                $ResUCount = 1
                 $SubId = $1.id.split('/')[2]
                 $sub1 = $SUB | Where-Object { $_.id -eq $SubId }
                 $data = $1.PROPERTIES
@@ -52,8 +53,10 @@ If ($Task -eq 'Processing') {
                     'Net Savings'                       = $data.netSavings;
                     'Reservation Term'                  = $data.term;
                     'Scope'                             = $data.scope;
+                    'Resource U'                        = $ResUCount
                 }
                 $obj
+                if ($ResUCount -eq 1) { $ResUCount = 0 }
             }
             $tmp
         }
@@ -66,7 +69,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('ReservRecTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('ReservRecTable_'+($SmaResources.'Resource U').count)
 
         $Style = @()
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -Range A:I
@@ -90,7 +93,7 @@ Else {
         $Exc.Add('Scope')
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Reservation Advisor' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -Style $Style
 
     }

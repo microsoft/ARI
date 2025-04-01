@@ -51,6 +51,7 @@ If ($Task -eq 'Processing')
                     $OSVersion = if(![string]::IsNullOrEmpty($data.extended.instanceView.osversion)){$data.extended.instanceView.osversion}else{$data.storageprofile.imagereference.sku}
 
                     # Extra VM Details
+
                     $VMExtraDetail = $VMExtraDetails.properties | Where-Object {$_.Location -eq $1.location}
                     $VMExtraDetail = $VMExtraDetail.SKUs | Where-Object {$_.Name -eq $data.hardwareProfile.vmSize}
 

@@ -33,6 +33,7 @@ If ($Task -eq 'Processing') {
     if($Tickets)
         {
             $tmp = foreach ($1 in $Tickets) {
+                $ResUCount = 1
                 $data = $1.PROPERTIES
 
                 $timecreated = $data.createdDate
@@ -64,6 +65,7 @@ If ($Task -eq 'Processing') {
                     'Ticket Contact Name'       = ($data.contactDetails.firstName + ' ' + $data.contactDetails.lastName);
                     'Ticket Contact Email'      = $data.contactDetails.primaryEmailAddress;
                     'Ticket Contact Country'    = $data.contactDetails.country;
+                    'Resource U'                = $ResUCount
                 }
                 $obj
             }
@@ -78,7 +80,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('TicketsTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('TicketsTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $cond = @()
@@ -102,8 +104,8 @@ Else {
         $Exc.Add('Ticket Contact Country')
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
-        Export-Excel -Path $File -WorksheetName 'Support Tickets' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $cond -Numberformat '0' -Style $Style
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
+        Export-Excel -Path $File -WorksheetName 'Support Tickets' -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $cond -Style $Style
 
     }
 }

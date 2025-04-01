@@ -17,16 +17,8 @@ First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
 function Get-ARIManagementGroups {
-    Param ($ManagementGroup, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param ($ManagementGroup)
+
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Management group name supplied: ' + $ManagmentGroupName)
     $ReportCounter = 1
     $LocalResults = @()

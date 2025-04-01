@@ -18,16 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Invoke-ARIAdvisoryJob {
-    Param($Advisories, $ARIModule, $Automation, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($Advisories, $ARIModule, $Automation)
 
     if ($Automation.IsPresent)
         {

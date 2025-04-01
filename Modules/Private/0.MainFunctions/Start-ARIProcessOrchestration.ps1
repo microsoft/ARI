@@ -19,16 +19,7 @@ Authors: Claudio Merola
 #>
 
 function Start-ARIProcessOrchestration {
-    Param($Subscriptions, $Resources, $Retirements, $File, $InTag, $Automation, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($Subscriptions, $Resources, $Retirements, $File, $InTag, $Automation)
 
         Write-Progress -activity 'Azure Inventory' -Status "21% Complete." -PercentComplete 21 -CurrentOperation "Starting to process extracted data.."
 
@@ -36,7 +27,7 @@ function Start-ARIProcessOrchestration {
 
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Importing List of Unsupported Versions.')
 
-        $Unsupported = Get-ARIUnsupportedData -Debug $Debug
+        $Unsupported = Get-ARIUnsupportedData
 
         <######################################################### RESOURCE GROUP JOB ######################################################################>
 
@@ -44,14 +35,16 @@ function Start-ARIProcessOrchestration {
             {
                 Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Processing Resources in Automation Mode')
 
-                Start-ARIAutProcessJob -Resources $Resources -Retirements $Retirements -Subscriptions $Subscriptions -InTag $InTag -Unsupported $Unsupported -Debug $Debug
+                Start-ARIAutProcessJob -Resources $Resources -Retirements $Retirements -Subscriptions $Subscriptions -InTag $InTag -Unsupported $Unsupported
             }
         else
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Processing Resources in Regular Mode')
 
-                Start-ARIProcessJob -Resources $Resources -Retirements $Retirements -Subscriptions $Subscriptions -InTag $InTag -Unsupported $Unsupported -Debug $Debug
+                Start-ARIProcessJob -Resources $Resources -Retirements $Retirements -Subscriptions $Subscriptions -InTag $InTag -Unsupported $Unsupported
             }
+
+        Remove-Variable -Name Unsupported -ErrorAction SilentlyContinue
 
         <############################################################## RESOURCES PROCESSING #############################################################>
 
@@ -59,9 +52,9 @@ function Start-ARIProcessOrchestration {
 
         if(![string]::IsNullOrEmpty($JobNames))
             {
-                Wait-ARIJob -JobNames $JobNames -JobType 'Resource' -LoopTime 5 -Debug $Debug
+                Wait-ARIJob -JobNames $JobNames -JobType 'Resource' -LoopTime 5
 
-                Build-ARICacheFiles -ReportCache $ReportCache -JobNames $JobNames -Debug $Debug
+                Build-ARICacheFiles -ReportCache $ReportCache -JobNames $JobNames
             }
 
         Write-Progress -activity 'Azure Inventory' -Status "60% Complete." -PercentComplete 60 -CurrentOperation "Completed Data Processing Phase.."

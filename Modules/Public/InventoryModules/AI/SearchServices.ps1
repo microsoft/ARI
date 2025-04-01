@@ -112,7 +112,7 @@ Else
     if($SmaResources)
     {
 
-        $TableName = ('SearchTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('SearchTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -146,7 +146,7 @@ Else
             }
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Search Services' -AutoSize -MaxAutoSizeRows 100 -ConditionalText $condtxt -TableName $TableName -TableStyle $tableStyle -Style $Style
 
     }

@@ -18,16 +18,8 @@ Authors: Claudio Merola
 #>
 
 function Build-ARICacheFiles {
-    Param($ReportCache, $JobNames, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($ReportCache, $JobNames)
+
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking Cache Folder.')
 
     $Lops = $JobNames.count

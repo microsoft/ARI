@@ -26,30 +26,19 @@ Function Start-ARIReporOrchestration {
     $SkipAdvisory,
     $Automation,
     $TableStyle,
-    $IncludeCosts,
-    $Debug)
-
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    $IncludeCosts)
 
     Write-Progress -activity 'Azure Inventory' -Status "65% Complete." -PercentComplete 65 -CurrentOperation "Starting the Report Phase.."
 
     <############################################################## REPORT CREATION ###################################################################>
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Resource Reporting Cache.')
-    Start-ARIExcelJob -ReportCache $ReportCache -TableStyle $TableStyle -File $File -Debug $Debug
+    Start-ARIExcelJob -ReportCache $ReportCache -TableStyle $TableStyle -File $File
 
     <############################################################## EXTRA REPORTS ###################################################################>
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Default Data Reporting.')
 
-    Start-ARIExtraReports -File $File -Quotas $Quotas -SecurityCenter $SecurityCenter -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -IncludeCosts $IncludeCosts -TableStyle $TableStyle -Debug $Debug
+    Start-ARIExtraReports -File $File -Quotas $Quotas -SecurityCenter $SecurityCenter -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory -IncludeCosts $IncludeCosts -TableStyle $TableStyle
 
 }

@@ -18,16 +18,6 @@ Authors: Claudio Merola
 
 #>
 function Test-ARIPS {
-    Param($Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Test-ARIPS function')
     $CShell = try{Get-CloudShellTip}catch{$null}
     if ($CShell) {

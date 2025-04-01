@@ -18,16 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Start-ARIExtraReports {
-    Param($File, $Quotas, $SecurityCenter, $SkipPolicy, $SkipAdvisory, $IncludeCosts, $TableStyle, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($File, $Quotas, $SecurityCenter, $SkipPolicy, $SkipAdvisory, $IncludeCosts, $TableStyle)
 
     Write-Progress -activity 'Azure Inventory' -Status "70% Complete." -PercentComplete 70 -CurrentOperation "Reporting Extra Resources.."
 
@@ -47,7 +38,7 @@ function Start-ARIExtraReports {
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking if Should Generate Security Center Sheet.')
     if ($SecurityCenter.IsPresent) {
-        if($OldJobs | Where-Object {$_.Name -eq 'Security'})
+        if(get-job | Where-Object {$_.Name -eq 'Security'})
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Security Center Sheet.')
 
@@ -69,7 +60,7 @@ function Start-ARIExtraReports {
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking if Should Generate Policy Sheet.')
     if (!$SkipPolicy.IsPresent) {
-        if($OldJobs | Where-Object {$_.Name -eq 'Policy'})
+        if(get-job | Where-Object {$_.Name -eq 'Policy'})
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Policy Sheet.')
 
@@ -92,7 +83,7 @@ function Start-ARIExtraReports {
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking if Should Generate Advisory Sheet.')
     if (!$SkipAdvisory.IsPresent) {
-        if ($OldJobs | Where-Object {$_.Name -eq 'Policy'})
+        if (get-job | Where-Object {$_.Name -eq 'Policy'})
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Advisor Sheet.')
 

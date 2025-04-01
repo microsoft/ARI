@@ -18,16 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Start-ARIExcelJob {
-    Param($ReportCache, $File, $TableStyle, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($ReportCache, $File, $TableStyle)
 
     $ParentPath = (get-item $PSScriptRoot).parent.parent
     $InventoryModulesPath = Join-Path $ParentPath 'Public' 'InventoryModules'
@@ -38,7 +29,8 @@ function Start-ARIExcelJob {
     $ModulesCount = [string](Get-ChildItem -Path $InventoryModulesPath -Recurse -Filter "*.ps1").count
 
     Write-Output 'Starting to Build Excel Report.'
-    Write-Output ('Supported Resource Types: ' + $ModulesCount)
+    Write-Host 'Supported Resource Types: ' -NoNewline -ForegroundColor Green
+    Write-Host $ModulesCount -ForegroundColor Cyan
 
     $Lops = $ModulesCount
     $ReportCounter = 0
@@ -78,27 +70,21 @@ function Start-ARIExcelJob {
                     if ($ModuleResourceCount -gt 0)
                     {
                         Start-Sleep -Milliseconds 25
-                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Running Module: '$ModName'. Lines in Excel: $ModuleResourceCount")
+                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Running Module: '$ModName'. Excel Rows: $ModuleResourceCount")
 
-                        $ExcelRun = ([PowerShell]::Create()).AddScript($ModuleData).AddArgument($PSScriptRoot).AddArgument($null).AddArgument($InTag).AddArgument($null).AddArgument($null).AddArgument('Reporting').AddArgument($file).AddArgument($SmaResources).AddArgument($TableStyle).AddArgument($null)
+                        $ScriptBlock = [Scriptblock]::Create($ModuleData)
 
-                        $ExcelJob = $ExcelRun.BeginInvoke()
+                        Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot, $null, $InTag, $null, $null, 'Reporting', $file, $SmaResources, $TableStyle, $null
 
-                        while ($ExcelJob.IsCompleted -contains $false) { Start-Sleep -Milliseconds 200 }
-
-                        $ExcelRun.EndInvoke($ExcelJob)
-
-                        $ExcelRun.Dispose()
-                        Remove-Variable -Name ExcelRun
-                        Remove-Variable -Name ExcelJob
                         Remove-Variable -Name SmaResources
-                        Clear-ARIMemory
 
                     }
 
                     $ReportCounter ++
 
                 }
-                Write-Progress -Id 1 -activity "Building Report" -Status "100% Complete." -Completed
+                Remove-Variable -Name CacheData
+                Clear-ARIMemory
         }
+        Write-Progress -Id 1 -activity "Building Report" -Status "100% Complete." -Completed
     }

@@ -18,16 +18,7 @@ Authors: Claudio Merola
 
 #>
 function Start-ARIExcelCustomization {
-    param($File, $TableStyle, $PlatOS, $Subscriptions, $ExtractionRunTime, $ProcessingRunTime, $ReportingRunTime, $RunLite, $Overview, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    param($File, $TableStyle, $PlatOS, $Subscriptions, $ExtractionRunTime, $ProcessingRunTime, $ReportingRunTime, $IncludeCosts, $RunLite, $Overview)
 
     Write-Progress -activity 'Azure Inventory' -Status "85% Complete." -PercentComplete 85 -CurrentOperation "Starting Excel Customization.."
 
@@ -50,7 +41,7 @@ function Start-ARIExcelCustomization {
 
     "" | Export-Excel -Path $File -WorksheetName 'Overview' -MoveToStart
 
-    Start-ARIExcelOrdening -File $File -Debug $Debug
+    Start-ARIExcelOrdening -File $File
 
     $Excel = Open-ExcelPackage -Path $File
     $Worksheets = $Excel.Workbook.Worksheets
@@ -85,17 +76,17 @@ function Start-ARIExcelCustomization {
 
     $Excel = Open-ExcelPackage -Path $File
 
-    Build-ARIInitialBlock -Excel $Excel -ExtractionRunTime $ExtractionRunTime -ProcessingRunTime $ProcessingRunTime -ReportingRunTime $ReportingRunTime -PlatOS $PlatOS -TotalRes $TotalRes -ScriptVersion $ScriptVersion -Debug $Debug
+    Build-ARIInitialBlock -Excel $Excel -ExtractionRunTime $ExtractionRunTime -ProcessingRunTime $ProcessingRunTime -ReportingRunTime $ReportingRunTime -PlatOS $PlatOS -TotalRes $TotalRes -ScriptVersion $ScriptVersion
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Creating Charts.')
 
-    Build-ARIExcelChart -Excel $Excel -Overview $Overview -Debug $Debug
+    Build-ARIExcelChart -Excel $Excel -Overview $Overview -IncludeCosts $IncludeCosts
 
     Close-ExcelPackage $Excel
 
     if(!$RunLite)
         {
-            Build-ARIExcelComObject -File $File -Debug $Debug
+            Build-ARIExcelComObject -File $File
         }
 
     return $TotalRes

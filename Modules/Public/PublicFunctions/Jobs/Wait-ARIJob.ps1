@@ -18,16 +18,7 @@ Authors: Claudio Merola
 
 #>
 function Wait-ARIJob {
-    Param($JobNames, $JobType, $LoopTime, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($JobNames, $JobType, $LoopTime)
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Jobs Collector.')
 

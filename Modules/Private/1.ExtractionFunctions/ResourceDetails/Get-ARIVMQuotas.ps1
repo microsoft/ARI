@@ -17,13 +17,7 @@ First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
 function Get-AriVMQuotas {
-    Param ($Subscriptions, $Resources, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'SilentlyContinue'
-            $ErrorActionPreference = 'Continue'
-        }
-
+    Param ($Subscriptions, $Resources)
     $Quotas = Foreach($Sub in $Subscriptions)
         {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM Quota Details: '+$Sub.name)
@@ -34,8 +28,8 @@ function Get-AriVMQuotas {
                         {
                             if($Loc.count -eq 1)
                                 {
-                                    Set-AzContext -Subscription $Sub.Id -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -InformationAction SilentlyContinue | Out-Null
-                                    $Quota = get-azvmusage -location $Loc -InformationAction SilentlyContinue -ProgressAction SilentlyContinue
+                                    Set-AzContext -Subscription $Sub.Id -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
+                                    $Quota = get-azvmusage -location $Loc -Debug:$false
                                     $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
                                     $tmp = [PSCustomObject]@{
                                         Location = $Loc
@@ -46,10 +40,10 @@ function Get-AriVMQuotas {
                                     $tmp
                                 }
                             else {
-                                    Set-AzContext -Subscription $Sub.Id -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -InformationAction SilentlyContinue | Out-Null
+                                    Set-AzContext -Subscription $Sub.Id -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -InformationAction SilentlyContinue -Debug:$false
                                     foreach($Loc1 in $Loc)
                                         {
-                                            $Quota = get-azvmusage -location $Loc1 -InformationAction SilentlyContinue -ProgressAction SilentlyContinue
+                                            $Quota = get-azvmusage -location $Loc1 -Debug:$false
                                             $Quota = $Quota | Where-Object {$_.CurrentValue -ge 1}
                                             $tmp = [PSCustomObject]@{
                                                 Location = $Loc1

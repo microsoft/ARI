@@ -29,56 +29,96 @@ function Start-ARISubscriptionJob {
     $resTable2 = $ResTable | Select-Object id, Type, location, resourcegroup, subscriptionid
     $ResTable3 = $ResTable2 | Group-Object -Property type, location, resourcegroup, subscriptionid
 
-    if (![string]::IsNullOrEmpty($CostData.ActualCost.Row)) {
-        $tmp = foreach ($ResourcesSUB in $ResTable3) 
-            {
-                $ResourceDetails = $ResourcesSUB.name -split ", "
-                foreach ($Cost in $CostData)
-                    {
-                        if($Cost.SubscriptionId -eq $ResourceDetails[3])
-                            {
-                                Foreach ($Row in $Cost.ActualCost.Row)
-                                    {
-                                        if ($Row[2] -eq $ResourceDetails[0] -and $Row[3] -eq $ResourceDetails[2])
-                                            {
-                                                Foreach ($Currency in $Row[4])
-                                                    {
-                                                        $Date0 = [datetime]$Row[1]
-                                                        $DateMonth = ((Get-Culture).DateTimeFormat.GetMonthName(([datetime]$Date0).ToString("MM"))).ToString()
-                                                        $DateYear = (([datetime]$Date0).ToString("yyyy")).ToString()
-
-                                                        $obj = @{
-                                                            'Subscription'   = $Cost.Subscription;
-                                                            'Resource Group' = $ResourceDetails[2];
-                                                            'Location'       = $ResourceDetails[1];
-                                                            'Resource Type'  = $ResourceDetails[0];
-                                                            'Resources Count'= $ResourcesSUB.Count;
-                                                            'Currency'       = $Currency;
-                                                            'Cost'           = $Row[0];
-                                                            'Year'           = $DateYear;
-                                                            'Month'          = $DateMonth
-                                                        }
-                                                        $obj
-                                                    }
-                                            }
-                                    }
-                            }
-                    }
-            }
-    } else {
-        $tmp = foreach ($ResourcesSUB in $ResTable3) {
-            $ResourceDetails = $ResourcesSUB.name -split ","
-            $SubName = $Subscriptions | Where-Object { $_.Id -eq ($ResourceDetails[3] -replace (" ", "")) }
-            $obj = @{
-                'Subscription'   = $SubName.Name;
-                'Resource Group' = $ResourceDetails[2];
-                'Location'       = $ResourceDetails[1];
-                'Resource Type'  = $ResourceDetails[0];
-                'Resources Count'= $ResourcesSUB.Count
+    $SubDetailsTable = foreach ($ResourcesSUB in $ResTable3) 
+        {
+            $ResourceDetails = $ResourcesSUB.name -split ", "
+            $SubName = $Subscriptions | Where-Object { $_.Id -eq $ResourceDetails[3] }
+            $obj = [PSCustomObject]@{
+                'Subscription'   = $SubName.Name
+                'SubscriptionId'   = $ResourceDetails[3]
+                'ResourceGroup' = $ResourceDetails[2]
+                'Location'       = $ResourceDetails[1]
+                'ResourceType'  = $ResourceDetails[0]
+                'ResourcesCount'= $ResourcesSUB.Count
             }
             $obj
         }
-    }
 
-    $tmp
+    $CostDetailsTable = foreach ($Cost in $CostData)
+        {
+            Foreach ($CostDetail in $Cost.CostData.Row)
+                {
+                    Foreach ($Currency in $CostDetail[5])
+                        {
+                            $Date0 = [datetime]$CostDetail[1]
+                            $DateMonth = ((Get-Culture).DateTimeFormat.GetMonthName(([datetime]$Date0).ToString("MM"))).ToString()
+                            $DateYear = (([datetime]$Date0).ToString("yyyy")).ToString()
+
+                            $obj = [PSCustomObject]@{
+                                'Subscription'   = $Cost.SubscriptionName
+                                'SubscriptionId' = $Cost.SubscriptionId
+                                'ResourceGroup'  = $CostDetail[3]
+                                'ResourceType'   = $CostDetail[2]
+                                #'Location'       = $CostDetail[4]
+                                'Currency'       = $Currency
+                                'Cost'           = $CostDetail[0]
+                                'DetailedCost'   = $CostDetail[0]
+                                'Year'           = $DateYear
+                                'Month'          = $DateMonth
+                            }
+                            $obj
+                        }
+                }
+        }
+
+        $outerKeyGeneral = [Func[Object,string]] { $args[0].SubscriptionID, $args[0].ResourceGroup, $args[0].ResourceType }
+        $innerKeyGeneral = [Func[Object,string]] { $args[0].SubscriptionID, $args[0].ResourceGroup, $args[0].ResourceType }
+
+        $ResultDelegate = [Func[Object, Object, PSCustomObject]] {
+            param
+            (
+                $SubTable,
+                $CostTable
+            )
+            [PSCustomObject]@{
+                'Subscription' = $SubTable.Subscription
+                'Resource Group' = $SubTable.ResourceGroup
+                'Location' = $SubTable.Location
+                'Resource Type' = $SubTable.ResourceType
+                'Resources Count' = $SubTable.ResourcesCount
+                'Currency' = $CostTable.Currency
+                'Cost' = $CostTable.Cost
+                'Detailed Cost' = $CostTable.DetailedCost
+                'Year' = $CostTable.Year
+                'Month' = $CostTable.Month
+            }  
+        }
+
+        <#
+        [System.Func[System.Object, [Collections.Generic.IEnumerable[System.Object]], System.Object]]$query = {
+            param(
+                $SubTable,
+                $CostTable
+            )
+            $RightJoin = [System.Linq.Enumerable]::SingleOrDefault($CostTable)
+
+            [PSCustomObject]@{
+                'Subscription' = $SubTable.Subscription
+                'Resource Group' = $SubTable.ResourceGroup
+                'Location' = $SubTable.Location
+                'Resource Type' = $SubTable.ResourceType
+                'Resources Count' = $SubTable.ResourcesCount
+                'Currency' = $RightJoin.Currency
+                'Cost' = $RightJoin.Cost
+                'Year' = $RightJoin.Year
+                'Month' = $RightJoin.Month
+            }
+        }
+
+        $LeftJoin = [System.Linq.Enumerable]::ToArray([System.Linq.Enumerable]::GroupJoin($SubDetailsTable, $CostDetailsTable, $outerKeyGroup, $innerKeyGeneraltest, $query))
+        #>
+
+        $InnerJoinResult = [System.Linq.Enumerable]::ToArray([System.Linq.Enumerable]::Join($SubDetailsTable, $CostDetailsTable, $outerKeyGeneral, $innerKeyGeneral, $resultDelegate))
+
+        $InnerJoinResult
 }

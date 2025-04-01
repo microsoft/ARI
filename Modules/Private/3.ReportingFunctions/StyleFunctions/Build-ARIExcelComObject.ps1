@@ -18,30 +18,25 @@ Authors: Claudio Merola
 #>
 
 function Build-ARIExcelComObject {
-    param($File, $Debug)
-    if($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    param($File)
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Validating if Excel is installed (Extra Customizations).')
     try
         {
             $application = New-Object -ComObject Excel.Application
+            Start-Sleep -Seconds 2
+            $application.Visible = $false
             if ($application) {
                 try
                     {
-                        $Ex = $application.Workbooks.Open($File)
-                        While ([string]::IsNullOrEmpty($Ex))
+                        $ExApp = $application.Workbooks.Open($File)
+                        Start-Sleep -Seconds 2
+                        While ([string]::IsNullOrEmpty($ExApp))
                             {
                                 Start-Sleep -Seconds 1
                             }
-                        $WS = $Ex.Worksheets | Where-Object { $_.Name -eq 'Overview' }
+                        Start-Sleep -Milliseconds 500
+                        $WSheet = $ExApp.Worksheets | Where-Object { $_.Name -eq 'Overview' }
                     }
                 catch
                     {
@@ -55,45 +50,47 @@ function Build-ARIExcelComObject {
                 $NoChangeChart = ('ChartP0', 'ChartP1', 'ChartP2', 'ChartP3', 'ChartP4', 'ChartP5', 'ChartP6', 'ChartP7', 'ChartP8', 'ChartP9', 'ARI', 'RGs', 'TP00', 'TP0', 'TP1', 'TP2', 'TP3', 'TP4', 'TP5','TP6','TP7','TP8','TP9')
                 $ChangeChart = ('ARI', 'RGs', 'TP00', 'TP0', 'TP1', 'TP2', 'TP3', 'TP4', 'TP5', 'TP6', 'TP7','TP8','TP9')
 
-                ($WS.Shapes | Where-Object { $_.name -eq 'ChartP0' }).DrawingObject.Chart.ChartStyle = 294
+                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP0' }).DrawingObject.Chart.ChartStyle = 294
                 Start-Sleep -Milliseconds 50
-                ($WS.Shapes | Where-Object { $_.name -eq 'ChartP1' }).DrawingObject.Chart.ChartStyle = 222
+                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP1' }).DrawingObject.Chart.ChartStyle = 222
                 Start-Sleep -Milliseconds 50
-                ($WS.Shapes | Where-Object { $_.name -eq 'ChartP2' }).DrawingObject.Chart.ChartStyle = 294
+                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP2' }).DrawingObject.Chart.ChartStyle = 294
                 Start-Sleep -Milliseconds 50
-                ($WS.Shapes | Where-Object { $_.name -eq 'ChartP3' }).DrawingObject.Chart.ChartStyle = 268
+                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP3' }).DrawingObject.Chart.ChartStyle = 268
                 Start-Sleep -Milliseconds 50
-                ($WS.Shapes | Where-Object { $_.name -eq 'ChartP4' }).DrawingObject.Chart.ChartStyle = 294
+                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP4' }).DrawingObject.Chart.ChartStyle = 294
                 Start-Sleep -Milliseconds 50
-                ($WS.Shapes | Where-Object { $_.name -eq 'ChartP5' }).DrawingObject.Chart.ChartStyle = 222
+                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP5' }).DrawingObject.Chart.ChartStyle = 222
                 Start-Sleep -Milliseconds 50
-                ($WS.Shapes | Where-Object { $_.name -eq 'ChartP6' }).DrawingObject.Chart.ChartStyle = 294
+                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP6' }).DrawingObject.Chart.ChartStyle = 294
                 Start-Sleep -Milliseconds 50
-                ($WS.Shapes | Where-Object { $_.name -eq 'ChartP7' }).DrawingObject.Chart.ChartStyle = 268
+                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP7' }).DrawingObject.Chart.ChartStyle = 268
                 Start-Sleep -Milliseconds 50
-                ($WS.Shapes | Where-Object { $_.name -eq 'ChartP8' }).DrawingObject.Chart.ChartStyle = 294
+                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP8' }).DrawingObject.Chart.ChartStyle = 294
                 Start-Sleep -Milliseconds 50
-                ($WS.Shapes | Where-Object { $_.name -eq 'ChartP9' }).DrawingObject.Chart.ChartStyle = 268
+                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP9' }).DrawingObject.Chart.ChartStyle = 268
                 Start-Sleep -Milliseconds 50
-                ($WS.Shapes | Where-Object { $_.name -notin $NoChangeChart -and $_.name -like 'Chart*' }).DrawingObject.Chart.ChartStyle = 315
+                ($WSheet.Shapes | Where-Object { $_.name -notin $NoChangeChart -and $_.name -like 'Chart*' }).DrawingObject.Chart.ChartStyle = 315
                 Start-Sleep -Milliseconds 50
 
                 Foreach ($Changer in $ChangeChart) {
-                    ($WS.Shapes | Where-Object { $_.name -eq $Changer }).DrawingObject.interior.color = 2500134
-                    ($WS.Shapes | Where-Object { $_.name -eq $Changer }).DrawingObject.border.color = 16777215
-                    ($WS.Shapes | Where-Object { $_.name -eq $Changer }).DrawingObject.border.ColorIndex = -4142
-                    ($WS.Shapes | Where-Object { $_.name -eq $Changer }).DrawingObject.border.LineStyle = -4142
+                    ($WSheet.Shapes | Where-Object { $_.name -eq $Changer }).DrawingObject.interior.color = 2500134
+                    ($WSheet.Shapes | Where-Object { $_.name -eq $Changer }).DrawingObject.border.color = 16777215
+                    ($WSheet.Shapes | Where-Object { $_.name -eq $Changer }).DrawingObject.border.ColorIndex = -4142
+                    ($WSheet.Shapes | Where-Object { $_.name -eq $Changer }).DrawingObject.border.LineStyle = -4142
                     Start-Sleep -Milliseconds 50
                 }
 
-                $Draw = ($WS.Shapes | Where-Object {$_.name -eq 'ARI'})
+                $Draw = ($WSheet.Shapes | Where-Object {$_.name -eq 'ARI'})
                 $Draw.Adjustments(1) = 0.07
                 Start-Sleep -Milliseconds 50
 
-                $Ex.Save()
-                $Ex.Close()
+                $ExApp.Save()
+                $ExApp.Close()
                 $application.Quit()
                 Remove-ARIExcelProcess -Debug $Debug
+
+                Start-Sleep -Seconds 2
 
                 $Excel = New-Object OfficeOpenXml.ExcelPackage $File
 

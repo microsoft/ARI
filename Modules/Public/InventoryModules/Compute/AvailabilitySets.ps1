@@ -34,6 +34,7 @@ If ($Task -eq 'Processing')
     if($AvSet)
         {
             $tmp = foreach ($1 in $AvSet) {
+                $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $Orphaned = if([string]::IsNullOrEmpty($data.virtualMachines.id)){$true}else{$false}
@@ -78,10 +79,12 @@ If ($Task -eq 'Processing')
                                 'Fault Domains'    = [string]$data.platformFaultDomainCount;
                                 'Update Domains'   = [string]$data.platformUpdateDomainCount;
                                 'Virtual Machines' = [string]$vmIds;
+                                'Resource U'       = $ResUCount;
                                 'Tag Name'         = [string]$Tag.Name;
                                 'Tag Value'        = [string]$Tag.Value
                             }
                             $obj
+                            if ($ResUCount -eq 1) { $ResUCount = 0 } 
                         }                    
                 }
             }
@@ -98,7 +101,7 @@ Else
     if($SmaResources)
     {
 
-        $TableName = ('AvSetTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('AvSetTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()

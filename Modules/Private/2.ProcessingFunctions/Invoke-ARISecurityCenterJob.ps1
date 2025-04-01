@@ -18,16 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Invoke-ARISecurityCenterJob {
-    Param($Subscriptions, $Automation, $Resources, $ARIModule, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($Subscriptions, $Automation, $Resources, $ARIModule)
 
     if ($Automation.IsPresent)
         {

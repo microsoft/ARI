@@ -18,16 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Start-ARIExcelOrdening {
-    Param($File, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($File)
 
     $Excel = Open-ExcelPackage -Path $File
     $Worksheets = $Excel.Workbook.Worksheets
@@ -36,16 +27,7 @@ function Start-ARIExcelOrdening {
 
     $Order0 = $Order | Where-Object { $_.Name -ne $Order[0].name -and $_.Name -ne ($Order | select-object -Last 1).Name }
 
-    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Validating if Advisor and Policies are included.')
-    if (($Worksheets | Where-Object { $_.Name -eq 'Advisor'}))
-        {
-            $Worksheets.MoveAfter($Order[0].Name, 'Advisor')
-        }
-    if (($Worksheets | Where-Object { $_.Name -eq 'Policy'}))
-        {
-            $Worksheets.MoveAfter($Order[0].Name, 'Policy')
-        }
-    $Worksheets.MoveAfter(($Order | select-object -Last 1).Name, 'Subscriptions')
+    #$Worksheets.MoveAfter(($Order | select-object -Last 1).Name, 'Subscriptions')
 
     $Loop = 0
 
@@ -59,15 +41,34 @@ function Start-ARIExcelOrdening {
         $Loop++
     }
 
-    $Worksheets = $Excel.Workbook.Worksheets
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Validating if Advisor and Policies are included.')
+    if (($Worksheets | Where-Object { $_.Name -eq 'Advisor'}))
+        {
+            $Worksheets.MoveAfter('Advisor', 'Overview')
+        }
+    if (($Worksheets | Where-Object { $_.Name -eq 'Policy'}))
+        {
+            $Worksheets.MoveAfter('Policy', 'Overview')
+        }
+    if (($Worksheets | Where-Object { $_.Name -eq 'Security Center'}))
+        {
+            $Worksheets.MoveAfter('Security Center', 'Overview')
+        }
+    if (($Worksheets | Where-Object {$_.Name -eq 'Quota Usage'}))
+        {
+            $Worksheets.MoveAfter('Quota Usage', 'Overview')
+        }
+    if (($Worksheets | Where-Object {$_.Name -eq 'AdvisorScore'}))
+        {
+            $Worksheets.MoveAfter('AdvisorScore', 'Overview')
+        }
+    $Worksheets.MoveAfter('Subscriptions','Overview')
+
     $WS = $Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Overview' }
 
     $WS.SetValue(75,70,'')
     $WS.SetValue(76,70,'')
     $WS.View.ShowGridLines = $false
-
-    $Worksheets = $Excel.Workbook.Worksheets | Where-Object { $_.name -notin 'Overview', 'Advisor', 'Policy', 'SecurityCenter'}
-    $WS = $Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Overview' }
 
     $TabDraw = $WS.Drawings.AddShape('TP00', 'RoundRect')
     $TabDraw.SetSize(130 , 78)

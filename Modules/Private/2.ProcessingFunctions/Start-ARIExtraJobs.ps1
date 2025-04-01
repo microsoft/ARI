@@ -35,17 +35,7 @@ function Start-ARIExtraJobs {
             $PolicyAssign, 
             $Automation,
             $IncludeCosts,
-            $Debug)
-
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+            $CostData)
 
     $ARIModule = 'AzureResourceInventory'
     #$ARIModule = 'C:\usr\src\PSModules\AzureResourceInventory\AzureResourceInventory'
@@ -55,7 +45,7 @@ function Start-ARIExtraJobs {
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking if Draw.io Diagram Job Should be Run.')
     if (!$SkipDiagram.IsPresent) {
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Draw.io Diagram Processing Job.')
-        Invoke-ARIDrawIOJob -Subscriptions $Subscriptions -Resources $Resources -Advisories $Advisories -DDFile $DDFile -DiagramCache $DiagramCache -FullEnv $FullEnv -ResourceContainers $ResourceContainers -Automation $Automation -ARIModule $ARIModule -Debug $Debug
+        Invoke-ARIDrawIOJob -Subscriptions $Subscriptions -Resources $Resources -Advisories $Advisories -DDFile $DDFile -DiagramCache $DiagramCache -FullEnv $FullEnv -ResourceContainers $ResourceContainers -Automation $Automation -ARIModule $ARIModule
     }
 
     <######################################################### VISIO DIAGRAM JOB ######################################################################>
@@ -96,7 +86,7 @@ function Start-ARIExtraJobs {
     if (![string]::IsNullOrEmpty($SecurityCenter))
         {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Security Processing Job.')
-            Invoke-ARISecurityCenterJob -Subscriptions $Subscriptions -Automation $Automation -Resources $Resources -SecurityCenter $SecurityCenter -ARIModule $ARIModule -Debug $Debug
+            Invoke-ARISecurityCenterJob -Subscriptions $Subscriptions -Automation $Automation -Resources $Resources -SecurityCenter $SecurityCenter -ARIModule $ARIModule
         }
 
     <######################################################### POLICY JOB ######################################################################>
@@ -106,7 +96,7 @@ function Start-ARIExtraJobs {
         if (![string]::IsNullOrEmpty($PolicyAssign) -and ![string]::IsNullOrEmpty($PolicyDef))
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Policy Processing Job.')
-                Invoke-ARIPolicyJob -Subscriptions $Subscriptions -PolicySetDef $PolicySetDef -PolicyAssign $PolicyAssign -PolicyDef $PolicyDef -ARIModule $ARIModule -Automation $Automation -Debug $Debug
+                Invoke-ARIPolicyJob -Subscriptions $Subscriptions -PolicySetDef $PolicySetDef -PolicyAssign $PolicyAssign -PolicyDef $PolicyDef -ARIModule $ARIModule -Automation $Automation
             }
     }
 
@@ -117,19 +107,12 @@ function Start-ARIExtraJobs {
         if (![string]::IsNullOrEmpty($Advisories))
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Advisory Processing Job.')
-                Invoke-ARIAdvisoryJob -Advisories $Advisories -ARIModule $ARIModule -Automation $Automation -Debug $Debug
+                Invoke-ARIAdvisoryJob -Advisories $Advisories -ARIModule $ARIModule -Automation $Automation
             }
     }
 
     <######################################################### SUBSCRIPTIONS JOB ######################################################################>
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Subscriptions Processing job.')
-    $CostData = ''
-    if ($IncludeCosts.IsPresent) {
-        Get-Job -Name 'Cost Inventory' | Wait-Job | Out-Null
-        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting Cost Inventory Data.')
-        $CostData = Receive-job -Name 'Cost Inventory' -ErrorAction SilentlyContinue
-        Remove-Job -Name 'Cost Inventory' | Out-Null
-    }
-    Invoke-ARISubJob -Subscriptions $Subscriptions -Automation $Automation -Resources $Resources -CostData $CostData -ARIModule $ARIModule -Debug $Debug
+    Invoke-ARISubJob -Subscriptions $Subscriptions -Automation $Automation -Resources $Resources -CostData $CostData -ARIModule $ARIModule
 }

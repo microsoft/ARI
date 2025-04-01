@@ -18,16 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Invoke-ARISubJob {
-    Param($Subscriptions, $Automation, $Resources, $CostData, $ARIModule, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($Subscriptions, $Automation, $Resources, $CostData, $ARIModule)
 
     if ($Automation.IsPresent)
         {

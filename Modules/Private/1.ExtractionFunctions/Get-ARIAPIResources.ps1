@@ -17,23 +17,14 @@ First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
 function Get-ARIAPIResources {
-    Param($Subscriptions, $AzureEnvironment, $SkipPolicy, $Debug )
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    Param($Subscriptions, $AzureEnvironment, $SkipPolicy)
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting API Inventory')
 
     try
         {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Adquiring Token')
-            $Token = Get-AzAccessToken -AsSecureString -InformationAction SilentlyContinue -WarningAction SilentlyContinue
+            $Token = Get-AzAccessToken -AsSecureString -InformationAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
 
             $TokenData = $Token.Token | ConvertFrom-SecureString -AsPlainText
 

@@ -18,16 +18,6 @@ Authors: Claudio Merola
 
 #>
 function Get-ARIUnsupportedData {
-    Param($Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'Continue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
 
     $SupportedDataPath = (get-item $PSScriptRoot).parent
     $SupportFile = Join-Path $SupportedDataPath '3.ReportingFunctions' 'StyleFunctions' 'Support.json'

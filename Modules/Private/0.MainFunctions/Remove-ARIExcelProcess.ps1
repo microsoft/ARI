@@ -19,7 +19,6 @@ Authors: Claudio Merola
 #>
 
 function Remove-ARIExcelProcess {
-    Param($Debug)
 
     if (Get-Process -Name "excel" -ErrorAction Ignore | Where-Object { $_.CommandLine -like '*/automation*' } )
         {

@@ -19,15 +19,9 @@ Authors: Claudio Merola
 #>
 function Connect-ARILoginSession {
     Param($AzureEnvironment, $TenantID, $SubscriptionID, $DeviceLogin, $AppId, $Secret, $CertificatePath, $Debug)
-    if ($Debug.IsPresent)
-        {
-            $DebugPreference = 'silentlycontinue'
-            $ErrorActionPreference = 'Continue'
-        }
-    else
-        {
-            $ErrorActionPreference = "silentlycontinue"
-        }
+    $DebugPreference = 'silentlycontinue'
+    $ErrorActionPreference = 'Continue'
+
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Connect-LoginSession function')
     Write-Host $AzureEnvironment -BackgroundColor Green
     $Context = Get-AzContext -ErrorAction SilentlyContinue

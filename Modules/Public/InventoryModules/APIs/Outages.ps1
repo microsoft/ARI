@@ -34,6 +34,7 @@ If ($Task -eq 'Processing') {
         {
             $tmp = foreach ($1 in $Outages) {
                 $ImpactedSubs = $1.properties.impact.impactedRegions.impactedSubscriptions | Select-Object -Unique
+                $ResUCount = 1
 
                 $Data = $1.properties
 
@@ -73,9 +74,11 @@ If ($Task -eq 'Processing') {
                             'What went wrong and why'                                             = ($SplitDescription[2]).Split([Environment]::NewLine)[1];
                             'How did we respond'                                                  = ($SplitDescription[3]).Split([Environment]::NewLine)[1];
                             'How are we making incidents like this less likely or less impactful' = ($SplitDescription[4]).Split([Environment]::NewLine)[1];
-                            'How can customers make incidents like this less impactful'           = ($SplitDescription[5]).Split([Environment]::NewLine)[1]
+                            'How can customers make incidents like this less impactful'           = ($SplitDescription[5]).Split([Environment]::NewLine)[1];
+                            'Resource U'                                                          = $ResUCount;
                         }
                         $obj
+                        if ($ResUCount -eq 1) { $ResUCount = 0 } 
                     }
                 }
             $tmp
@@ -89,7 +92,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('OutagesTable_'+($SmaResources.id | Select-Object -Unique).count)
+        $TableName = ('OutagesTable_'+($SmaResources.'Resource U').count)
 
         $Style = @(
         New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -Range 'A:E'
@@ -115,7 +118,7 @@ Else {
         $Exc.Add('How can customers make incidents like this less impactful')
 
         $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object -Unique $Exc | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Outages' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -Numberformat '0' -Style $Style
 
     }
