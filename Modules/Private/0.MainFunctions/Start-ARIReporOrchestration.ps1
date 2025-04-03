@@ -35,6 +35,11 @@ Function Start-ARIReporOrchestration {
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Resource Reporting Cache.')
     Start-ARIExcelJob -ReportCache $ReportCache -TableStyle $TableStyle -File $File
 
+    <############################################################## REPORT EXTRA DETAILS ###################################################################>
+
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Reporting Extra Details.')
+    Start-ARIExcelExtraData -File $File
+
     <############################################################## EXTRA REPORTS ###################################################################>
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Default Data Reporting.')

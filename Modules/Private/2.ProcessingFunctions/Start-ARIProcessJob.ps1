@@ -50,7 +50,7 @@ function Start-ARIProcessJob {
     $TotalFolders = $ModuleFolders.count
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Converting Resource data to JSON for Jobs')
-    $NewResources = ($Resources | ConvertTo-Json -Depth 25 -Compress)
+    $NewResources = ($Resources | ConvertTo-Json -Depth 40 -Compress)
 
     Remove-Variable -Name Resources
     Clear-ARIMemory

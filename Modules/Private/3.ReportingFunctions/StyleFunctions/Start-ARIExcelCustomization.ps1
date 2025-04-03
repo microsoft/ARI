@@ -56,7 +56,10 @@ function Start-ARIExcelCustomization {
                     'Size' = [int]$Number[1];
                     'Size2' = if ($WorkS.name -in ('Subscriptions', 'Quota Usage', 'AdvisorScore', 'Outages', 'SupportTickets', 'Reservation Advisor')) {0}else{[int]$Number[1]}
                 }
-                $TotalRes = $TotalRes + ([int]$Number[1])
+                if ($WorkS.name -notin ('Subscriptions', 'Quota Usage', 'AdvisorScore', 'Outages', 'SupportTickets', 'Reservation Advisor', 'Managed Identity', 'Backup'))
+                    {
+                        $TotalRes = $TotalRes + ([int]$Number[1])
+                    }
                 $tmp
             }
     }

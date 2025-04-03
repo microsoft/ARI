@@ -107,8 +107,7 @@
 #### 4) "Az.Accounts"
 #### 5) "Az.Storage"
 #### 6) "Az.Compute"
-#### 7) "PowershellGet" (This is not really necessary)
-#### 8) "ThreadJob"
+#### 7) "Az.CostManagement" (This is only necessary when using the -IncludeCosts)
 
 <br/>
 

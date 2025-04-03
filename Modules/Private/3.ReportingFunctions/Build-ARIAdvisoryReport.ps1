@@ -25,8 +25,8 @@ function Build-ARIAdvisoryReport {
 
     $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '#,##0.00' -Range H:H
 
-    $Adv |
-    ForEach-Object { [PSCustomObject]$_ } |
+    [PSCustomObject]$Adv |
+    ForEach-Object { $_ } |
     Select-Object 'ResourceGroup',
     'Affected Resource Type',
     'Name',

@@ -61,15 +61,12 @@ function Start-ARIExtractionOrchestration {
             Write-Host 'Gathering VM Extra Details: ' -NoNewline
             Write-Host 'Quotas' -ForegroundColor Cyan
             Write-Progress -activity 'Azure Inventory' -Status "13% Complete." -PercentComplete 13 -CurrentOperation "Starting VM Details Extraction.."
-            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM Quota Details.')
 
             $VMQuotas = Get-AriVMQuotas -Subscriptions $Subscriptions -Resources $Resources
 
             $Resources += $VMQuotas
 
             Remove-Variable -Name VMQuotas -ErrorAction SilentlyContinue
-
-            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM SKU Details.')
 
             Write-Host 'Gathering VM Extra Details: ' -NoNewline
             Write-Host 'Size SKU' -ForegroundColor Cyan

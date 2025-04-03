@@ -41,8 +41,16 @@ function Get-ARIAPIResources {
 
     if ($AzureEnvironment -eq 'AzureCloud') {
         $AzURL = 'management.azure.com'
-    } else {
+    } 
+    elseif ($AzureEnvironment -eq 'AzureUSGovernment') {
         $AzURL = 'management.usgovcloudapi.net'
+    }
+    elseif ($AzureEnvironment -eq 'AzureChinaCloud') {
+        $AzURL = 'management.chinacloudapi.cn'
+    }
+    else {
+        Write-Host ('Invalid Azure Environment for API Rest Inventory: ' + $AzureEnvironment) -ForegroundColor Red
+        return
     }
     $ResourceHealthHistoryDate = (Get-Date).AddMonths(-6)
     $APIResults = @()
@@ -134,9 +142,9 @@ function Get-ARIAPIResources {
                     }
                 }
 
-            Start-Sleep 1
+            Start-Sleep -Milliseconds 300
 
-            $tmp = @{
+            $APIResults = @{
                 'Subscription'          = $Sub;
                 'ResourceHealth'        = $ResourceHealth.value;
                 'ManagedIdentities'     = $Identities.value;
@@ -146,7 +154,6 @@ function Get-ARIAPIResources {
                 'PolicyDef'             = $PolicyDef;
                 'PolicySetDef'          = $PolicySetDef
             }
-            $APIResults += $tmp
 
         }
 

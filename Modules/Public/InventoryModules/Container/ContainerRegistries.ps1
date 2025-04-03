@@ -149,8 +149,8 @@ Else
                 $Exc.Add('Tag Value') 
             }
 
-        $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
+        [PSCustomObject]$SmaResources | 
+        ForEach-Object { $_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Registries' -AutoSize -ConditionalText $condtxt -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -Style $Style
 
     }

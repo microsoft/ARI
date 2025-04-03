@@ -20,7 +20,7 @@ Authors: Claudio Merola
 Function Start-ARIDiagramNetwork {
     Param($Subscriptions,$Job,$Advisories,$DiagramCache,$FullEnvironment,$DDFile,$XMLFiles,$LogFile,$Automation,$ARIModule)
 
-    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Network Diagram Job...') | Out-File -FilePath $LogFile -Append 
+    Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Network Diagram Job...')
 
         $Script:jobs = @()
         $Script:jobs2 = @()
@@ -49,7 +49,7 @@ Function Start-ARIDiagramNetwork {
 
                 $Script:ContID = (-join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})+'-'+1)
 
-                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Adding VNET: ' + $title + '. ID: ' + $Script:ContID + '. Position X: ' + $x + ' Position Y: ' + $y) | Out-File -FilePath $LogFile -Append 
+                Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Adding VNET: ' + $title + '. ID: ' + $Script:ContID + '. Position X: ' + $x + ' Position Y: ' + $y)
 
                 $Script:XmlWriter.WriteStartElement('mxCell')
                 $Script:XmlWriter.WriteAttributeString('id', $Script:ContID)
@@ -72,15 +72,15 @@ Function Start-ARIDiagramNetwork {
         Function New-ARIDiagramHubContainer {
             Param($x,$y,$w,$h,$title)
                 $Script:ContID = (-join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})+'-'+1)
-                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Adding HUB: ' + $title + '. ID: ' + $Script:ContID + '. Position X: ' + $x + ' Position Y: ' + $y) | Out-File -FilePath $LogFile -Append 
-        
+                Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Adding HUB: ' + $title + '. ID: ' + $Script:ContID + '. Position X: ' + $x + ' Position Y: ' + $y)
+
                 $Script:XmlWriter.WriteStartElement('mxCell')
                 $Script:XmlWriter.WriteAttributeString('id', $Script:ContID)
                 $Script:XmlWriter.WriteAttributeString('value', "$title")
                 $Script:XmlWriter.WriteAttributeString('style', "swimlane;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=1;swimlaneFillColor=#DAE8FC;")
                 $Script:XmlWriter.WriteAttributeString('vertex', "1")
                 $Script:XmlWriter.WriteAttributeString('parent', "1")
-            
+
                     $Script:XmlWriter.WriteStartElement('mxGeometry')
                     $Script:XmlWriter.WriteAttributeString('x', $x)
                     $Script:XmlWriter.WriteAttributeString('y', $y)
@@ -96,7 +96,7 @@ Function Start-ARIDiagramNetwork {
             Param($x,$y,$w,$h,$title)
                 $Script:ContID = (-join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})+'-'+1)
 
-                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Adding Broken Container: ' + $title + '. ID: ' + $Script:ContID + '. Position X: ' + $x + ' Position Y: ' + $y) | Out-File -FilePath $LogFile -Append 
+                Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Adding Broken Container: ' + $title + '. ID: ' + $Script:ContID + '. Position X: ' + $x + ' Position Y: ' + $y)
 
                 $Script:XmlWriter.WriteStartElement('mxCell')
                 $Script:XmlWriter.WriteAttributeString('id', $Script:ContID)
@@ -121,7 +121,7 @@ Function Start-ARIDiagramNetwork {
         
             if($Parent){$Parent = $Parent}else{$Parent = 1}
         
-            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Connecting: ' + $Source + ' to: ' + $Target + '. Parent ID: ' + $Parent) | Out-File -FilePath $LogFile -Append 
+            Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Connecting: ' + $Source + ' to: ' + $Target + '. Parent ID: ' + $Parent)
 
             $Script:XmlWriter.WriteStartElement('mxCell')
             $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
@@ -151,8 +151,6 @@ Function Start-ARIDiagramNetwork {
             $Script:IconVGW2 = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_Network_Gateways.svg;" #width="52" height="69"
             $Script:IconVNET = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_Networks.svg;" #width="67" height="40"
             $Script:IconTraffic = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Local_Network_Gateways.svg;" #width="68" height="68"
-            $Script:IconNIC = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Network_Interfaces.svg;" #width="68" height="60"
-            $Script:IconLBs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Load_Balancers.svg;" #width="72" height="72"
             $Script:IconPVTs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Private_Endpoint.svg;" #width="72" height="66"
             $Script:IconNSG = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Network_Security_Groups.svg;" # width="26.35" height="32"
             $Script:IconUDR =  "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/networking/Route_Tables.svg;" #width="30.97" height="30"
@@ -166,38 +164,13 @@ Function Start-ARIDiagramNetwork {
             $Script:SymInfo = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/general/Information.svg;" #width="64" height="64"
             $Script:IconSubscription = "aspect=fixed;html=1;points=[];align=center;image;fontSize=20;image=img/lib/azure2/general/Subscriptions.svg;" #width="44" height="71"
             $Script:IconRG = "image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/mscae/ResourceGroup.svg;" # width="37.5" height="30"
-            $Script:IconBastions = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/general/Launch_Portal.svg;" #width="68" height="67"
             $Script:IconContain = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Container_Instances.svg;" #width="64" height="68"
             $Script:IconVWAN = "aspect=fixed;html=1;points=[];align=center;image;fontSize=18;image=img/lib/azure2/networking/Virtual_WANs.svg;" #width="65" height="64"
             $Script:IconCostMGMT = "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/general/Cost_Analysis.svg;" #width="60" height="70"
-        
-            <########################## Azure Computing Stencils #############################>
-        
-            $Script:IconVMs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Virtual_Machine.svg;" #width="69" height="64"
-            $Script:IconAKS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/containers/Kubernetes_Services.svg;" #width="68" height="60"
-            $Script:IconVMSS = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/VM_Scale_Sets.svg;" # width="68" height="68"
-            $Script:IconARO = "sketch=0;aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/mscae/OpenShift.svg;" #width="50" height="46"
-            $Script:IconFunApps = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/compute/Function_Apps.svg;" # width="68" height="60"
-        
-            <########################## Azure Service Stencils #############################>
-        
-            $Script:IconAPIMs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/app_services/API_Management_Services.svg;" #width="65" height="60"
-            $Script:IconAPPs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/containers/App_Services.svg;" #width="64" height="64"                   
-        
-            <########################## Azure Storage Stencils #############################>
-        
-            $Script:IconNetApp = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/storage/Azure_NetApp_Files.svg;" #width="65" height="52"
-        
-            <########################## Azure Storage Stencils #############################>
-        
-            $Script:IconDataExplorer = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/databases/Azure_Data_Explorer_Clusters.svg;" #width="68" height="68"
-        
+
             <########################## Other Stencils #############################>
-            
-            $Script:IconFWs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Firewalls.svg;" #width="71" height="60"
+
             $Script:IconDet =  "aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/other/Detonation.svg;" #width="42.63" height="44"
-            $Script:IconAppGWs = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/networking/Application_Gateways.svg;" #width="64" height="64"
-            $Script:IconBricks = "aspect=fixed;html=1;points=[];align=center;image;fontSize=14;image=img/lib/azure2/analytics/Azure_Databricks.svg;" #width="60" height="68"   
             $Script:IconError = "sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.mscae.enterprise.not_allowed;fillColor=#EA1C24;" #width="30" height="30"
             $Script:OnPrem = "sketch=0;aspect=fixed;html=1;points=[];align=center;image;fontSize=56;image=img/lib/mscae/Exchange_On_premises_Access.svg;" #width="168.2" height="290"
             $Script:Signature = "aspect=fixed;html=1;points=[];align=left;image;fontSize=22;image=img/lib/azure2/general/Dev_Console.svg;" #width="27.5" height="22"
@@ -208,13 +181,13 @@ Function Start-ARIDiagramNetwork {
         <# Function to begin OnPrem environment drawing. Will begin by Local network Gateway, then Express Route.#>
         Function Invoke-ARIDiagramOnPremNetwork {
             $Script:VNETHistory = @()
-            $Script:RoutsW = $AZVNETs | Select-Object -Property Name, @{N="Subnets";E={$_.properties.subnets.properties.addressPrefix.count}} | Sort-Object -Property Subnets -Descending
+            $Script:RoutsW = $Job.AZVNETs | Select-Object -Property Name, @{N="Subnets";E={$_.properties.subnets.properties.addressPrefix.count}} | Sort-Object -Property Subnets -Descending
         
             $Script:Alt = 0
         
             ##################################### Local Network Gateway #############################################
         
-            foreach($GTW in $AZLGWs)
+            foreach($GTW in $Job.AZLGWs)
             {
                 if($GTW.properties.provisioningState -ne 'Succeeded')
                 {
@@ -228,7 +201,7 @@ Function Start-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteEndElement()
                 }
 
-                $Con1 = $AZCONs | Where-Object {$_.properties.localNetworkGateway2.id -eq $GTW.id}
+                $Con1 = $Job.AZCONs | Where-Object {$_.properties.localNetworkGateway2.id -eq $GTW.id}
                 
                 if(!$Con1 -and $GTW.properties.provisioningState -eq 'Succeeded')
                 {
@@ -264,7 +237,7 @@ Function Start-ARIDiagramNetwork {
 
             ##################################### ERS #############################################
 
-            Foreach($ERs in $AZEXPROUTEs)
+            Foreach($ERs in $Job.AZEXPROUTEs)
             {
                 if($ERs.properties.provisioningState -ne 'Succeeded')
                 {
@@ -278,7 +251,7 @@ Function Start-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteEndElement()
                 }       
 
-                $Con1 = $AZCONs | Where-Object {$_.properties.peer.id -eq $ERs.id}
+                $Con1 = $Job.AZCONs | Where-Object {$_.properties.peer.id -eq $ERs.id}
                 
                 if(!$Con1 -and $ERs.properties.circuitProvisioningState -eq 'Enabled')
                 {
@@ -310,7 +283,7 @@ Function Start-ARIDiagramNetwork {
                 $Script:ERAddress = ($Script:CellID+'-'+($Script:IDNum-1))
                 $Script:ConnSourceResource = 'ER'
 
-                    Start-ARIDiagramOnPremInfram $Con1
+                    Start-ARIDiagramOnPremInfra $Con1
 
                 $Script:Alt = $Script:Alt + 150
 
@@ -318,7 +291,7 @@ Function Start-ARIDiagramNetwork {
 
             ##################################### VWAN VPNSITES #############################################
 
-            foreach($GTW in $AZVPNSITES)
+            foreach($GTW in $Job.AZVPNSITES)
             {
                 if($GTW.properties.provisioningState -ne 'Succeeded')
                 {
@@ -332,7 +305,7 @@ Function Start-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteEndElement()
                 }
 
-                $wan1 = $AZVWAN | Where-Object {$_.properties.vpnSites.id -eq $GTW.id}
+                $wan1 = $Job.AZVWAN | Where-Object {$_.properties.vpnSites.id -eq $GTW.id}
 
                 if(!$wan1 -and $GTW.properties.provisioningState -eq 'Succeeded')
                 {
@@ -365,7 +338,7 @@ Function Start-ARIDiagramNetwork {
 
             ##################################### VWAN ERs #############################################
 
-            foreach($GTW in $AZVERs)
+            foreach($GTW in $Job.AZVERs)
             {
                 if($GTW.properties.provisioningState -ne 'Succeeded')
                 {
@@ -379,7 +352,7 @@ Function Start-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteEndElement()
                 }
 
-                $wan1 = $AZVWAN | Where-Object {$_.properties.vpnSites.id -eq $GTW.id}
+                $wan1 = $Job.AZVWAN | Where-Object {$_.properties.vpnSites.id -eq $GTW.id}
 
                 if(!$wan1 -and $GTW.properties.provisioningState -eq 'Succeeded')
                 {
@@ -448,8 +421,8 @@ Function Start-ARIDiagramNetwork {
                     {
                         $Script:vnetLoc = 700
                     }
-                    $VGT = $AZVGWs | Where-Object {$_.id -eq $Con2.properties.virtualNetworkGateway1.id}
-                    $VGTPIP = $PIPs | Where-Object {$_.properties.ipConfiguration.id -eq $VGT.properties.ipConfigurations.id}
+                    $VGT = $Job.AZVGWs | Where-Object {$_.id -eq $Con2.properties.virtualNetworkGateway1.id}
+                    $VGTPIP = $Job.PIPs | Where-Object {$_.properties.ipConfiguration.id -eq $VGT.properties.ipConfigurations.id}
 
                     $Name2 = $Con2.Name
 
@@ -463,7 +436,7 @@ Function Start-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
                         $LogResName = [string]$Name2
-                        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Icon ($LogResName): " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
+                        Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Icon ($LogResName): " + $Script:CellID+'-'+($Script:IDNum))
                         New-ARIDiagramIcon $IconConnections 250 $Script:Alt "40" "40" 1
 
                     $Script:XmlWriter.WriteEndElement()
@@ -492,7 +465,7 @@ Function Start-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
                         $LogResName = [string]$VGT.Name
-                        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Icon ($LogResName): " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
+                        Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Icon ($LogResName): " + $Script:CellID+'-'+($Script:IDNum))
                         New-ARIDiagramIcon $IconVGW2 425 ($Script:Alt-4) "31.34" "48" 1
 
                     $Script:XmlWriter.WriteEndElement()
@@ -503,7 +476,7 @@ Function Start-ARIDiagramNetwork {
 
                     $Script:Source = $Script:Target
 
-                    foreach($AZVNETs2 in $AZVNETs)
+                    foreach($AZVNETs2 in $Job.AZVNETs)
                     {
                         foreach($VNETTEMP in $AZVNETs2.properties.subnets.properties.ipconfigurations.id)
                         {
@@ -537,7 +510,7 @@ Function Start-ARIDiagramNetwork {
                                         $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
                                             
                                             $LogResName = [string]$VNET2.Name
-                                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Icon ($LogResName): " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
+                                            Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Icon ($LogResName): " + $Script:CellID+'-'+($Script:IDNum))
                                             New-ARIDiagramIcon $IconVNET 600 $Script:Alt "65" "39" 1
 
                                         $Script:XmlWriter.WriteEndElement()      
@@ -626,7 +599,7 @@ Function Start-ARIDiagramNetwork {
 
             foreach ($Con2 in $wan1.properties.virtualHubs.id)
                 {
-                    $VHUB = $AZVHUB | Where-Object {$_.id -eq $Con2}           
+                    $VHUB = $Job.AZVHUB | Where-Object {$_.id -eq $Con2}           
 
                     $Script:XmlWriter.WriteStartElement('object')            
                     $Script:XmlWriter.WriteAttributeString('label', ("`n" +[string]$VHUB.Name))
@@ -646,7 +619,7 @@ Function Start-ARIDiagramNetwork {
 
                     $Script:Source = $Script:Target
 
-                    foreach($AZVNETs2 in $AZVNETs)
+                    foreach($AZVNETs2 in $Job.AZVNETs)
                     {
                         foreach($VNETTEMP in $AZVNETs2.properties.virtualNetworkPeerings.properties.remoteVirtualNetwork.id)
                         {
@@ -680,7 +653,7 @@ Function Start-ARIDiagramNetwork {
                                         $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
                                             $LogResName = [string]$VNET2.Name
-                                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding VNET ($LogResName): " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
+                                            Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding VNET ($LogResName): " + $Script:CellID+'-'+($Script:IDNum))
                                             New-ARIDiagramIcon $IconVNET 600 $Script:Alt "65" "39" 1
 
                                         $Script:XmlWriter.WriteEndElement()      
@@ -689,7 +662,7 @@ Function Start-ARIDiagramNetwork {
                                                             
                                         $Script:Target = ($Script:CellID+'-'+($Script:IDNum-1))
 
-                                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Connecting: " + $Script:Source+' to: '+$Script:Target) | Out-File -FilePath $LogFile -Append
+                                            Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Connecting: " + $Script:Source+' to: '+$Script:Target)
                                             New-ARIDiagramConnection $Script:Source $Script:Target
 
                                         if($VNET2.properties.enableDdosProtection -eq $true)
@@ -721,7 +694,7 @@ Function Start-ARIDiagramNetwork {
                                     {     
                                         $VNETDID = $VNETHistory | Where-Object {$_.VNET -eq $AZVNETs2.id}
 
-                                        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Connecting: " + $Script:Source+' to: '+$VNETDID.VNETid ) | Out-File -FilePath $LogFile -Append
+                                        Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Connecting: " + $Script:Source+' to: '+$VNETDID.VNETid )
                                         New-ARIDiagramConnection $Script:Source $VNETDID.VNETid 
                                     }
                                 }
@@ -738,7 +711,7 @@ Function Start-ARIDiagramNetwork {
 
         <# Function for Cloud Only Environments #>
         Function Invoke-ARIDiagramCloudOnly {
-        $Script:RoutsW = $AZVNETs | Select-Object -Property Name, @{N="Subnets";E={$_.properties.subnets.properties.addressPrefix.count}} | Sort-Object -Property Subnets -Descending
+        $Script:RoutsW = $Job.AZVNETs | Select-Object -Property Name, @{N="Subnets";E={$_.properties.subnets.properties.addressPrefix.count}} | Sort-Object -Property Subnets -Descending
         
         $Script:VNETHistory = @()
         if([string]::IsNullOrEmpty($Script:vnetLoc))
@@ -747,7 +720,7 @@ Function Start-ARIDiagramNetwork {
             }
         $Script:Alt = 2
         
-            foreach($AZVNETs2 in $AZVNETs)
+            foreach($AZVNETs2 in $Job.AZVNETs)
                 {             
                     $Script:VNET2 = $AZVNETs2
         
@@ -776,7 +749,7 @@ Function Start-ARIDiagramNetwork {
                             $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
                                 $LogResName = [string]$VNET2.Name
-                                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding VNET ($LogResName): " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
+                                Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding VNET ($LogResName): " + $Script:CellID+'-'+($Script:IDNum))
                                 New-ARIDiagramIcon $IconVNET 600 $Script:Alt "65" "39" 1
 
                             $Script:XmlWriter.WriteEndElement()      
@@ -818,7 +791,7 @@ Function Start-ARIDiagramNetwork {
                     $Script:XmlWriter.WriteAttributeString('label', '')
                     $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Icon: " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
+                        Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding Icon: " + $Script:CellID+'-'+($Script:IDNum))
                         New-ARIDiagramIcon $Ret -520 -100 "500" ($Script:Alt + 100) 1
 
                     $Script:XmlWriter.WriteEndElement()
@@ -840,10 +813,11 @@ Function Start-ARIDiagramNetwork {
         }
 
         Function Invoke-ARIDiagramFullEnvironment {
-            foreach($AZVNETs2 in $AZVNETs)
+            foreach($AZVNETs2 in $Job.AZVNETs)
                 {             
                     $Script:VNET2 = $AZVNETs2
-        
+                    $Script:Alt0 = $Script:Alt
+
                     if($VNET2.id -notin $VNETHistory.vnet)
                         {
                             if($VNET2.properties.addressSpace.addressPrefixes.count -ge 10)
@@ -867,7 +841,7 @@ Function Start-ARIDiagramNetwork {
                             $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
                                 $LogResName = [string]$VNET2.Name
-                                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding VNET ($LogResName): " + $Script:CellID+'-'+($Script:IDNum)) | Out-File -FilePath $LogFile -Append
+                                Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+" - Adding VNET ($LogResName): " + $Script:CellID+'-'+($Script:IDNum))
                                 New-ARIDiagramIcon $IconVNET 600 $Script:Alt "65" "39" 1
 
                             $Script:XmlWriter.WriteEndElement()
@@ -879,8 +853,6 @@ Function Start-ARIDiagramNetwork {
                                     New-ARIDiagramPeerVNET $Script:VNET2
                                 }  
                         }
-
-                        $Script:Alt = $Script:Alt + 250
                     }
 
                     $Script:XmlWriter.WriteStartElement('object')            
@@ -972,32 +944,7 @@ Function Start-ARIDiagramNetwork {
 
                         Start-Sleep -Milliseconds 100
 
-                        if($Script:VNETPIP)
-                            {
-                                $Script:XmlWriter.WriteStartElement('object')            
-                                $Script:XmlWriter.WriteAttributeString('label', '')
-
-                                $Count = 1
-                                Foreach ($PIPDetail in $Script:VNETPIP)
-                                    {
-                                        $Attr1 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-Name')
-                                        $Attr2 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-IP')
-                                        $Script:XmlWriter.WriteAttributeString($Attr1, [string]$PIPDetail.name)
-                                        $Script:XmlWriter.WriteAttributeString($Attr2, [string]$PIPDetail.properties.ipaddress)
-
-                                        $Count ++
-                                    }
-
-                                $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-
-                                    New-ARIDiagramIcon $IconDet ($Script:sizeL + 500) 225 "42.63" "44" $Script:ContID
-
-                                $Script:XmlWriter.WriteEndElement()
-
-                                    New-ARIDiagramConnection ($Script:CellID+'-'+($Script:IDNum-1)) $Script:ContID $Script:ContID
-                            }
-
-                            $Script:Alt = $Script:Alt + 650
+                        $Script:Alt = $Script:Alt + 650
                     }
                 else
                     {
@@ -1052,30 +999,6 @@ Function Start-ARIDiagramNetwork {
 
                         Start-Sleep -Milliseconds 100
 
-                        if($Script:VNETPIP)
-                            {
-                                $Script:XmlWriter.WriteStartElement('object')            
-                                $Script:XmlWriter.WriteAttributeString('label', '')
-
-                                $Count = 1
-                                Foreach ($PIPDetail in $Script:VNETPIP)
-                                    {
-                                        $Attr1 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-Name')
-                                        $Attr2 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-IP')
-                                        $Script:XmlWriter.WriteAttributeString($Attr1, [string]$PIPDetail.name)
-                                        $Script:XmlWriter.WriteAttributeString($Attr2, [string]$PIPDetail.properties.ipaddress)
-
-                                        $Count ++
-                                    }
-
-                                $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-
-                                    New-ARIDiagramIcon $IconDet ($Script:sizeL + 500) 107 "42.63" "44" $Script:ContID
-
-                                $Script:XmlWriter.WriteEndElement()
-
-                                    New-ARIDiagramConnection ($Script:CellID+'-'+($Script:IDNum-1)) $Script:ContID $Script:ContID $LogFile
-                            }
                         $Script:Alt = $Script:Alt + 350 
                     }
                 }
@@ -1091,7 +1014,7 @@ Function Start-ARIDiagramNetwork {
 
             Foreach ($Peer in $VNET2.properties.virtualNetworkPeerings)
                 {
-                    $VNETSUB = $AZVNETs | Where-Object {$_.id -eq $Peer.properties.remoteVirtualNetwork.id}                                                
+                    $VNETSUB = $Job.AZVNETs | Where-Object {$_.id -eq $Peer.properties.remoteVirtualNetwork.id}                                                
 
                     if($VNETSUB.id -in $VNETHistory.VNET)
                         {        
@@ -1100,6 +1023,10 @@ Function Start-ARIDiagramNetwork {
                             $Script:XmlWriter.WriteStartElement('object')
                             $Script:XmlWriter.WriteAttributeString('label', '')
                             $Script:XmlWriter.WriteAttributeString('Peering_Name', $Peer.name)
+                            $Script:XmlWriter.WriteAttributeString('Peering_State', $Peer.properties.peeringState)
+                            $Script:XmlWriter.WriteAttributeString('Gateway_Transit', $Peer.properties.allowGatewayTransit)
+                            $Script:XmlWriter.WriteAttributeString('Forwarded_Traffic', $Peer.properties.allowForwardedTraffic)
+                            $Script:XmlWriter.WriteAttributeString('VNET_Access', $Peer.properties.allowVirtualNetworkAccess)
                             $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
                                 $Script:XmlWriter.WriteStartElement('mxCell')
@@ -1153,6 +1080,10 @@ Function Start-ARIDiagramNetwork {
                         $Script:XmlWriter.WriteStartElement('object')            
                         $Script:XmlWriter.WriteAttributeString('label', '')
                         $Script:XmlWriter.WriteAttributeString('Peering_Name', $Peer.name)
+                        $Script:XmlWriter.WriteAttributeString('Peering_State', $Peer.properties.peeringState)
+                        $Script:XmlWriter.WriteAttributeString('Gateway_Transit', $Peer.properties.allowGatewayTransit)
+                        $Script:XmlWriter.WriteAttributeString('Forwarded_Traffic', $Peer.properties.allowForwardedTraffic)
+                        $Script:XmlWriter.WriteAttributeString('VNET_Access', $Peer.properties.allowVirtualNetworkAccess)
                         $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
                             $Script:XmlWriter.WriteStartElement('mxCell')
@@ -1240,31 +1171,6 @@ Function Start-ARIDiagramNetwork {
 
                                     $Script:vnetLoc1 = $Script:vnetLoc1 + 230 
 
-                                if($Script:VNETPIP)
-                                    {
-                                        $Script:XmlWriter.WriteStartElement('object')            
-                                        $Script:XmlWriter.WriteAttributeString('label', '')
-
-                                        $Count = 1
-                                        Foreach ($PIPDetail in $Script:VNETPIP)
-                                            {
-                                                $Attr1 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-Name')
-                                                $Attr2 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-IP')
-                                                $Script:XmlWriter.WriteAttributeString($Attr1, [string]$PIPDetail.name)
-                                                $Script:XmlWriter.WriteAttributeString($Attr2, [string]$PIPDetail.properties.ipaddress)
-
-                                                $Count ++
-                                            }
-
-                                        $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-
-                                            New-ARIDiagramIcon $IconDet ($Script:sizeL + 500) 225 "42.63" "44" $Script:ContID
-
-                                        $Script:XmlWriter.WriteEndElement()
-
-                                            New-ARIDiagramConnection ($Script:CellID+'-'+($Script:IDNum-1)) $Script:ContID $Script:ContID
-                                    }  
-
                                 $Script:Alt = $Script:Alt + 650                                                                         
                             }
                         else
@@ -1328,32 +1234,6 @@ Function Start-ARIDiagramNetwork {
 
                                     Start-Sleep -Milliseconds 100
 
-                                if($Script:VNETPIP)
-                                    {
-                                        $Script:XmlWriter.WriteStartElement('object')            
-                                        $Script:XmlWriter.WriteAttributeString('label', '')
-
-                                        $Count = 1
-                                        Foreach ($PIPDetail in $Script:VNETPIP)
-                                            {
-                                                $Attr1 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-Name')
-                                                $Attr2 = ('PublicIP-'+[string]("{0:d3}" -f $Count)+'-IP')
-                                                $Script:XmlWriter.WriteAttributeString($Attr1, [string]$PIPDetail.name)
-                                                $Script:XmlWriter.WriteAttributeString($Attr2, [string]$PIPDetail.properties.ipaddress)
-
-                                                $Count ++
-                                            }
-
-                                        $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
-
-                                            New-ARIDiagramIcon $IconDet ($Script:sizeL+ 500) 107 "42.63" "44" $Script:ContID
-
-                                        $Script:XmlWriter.WriteEndElement()
-
-                                            New-ARIDiagramConnection ($Script:CellID+'-'+($Script:IDNum-1)) $Script:ContID $Script:ContID
-
-                                    }
-
                             }
                             
                         $tmp =@{
@@ -1375,30 +1255,41 @@ Function Start-ARIDiagramNetwork {
                 {
                     if($Automation.IsPresent)
                     {
-                        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Creating Subnet in Automation') | Out-File -FilePath $LogFile -Append 
+                        Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Creating Subnet in Automation')
 
-                        $Script:IDNum = Build-ARIDiagramSubnet -SubnetLocation $subloc -VNET $VNET -IDNum $IDNum -DiagramCache $DiagramCache -ContainerID $ContID -Job $Job -LogFile $LogFile
+                        Build-ARIDiagramSubnet -SubnetLocation $subloc -VNET $VNET -IDNum $IDNum -DiagramCache $DiagramCache -ContainerID $ContID -Job $Job -LogFile $LogFile
                     }
                 else
                     {
-                        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Creating Subnet in Thread') | Out-File -FilePath $LogFile -Append 
+                        Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Creating Subnet in Thread')
 
                         $NameString = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
 
+                        Start-ThreadJob -Name ('Job_'+$NameString) -ScriptBlock {
+                            Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Subnet function')
+
+                            Import-Module $($args[7])
+
+                            Build-ARIDiagramSubnet -SubnetLocation $($args[0]) -VNET $($args[1]) -IDNum $($args[2]) -DiagramCache $($args[3]) -ContainerID $($args[4]) -Job $($args[5])-LogFile $($args[6])
+                        } -ArgumentList $subloc,$VNET,$IDNum,$DiagramCache,$ContID,$Job,$LogFile,$ARIModule | Out-Null
+
+                        $Script:jobs += ('Job_'+$NameString)
+
+                        <#
                         New-Variable -Name ('Run_'+$NameString) -Scope Script
 
                         Set-Variable -name ('Run_'+$NameString) -Value ([PowerShell]::Create()).AddScript({param($subloc,$VNET,$IDNum,$DiagramCache,$ContID,$LogFile,$ARIModule)
                             try
                                 {
-                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Subnet function') | Out-File -FilePath $LogFile -Append 
+                                    Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Subnet function')
 
                                     Import-Module $ARIModule
 
-                                    $Script:IDNum = Build-ARIDiagramSubnet -SubnetLocation $subloc -VNET $VNET -IDNum $IDNum -DiagramCache $DiagramCache -ContainerID $ContID -Job $Job -LogFile $LogFile
+                                    Build-ARIDiagramSubnet -SubnetLocation $subloc -VNET $VNET -IDNum $IDNum -DiagramCache $DiagramCache -ContainerID $ContID -Job $Job -LogFile $LogFile
                                 }
                             catch
                                 {
-                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $LogFile -Append
+                                    Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message)
                                 }
 
                         }).AddArgument($subloc).AddArgument($VNET).AddArgument($IDNum).AddArgument($DiagramCache).AddArgument($ContID).AddArgument($LogFile).AddArgument($ARIModule)
@@ -1417,12 +1308,13 @@ Function Start-ARIDiagramNetwork {
                         #((get-variable -name ('Run_'+$NameString)).Value).Dispose()
 
                         #while ($Job.Runspace.IsCompleted -contains $false) {}
+                        #>
 
                     }
                 }
             catch
                 {
-                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $LogFile -Append
+                    Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message)
                 }
         }
 
@@ -1447,10 +1339,23 @@ Function Start-ARIDiagramNetwork {
             $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
         }
 
+        Function Get-ARIDiagramJobLog {
+            Param($JobNames)
+
+            Foreach ($JobName in $JobNames)
+                {
+                    $LogEntries = Receive-Job -Name $JobName
+                    Foreach ($LogEntry in $LogEntries)
+                        {
+                            Write-Output $LogEntry
+                        }
+                }
+        }
+
         try
             {
 
-                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting Subnet files') | Out-File -FilePath $LogFile -Append 
+                Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting Subnet files')
 
                 $Subnetfiles = Get-ChildItem -Path $DiagramCache
 
@@ -1459,11 +1364,11 @@ Function Start-ARIDiagramNetwork {
                 foreach($SubFile in $Subnetfiles)
                     {
                         $LogSubFile = $SubFile.FullName
-                        ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Removing File: ' + $LogSubFile) | Out-File -FilePath $LogFile -Append 
+                        Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Removing File: ' + $LogSubFile)
                         Remove-Item -Path $SubFile.FullName
                     }
 
-                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting Variables') | Out-File -FilePath $LogFile -Append 
+                Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting Variables')
 
                 $Script:etag = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
                 $Script:DiagID = -join ((65..90) + (97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
@@ -1471,11 +1376,7 @@ Function Start-ARIDiagramNetwork {
 
                 $Script:IDNum = 0
 
-                $VMsCount = $Script:VM.count
-
-                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Diagraming VMs: ' + $VMsCount) | Out-File -FilePath $LogFile -Append 
-
-                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Defining XML file') | Out-File -FilePath $LogFile -Append 
+                Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Defining XML file')
 
                 $Script:XmlWriter = New-Object System.XMl.XmlTextWriter($DDFile,$Null)
 
@@ -1524,25 +1425,25 @@ Function Start-ARIDiagramNetwork {
                                 $Script:XmlWriter.WriteAttributeString('parent', "0")
                                 $Script:XmlWriter.WriteEndElement()
 
-                                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Stensils') | Out-File -FilePath $LogFile -Append 
+                                Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Stensils')
 
                                     Publish-ARIDiagramStensils
 
-                                    if($AZLGWs -or $AZEXPROUTEs -or $AZVERs -or $AZVPNSITES)
+                                    if($Job.AZLGWs -or $Job.AZEXPROUTEs -or $Job.AZVERs -or $Job.AZVPNSITES)
                                         {
-                                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling OnPremNet') | Out-File -FilePath $LogFile -Append 
+                                            Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling OnPremNet')
 
                                             Invoke-ARIDiagramOnPremNetwork
                                             if($FullEnvironment)
                                                 {
-                                                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling as FullEnvironment') | Out-File -FilePath $LogFile -Append 
+                                                    Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling as FullEnvironment')
 
                                                     Invoke-ARIDiagramFullEnvironment
                                                 }
                                         }
                                     else
                                         {
-                                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling CloudOnly Function') | Out-File -FilePath $LogFile -Append
+                                            Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling CloudOnly Function')
                                             Invoke-ARIDiagramCloudOnly
                                         }
 
@@ -1559,11 +1460,15 @@ Function Start-ARIDiagramNetwork {
 
                     if (!$Automation.IsPresent)
                         {
-                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting Job2 to complete') | Out-File -FilePath $LogFile -Append 
+                            Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting Job2 to complete')
 
-                            while ($Script:jobs2.IsCompleted -contains $false) {}
+                            Get-job -Name $Script:jobs | Wait-Job | Out-Null
 
-                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Removing Jobs') | Out-File -FilePath $LogFile -Append
+                            Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Getting Subnet Job Logs')
+
+                            Get-ARIDiagramJobLog -JobNames $Script:jobs
+
+                            Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Removing Jobs')
 
                             Remove-ARIDiagramJob
                         }
@@ -1572,15 +1477,15 @@ Function Start-ARIDiagramNetwork {
 
                     $Subnetfiles = $Subnetfiles | Where-Object {$_.Name -notlike '*Organization.xml' -and $_.Name -notlike '*Subscriptions.xml'}
 
-                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Processing Subnet files') | Out-File -FilePath $LogFile -Append 
+                    Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Processing Subnet files')
 
                     foreach($SubFile in $Subnetfiles)
                         {
-                            $newxml = New-Object XML
+                            $newxml = [XML]::new()
                             $newxml.Load($SubFile.FullName)
 
                             $LogSubFile = $SubFile.FullName
-                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Processing Subnet File: ' + $LogSubFile) | Out-File -FilePath $LogFile -Append 
+                            Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Processing Subnet File: ' + $LogSubFile)
 
                             $Innerxml = $newxml.mxfile.diagram.mxGraphModel.root.InnerXml
 
@@ -1592,21 +1497,23 @@ Function Start-ARIDiagramNetwork {
                             $xmlFrag=$xml.CreateDocumentFragment()
                             $xmlFrag.InnerXml=$Innerxml2
 
-                            $xml.mxfile.diagram.mxGraphModel.root.AppendChild($xmlFrag)
+                            $xml.mxfile.diagram.mxGraphModel.root.AppendChild($xmlFrag) | Out-Null
 
                             #save file
                             $xml.Save($DDFile)
 
-                            ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Deleting Subnet File: ' + $LogSubFile) | Out-File -FilePath $LogFile -Append
+                            Start-Sleep -Milliseconds 100
+
+                            Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Deleting Subnet File: ' + $LogSubFile)
                             Remove-Item -Path $SubFile.FullName
 
                             Start-Sleep -Milliseconds 100
                         }
 
-                    ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - End of Network Diagram') | Out-File -FilePath $LogFile -Append 
+                        Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - End of Network Diagram')
             }
         catch
             {
-                ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $LogFile -Append 
+                Write-Output ('DrawIONetwork - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message)
             }
 }

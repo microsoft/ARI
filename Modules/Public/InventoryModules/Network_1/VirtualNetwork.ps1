@@ -200,23 +200,9 @@ Else {
         $noNumberConversion += 'Address Space'
         $noNumberConversion += 'Subnet Prefix'
 
-        $SmaResources | 
-            ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
+        [PSCustomObject]$SmaResources | 
+            ForEach-Object { $_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
-
-
-
-        $excel = Open-ExcelPackage -Path $File
-
-        $sheet = $excel.Workbook.Worksheets[$SheetName]
-
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue 20 -ConditionValue2 40 -Address N:N -BackgroundColor "Yellow"
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue 1 -ConditionValue2 20 -Address N:N -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
-
-        $null = $excel.$SheetName.Cells["F1"].AddComment("Azure DDoS Protection Standard, combined with application design best practices, provides enhanced DDoS mitigation features to defend against DDoS attacks.", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["F1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/ddos-protection/ddos-protection-overview'
-
-        Close-ExcelPackage $excel
 
     }
 }

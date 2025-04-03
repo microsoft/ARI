@@ -20,7 +20,7 @@ Authors: Claudio Merola
 Function Start-ARIDiagramOrganization {
     Param($ResourceContainers,$DiagramCache,$LogFile)
 
-    ('DrawIOOrgsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Function') | Out-File -FilePath $LogFile -Append 
+    Write-Output ('DrawIOOrgsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Function')
     Function Add-Icon {    
         Param($Style,$x,$y,$w,$h,$p)
         
@@ -920,7 +920,7 @@ Function Start-ARIDiagramOrganization {
     $Script:IDNum = 0
     $Script:CelNum = 0
 
-    ('DrawIOOrgsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Creating XML File: ' + $OrgFile) | Out-File -FilePath $LogFile -Append 
+    Write-Output ('DrawIOOrgsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Creating XML File: ' + $OrgFile)
 
     $Script:XmlWriter = New-Object System.XMl.XmlTextWriter($OrgFile,$Null)
 
@@ -985,6 +985,6 @@ Function Start-ARIDiagramOrganization {
     $Script:XmlWriter.Flush()
     $Script:XmlWriter.Close()
 
-    ('DrawIOOrgsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - End of Function') | Out-File -FilePath $LogFile -Append 
+    Write-Output ('DrawIOOrgsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - End of Function')
 
 }

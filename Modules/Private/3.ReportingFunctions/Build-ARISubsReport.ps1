@@ -25,15 +25,15 @@ function Build-ARISubsReport {
         {
             $Style = @() 
             $Style += New-ExcelStyle -AutoSize -HorizontalAlignment Center -NumberFormat '0'
-            $Style += New-ExcelStyle -Width 55 -NumberFormat '$#,#######0.0000000' -Range J:J
+            $Style += New-ExcelStyle -Width 55 -NumberFormat '$#,#########0.000000000' -Range J:J
             $Style += New-ExcelStyle -AutoSize -NumberFormat '$#,##0.00' -Range I:I
-            $Sub |
-                ForEach-Object { [PSCustomObject]$_ } |
+            [PSCustomObject]$Sub |
+                ForEach-Object { $_ } |
                 Select-Object 'Subscription',
                 'Resource Group',
                 'Location',
                 'Resource Type',
-                'Resources Count',
+                'Service Name',
                 'Currency',
                 'Month',
                 'Year',
@@ -44,8 +44,8 @@ function Build-ARISubsReport {
     else
         {
             $Style = New-ExcelStyle -HorizontalAlignment Center -NumberFormat '0'
-            $Sub |
-                ForEach-Object { [PSCustomObject]$_ } |
+            [PSCustomObject]$Sub |
+                ForEach-Object { $_ } |
                 Select-Object 'Subscription',
                 'Resource Group',
                 'Location',
