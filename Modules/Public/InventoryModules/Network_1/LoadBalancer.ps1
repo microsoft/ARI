@@ -163,26 +163,9 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
-        $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
+        [PSCustomObject]$SmaResources | 
+        ForEach-Object { $_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
-
-
-        $excel = Open-ExcelPackage -Path $File
-
-        $null = $excel.$SheetName.Cells["E1"].AddComment("No SLA is provided for Basic Load Balancer!", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["E1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/load-balancer/skus'
-
-        $null = $excel.$SheetName.Cells["F1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["F1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
-
-        $null = $excel.$SheetName.Cells["H1"].AddComment("Orphaned Load Balancer is when there is no Backend Pool at all associated with the Load Balancer and the Load Balancer may be deleted to save costs.", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["H1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/load-balancer/backend-pool-management'
-
-        $null = $excel.$SheetName.Cells["I1"].AddComment("'Not In Use' Load Balancer is when there is a Backend Pool in the Load Balancer but no IP Address or Resources are associated with the Backend Pools and the Load Balancer should be investigated to be deleted to save costs.", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["I1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/load-balancer/backend-pool-management'
-
-        Close-ExcelPackage $excel
 
     }
     

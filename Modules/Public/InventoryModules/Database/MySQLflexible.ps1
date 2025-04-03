@@ -143,8 +143,8 @@ Else {
                 $Exc.Add('Tag Value') 
             }
 
-        $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
+        [PSCustomObject]$SmaResources | 
+        ForEach-Object { $_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'MySQL Flexible' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -ConditionalText $condtxt -TableStyle $tableStyle -Style $Style
 
     }

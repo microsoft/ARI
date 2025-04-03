@@ -80,8 +80,8 @@ Else {
             $Exc.Add('Tag Value') 
         }
 
-        $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
+        [PSCustomObject]$SmaResources | 
+        ForEach-Object { $_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Managed Identity' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -Numberformat '0' -Style $Style
 
     }

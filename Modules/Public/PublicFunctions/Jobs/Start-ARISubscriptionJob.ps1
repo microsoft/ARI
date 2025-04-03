@@ -20,57 +20,64 @@ Authors: Claudio Merola
 function Start-ARISubscriptionJob {
     param($Subscriptions, $Resources, $CostData)
 
-    $ResTable = $Resources | Where-Object { $_.type -notin ('microsoft.advisor/recommendations',
+    if ([string]::IsNullOrEmpty($CostData))
+        {
+            $ResTable = $Resources | Where-Object { $_.type -notin ('microsoft.advisor/recommendations',
                                                             'ARI/VM/Quotas',
                                                             'ARI/VM/SKU',
                                                             'Microsoft.Advisor/advisorScore',
                                                             'Microsoft.ResourceHealth/events',
                                                             'microsoft.support/supporttickets' )}
-    $resTable2 = $ResTable | Select-Object id, Type, location, resourcegroup, subscriptionid
-    $ResTable3 = $ResTable2 | Group-Object -Property type, location, resourcegroup, subscriptionid
+            $resTable2 = $ResTable | Select-Object id, Type, location, resourcegroup, subscriptionid
+            $ResTable3 = $ResTable2 | Group-Object -Property type, location, resourcegroup, subscriptionid
 
-    $SubDetailsTable = foreach ($ResourcesSUB in $ResTable3) 
-        {
-            $ResourceDetails = $ResourcesSUB.name -split ", "
-            $SubName = $Subscriptions | Where-Object { $_.Id -eq $ResourceDetails[3] }
-            $obj = [PSCustomObject]@{
-                'Subscription'   = $SubName.Name
-                'SubscriptionId'   = $ResourceDetails[3]
-                'ResourceGroup' = $ResourceDetails[2]
-                'Location'       = $ResourceDetails[1]
-                'ResourceType'  = $ResourceDetails[0]
-                'ResourcesCount'= $ResourcesSUB.Count
-            }
-            $obj
-        }
-
-    $CostDetailsTable = foreach ($Cost in $CostData)
-        {
-            Foreach ($CostDetail in $Cost.CostData.Row)
+            $FormattedTable = foreach ($ResourcesSUB in $ResTable3) 
                 {
-                    Foreach ($Currency in $CostDetail[5])
+                    $ResourceDetails = $ResourcesSUB.name -split ", "
+                    $SubName = $Subscriptions | Where-Object { $_.Id -eq $ResourceDetails[3] }
+                    $obj = [PSCustomObject]@{
+                        'Subscription'      = $SubName.Name
+                        'SubscriptionId'    = $ResourceDetails[3]
+                        'Resource Group'    = $ResourceDetails[2]
+                        'Location'          = $ResourceDetails[1]
+                        'Resource Type'     = $ResourceDetails[0]
+                        'Resources Count'   = $ResourcesSUB.Count
+                    }
+                    $obj
+                }
+        }
+    else
+        {
+            $FormattedTable = foreach ($Cost in $CostData)
+                {
+                    Foreach ($CostDetail in $Cost.CostData.Row)
                         {
-                            $Date0 = [datetime]$CostDetail[1]
-                            $DateMonth = ((Get-Culture).DateTimeFormat.GetMonthName(([datetime]$Date0).ToString("MM"))).ToString()
-                            $DateYear = (([datetime]$Date0).ToString("yyyy")).ToString()
+                            Foreach ($Currency in $CostDetail[6])
+                                {
+                                    $Date0 = [datetime]$CostDetail[1]
+                                    $DateMonth = ((Get-Culture).DateTimeFormat.GetMonthName(([datetime]$Date0).ToString("MM"))).ToString()
+                                    $DateYear = (([datetime]$Date0).ToString("yyyy")).ToString()
 
-                            $obj = [PSCustomObject]@{
-                                'Subscription'   = $Cost.SubscriptionName
-                                'SubscriptionId' = $Cost.SubscriptionId
-                                'ResourceGroup'  = $CostDetail[3]
-                                'ResourceType'   = $CostDetail[2]
-                                #'Location'       = $CostDetail[4]
-                                'Currency'       = $Currency
-                                'Cost'           = $CostDetail[0]
-                                'DetailedCost'   = $CostDetail[0]
-                                'Year'           = $DateYear
-                                'Month'          = $DateMonth
-                            }
-                            $obj
+                                    $obj = [PSCustomObject]@{
+                                        'Subscription'      = $Cost.SubscriptionName
+                                        'SubscriptionId'    = $Cost.SubscriptionId
+                                        'Resource Group'    = $CostDetail[3]
+                                        'Resource Type'     = $CostDetail[2]
+                                        'Location'          = $CostDetail[4]
+                                        'Service Name'      = $CostDetail[5]
+                                        'Currency'          = $Currency
+                                        'Cost'              = $CostDetail[0]
+                                        'Detailed Cost'     = $CostDetail[0]
+                                        'Year'              = $DateYear
+                                        'Month'             = $DateMonth
+                                    }
+                                    $obj
+                                }
                         }
                 }
         }
 
+        <#
         $outerKeyGeneral = [Func[Object,string]] { $args[0].SubscriptionID, $args[0].ResourceGroup, $args[0].ResourceType }
         $innerKeyGeneral = [Func[Object,string]] { $args[0].SubscriptionID, $args[0].ResourceGroup, $args[0].ResourceType }
 
@@ -83,7 +90,7 @@ function Start-ARISubscriptionJob {
             [PSCustomObject]@{
                 'Subscription' = $SubTable.Subscription
                 'Resource Group' = $SubTable.ResourceGroup
-                'Location' = $SubTable.Location
+                'Location' = $CostTable.Location
                 'Resource Type' = $SubTable.ResourceType
                 'Resources Count' = $SubTable.ResourcesCount
                 'Currency' = $CostTable.Currency
@@ -94,7 +101,6 @@ function Start-ARISubscriptionJob {
             }  
         }
 
-        <#
         [System.Func[System.Object, [Collections.Generic.IEnumerable[System.Object]], System.Object]]$query = {
             param(
                 $SubTable,
@@ -116,9 +122,12 @@ function Start-ARISubscriptionJob {
         }
 
         $LeftJoin = [System.Linq.Enumerable]::ToArray([System.Linq.Enumerable]::GroupJoin($SubDetailsTable, $CostDetailsTable, $outerKeyGroup, $innerKeyGeneraltest, $query))
-        #>
+
 
         $InnerJoinResult = [System.Linq.Enumerable]::ToArray([System.Linq.Enumerable]::Join($SubDetailsTable, $CostDetailsTable, $outerKeyGeneral, $innerKeyGeneral, $resultDelegate))
 
         $InnerJoinResult
+        #>
+
+        $FormattedTable
 }

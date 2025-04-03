@@ -22,6 +22,7 @@ type =~ "microsoft.web/hostingenvironments" and kind in~ ('ASEV1','ASEV2'),13
 ,type =~ 'microsoft.healthcareapis/services',354
 ,type =~ 'microsoft.healthcareapis' and properties.authenticationConfiguration.smartProxyEnabled =~ 'true',387
 ,type contains "Microsoft.DBforMariaDB",398
+,type =~ "microsoft.automanage/configurationprofiles", 622
 ,type =~ "microsoft.cognitiveservices/accounts" 
 , case(kind =~ "Personalizer", 408
     , kind =~ "AnomalyDetector", 405
@@ -64,14 +65,14 @@ type =~ "microsoft.web/hostingenvironments" and kind in~ ('ASEV1','ASEV2'),13
     (properties['sslPolicy']['minProtocolVersion'] != "TLSv1_2" and ​properties['sslPolicy']['minProtocolVersion'] != "TLSv1_3"​ and 
     properties['sslPolicy']['policyName'] !contains "2022" and properties['sslPolicy']['policyName'] !contains "401S" and 
     properties['defaultPredefinedSslPolicy'] !contains "2022"),714
-,type =~ "microsoft.eventhub/namespaces" and (isempty(properties.minimumTlsVersion) or tostring(properties.minimumTlsVersion) in("1.0","1.1")),7001
-,type =~ "microsoft.cache/redis" and (isempty(properties['minimumTlsVersion']) or properties['minimumTlsVersion'] in ("1.1","1.0")) ,403
+,type =~ "microsoft.eventhub/namespaces" and (tostring(properties.minimumTlsVersion) in ("NonTLS","1.0","1.1")),7001
+,type =~ "microsoft.cache/redis" and (tostring(properties['minimumTlsVersion']) !in ("1.2","1.3")) ,403
 ,type contains "microsoft.documentdb/databaseaccounts" and (isempty(properties['minimalTlsVersion']) or  properties['minimalTlsVersion'] in ("Tls11","Tls")), 703
-,type contains "microsoft.eventgrid/" and (isempty(properties['minimumTlsVersionAllowed']) or tostring(properties['minimumTlsVersionAllowed']) in ("1.1","1.0")), 669
+,type contains "microsoft.eventgrid/" and tostring(properties['minimumTlsVersionAllowed']) in ("1.1","1.0"), 669
 ,type =~ "microsoft.servicebus/namespaces" and isnotempty(tostring(parse_json(properties).minimumTlsVersion)) and tostring(parse_json(properties).minimumTlsVersion) in ("1.0","1.1"),43502
 ,type =~ "microsoft.sql/servers" and properties['minimalTlsVersion'] in ("None","1.0", "1.1"), 43503
 ,type == "microsoft.storage/storageaccounts" and (isempty(properties['minimumTlsVersion']) or properties['minimumTlsVersion'] in ("TLS1_0", "TLS1_1")), 43507
-,type =~ 'microsoft.sql/managedinstances' and (isempty(properties['minimalTlsVersion']) or properties['minimalTlsVersion'] in ("TLS1_0", "TLS1_1")), 43508
+,type =~ 'microsoft.sql/managedinstances' and properties['minimalTlsVersion'] in ('None', '1.0','1.1'), 43508
 ,type =~ 'microsoft.datalakeanalytics/accounts' and not(location in ('westcentralus','westus2','westus3')) and properties contains 'defaultDataLakeStoreAccount', 18
 ,type contains 'Microsoft.TimeSeriesInsights',31,
 type =~ "microsoft.insights/workbooks" and properties.category =~ "tsg",143,
@@ -81,7 +82,7 @@ type =~ "microsoft.datalakestore/accounts" and not(location in ('westcentralus',
 type =~ "microsoft.migrate/projects",187,
 type =~ "microsoft.insights/alertrules",200,
 type contains "microsoft.media/mediaservices",394,
-type =~ "microsoft.containerservice/managedclusters" and properties.addonProfiles contains 'httpApplicationRouting', 353,
+type =~ "microsoft.containerservice/managedclusters" and properties.addonProfiles.httpApplicationRouting.enabled == true, 353,
 type =~ "microsoft.compute/virtualmachinescalesets" and tags contains 'aks-managed' 
 , case(tostring(properties.virtualMachineProfile.storageProfile.imageReference.id) contains "AKSWindows/images/windows-2022", 560,
  tostring(properties.virtualMachineProfile.storageProfile.imageReference.id) contains "AKSWindows/images/windows-2019", 284,-9999),
@@ -108,7 +109,7 @@ type contains "microsoft.web/sites" and tostring(properties.siteProperties.prope
     | where (type =~ "microsoft.synapse/workspaces/bigdatapools" and isnotempty(workspaceId1)) or (type contains "microsoft.hdinsight/clusters") or (type =~ 'microsoft.network/loadbalancers' and sku.name =~ "Standard")
     | mv-expand properties.computeProfile.roles
     | mv-expand properties_computeProfile_roles
-    | mv-expand inboundNatRules = todynamic(properties["inboundNatRules"]) , inboundNatPools = properties.inboundNatPools
+    | mv-expand inboundNatRules = todynamic(properties["inboundNatRules"])
     | extend vmSize = properties_computeProfile_roles.hardwareProfile.vmSize
     | project subscriptionId, ServiceID = 
         case (
@@ -117,7 +118,7 @@ type contains "microsoft.web/sites" and tostring(properties.siteProperties.prope
             ['type'] =~ "microsoft.synapse/workspaces/bigdatapools" and sparkVersion == 3.2, 583, 
             ['type'] =~ "microsoft.synapse/workspaces/bigdatapools" and sparkVersion == 3.3, 643, 
             ['type'] =~ "microsoft.hdinsight/clusters" and vmSize in~ ("standard_a0","standard_a1","standard_a2","standard_a3","standard_a4","standard_a5","standard_a6","standard_a7"), 564,
-            ['type'] =~ 'microsoft.network/loadbalancers' and sku.name =~ "Standard" and ((isnotempty(inboundNatRules.properties.backendIPConfiguration) and array_length(inboundNatPools) == 0) or (array_length(inboundNatPools) != 0))   , 666,  
+            ['type'] =~ 'microsoft.network/loadbalancers' and sku.name =~ "Standard" and ((isnotempty(inboundNatRules.properties.backendIPConfiguration) and array_length(properties.inboundNatPools) == 0) or (array_length(properties.inboundNatPools) != 0))   , 666,  
              -9999),
             id, resourceGroup, location, type,  tags = tostring(tags)
     | where ServiceID > 0
@@ -128,15 +129,14 @@ type contains "microsoft.web/sites" and tostring(properties.siteProperties.prope
 (
     AdvisorResources
     | where type =~'microsoft.advisor/recommendations'
-    | where properties.shortDescription contains 'Cloud service caches are being retired' or properties.shortDescription contains 'Move to Azure Update Manager as Automation Update Management will be deprecated' or properties.shortDescription contains 'Upgrade NSG flow logs to VNet flow logs'
+    | where properties.shortDescription contains 'Cloud service caches are being retired' or properties.shortDescription contains 'Move to Azure Update Manager as Automation Update Management will be deprecated' or properties.shortDescription contains 'Upgrade from network security group flow log to Virtual Network flow log'
     | project id=tolower(tostring(properties.resourceMetadata.resourceId))
     | join kind = inner
     (
         resources
         | where type in~ ('microsoft.cache/redis','microsoft.automation/automationAccounts','MICROSOFT.NETWORK/NETWORKWATCHERS/FLOWLOGS')
         | extend ServiceID = case (type contains 'microsoft.cache/redis', 124 , type contains 'microsoft.automation/automationAccounts', 245, type contains 'MICROSOFT.NETWORK/NETWORKWATCHERS/FLOWLOGS', 524, -9999)
-        | extend joiningId = tolower(case (type contains 'MICROSOFT.NETWORK/NETWORKWATCHERS/FLOWLOGS', tostring(properties.targetResourceId), id))
-        | project ServiceID, subscriptionId, location, type,  id=tolower(id), tags = tostring(tags), joiningId,resourceGroup
-    ) on $left.id == $right.joiningId
-    | project ServiceID, subscriptionId, type, resourceGroup, location, id = id1, tags  
+        | project ServiceID, subscriptionId, location, type,  id=tolower(id), tags = tostring(tags), resourceGroup
+    ) on id
+    | project ServiceID, subscriptionId, type, resourceGroup, location, id, tags  
 )

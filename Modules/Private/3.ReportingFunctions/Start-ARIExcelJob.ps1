@@ -37,6 +37,7 @@ function Start-ARIExcelJob {
 
     Foreach ($ModuleFolder in $ModuleFolders)
         {
+            $CacheData = $null
             $ModulePath = Join-Path $ModuleFolder.FullName '*.ps1'
             $ModuleFiles = Get-ChildItem -Path $ModulePath
 
@@ -76,14 +77,13 @@ function Start-ARIExcelJob {
 
                         Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot, $null, $InTag, $null, $null, 'Reporting', $file, $SmaResources, $TableStyle, $null
 
-                        Remove-Variable -Name SmaResources
-
                     }
 
                     $ReportCounter ++
 
                 }
                 Remove-Variable -Name CacheData
+                Remove-Variable -Name SmaResources
                 Clear-ARIMemory
         }
         Write-Progress -Id 1 -activity "Building Report" -Status "100% Complete." -Completed

@@ -25,12 +25,11 @@ function Build-ARIExcelComObject {
         {
             $application = New-Object -ComObject Excel.Application
             Start-Sleep -Seconds 2
-            $application.Visible = $false
             if ($application) {
                 try
                     {
                         $ExApp = $application.Workbooks.Open($File)
-                        Start-Sleep -Seconds 2
+                        Start-Sleep -Seconds 3
                         While ([string]::IsNullOrEmpty($ExApp))
                             {
                                 Start-Sleep -Seconds 1

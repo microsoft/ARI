@@ -117,8 +117,8 @@ Else {
         $Exc.Add('How are we making incidents like this less likely or less impactful')
         $Exc.Add('How can customers make incidents like this less impactful')
 
-        $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
+        [PSCustomObject]$SmaResources | 
+        ForEach-Object { $_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Outages' -AutoSize -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -Numberformat '0' -Style $Style
 
     }

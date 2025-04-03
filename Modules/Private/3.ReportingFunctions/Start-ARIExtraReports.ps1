@@ -48,6 +48,7 @@ function Start-ARIExtraReports {
                 }
 
                 $Sec = Receive-Job -Name 'Security'
+                Remove-Job -Name 'Security' | Out-Null
 
                 Build-ARISecCenterReport -File $File -Sec $Sec -TableStyle $TableStyle
 
@@ -70,6 +71,7 @@ function Start-ARIExtraReports {
                 }
 
                 $Pol = Receive-Job -Name 'Policy'
+                Remove-Job -Name 'Policy' | Out-Null
 
                 Build-ARIPolicyReport -File $File -Pol $Pol -TableStyle $TableStyle
 
@@ -83,7 +85,7 @@ function Start-ARIExtraReports {
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking if Should Generate Advisory Sheet.')
     if (!$SkipAdvisory.IsPresent) {
-        if (get-job | Where-Object {$_.Name -eq 'Policy'})
+        if (get-job | Where-Object {$_.Name -eq 'Advisory'})
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Generating Advisor Sheet.')
 
@@ -93,6 +95,7 @@ function Start-ARIExtraReports {
                 }
 
                 $Adv = Receive-Job -Name 'Advisory'
+                Remove-Job -Name 'Advisory' | Out-Null
 
                 Build-ARIAdvisoryReport -File $File -Adv $Adv -TableStyle $TableStyle
 

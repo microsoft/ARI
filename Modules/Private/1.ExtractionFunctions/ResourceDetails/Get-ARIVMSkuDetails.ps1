@@ -14,7 +14,7 @@ This PowerShell Module is part of Azure Resource Inventory (ARI).
 .NOTES
 Version: 3.6.0
 First Release Date: 15th Oct, 2024
-Authors: Claudio Merola
+Authors: Claudio Merola, Olli Uronen (Seppohto)
 #>
 function Get-ARIVMSkuDetails {
     Param ($Resources)

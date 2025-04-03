@@ -125,7 +125,7 @@ Function Invoke-ARI {
     param (
         [ValidateSet(1, 2, 3)]
         [int]$Overview = 1,    
-        [ValidateSet('AzureCloud', 'AzureUSGovernment','AzureChinaCloud')]
+        [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud', 'AzureGermanCloud')]
         [string]$AzureEnvironment = 'AzureCloud',
         [string]$TenantID,
         [string]$AppId,
@@ -360,7 +360,7 @@ Function Invoke-ARI {
         Start-ARIProcessOrchestration -Subscriptions $Subscriptions -Resources $Resources -Retirements $Retirements -File $File -InTag $InTag -Automation $Automation
 
     $ProcessingRunTime.Stop()
-    
+
     $ProcessingTotalTime = $ProcessingRunTime.Elapsed.ToString("dd\:hh\:mm\:ss\:fff")
 
     if ($Automation.IsPresent)
@@ -420,6 +420,8 @@ Function Invoke-ARI {
         $JobNames = (Get-Job | Where-Object {$_.name -eq 'DrawDiagram'}).Name
 
         Wait-ARIJob -JobNames $JobNames -JobType 'Diagram' -LoopTime 5
+
+        Remove-Job -Name 'DrawDiagram' | Out-Null
 
         Write-Progress -activity 'Diagrams' -Status "Closing Diagram File" -Completed
     }

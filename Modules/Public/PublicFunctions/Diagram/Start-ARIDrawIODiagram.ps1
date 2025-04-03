@@ -24,11 +24,17 @@ function Start-ARIDrawIODiagram {
 
     $Logfile = Join-Path $TempPath 'DiagramLogFile.log'
 
+    $ARIModuleVersion = (get-module -Name AzureResourceInventory).Version.ToString()
+
+    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - ################################################ Starting AzureResourceInventory Diagram ##################################') | Out-File -FilePath $LogFile -Append
+
+    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - AzureResourceInventory Module Version: ' + $ARIModuleVersion) | Out-File -FilePath $LogFile -Append
+
     ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Calling Start-ARIDiagramJob Function') | Out-File -FilePath $LogFile -Append
 
     Start-ARIDiagramJob -Resources $Resources -Automation $Automation
 
-    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Draw.IO file') | Out-File -FilePath $LogFile -Append 
+    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Setting Draw.IO Diagram File') | Out-File -FilePath $LogFile -Append 
 
     $XMLFiles = @()
 
@@ -106,7 +112,7 @@ function Start-ARIDrawIODiagram {
         } -ArgumentList $ResourceContainers, $DiagramCache, $Logfile, $ARIModule
     }
 
-    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting Variables Job to complete') | Out-File -FilePath $LogFile -Append 
+    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting Variables Job to Continue') | Out-File -FilePath $LogFile -Append 
 
     Get-Job -Name 'DiagramVariables' | Wait-Job
 
@@ -145,36 +151,23 @@ function Start-ARIDrawIODiagram {
         } -ArgumentList $Subscriptions, $Job, $Advisories, $DiagramCache, $FullEnvironment, $DDFile, $XMLFiles, $Logfile, $Automation, $ARIModule
     }
 
-    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting for Jobs to complete') | Out-File -FilePath $LogFile -Append 
+    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Waiting for Jobs') | Out-File -FilePath $LogFile -Append 
 
     (Get-Job | Where-Object {$_.name -like 'Diagram_*'}) | Wait-Job
 
-    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting to process files') | Out-File -FilePath $LogFile -Append 
+    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Merging XML Files') | Out-File -FilePath $LogFile -Append 
+    Set-ARIDiagramFile -XMLFiles $XMLFiles -DDFile $DDFile -LogFile $LogFile
 
-    if($Automation.IsPresent)
-        {
-            ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting to process files in Automation') | Out-File -FilePath $LogFile -Append 
-            Start-ThreadJob -Name 'DiagramFile_Process' -ScriptBlock {
-                try
-                    {
-                        ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Merging XML Files in a Thread') | Out-File -FilePath $($args[2]) -Append 
-                        Set-ARIDiagramFile -XMLFiles $($args[0]) -DDFile $($args[1]) -LogFile $($args[2])
-                    }
-                catch
-                    {
-                        ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $($args[2]) -Append
-                    }
-            } -ArgumentList $XMLFiles, $DDFile, $LogFile
+    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Getting Log Details from Jobs') | Out-File -FilePath $LogFile -Append
 
-            Start-Sleep -Seconds 2
+    Foreach ($DiagramJob in (Get-Job | Where-Object {$_.name -like 'Diagram_*'})) {
+        $Logger = Receive-Job -Name $DiagramJob.Name
+        Foreach ($LogEntry in $Logger) {
+            $LogEntry | Out-File -FilePath $LogFile -Append
         }
-    else
-        {
-            ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Merging XML Files in the same process') | Out-File -FilePath $LogFile -Append 
-            Set-ARIDiagramFile -XMLFiles $XMLFiles -DDFile $DDFile -LogFile $LogFile
-        }
+    }
 
-    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Cleaning old jobs') | Out-File -FilePath $LogFile -Append 
+    ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Removing old jobs') | Out-File -FilePath $LogFile -Append
 
     (Get-Job | Where-Object {$_.name -like 'Diagram_*'}) | Remove-Job
 

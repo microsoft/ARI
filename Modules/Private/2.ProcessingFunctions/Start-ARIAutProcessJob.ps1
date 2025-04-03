@@ -23,7 +23,7 @@ function Start-ARIAutProcessJob {
     $ParentPath = (get-item $PSScriptRoot).parent.parent
     $InventoryModulesPath = Join-Path $ParentPath 'Public' 'InventoryModules'
     $Modules = Get-ChildItem -Path $InventoryModulesPath -Directory
-    $NewResources = ($Resources | ConvertTo-Json -Depth 50 -Compress)
+    $NewResources = ($Resources | ConvertTo-Json -Depth 40 -Compress)
 
     Foreach ($ModuleFolder in $Modules)
         {

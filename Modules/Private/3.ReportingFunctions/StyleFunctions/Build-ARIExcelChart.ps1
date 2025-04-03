@@ -45,7 +45,7 @@ function Build-ARIExcelChart {
                 PivotTotals             = 'Rows'
                 ShowCategory            = $false
                 NoLegend                = $true
-                ChartTitle              = 'Azure Cost per Month'
+                ChartTitle              = 'Azure Cost per Subscription'
                 ShowPercent             = $true
                 ChartHeight             = 400
                 ChartWidth              = 950
@@ -604,6 +604,35 @@ function Build-ARIExcelChart {
     $DrawP5 = $WS.Drawings | Where-Object { $_.Name -eq 'TP5' }
     $DrawP5.RichText.Add($P5Name) | Out-Null
 
+    if($IncludeCosts.IsPresent)
+        {
+            $P6Name = 'Cost per Month'
+            $PTParams = @{
+                PivotTableName          = "P6"
+                Address                 = $excel.Overview.cells["CR5"] # top-left corner of the table
+                SourceWorkSheet         = $excel.Subscriptions
+                PivotRows               = @("Month")
+                PivotData               = @{"Cost" = "sum" }
+                PivotTableStyle         = $tableStyle
+                IncludePivotChart       = $true
+                ChartType               = "ColumnStacked3D"
+                ChartRow                = 1 # place the chart below row 22nd
+                ChartColumn             = 24
+                Activate                = $true
+                PivotNumberFormat       = 'Currency'
+                PivotFilter             = 'Subscription'
+                ChartTitle              = 'Cost per Month'
+                NoLegend                = $true
+                ShowPercent             = $true
+                ChartHeight             = 400
+                ChartWidth              = 315
+                ChartRowOffSetPixels    = 0
+                ChartColumnOffSetPixels = 0
+            }
+            Add-PivotTable @PTParams
+        }
+    else
+        {
     $P6Name = 'Resources by Location'
     $PTParams = @{
         PivotTableName          = "P6"
@@ -625,8 +654,9 @@ function Build-ARIExcelChart {
         ChartWidth              = 315
         ChartRowOffSetPixels    = 0
         ChartColumnOffSetPixels = 0
+        }
+        Add-PivotTable @PTParams
     }
-    Add-PivotTable @PTParams
 
     $DrawP6 = $WS.Drawings | Where-Object { $_.Name -eq 'TP6' }
     $DrawP6.RichText.Add($P6Name) | Out-Null

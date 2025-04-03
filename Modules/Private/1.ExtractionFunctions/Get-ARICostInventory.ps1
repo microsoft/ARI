@@ -13,8 +13,11 @@ function Get-ARICostInventory {
     $Grouping += $GTemp
     $GTemp = @{Name='ResourceGroup';Type='Dimension'}
     $Grouping += $GTemp
-    #$GTemp = @{Name='ResourceLocation';Type='Dimension'}
-    #$Grouping += $GTemp
+    $GTemp = @{Name='ResourceLocation';Type='Dimension'}
+    $Grouping += $GTemp
+    $GTemp = @{Name='ServiceName';Type='Dimension'}
+    $Grouping += $GTemp
+
 
     $Hash = @{name="PreTaxCost";function="Sum"}
     $MHash = @{totalCost=$Hash}

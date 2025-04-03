@@ -258,88 +258,9 @@ Else
         $noNumberConversion += 'Kubernetes Version'
         $noNumberConversion += 'Node Pool Version'
 
-        $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
+        [PSCustomObject]$SmaResources | 
+        ForEach-Object { $_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -TableName $TableName -MaxAutoSizeRows 50 -TableStyle $tableStyle -ConditionalText $condtxt -Numberformat '0' -Style $Style -NoNumberConversion $noNumberConversion 
-
-
-        $excel = Open-ExcelPackage -Path $File
-
-        $sheet = $excel.Workbook.Worksheets[$SheetName]
-
-        #AKS Version
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue "1.29.0" -ConditionValue2 "1.31.99" -Address H:H -BackgroundColor "Yellow"
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue "1.20.0" -ConditionValue2 "1.28.99" -Address H:H -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
-
-        #NodePool Version
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue "1.29.0" -ConditionValue2 "1.31.99" -Address AE:AE -BackgroundColor "Yellow"
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue "1.20.0" -ConditionValue2 "1.28.99" -Address AE:AE -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
-
-        #Remaining Quota
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue 50 -ConditionValue2 100 -Address AO:AO -BackgroundColor "Yellow"
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue 1 -ConditionValue2 50 -Address AO:AO -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
-
-        #Pricing Tier
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -ConditionValue 'Free' -Address G:G -BackgroundColor 'Yellow'
-
-        #Local Accounts
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -ConditionValue 'true' -Address L:L -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
-
-        #Private Cluster
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -ConditionValue 'false' -Address V:V -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
-
-        #Public Network Access
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -ConditionValue 'Enabled' -Address X:X -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
-
-        #Automatic Upgrades
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -ConditionValue 'Disabled' -Address Y:Y -BackgroundColor 'Yellow'
-
-        #Node Security Channel
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -ConditionValue 'none' -Address Z:Z -BackgroundColor 'Yellow'
-
-        #Container Insights
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -ConditionValue 'false' -Address AA:AA -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
-
-        #NodeSize
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -ConditionValue '_b' -Address AJ:AJ -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
-
-        #Av Zone
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -ConditionValue 'None' -Address AP:AP -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
-
-        #AutoScale
-        Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -ConditionValue 'false' -Address AT:AT -BackgroundColor 'Yellow'
-
-        $null = $excel.$SheetName.Cells["G1"].AddComment("Microsoft recommends Free Pricing tier only for non-production workloads", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["G1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/free-standard-pricing-tiers'
-
-        $null = $excel.$SheetName.Cells["H1"].AddComment("AKS follows 12 months of support for a generally available (GA) Kubernetes version. To read more about our support policy for Kubernetes versioning", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["H1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/supported-kubernetes-versions?tabs=azure-cli#aks-kubernetes-release-calendar'
-
-        $null = $excel.$SheetName.Cells["L1"].AddComment("Local accounts are enabled by default. Even when you enable RBAC or Microsoft Entra integration", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["L1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/manage-local-accounts-managed-azure-ad'
-
-        $null = $excel.$SheetName.Cells["V1"].AddComment("By default AKS Control Plane is exposed on a public endpoint accessible over the internet. Organizations who want to disable this public endpoint, can leverage the private cluster feature", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["V1"].Hyperlink = 'https://techcommunity.microsoft.com/t5/core-infrastructure-and-security/public-and-private-aks-clusters-demystified/ba-p/3716838'
-
-        $null = $excel.$SheetName.Cells["Y1"].AddComment("By enabling auto-upgrade, you can ensure your clusters are up to date and don't miss the latest features or patches from AKS and upstream Kubernetes.", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["Y1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/auto-upgrade-cluster?tabs=azure-cli#why-use-cluster-auto-upgrade'
-
-        $null = $excel.$SheetName.Cells["Z1"].AddComment("Node-level OS security updates are released at a faster rate than Kubernetes patch or minor version updates. The node OS auto-upgrade channel grants you flexibility and enables a customized strategy for node-level OS security updates.", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["Z1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/auto-upgrade-node-os-image?tabs=azure-cli#interactions-between-node-os-auto-upgrade-and-cluster-auto-upgrade'
-
-        $null = $excel.$SheetName.Cells["AA1"].AddComment("Container insights collects metric data from your cluster in addition to logs. This functionality has been replaced by Azure Monitor managed service for Prometheus. You can analyze that data using built-in dashboards in Managed Grafana and alert on them using prebuilt Prometheus alert rules.", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["AA1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/azure-monitor/containers/container-insights-overview'
-
-        $null = $excel.$SheetName.Cells["AJ1"].AddComment("System node pools require a VM SKU of at least 2 vCPUs and 4 GB memory. But burstable-VM(B series) isn't recommended", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["AJ1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/use-system-pools?tabs=azure-cli#system-and-user-node-pools'
-
-        $null = $excel.$SheetName.Cells["AP1"].AddComment("An AKS cluster distributes resources, such as nodes and storage, across logical sections of underlying Azure infrastructure. Using availability zones physically separates nodes from other nodes deployed to different availability zones. AKS clusters deployed with multiple availability zones configured across a cluster provide a higher level of availability to protect against a hardware failure or a planned maintenance event.", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["AP1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/availability-zones-overview'
-
-        $null = $excel.$SheetName.Cells["AT1"].AddComment("The cluster autoscaler component can watch for pods in your cluster that can't be scheduled because of resource constraints", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["AT1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/aks/cluster-autoscaler'
-
-        Close-ExcelPackage $excel
 
     }
 }

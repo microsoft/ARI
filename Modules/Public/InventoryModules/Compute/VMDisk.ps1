@@ -160,17 +160,9 @@ Else
                 $Exc.Add('Tag Value') 
             }
 
-        $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
+        [PSCustomObject]$SmaResources | 
+        ForEach-Object { $_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -TableName $TableName -MaxAutoSizeRows 100 -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
-
-
-        $excel = Open-ExcelPackage -Path $File
-
-        $null = $excel.$SheetName.Cells["F1"].AddComment("When you delete a virtual machine (VM) in Azure, by default, any disks that are attached to the VM aren't deleted. After a VM is deleted, you will continue to pay for unattached disks.", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["F1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/windows/find-unattached-disks'
-
-        Close-ExcelPackage $excel
 
     }
 }

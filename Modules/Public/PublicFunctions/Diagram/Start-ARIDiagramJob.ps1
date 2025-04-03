@@ -24,35 +24,33 @@ Function Start-ARIDiagramJob {
     if ($Automation.IsPresent) {
         Start-ThreadJob -Name 'DiagramVariables' -ScriptBlock {
 
-            $AZVGWs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworkgateways'} | Select-Object -Property * -Unique
-            $AZLGWs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/localnetworkgateways'} | Select-Object -Property * -Unique
-            $AZVNETs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworks'} | Select-Object -Property * -Unique
-            $AZCONs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/connections'} | Select-Object -Property * -Unique
-            $AZEXPROUTEs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/expressroutecircuits'} | Select-Object -Property * -Unique
-            $PIPs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/publicipaddresses'} | Select-Object -Property * -Unique
-            $AZVWAN = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/virtualwans'} | Select-Object -Property * -Unique
-            $AZVHUB = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/virtualhubs'} | Select-Object -Property * -Unique
-            $AZVPNSITES = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/vpnsites'} | Select-Object -Property * -Unique
-            $AZVERs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/expressroutegateways'} | Select-Object -Property * -Unique
-            $AZAKS = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.containerservice/managedclusters'} | Select-Object -Property * -Unique
-            $AZVMSS = $($args[0]) | Where-Object {$_.Type -eq 'Microsoft.Compute/virtualMachineScaleSets'} | Select-Object -Property * -Unique
-            $AZNIC = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/networkinterfaces'} | Select-Object -Property * -Unique
-            $AZPrivEnd = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/privateendpoints'} | Select-Object -Property * -Unique
-            $AZVM = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.compute/virtualmachines'} | Select-Object -Property * -Unique
-            $AZARO = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.redhatopenshift/openshiftclusters'} | Select-Object -Property * -Unique
-            $AZKusto = $($args[0]) | Where-Object {$_.Type -eq 'Microsoft.Kusto/clusters'} | Select-Object -Property * -Unique
-            $AZAppGW = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/applicationgateways'} | Select-Object -Property * -Unique
-            $AZDW = $($args[0]) | Where-Object {$_.Type -eq 'Microsoft.Databricks/workspaces'} | Select-Object -Property * -Unique
-            $AZAppWeb = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.web/sites'} | Select-Object -Property * -Unique
-            $AZAPIM = $($args[0]) | Where-Object {$_.Type -eq 'Microsoft.ApiManagement/service'} | Select-Object -Property * -Unique
-            $AZLB = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/loadbalancers'} | Select-Object -Property * -Unique
-            $AZBastion = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/bastionhosts'} | Select-Object -Property * -Unique
-            $AZFW = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/azurefirewalls'} | Select-Object -Property * -Unique
-            $AZNetProf = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/networkprofiles'} | Select-Object -Property * -Unique
-            $AZCont = $($args[0]) | Where-Object {$_.Type -eq 'Microsoft.ContainerInstance/containerGroups'} | Select-Object -Property * -Unique
-            $AZANF = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.netapp/netappaccounts/capacitypools/volumes'} | Select-Object -Property * -Unique
-
-            $CleanPIPs = $PIPs | Where-Object {$_.id -notin $AZVGWsS.properties.ipConfigurations.properties.publicIPAddress.id}
+            $AZVGWs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworkgateways'}
+            $AZLGWs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/localnetworkgateways'}
+            $AZVNETs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworks'}
+            $AZCONs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/connections'}
+            $AZEXPROUTEs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/expressroutecircuits'}
+            $PIPs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/publicipaddresses'}
+            $AZVWAN = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/virtualwans'}
+            $AZVHUB = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/virtualhubs'}
+            $AZVPNSITES = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/vpnsites'}
+            $AZVERs = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/expressroutegateways'}
+            $AZAKS = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.containerservice/managedclusters'}
+            $AZVMSS = $($args[0]) | Where-Object {$_.Type -eq 'Microsoft.Compute/virtualMachineScaleSets'}
+            $AZNIC = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/networkinterfaces'}
+            $AZPrivEnd = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/privateendpoints'}
+            $AZVM = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.compute/virtualmachines'}
+            $AZARO = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.redhatopenshift/openshiftclusters'}
+            $AZKusto = $($args[0]) | Where-Object {$_.Type -eq 'Microsoft.Kusto/clusters'}
+            $AZAppGW = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/applicationgateways'}
+            $AZDW = $($args[0]) | Where-Object {$_.Type -eq 'Microsoft.Databricks/workspaces'}
+            $AZAppWeb = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.web/sites'}
+            $AZAPIM = $($args[0]) | Where-Object {$_.Type -eq 'Microsoft.ApiManagement/service'}
+            $AZLB = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/loadbalancers'}
+            $AZBastion = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/bastionhosts'}
+            $AZFW = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/azurefirewalls'}
+            $AZNetProf = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.network/networkprofiles'}
+            $AZCont = $($args[0]) | Where-Object {$_.Type -eq 'Microsoft.ContainerInstance/containerGroups'}
+            $AZANF = $($args[0]) | Where-Object {$_.Type -eq 'microsoft.netapp/netappaccounts/capacitypools/volumes'}
 
             $Variables = @{
                     'AZVGWs' = $AZVGWs;
@@ -65,7 +63,6 @@ Function Start-ARIDiagramJob {
                     'AZVHUB' = $AZVHUB;
                     'AZVPNSITES' = $AZVPNSITES;
                     'AZVERs' = $AZVERs;
-                    'CleanPIPs' = $CleanPIPs;
                     'AKS' = $AZAKS;
                     'VMSS' = $AZVMSS;
                     'NIC' = $AZNIC;
@@ -74,7 +71,7 @@ Function Start-ARIDiagramJob {
                     'ARO' = $AZARO;
                     'Kusto' = $AZKusto;
                     'AppGtw' = $AZAppGW;
-                    'DW' = $AZDW;
+                    'Databricks' = $AZDW;
                     'AppWeb' = $AZAppWeb;
                     'APIM' = $AZAPIM;
                     'LB' = $AZLB;
@@ -92,36 +89,36 @@ Function Start-ARIDiagramJob {
     else
     {
         Start-Job -Name 'DiagramVariables' -ScriptBlock {
-            $job = @()                
+            $job = @()
 
-            $AZVGWs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworkgateways'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZLGWs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/localnetworkgateways'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZVNETs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworks'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZCONs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/connections'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZEXPROUTEs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/expressroutecircuits'} | Select-Object -Property * -Unique }).AddArgument($($args[0]))
-            $PIPs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/publicipaddresses'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZVWAN = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualwans'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZVHUB = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualhubs'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZVPNSITES = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/vpnsites'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZVERs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/expressroutegateways'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+            $AZVGWs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworkgateways'}}).AddArgument($($args[0]))
+            $AZLGWs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/localnetworkgateways'}}).AddArgument($($args[0]))
+            $AZVNETs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualnetworks'}}).AddArgument($($args[0]))
+            $AZCONs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/connections'}}).AddArgument($($args[0]))
+            $AZEXPROUTEs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/expressroutecircuits'} }).AddArgument($($args[0]))
+            $PIPs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/publicipaddresses'}}).AddArgument($($args[0]))
+            $AZVWAN = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualwans'}}).AddArgument($($args[0]))
+            $AZVHUB = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/virtualhubs'}}).AddArgument($($args[0]))
+            $AZVPNSITES = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/vpnsites'}}).AddArgument($($args[0]))
+            $AZVERs = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/expressroutegateways'}}).AddArgument($($args[0]))
 
-            $AZAKS = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.containerservice/managedclusters'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZVMSS = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.Compute/virtualMachineScaleSets'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZNIC = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/networkinterfaces'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZPrivEnd = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/privateendpoints'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZVM = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.compute/virtualmachines'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZARO = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.redhatopenshift/openshiftclusters'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZKusto = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.Kusto/clusters'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZAppGW = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/applicationgateways'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZDW = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.Databricks/workspaces'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZAppWeb = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.web/sites'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZAPIM = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.ApiManagement/service'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZLB = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/loadbalancers'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZBastion = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/bastionhosts'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZFW = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/azurefirewalls'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZNetProf = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/networkprofiles'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZCont = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.ContainerInstance/containerGroups'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
-            $AZANF = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.netapp/netappaccounts/capacitypools/volumes'} | Select-Object -Property * -Unique}).AddArgument($($args[0]))
+            $AZAKS = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.containerservice/managedclusters'}}).AddArgument($($args[0]))
+            $AZVMSS = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.Compute/virtualMachineScaleSets'}}).AddArgument($($args[0]))
+            $AZNIC = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/networkinterfaces'}}).AddArgument($($args[0]))
+            $AZPrivEnd = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/privateendpoints'}}).AddArgument($($args[0]))
+            $AZVM = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.compute/virtualmachines'}}).AddArgument($($args[0]))
+            $AZARO = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.redhatopenshift/openshiftclusters'}}).AddArgument($($args[0]))
+            $AZKusto = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.Kusto/clusters'}}).AddArgument($($args[0]))
+            $AZAppGW = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/applicationgateways'}}).AddArgument($($args[0]))
+            $AZDW = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.Databricks/workspaces'}}).AddArgument($($args[0]))
+            $AZAppWeb = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.web/sites'}}).AddArgument($($args[0]))
+            $AZAPIM = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.ApiManagement/service'}}).AddArgument($($args[0]))
+            $AZLB = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/loadbalancers'}}).AddArgument($($args[0]))
+            $AZBastion = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/bastionhosts'}}).AddArgument($($args[0]))
+            $AZFW = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/azurefirewalls'}}).AddArgument($($args[0]))
+            $AZNetProf = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.network/networkprofiles'}}).AddArgument($($args[0]))
+            $AZCont = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'Microsoft.ContainerInstance/containerGroups'}}).AddArgument($($args[0]))
+            $AZANF = ([PowerShell]::Create()).AddScript({param($resources)$resources | Where-Object {$_.Type -eq 'microsoft.netapp/netappaccounts/capacitypools/volumes'}}).AddArgument($($args[0]))
 
             $jobAZVGWs = $AZVGWs.BeginInvoke()
             $jobAZLGWs = $AZLGWs.BeginInvoke()
@@ -238,7 +235,6 @@ Function Start-ARIDiagramJob {
             $AZCont.Dispose()
             $AZANF.Dispose()
 
-            $CleanPIPs = $PIPsS | Where-Object {$_.id -notin $AZVGWsS.properties.ipConfigurations.properties.publicIPAddress.id}
 
             $Variables = @{
                     'AZVGWs' = $AZVGWsS;
@@ -251,7 +247,6 @@ Function Start-ARIDiagramJob {
                     'AZVHUB' = $AZVHUBS;
                     'AZVPNSITES' = $AZVPNSITESS;
                     'AZVERs' = $AZVERsS;
-                    'CleanPIPs' = $CleanPIPs;
                     'AKS' = $AZAKSs;
                     'VMSS' = $AZVMSSs;
                     'NIC' = $AZNICs;
@@ -260,7 +255,7 @@ Function Start-ARIDiagramJob {
                     'ARO' = $AZAROs;
                     'Kusto' = $AZKustos;
                     'AppGtw' = $AZAppGWs;
-                    'DW' = $AZDWs;
+                    'Databricks' = $AZDWs;
                     'AppWeb' = $AZAppWebs;
                     'APIM' = $AZAPIMs;
                     'LB' = $AZLBs;

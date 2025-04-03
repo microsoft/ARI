@@ -20,7 +20,7 @@ Authors: Claudio Merola
 Function Start-ARIDiagramSubscription {
     Param($Subscriptions,$Resources,$DiagramCache,$LogFile) 
 
-    ('DrawIOSubsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Subscription Function') | Out-File -FilePath $LogFile -Append 
+    ('DrawIOSubsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Starting Subscription Function')
         Function Add-Icon {    
             Param($Style,$x,$y,$w,$h,$p)
             
@@ -1632,7 +1632,7 @@ Function Start-ARIDiagramSubscription {
 
         $Script:IDNum = 0
 
-        ('DrawIOSubsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Creating XML File: ' + $DDDFile) | Out-File -FilePath $LogFile -Append 
+        Write-Output ('DrawIOSubsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Creating XML File: ' + $DDDFile)
 
         $Script:XmlWriter = New-Object System.XMl.XmlTextWriter($DDDFile,$Null)
 
@@ -1703,7 +1703,7 @@ Function Start-ARIDiagramSubscription {
                                     foreach($RG in $Resource0.Name)
                                         {
 
-                                            ('DrawIOSubsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Processing Resource Group: ' + $RG) | Out-File -FilePath $LogFile -Append 
+                                            Write-Output ('DrawIOSubsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Processing Resource Group: ' + $RG)
 
                                             $Res = $Resource | Where-Object {$_.resourceGroup -eq $RG -and $_.Type -notin $NonTypes}
                                             $Resource1 = $Res | Group-Object -Property type | Sort-Object -Property Count -Descending                        
@@ -1864,6 +1864,6 @@ Function Start-ARIDiagramSubscription {
             $Script:XmlWriter.Flush()
             $Script:XmlWriter.Close()
 
-            ('DrawIOSubsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - End of Subscription Function: ') | Out-File -FilePath $LogFile -Append 
+            Write-Output ('DrawIOSubsFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - End of Subscription Function: ')
 
 }

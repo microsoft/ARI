@@ -149,18 +149,8 @@ Else
         $noNumberConversion = @()
         $noNumberConversion += 'Minimum TLS Version'
 
-        $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
+        [PSCustomObject]$SmaResources | 
+        ForEach-Object { $_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
-
-
-        $excel = Open-ExcelPackage -Path $File
-
-        $null = $excel.$SheetName.Cells["L1"].AddComment("The Auto-inflate feature of Event Hubs automatically scales up by increasing the number of throughput units, to meet usage needs. Increasing throughput units prevents throttling scenarios.", "Azure Resource Inventory")
-        $excel.$SheetName.Cells["L1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-auto-inflate'
-
-        Close-ExcelPackage $excel
-
-
     }
 }

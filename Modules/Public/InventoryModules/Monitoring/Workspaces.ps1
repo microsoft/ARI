@@ -134,8 +134,8 @@ Else
         $noNumberConversion = @()
         $noNumberConversion += 'Daily Cap (GB)'
 
-        $SmaResources | 
-        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
+        [PSCustomObject]$SmaResources | 
+        ForEach-Object { $_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Workspaces' -AutoSize -MaxAutoSizeRows 100 -ConditionalText $condtxt -TableName $TableName -TableStyle $tableStyle -Style $Style -NoNumberConversion $noNumberConversion
 
     }
