@@ -48,7 +48,7 @@ Tags: PowerShell, Azure, Inventory, Excel Report, Customer Engineer
 Azure Resource Inventory (ARI) is a comprehensive PowerShell module that generates detailed Excel reports of any Azure environment you have read access to. It is designed for Cloud Administrators and technical professionals who need an easy and fast way to document their Azure environments.
 
 <p align="center">
-  <img src="Images/ARIv35-Overview.png" width="700">
+  <img src="images/ARIv35-Overview.png" width="700">
 </p>
 
 ## ✨ Key Features
@@ -79,7 +79,7 @@ Install-Module -Name AzureResourceInventory
 ```
 
 <p align="center">
-  <img src="docs/images/InstallARI.gif" width="700">
+  <img src="images/InstallARI.gif" width="700">
 </p>
 
 
@@ -92,7 +92,7 @@ Invoke-ARI
 ```
 
 <p align="center">
-  <img src="docs/images/RunningARI.gif" width="700">
+  <img src="images/RunningARI.gif" width="700">
 </p>
 
 ## 📖 Usage Guide
@@ -148,7 +148,7 @@ Invoke-ARI -TenantID <Azure-Tenant-ID> -SkipDiagram
 If you want to automatically run ARI, there is a way to do it using Automation Accounts:
 
 <p align="center">
-  <img src="docs/images/Automation.png" width="600">
+  <img src="images/Automation.png" width="600">
 </p>
 
 See the [Automation Guide](https://github.com/microsoft/ARI/blob/main/Docs/Automation.md) for implementation details.
@@ -198,32 +198,32 @@ See the [Automation Guide](https://github.com/microsoft/ARI/blob/main/Docs/Autom
 ### Excel Report
 
 <p align="center">
-  <img src="docs/images/ARIv3ExcelExample.png" width="800">
+  <img src="images/ARIv3ExcelExample.png" width="800">
 </p>
 
 ### Network Topology View
 
 <p align="center">
-  <img src="docs/images/DrawioImage.png" width="700">
+  <img src="images/DrawioImage.png" width="700">
 </p>
 
 Interactive features show resource details on hover:
 
 <p align="center">
-  <img src="docs/images/ARIv3DrawioHover.png" width="400">
-  <img src="docs/images/ARIv3DrawioPeer.png" width="400">
+  <img src="images/ARIv3DrawioHover.png" width="400">
+  <img src="images/ARIv3DrawioPeer.png" width="400">
 </p>
 
 ### Organization View
 
 <p align="center">
-  <img src="docs/images/DrawioOrganization.png" width="700">
+  <img src="images/DrawioOrganization.png" width="700">
 </p>
 
 ### Resources View
 
 <p align="center">
-  <img src="docs/images/drawiosubs.png" width="700">
+  <img src="images/drawiosubs.png" width="700">
 </p>
 
 ## ⚠️ Important Notes
@@ -233,7 +233,7 @@ Interactive features show resource details on hover:
 > **CloudShell Limitation:** When running in Azure CloudShell, the Excel output will not have auto-fit columns and you may see warnings during execution. The inventory results will still be correct.
 
 <p align="center">
-  <img src="docs/images/cloudshell-warning-lib.png" width="600">
+  <img src="images/cloudshell-warning-lib.png" width="600">
 </p>
 
 ### Our Test Environment
