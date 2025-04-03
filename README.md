@@ -79,7 +79,7 @@ Install-Module -Name AzureResourceInventory
 ```
 
 <p align="center">
-  <img src="Images/InstallARI.gif" width="700">
+  <img src="docs/images/InstallARI.gif" width="700">
 </p>
 
 
@@ -92,7 +92,7 @@ Invoke-ARI
 ```
 
 <p align="center">
-  <img src="Images/RunningARI.gif" width="700">
+  <img src="docs/images/RunningARI.gif" width="700">
 </p>
 
 ## 📖 Usage Guide
@@ -148,7 +148,7 @@ Invoke-ARI -TenantID <Azure-Tenant-ID> -SkipDiagram
 If you want to automatically run ARI, there is a way to do it using Automation Accounts:
 
 <p align="center">
-  <img src="Images/Automation.png" width="600">
+  <img src="docs/images/Automation.png" width="600">
 </p>
 
 See the [Automation Guide](https://github.com/microsoft/ARI/blob/main/Docs/Automation.md) for implementation details.
@@ -176,6 +176,8 @@ See the [Automation Guide](https://github.com/microsoft/ARI/blob/main/Docs/Autom
 | SkipPolicy | Skip Azure Policy collection | `-SkipPolicy` |
 | SkipVMDetails | Skip Azure VM Extra Details collection | `-SkipVMDetails` |
 | SkipAdvisory | Skip Azure Advisory collection | `-SkipAdvisory` |
+| IncludeCosts | Includes Azure Cost details for the Subscriptions (Requires the module Az.CostManagement) | `-IncludeCosts` |
+| SkipVMDetails | Skip extra details for the VM Families (Quota, vCPUs and memory) | `-SkipVMDetails` |
 | **Output Options** | | |
 | ReportName | Custom report filename | `-ReportName <NAME>` |
 | ReportDir | Custom directory for report | `-ReportDir "<Path>"` |
@@ -196,32 +198,32 @@ See the [Automation Guide](https://github.com/microsoft/ARI/blob/main/Docs/Autom
 ### Excel Report
 
 <p align="center">
-  <img src="Images/ARIv3ExcelExample.png" width="800">
+  <img src="docs/images/ARIv3ExcelExample.png" width="800">
 </p>
 
 ### Network Topology View
 
 <p align="center">
-  <img src="Images/DrawioImage.png" width="700">
+  <img src="docs/images/DrawioImage.png" width="700">
 </p>
 
 Interactive features show resource details on hover:
 
 <p align="center">
-  <img src="Images/ARIv3DrawioHover.png" width="400">
-  <img src="Images/ARIv3DrawioPeer.png" width="400">
+  <img src="docs/images/ARIv3DrawioHover.png" width="400">
+  <img src="docs/images/ARIv3DrawioPeer.png" width="400">
 </p>
 
 ### Organization View
 
 <p align="center">
-  <img src="Images/DrawioOrganization.png" width="700">
+  <img src="docs/images/DrawioOrganization.png" width="700">
 </p>
 
 ### Resources View
 
 <p align="center">
-  <img src="Images/drawiosubs.png" width="700">
+  <img src="docs/images/drawiosubs.png" width="700">
 </p>
 
 ## ⚠️ Important Notes
@@ -231,7 +233,7 @@ Interactive features show resource details on hover:
 > **CloudShell Limitation:** When running in Azure CloudShell, the Excel output will not have auto-fit columns and you may see warnings during execution. The inventory results will still be correct.
 
 <p align="center">
-  <img src="Images/cloudshell-warning-lib.png" width="600">
+  <img src="docs/images/cloudshell-warning-lib.png" width="600">
 </p>
 
 ### Our Test Environment
