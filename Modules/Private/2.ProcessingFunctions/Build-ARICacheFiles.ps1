@@ -18,7 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Build-ARICacheFiles {
-    Param($ReportCache, $JobNames)
+    Param($DefaultPath, $ReportCache, $JobNames)
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Checking Cache Folder.')
 

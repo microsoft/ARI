@@ -18,7 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Start-ARIProcessJob {
-    Param($Resources, $Retirements, $Subscriptions, $InTag, $Unsupported)
+    Param($Resources, $Retirements, $Subscriptions, $DefaultPath, $InTag, $Unsupported)
 
     Write-Progress -activity 'Azure Inventory' -Status "22% Complete." -PercentComplete 22 -CurrentOperation "Creating Jobs to Process Data.."
 
@@ -144,7 +144,7 @@ function Start-ARIProcessJob {
 
                 $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
 
-                Build-ARICacheFiles -ReportCache $ReportCache -JobNames $JobNames
+                Build-ARICacheFiles -DefaultPath $DefaultPath -ReportCache $ReportCache -JobNames $JobNames
 
                 $JobLoop = 0
             }

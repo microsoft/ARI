@@ -6,13 +6,13 @@ Inventory for Azure Advisor Score
 Excel Sheet Name: AdvisorScore
 
 .Link
-https://github.com/microsoft/ARI/Modules/APIs/AdvisorScore.ps1
+https://github.com/microsoft/ARI/Modules/public/InventoryModules/APIs/AdvisorScore.ps1
 
 .COMPONENT
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 4.0.1
+Version: 3.6.1
 First Release Date: 25th Aug, 2024
 Authors: Claudio Merola 
 
@@ -20,15 +20,11 @@ Authors: Claudio Merola
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task, $File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
-    <######### Insert the resource extraction here ########>
-
     $AdvisorScore = $Resources | Where-Object { $_.TYPE -eq 'Microsoft.Advisor/advisorScore' }
-
-    <######### Insert the resource Process here ########>
 
     if($AdvisorScore)
         {
@@ -62,10 +58,10 @@ If ($Task -eq 'Processing') {
                                     'Impacted Resources'        = $Serie.impactedResourceCount;
                                     'Consumption Units'         = $Serie.consumptionUnits;
                                     'Potential Score Increase'  = $Serie.potentialScoreIncrease;
-                                    'Resource U'                = $ResUCount;
+                                    'Resource U'                = $ResUCount
                                 }
-                                $obj
                                 if ($ResUCount -eq 1) { $ResUCount = 0 } 
+                                $obj
                             }
                     }
             }
@@ -76,11 +72,10 @@ If ($Task -eq 'Processing') {
 <######## Resource Excel Reporting Begins Here ########>
 
 Else {
-    <######## $SmaResources.(RESOURCE FILE NAME) ##########>
 
     if ($SmaResources) {
 
-        $TableName = ('AdvScoreTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('AdvScTab_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()

@@ -405,7 +405,7 @@ function Build-ARIExcelChart {
         $PTParams = @{
             PivotTableName          = "P3"
             Address                 = $excel.Overview.cells["BZ5"] # top-left corner of the table
-            SourceWorkSheet         = $excel.SupportTickets
+            SourceWorkSheet         = $excel.'Support Tickets'
             PivotRows               = @("Status")
             PivotData               = @{"Status" = "Count" }
             PivotTableStyle         = $tableStyle
