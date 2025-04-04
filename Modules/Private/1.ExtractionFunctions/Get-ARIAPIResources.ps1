@@ -144,7 +144,7 @@ function Get-ARIAPIResources {
 
             Start-Sleep -Milliseconds 300
 
-            $APIResults = @{
+            $tmp = @{
                 'Subscription'          = $Sub;
                 'ResourceHealth'        = $ResourceHealth.value;
                 'ManagedIdentities'     = $Identities.value;
@@ -154,6 +154,7 @@ function Get-ARIAPIResources {
                 'PolicyDef'             = $PolicyDef;
                 'PolicySetDef'          = $PolicySetDef
             }
+            $APIResults += $tmp
 
         }
 

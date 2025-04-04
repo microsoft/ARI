@@ -24,6 +24,7 @@ function Start-ARIAutProcessJob {
     $InventoryModulesPath = Join-Path $ParentPath 'Public' 'InventoryModules'
     $Modules = Get-ChildItem -Path $InventoryModulesPath -Directory
     $NewResources = ($Resources | ConvertTo-Json -Depth 40 -Compress)
+    $SmaResources = @{} # Initialize the hashtable to store results
 
     Foreach ($ModuleFolder in $Modules)
         {

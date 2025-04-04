@@ -96,7 +96,7 @@ function Build-ARIExcelComObject {
                 foreach ($Sheet in $excel.Workbook.Worksheets)
                 {
                     try{
-                        if ($Sheet.name -in ('Overview','Policy', 'Advisor', 'Security Center', 'Subscriptions', 'Quota Usage', 'AdvisorScore', 'Outages', 'SupportTickets', 'Reservation Advisor'))
+                        if ($Sheet.name -in ('Overview','Policy', 'Advisor', 'Security Center', 'Subscriptions', 'Quota Usage', 'AdvisorScore', 'Outages', 'Support Tickets', 'Reservation Advisor'))
                             {
                                 $Sheet.TabColor = [System.Drawing.Color]::FromName('DarkBlue')
                             }

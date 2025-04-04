@@ -23,7 +23,7 @@ function Start-ARIExcelOrdening {
     $Excel = Open-ExcelPackage -Path $File
     $Worksheets = $Excel.Workbook.Worksheets
 
-    $Order = $Worksheets | Where-Object { $_.Name -notin 'Overview','Policy', 'Advisor', 'Security Center', 'Subscriptions', 'Quota Usage', 'AdvisorScore', 'Outages', 'SupportTickets', 'Reservation Advisor' } | Select-Object -Property Index, name, @{N = "Dimension"; E = { $_.dimension.Rows - 1 } } | Sort-Object -Property Dimension -Descending
+    $Order = $Worksheets | Where-Object { $_.Name -notin 'Overview','Policy', 'Advisor', 'Security Center', 'Subscriptions', 'Quota Usage', 'AdvisorScore', 'Outages', 'Support Tickets', 'Reservation Advisor' } | Select-Object -Property Index, name, @{N = "Dimension"; E = { $_.dimension.Rows - 1 } } | Sort-Object -Property Dimension -Descending
 
     $Order0 = $Order | Where-Object { $_.Name -ne $Order[0].name -and $_.Name -ne ($Order | select-object -Last 1).Name }
 
@@ -61,6 +61,14 @@ function Start-ARIExcelOrdening {
     if (($Worksheets | Where-Object {$_.Name -eq 'AdvisorScore'}))
         {
             $Worksheets.MoveAfter('AdvisorScore', 'Overview')
+        }
+    if (($Worksheets | Where-Object {$_.Name -eq 'Support Tickets'}))
+        {
+            $Worksheets.MoveAfter('Support Tickets', 'Overview')
+        }
+    if (($Worksheets | Where-Object {$_.Name -eq 'Reservation Advisor'}))
+        {
+            $Worksheets.MoveAfter('Reservation Advisor', 'Overview')
         }
     $Worksheets.MoveAfter('Subscriptions','Overview')
 

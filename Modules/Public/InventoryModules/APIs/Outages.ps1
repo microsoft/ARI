@@ -20,7 +20,7 @@ Authors: Claudio Merola
 
 <######## Default Parameters. Don't modify this ########>
 
-param($SCPath, $Sub, $Intag, $Resources, $Task , $File, $SmaResources, $TableStyle, $Unsupported)
+param($SCPath, $Sub, $Intag, $Resources, $Retirements, $Task, $File, $SmaResources, $TableStyle, $Unsupported)
 
 If ($Task -eq 'Processing') {
 
@@ -75,7 +75,7 @@ If ($Task -eq 'Processing') {
                             'How did we respond'                                                  = ($SplitDescription[3]).Split([Environment]::NewLine)[1];
                             'How are we making incidents like this less likely or less impactful' = ($SplitDescription[4]).Split([Environment]::NewLine)[1];
                             'How can customers make incidents like this less impactful'           = ($SplitDescription[5]).Split([Environment]::NewLine)[1];
-                            'Resource U'                                                          = $ResUCount;
+                            'Resource U'                                                          = $ResUCount
                         }
                         $obj
                         if ($ResUCount -eq 1) { $ResUCount = 0 } 
@@ -92,7 +92,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('OutagesTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('OutageTab_'+($SmaResources.'Resource U').count)
 
         $Style = @(
         New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -Range 'A:E'

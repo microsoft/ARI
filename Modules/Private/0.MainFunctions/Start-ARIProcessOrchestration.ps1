@@ -19,7 +19,7 @@ Authors: Claudio Merola
 #>
 
 function Start-ARIProcessOrchestration {
-    Param($Subscriptions, $Resources, $Retirements, $File, $InTag, $Automation)
+    Param($Subscriptions, $Resources, $Retirements, $DefaultPath, $File, $InTag, $Automation)
 
         Write-Progress -activity 'Azure Inventory' -Status "21% Complete." -PercentComplete 21 -CurrentOperation "Starting to process extracted data.."
 
@@ -41,7 +41,7 @@ function Start-ARIProcessOrchestration {
             {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Processing Resources in Regular Mode')
 
-                Start-ARIProcessJob -Resources $Resources -Retirements $Retirements -Subscriptions $Subscriptions -InTag $InTag -Unsupported $Unsupported
+                Start-ARIProcessJob -Resources $Resources -Retirements $Retirements -Subscriptions $Subscriptions -DefaultPath $DefaultPath -InTag $InTag -Unsupported $Unsupported
             }
 
         Remove-Variable -Name Unsupported -ErrorAction SilentlyContinue
@@ -54,7 +54,7 @@ function Start-ARIProcessOrchestration {
             {
                 Wait-ARIJob -JobNames $JobNames -JobType 'Resource' -LoopTime 5
 
-                Build-ARICacheFiles -ReportCache $ReportCache -JobNames $JobNames
+                Build-ARICacheFiles -DefaultPath $DefaultPath -ReportCache $ReportCache -JobNames $JobNames
             }
 
         Write-Progress -activity 'Azure Inventory' -Status "60% Complete." -PercentComplete 60 -CurrentOperation "Completed Data Processing Phase.."
