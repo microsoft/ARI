@@ -88,6 +88,15 @@ Install-Module -Name AzureResourceInventory
 To generate a basic inventory report:
 
 ```powershell
+Import-Module AzureResourceInventory
+```
+
+<p align="center">
+  <img src="images/ImportingARI.gif" width="700">
+</p>
+
+
+```powershell
 Invoke-ARI
 ```
 
