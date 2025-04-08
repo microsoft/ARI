@@ -284,12 +284,17 @@ Function Invoke-ARI {
             }
         }
 
+    if ($PlatOS -eq 'Azure CloudShell')
+        {
+            $Heavy = $true
+        }
+
     if ($StorageAccount)
         {
             $StorageContext = New-AzStorageContext -StorageAccountName $StorageAccount -UseConnectedAccount
         }
 
-    $Subscriptions = Get-ARISubscriptions -TenantID $TenantID -SubscriptionID $SubscriptionID
+    $Subscriptions = Get-ARISubscriptions -TenantID $TenantID -SubscriptionID $SubscriptionID -PlatOS $PlatOS
 
     $ReportingPath = Set-ARIReportPath -ReportDir $ReportDir
 
@@ -357,7 +362,7 @@ Function Invoke-ARI {
 
         Start-ARIExtraJobs -SkipDiagram $SkipDiagram -SkipAdvisory $SkipAdvisory -SkipPolicy $SkipPolicy -SecurityCenter $Security -Subscriptions $Subscriptions -Resources $Resources -Advisories $Advisories -DDFile $DDFile -DiagramCache $DiagramCache -FullEnv $FullEnv -ResourceContainers $ResourceContainers -Security $Security -PolicyAssign $PolicyAssign -PolicySetDef $PolicySetDef -PolicyDef $PolicyDef -IncludeCosts $IncludeCosts -CostData $CostData -Automation $Automation
 
-        Start-ARIProcessOrchestration -Subscriptions $Subscriptions -Resources $Resources -Retirements $Retirements -DefaultPath $DefaultPath -File $File -InTag $InTag -Automation $Automation
+        Start-ARIProcessOrchestration -Subscriptions $Subscriptions -Resources $Resources -Retirements $Retirements -DefaultPath $DefaultPath -Heavy $Heavy -File $File -InTag $InTag -Automation $Automation
 
     $ProcessingRunTime.Stop()
 

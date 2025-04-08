@@ -17,28 +17,48 @@ First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
 function Get-ARISubscriptions {
-    Param ($TenantID,$SubscriptionID)
-    Write-Host "Extracting Subscriptions from Tenant $TenantID"
-    try
+    Param ($TenantID,$SubscriptionID,$PlatOS)
+    if($PlatOS -eq 'Azure CloudShell')
         {
-            $Subscriptions = Get-AzSubscription -TenantId $TenantID -WarningAction SilentlyContinue -Debug:$false
+            $Subscriptions = Get-AzSubscription -WarningAction SilentlyContinue -Debug:$false
+            
+            if ($SubscriptionID)
+                {
+                    if($SubscriptionID.count -gt 1)
+                        {
+                            $Subscriptions = $Subscriptions | Where-Object { $_.ID -in $SubscriptionID }
+                        }
+                    else
+                        {
+                            $Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
+                        }
+                }
         }
-    catch
+    else
         {
-            Write-Host ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+ " Error: $_")
-            return
+            Write-Host "Extracting Subscriptions from Tenant $TenantID"
+            try
+                {
+                    $Subscriptions = Get-AzSubscription -TenantId $TenantID -WarningAction SilentlyContinue -Debug:$false
+                }
+            catch
+                {
+                    Write-Host ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+ " Error: $_")
+                    return
+                }
+            
+            if ($SubscriptionID)
+                {
+                    if($SubscriptionID.count -gt 1)
+                        {
+                            $Subscriptions = $Subscriptions | Where-Object { $_.ID -in $SubscriptionID }
+                        }
+                    else
+                        {
+                            $Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
+                        }
+                }
         }
     
-    if ($SubscriptionID)
-        {
-            if($SubscriptionID.count -gt 1)
-                {
-                    $Subscriptions = $Subscriptions | Where-Object { $_.ID -in $SubscriptionID }
-                }
-            else
-                {
-                    $Subscriptions = $Subscriptions | Where-Object { $_.ID -eq $SubscriptionID }
-                }
-        }
     return $Subscriptions
 }
