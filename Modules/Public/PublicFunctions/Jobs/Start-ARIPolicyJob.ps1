@@ -26,7 +26,14 @@ function Start-ARIPolicyJob {
         {
             if(![string]::IsNullOrEmpty($1.policySetDefinitionId))
                 {
-                    $Initiative = (($PolicySetDef | Where-Object {$_.id -eq $1.policySetDefinitionId}).properties.displayName | Select-Object -Unique )
+                    $TempPolDef = foreach ($PolDe in $PolicySetDef)
+                        {
+                            if ($PolDe.id -eq $1.policySetDefinitionId)
+                                {
+                                    $PolDe.properties.displayName
+                                }
+                        }
+                    $Initiative = if($TempPolDef.count -gt 1){$TempPolDef[0]}else{$TempPolDef}
                     $InitNonCompRes = $1.results.nonCompliantResources
                     $InitNonCompPol = $1.results.nonCompliantPolicies
                 }
@@ -42,7 +49,6 @@ function Start-ARIPolicyJob {
                     $Pol = (($poltmp | Where-Object {$_.id -eq $2.policyDefinitionId}).properties)
                     if(![string]::IsNullOrEmpty($Pol))
                         {
-                            $PolMode
                             $PolResUnkown = ($2.results.resourceDetails | Where-Object {$_.complianceState -eq 'unknown'} | Select-Object -ExpandProperty Count)
                             $PolResUnkown = if (![string]::IsNullOrEmpty($PolResUnkown)){$PolResUnkown}else{'0'}
                             $PolResCompl = ($2.results.resourceDetails | Where-Object {$_.complianceState -eq 'compliant'} | Select-Object -ExpandProperty Count)

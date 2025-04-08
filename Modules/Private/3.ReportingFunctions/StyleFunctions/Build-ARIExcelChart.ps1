@@ -61,7 +61,6 @@ function Build-ARIExcelChart {
             SourceWorkSheet         = $excel.'Reservation Advisor'
             PivotRows               = @("Subscription")
             PivotData               = @{"Net Savings" = "Sum" }
-            PivotColumns            = @("Instance Flexibility Group")
             PivotTableStyle         = $TableStyle
             IncludePivotChart       = $true
             ChartType               = "ColumnStacked3D"
