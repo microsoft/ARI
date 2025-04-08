@@ -228,6 +228,17 @@ function Start-ARIExcelExtraData {
                 $excel.$SheetName.Cells["F1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/windows/find-unattached-disks'
             }
 
+
+        <################################################################### RESOURCE ###################################################################>
+
+        if($SheetName -eq 'AdvisorScore')
+            {
+                $sheet = $excel.Workbook.Worksheets[$SheetName]
+
+                Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue 1 -ConditionValue2 80 -Address C:C -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
+                Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue 1 -ConditionValue2 70 -Address F:F -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
+            }
+
         }
 
 

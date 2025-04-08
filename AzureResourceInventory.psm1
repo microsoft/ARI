@@ -15,9 +15,16 @@
     (c) Claudio Merola. All rights reserved.
 
 .VERSION
-    3.6.0
+    3.6.2
 
 #>
+
+foreach ($directory in @('modules\Private', '.\modules\Public\PublicFunctions')) {
+    Get-ChildItem -Path "$PSScriptRoot\$directory\*.ps1" -Recurse | ForEach-Object { . $_.FullName }
+}
+
+
+<#
 $PrivateFiles = @( Get-ChildItem -Path (Join-Path $PSScriptRoot "Modules" "Private" "*.ps1") -Recurse -ErrorAction SilentlyContinue )
 $PublicFiles = @( Get-ChildItem -Path (Join-Path $PSScriptRoot "Modules" "Public" "PublicFunctions" "*.ps1") -Recurse -ErrorAction SilentlyContinue )
 
@@ -35,3 +42,4 @@ Foreach($import in @($PrivateFiles + $PublicFiles))
 
 Export-ModuleMember -Function $PublicFiles.Basename
 
+#>

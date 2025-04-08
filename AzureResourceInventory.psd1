@@ -12,7 +12,7 @@
 RootModule = 'AzureResourceInventory.psm1'
 
 # Version number of this module.
-ModuleVersion = '3.6.2'
+ModuleVersion = '3.6.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -70,56 +70,6 @@ RequiredModules = @('ImportExcel','Az.Accounts','Az.ResourceGraph','Az.Storage',
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = @(
-            #0.MainFunctions
-            'Clear-ARICacheFolder',
-            'Clear-ARICacheFolder',
-            'Connect-ARILoginSession',
-            'Get-ARIUnsupportedData',
-            'Remove-ARIExcelProcess',
-            'Set-ARIFolder',
-            'Set-ARIReportPath',
-            'Start-ARIExtractionOrchestration',
-            'Start-ARIProcessOrchestration',
-            'Start-ARIReportOrchestration',
-            'Test-ARIPS',
-
-            #1.ExtractionFunctions
-            'Get-ARIVMQuotas',
-            'Get-ARIVMSkuDetails',
-            'Get-ARIAPIResources',
-            'Get-ARICostInventory',
-            'Get-ARIManagementGroups',
-            'Get-ARISubscriptions',
-            'Invoke-ARIInventoryLoop',
-            'Start-ARIGraphExtraction',
-
-            #2.ProcessingFunctions
-            'Build-ARICacheFiles',
-            'Invoke-ARIAdvisoryJob',
-            'Invoke-ARIDrawIOJob',
-            'Invoke-ARIPolicyJob',
-            'Invoke-ARISecurityCenterJob',
-            'Invoke-ARISubJob',
-            'Start-AutProcessJob',
-            'Start-ARIExtraJobs',
-            'Start-ARIProcessJob',
-
-            #3.ReportFunctions
-            'Build-ARIExcelChart',
-            'Build-ARIExcelComObject',
-            'Build-ARIExcelinitialBlock',
-            'Out-ARIReportResults',
-            'Start-ARIExcelCustomization',
-            'Start-ARIExcelOrdening',
-            'Build-ARIAdvisoryReport',
-            'Build-ARIPolicyReport',
-            'Build-ARIQuotaReport',
-            'Build-ARISecCenterReport',
-            'Build-ARISubsReport',
-            'Start-ARIExcelExtraData',
-            'Start-ARIExcelJob',
-            'Start-ARIExtraReports',
-
             #Public Jobs
             'Start-ARIAdvisoryJob',
             'Start-ARIPolicyJob',
@@ -179,7 +129,7 @@ PrivateData = @{
         # ReleaseNotes = ''
 
         # Prerelease string of this module
-        #Prerelease = ''
+        # Prerelease = ''
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false

@@ -79,8 +79,6 @@ Else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
-        $condtxt += New-ConditionalText -Range C:C -ConditionalType LessThan 80
-        $condtxt += New-ConditionalText -Range F:F -ConditionalType LessThan 70
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')

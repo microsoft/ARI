@@ -18,7 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Start-ARIProcessJob {
-    Param($Resources, $Retirements, $Subscriptions, $DefaultPath, $InTag, $Unsupported)
+    Param($Resources, $Retirements, $Subscriptions, $DefaultPath, $Heavy, $InTag, $Unsupported)
 
     Write-Progress -activity 'Azure Inventory' -Status "22% Complete." -PercentComplete 22 -CurrentOperation "Creating Jobs to Process Data.."
 
@@ -41,6 +41,12 @@ function Start-ARIProcessJob {
                 Write-Host ('Jobs will be run in small batches to avoid CPU and Memory Overload.') -ForegroundColor Red
             }
     }
+
+    if ($Heavy.IsPresent -or $InTag.IsPresent)
+        {
+            Write-Host ('Heavy Mode or InTag Mode Detected. Jobs will be run in small batches to avoid CPU and Memory Overload.') -ForegroundColor Red
+            $EnvSizeLooper = 5
+        }
 
     $ParentPath = (get-item $PSScriptRoot).parent.parent
     $InventoryModulesPath = Join-Path $ParentPath 'Public' 'InventoryModules'
