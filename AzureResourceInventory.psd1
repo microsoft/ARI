@@ -12,7 +12,7 @@
 RootModule = 'AzureResourceInventory.psm1'
 
 # Version number of this module.
-ModuleVersion = '3.6.3'
+ModuleVersion = '3.6.4'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -87,7 +87,8 @@ FunctionsToExport = @(
             'Start-ARIDrawIODiagram',
 
             #Main Function
-            'Invoke-ARI'
+            'Invoke-ARI',
+            'Invoke-AzureRAMPInventory'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -129,7 +130,7 @@ PrivateData = @{
         # ReleaseNotes = ''
 
         # Prerelease string of this module
-        # Prerelease = ''
+        Prerelease = 'Alpha'
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false
