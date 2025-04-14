@@ -142,7 +142,7 @@ Function Invoke-ARI {
         [string[]]$TagValue,
         [switch]$SecurityCenter,
         [switch]$Heavy,
-        [Alias("SkipAdvisories","NoAdvisory")]
+        [Alias("SkipAdvisories","NoAdvisory","SkipAdvisor")]
         [switch]$SkipAdvisory,
         [Alias("DisableAutoUpdate","SkipAutoUpdate")]
         [switch]$NoAutoUpdate,

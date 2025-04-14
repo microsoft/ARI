@@ -737,6 +737,30 @@ function Build-ARIExcelChart {
         }
         Add-PivotTable @PTParams -NoLegend
     }
+    else {
+        $P8Name = 'VMs per Region'
+        $PTParams = @{
+            PivotTableName          = "P8"
+            Address                 = $excel.Overview.cells["DE5"] # top-left corner of the table
+            SourceWorkSheet         = $excel.'Virtual Machines'
+            PivotRows               = @("Location")
+            PivotData               = @{"Resource U" = "Sum" }
+            PivotTableStyle         = $tableStyle
+            IncludePivotChart       = $true
+            ChartType               = "BarStacked3D"
+            ChartRow                = 34
+            ChartColumn             = 24
+            Activate                = $true
+            PivotFilter             = 'Subscription'
+            ChartTitle              = 'VMs by Region'
+            ShowPercent             = $true
+            ChartHeight             = 255
+            ChartWidth              = 315
+            ChartRowOffSetPixels    = 5
+            ChartColumnOffSetPixels = 0
+        }
+        Add-PivotTable @PTParams -NoLegend
+    }
 
     $DrawP8 = $WS.Drawings | Where-Object { $_.Name -eq 'TP8' }
     $DrawP8.RichText.Add($P8Name) | Out-Null
