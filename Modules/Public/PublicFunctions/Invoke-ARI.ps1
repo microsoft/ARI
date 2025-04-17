@@ -1,3 +1,4 @@
+#Requires -Version 7
 <#
 .SYNOPSIS
     This script creates Excel file to Analyze Azure Resources inside a Tenant
