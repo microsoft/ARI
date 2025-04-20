@@ -67,19 +67,21 @@ on:
   workflow_dispatch:
     inputs:
       subscriptionId:
-        description: 'Specific subscription ID to inventory (optional)'
+        description: 'Specific subscription ID (optional)'
         required: false
+        default: '00000000-0000-0000-0000-000000000000'
       resourceGroup:
-        description: 'Specific resource group to inventory (optional)'
+        description: 'Specific resource group (optional)'
         required: false
+        default: 'test-rg'
       reportName:
         description: 'Custom report name (optional)'
         required: false
-        default: 'AzureInventory'
+        default: 'TestInventory'
 
 jobs:
   run-inventory:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -101,36 +103,36 @@ jobs:
         shell: pwsh
         run: |
           $params = @{}
-          
+
           # If subscription ID is provided
           if ("${{ github.event.inputs.subscriptionId }}" -ne "") {
             $params.Add("SubscriptionID", "${{ github.event.inputs.subscriptionId }}")
           }
-          
+
           # If resource group is provided
           if ("${{ github.event.inputs.resourceGroup }}" -ne "") {
             $params.Add("ResourceGroup", "${{ github.event.inputs.resourceGroup }}")
           }
-          
+
           # Set report name
           if ("${{ github.event.inputs.reportName }}" -ne "") {
             $params.Add("ReportName", "${{ github.event.inputs.reportName }}")
           } else {
             $params.Add("ReportName", "AzureInventory_$(Get-Date -Format 'yyyyMMdd')")
           }
-          
+
           # Add any other parameters you want to use here
           # For example: $params.Add("SecurityCenter", $true)
-          
+
           # Run ARI
           Invoke-ARI @params
-          
+
           # Create artifacts directory
           New-Item -Path "$env:GITHUB_WORKSPACE/ari-reports" -ItemType Directory -Force
-          
+
           # Move reports to artifacts directory
           Move-Item -Path ".\*.xlsx" -Destination "$env:GITHUB_WORKSPACE/ari-reports/" -Force
-          
+
           if (Test-Path ".\*.drawio") {
             Move-Item -Path ".\*.drawio" -Destination "$env:GITHUB_WORKSPACE/ari-reports/" -Force
           }
@@ -148,14 +150,27 @@ jobs:
       #   run: |
       #     $storageAccount = "yourstorageaccount"
       #     $container = "ari-reports"
-      #     
+      #
       #     # Create the storage context
       #     $ctx = New-AzStorageContext -StorageAccountName $storageAccount -UseConnectedAccount
-      #     
+      #
       #     # Upload files to Azure Storage
       #     Get-ChildItem -Path "$env:GITHUB_WORKSPACE/ari-reports" -File | ForEach-Object {
       #       Set-AzStorageBlobContent -File $_.FullName -Container $container -Blob $_.Name -Context $ctx -Force
       #     }
+
+      # Optional: Send email notification
+      # - name: Send Email Notification
+      #   uses: dawidd6/action-send-mail@v3
+      #   with:
+      #     server_address: smtp.gmail.com
+      #     server_port: 465
+      #     username: ${{ secrets.EMAIL_USERNAME }}
+      #     password: ${{ secrets.EMAIL_PASSWORD }}
+      #     subject: Azure Resource Inventory Report
+      #     body: Azure Resource Inventory has completed. Reports are attached.
+      #     to: recipient@example.com
+      #     from: Azure Inventory <sender@example.com>
 ```
 
 ## Customizing the Workflow
@@ -203,7 +218,7 @@ To inventory specific subscriptions, you can modify the workflow:
       "00000000-0000-0000-0000-000000000000",
       "11111111-1111-1111-1111-111111111111"
     )
-    
+
     foreach ($subId in $subscriptionIds) {
       Invoke-ARI -SubscriptionID $subId -ReportName "AzureInventory_${subId}_$(Get-Date -Format 'yyyyMMdd')"
     }
@@ -211,10 +226,10 @@ To inventory specific subscriptions, you can modify the workflow:
 
 ### Adding Email Notifications
 
-You can add email notifications using GitHub Actions:
+You can add email notifications using GitHub Actions by uncommenting the email notification section in the workflow:
 
 ```yaml
-- name: Send Email
+- name: Send Email Notification
   uses: dawidd6/action-send-mail@v3
   with:
     server_address: smtp.gmail.com
@@ -223,10 +238,14 @@ You can add email notifications using GitHub Actions:
     password: ${{ secrets.EMAIL_PASSWORD }}
     subject: Azure Resource Inventory Report
     body: Azure Resource Inventory has completed. Reports are attached.
-    attachments: ari-reports/*.xlsx
     to: recipient@example.com
     from: Azure Inventory <sender@example.com>
 ```
+
+Before using this feature, make sure to add the following secrets to your repository:
+
+- `EMAIL_USERNAME`: Your email username/address
+- `EMAIL_PASSWORD`: Your email password or app-specific password
 
 ## Troubleshooting
 
@@ -264,4 +283,4 @@ If reports aren't generated:
 
 ## Conclusion
 
-GitHub Actions provides a flexible alternative to Azure Automation for running ARI on a schedule. This approach is particularly useful for teams already using GitHub for infrastructure management, allowing them to keep their inventory process alongside their infrastructure code. 
+GitHub Actions provides a flexible alternative to Azure Automation for running ARI on a schedule. This approach is particularly useful for teams already using GitHub for infrastructure management, allowing them to keep their inventory process alongside their infrastructure code.
