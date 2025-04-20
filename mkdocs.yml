@@ -1,10 +1,10 @@
 site_name: Azure Resource Inventory (ARI)
 site_description: Documentation for the Azure Resource Inventory PowerShell module
 site_author: Microsoft
-site_url: https://microsoft.github.io/ARI
+site_url: https://domalab.github.io/Microsoft-ARI
 
-repo_name: microsoft/ARI
-repo_url: https://github.com/microsoft/ARI
+repo_name: domalab/Microsoft-ARI
+repo_url: https://github.com/domalab/Microsoft-ARI
 edit_uri: edit/main/docs/
 
 theme:
@@ -41,7 +41,7 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/microsoft/ARI
+      link: https://github.com/domalab/Microsoft-ARI
 
 nav:
   - Home: index.md
@@ -71,4 +71,4 @@ nav:
   - About:
       - License: about/license.md
       - Authors: about/authors.md
-      - Changelog: about/changelog.md 
+      - Changelog: about/changelog.md

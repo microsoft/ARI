@@ -25,23 +25,23 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
+
       - name: Build MkDocs site
         run: mkdocs build
-      
+
       - name: Deploy (if on main branch)
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          mkdocs gh-deploy --force 
+          mkdocs gh-deploy --force --site-dir=site
