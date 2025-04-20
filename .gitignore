@@ -1,0 +1,109 @@
+# PowerShell module specific
+*.psd1.backup
+*.psm1.backup
+*.ps1.backup
+*.ps1.bak
+*.psm1.bak
+*.psd1.bak
+
+# PowerShell module output
+output/
+out/
+
+# PowerShell Studio files
+*.psprojs
+*.psproj
+*.TempPoint.*
+
+# PowerShell Gallery package
+*.nupkg
+
+# PowerShell test results
+TestResults/
+TestResults.xml
+
+# Pester test results
+coverage.xml
+coverage/
+
+# PSScriptAnalyzer results
+PSScriptAnalyzer.results.xml
+
+# MkDocs specific
+site/
+docs_build/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Python virtual environment
+venv/
+ENV/
+docs-venv/
+.venv/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+
+# Excel temporary files
+~$*.xlsx
+~$*.xls
+~$*.xlsm
+~$*.xlsb
+
+# Drawio temporary files
+.$*.drawio.bkp
+.$*.drawio.dtmp
+
+# Azure Resource Inventory specific
+ari-reports/
+*.xlsx
+*.drawio
+!docs/images/*.xlsx
+!docs/images/*.drawio
+
+# Local test files
+local-test/
+test-results/
