@@ -107,3 +107,107 @@ ari-reports/
 # Local test files
 local-test/
 test-results/
+
+# Azure credentials and secrets
+*.publishsettings
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+*.cer
+*.azureauth
+azureauth.json
+*.azurecredentials
+*credentials*.json
+*secrets*.json
+*connection*.json
+
+# Azure CLI and PowerShell Azure Module cache
+.azure/
+.azcli/
+
+# Terraform files
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+
+# Bicep files
+*.bicepparam
+
+# Act (GitHub Actions local testing)
+.actrc
+.secrets
+
+# Docker
+.docker/
+Docker.*.env
+
+# Node.js (for potential web components)
+node_modules/
+
+# Jupyter Notebooks (for potential data analysis)
+.ipynb_checkpoints/
+*.ipynb
+
+# R files (for potential data analysis)
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+
+# macOS extended attributes
+._*
+
+# Windows shortcuts
+*.lnk
+
+# Windows thumbnail cache
+ehthumbs.db
+ehthumbs_vista.db
+
+# Windows folder config
+Desktop.ini
+
+# Windows Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Backup files created by various editors
+*.bak
+*.gho
+*.ori
+*.orig
+*.tmp
+
+# Archive files
+*.7z
+*.jar
+*.rar
+*.zip
+*.gz
+*.tgz
+*.bzip
+*.bz2
+*.xz
+*.lzma
+*.cab
+*.iso
+*.tar
+
+# Compiled source
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.obj
+
+# Dependency directories
+vendor/
