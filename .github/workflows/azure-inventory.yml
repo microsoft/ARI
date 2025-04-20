@@ -1,0 +1,78 @@
+name: Azure Resource Inventory
+
+on:
+  workflow_dispatch:
+    inputs:
+      subscriptionId:
+        description: 'Specific subscription ID (optional)'
+        required: false
+        default: '00000000-0000-0000-0000-000000000000'
+      resourceGroup:
+        description: 'Specific resource group (optional)'
+        required: false
+        default: 'test-rg'
+      reportName:
+        description: 'Custom report name (optional)'
+        required: false
+        default: 'TestInventory'
+
+jobs:
+  run-inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # For local testing, we'll simulate the Azure login step
+      - name: Simulate Azure Login
+        run: |
+          echo "Azure login simulated for local testing"
+
+      # For local testing with act, we'll simulate the module installation and ARI execution
+      - name: Simulate ARI Installation and Run
+        shell: bash
+        run: |
+          echo "Installing ARI modules (simulation for testing)"
+          echo "Running Invoke-ARI with parameters:"
+          echo "- ReportName: ${{ github.event.inputs.reportName }}"
+          echo "- SubscriptionID: ${{ github.event.inputs.subscriptionId }}"
+          echo "- ResourceGroup: ${{ github.event.inputs.resourceGroup }}"
+          
+          # Create dummy report files
+          mkdir -p ari-reports
+          echo "This is a test Excel report" > ari-reports/test_report.xlsx
+          echo "This is a test diagram file" > ari-reports/test_diagram.drawio
+          
+          # List the created files
+          echo "Created files:"
+          ls -la ari-reports/
+          
+          echo "Workflow execution completed successfully"
+
+      # Optional: Upload to Azure Storage
+      # - name: Upload to Azure Storage
+      #   shell: pwsh
+      #   run: |
+      #     $storageAccount = "yourstorageaccount"
+      #     $container = "ari-reports"
+      #     
+      #     # Create the storage context
+      #     $ctx = New-AzStorageContext -StorageAccountName $storageAccount -UseConnectedAccount
+      #     
+      #     # Upload files to Azure Storage
+      #     Get-ChildItem -Path "$env:GITHUB_WORKSPACE/ari-reports" -File | ForEach-Object {
+      #       Set-AzStorageBlobContent -File $_.FullName -Container $container -Blob $_.Name -Context $ctx -Force
+      #     }
+
+      # Optional: Send email notification
+      # - name: Send Email Notification
+      #   uses: dawidd6/action-send-mail@v3
+      #   with:
+      #     server_address: smtp.gmail.com
+      #     server_port: 465
+      #     username: ${{ secrets.EMAIL_USERNAME }}
+      #     password: ${{ secrets.EMAIL_PASSWORD }}
+      #     subject: Azure Resource Inventory Report
+      #     body: Azure Resource Inventory has completed. Reports are attached.
+      #     to: recipient@example.com
+      #     from: Azure Inventory <sender@example.com> 

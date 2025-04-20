@@ -1,0 +1,4 @@
+mkdocs==1.5.3
+mkdocs-material==9.4.5
+pymdown-extensions==10.3
+mkdocs-awesome-pages-plugin==2.9.2 

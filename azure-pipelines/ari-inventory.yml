@@ -1,0 +1,133 @@
+trigger: none # Don't trigger on code changes
+
+schedules:
+- cron: "0 8 * * 1" # Run weekly on Monday at 8:00 AM UTC
+  displayName: Weekly Run
+  branches:
+    include:
+    - main
+  always: true # Run even when there are no code changes
+
+parameters:
+- name: subscriptionId
+  displayName: 'Specific subscription ID (optional)'
+  type: string
+  default: ''
+- name: resourceGroup
+  displayName: 'Specific resource group (optional)'
+  type: string
+  default: ''
+- name: reportName
+  displayName: 'Custom report name (optional)'
+  type: string
+  default: 'AzureInventory'
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  azureServiceConnection: 'ARI-ServiceConnection' # Replace with your service connection name
+
+steps:
+- task: AzureCLI@2
+  displayName: 'Install and Run Azure Resource Inventory'
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      # Install required modules
+      Install-Module -Name AzureResourceInventory -Force -Scope CurrentUser
+      Install-Module -Name Az.Accounts -Force -Scope CurrentUser
+      Install-Module -Name ImportExcel -Force -Scope CurrentUser
+      
+      # Import ARI module
+      Import-Module AzureResourceInventory
+      
+      # Prepare parameters
+      $params = @{}
+      
+      # If subscription ID is provided
+      if ("${{ parameters.subscriptionId }}" -ne "") {
+        $params.Add("SubscriptionID", "${{ parameters.subscriptionId }}")
+      }
+      
+      # If resource group is provided
+      if ("${{ parameters.resourceGroup }}" -ne "") {
+        $params.Add("ResourceGroup", "${{ parameters.resourceGroup }}")
+      }
+      
+      # Set report name
+      if ("${{ parameters.reportName }}" -ne "") {
+        $params.Add("ReportName", "${{ parameters.reportName }}")
+      } else {
+        $params.Add("ReportName", "AzureInventory_$(Get-Date -Format 'yyyyMMdd')")
+      }
+      
+      # Add any other parameters you want to use here
+      # For example: 
+      # $params.Add("SecurityCenter", $true)
+      # $params.Add("IncludeTags", $true)
+      # $params.Add("DiagramFullEnvironment", $true)
+      
+      # Run ARI
+      Invoke-ARI @params
+      
+      # Create artifacts directory
+      New-Item -Path "$(Build.ArtifactStagingDirectory)/ari-reports" -ItemType Directory -Force
+      
+      # Move reports to artifacts directory
+      Move-Item -Path "*.xlsx" -Destination "$(Build.ArtifactStagingDirectory)/ari-reports/" -Force
+      
+      if (Test-Path "*.drawio") {
+        Move-Item -Path "*.drawio" -Destination "$(Build.ArtifactStagingDirectory)/ari-reports/" -Force
+      }
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Inventory Reports'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/ari-reports'
+    ArtifactName: 'ARI-Reports'
+    publishLocation: 'Container'
+
+# Optional: Upload to Azure Storage
+# - task: AzureCLI@2
+#   displayName: 'Upload Reports to Azure Storage'
+#   inputs:
+#     azureSubscription: $(azureServiceConnection)
+#     scriptType: 'ps'
+#     scriptLocation: 'inlineScript'
+#     inlineScript: |
+#       $storageAccount = "yourstorageaccount"
+#       $container = "ari-reports"
+#       
+#       # Create storage context
+#       $ctx = New-AzStorageContext -StorageAccountName $storageAccount
+#       
+#       # Upload files to Azure Storage
+#       Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)/ari-reports" -File | ForEach-Object {
+#         Set-AzStorageBlobContent -File $_.FullName -Container $container -Blob $_.Name -Context $ctx -Force
+#       }
+
+# Optional: Send email notification with Logic App
+# - task: AzureCLI@2
+#   displayName: 'Trigger Logic App for Email Notification'
+#   condition: succeeded()
+#   inputs:
+#     azureSubscription: $(azureServiceConnection)
+#     scriptType: 'ps'
+#     scriptLocation: 'inlineScript'
+#     inlineScript: |
+#       # Replace with your Logic App details
+#       $logicAppUrl = "https://prod-00.region.logic.azure.com:443/workflows/..."
+#       
+#       # Construct payload
+#       $payload = @{
+#         subject = "Azure Resource Inventory Report"
+#         message = "The Azure Resource Inventory report has been generated successfully."
+#         runUrl = "$(System.TeamFoundationCollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)"
+#         date = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+#       } | ConvertTo-Json
+#       
+#       # Trigger Logic App
+#       Invoke-RestMethod -Uri $logicAppUrl -Method Post -Body $payload -ContentType "application/json" 
