@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Testing GitHub Actions workflow locally using act..."
+echo "Testing Azure Inventory workflow locally using act..."
 
 # Check if act is installed
 if ! command -v act &> /dev/null; then
@@ -12,6 +12,5 @@ if ! command -v act &> /dev/null; then
 fi
 
 # Run act to test the workflow locally
-# Note: This will only build the docs, not deploy them
-echo "Running the build-and-deploy job (deployment requires GitHub Pages setup)"
-act -j build-and-deploy -W .github/workflows/documentation.yml --container-architecture linux/amd64
+echo "Running the run-inventory job with workflow_dispatch event"
+act -j run-inventory -W .github/workflows/azure-inventory.yml -e workflow_dispatch.json --container-architecture linux/amd64
