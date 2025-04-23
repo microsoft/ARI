@@ -1,0 +1,74 @@
+site_name: Azure Resource Inventory (ARI)
+site_description: Documentation for the Azure Resource Inventory PowerShell module
+site_author: Microsoft
+site_url: https://microsoft.github.io/ARI
+
+repo_name: microsoft/ARI
+repo_url: https://github.com/microsoft/ARI
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  logo: images/ARI_Logo.png
+  favicon: images/ARI_Logo.png
+  palette:
+    primary: indigo
+    accent: blue
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - tables
+  - attr_list
+  - md_in_html
+  - footnotes
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/microsoft/ARI
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
+  - User Guide:
+      - Basic Usage: user-guide/basic-usage.md
+      - Parameters: user-guide/parameters.md
+      - Common Scenarios: user-guide/common-scenarios.md
+      - Troubleshooting: user-guide/troubleshooting.md
+      - FAQ: user-guide/faq.md
+  - Features:
+      - Excel Reports: features/excel-reports.md
+      - Network Diagrams: features/network-diagrams.md
+      - Security Center: features/security-center.md
+      - Azure Advisor: features/azure-advisor.md
+  - Advanced:
+      - Automation: advanced/automation.md
+      - GitHub Actions: advanced/github-actions.md
+      - Azure DevOps: advanced/azure-devops.md
+      - Local Testing: advanced/local-testing.md
+      - Resource Types: advanced/resource-types.md
+  - Development:
+      - Contributing: development/contributing.md
+      - Module Structure: development/module-structure.md
+  - About:
+      - License: about/license.md
+      - Authors: about/authors.md
+      - Changelog: about/changelog.md

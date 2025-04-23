@@ -1,0 +1,213 @@
+# PowerShell module specific
+*.psd1.backup
+*.psm1.backup
+*.ps1.backup
+*.ps1.bak
+*.psm1.bak
+*.psd1.bak
+
+# PowerShell module output
+output/
+out/
+
+# PowerShell Studio files
+*.psprojs
+*.psproj
+*.TempPoint.*
+
+# PowerShell Gallery package
+*.nupkg
+
+# PowerShell test results
+TestResults/
+TestResults.xml
+
+# Pester test results
+coverage.xml
+coverage/
+
+# PSScriptAnalyzer results
+PSScriptAnalyzer.results.xml
+
+# MkDocs specific
+site/
+docs_build/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Python virtual environment
+venv/
+ENV/
+docs-venv/
+.venv/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+
+# Excel temporary files
+~$*.xlsx
+~$*.xls
+~$*.xlsm
+~$*.xlsb
+
+# Drawio temporary files
+.$*.drawio.bkp
+.$*.drawio.dtmp
+
+# Azure Resource Inventory specific
+ari-reports/
+*.xlsx
+*.drawio
+!docs/images/*.xlsx
+!docs/images/*.drawio
+
+# Local test files
+local-test/
+test-results/
+
+# Azure credentials and secrets
+*.publishsettings
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+*.cer
+*.azureauth
+azureauth.json
+*.azurecredentials
+*credentials*.json
+*secrets*.json
+*connection*.json
+
+# Azure CLI and PowerShell Azure Module cache
+.azure/
+.azcli/
+
+# Terraform files
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+
+# Bicep files
+*.bicepparam
+
+# Act (GitHub Actions local testing)
+.actrc
+.secrets
+
+# Docker
+.docker/
+Docker.*.env
+
+# Node.js (for potential web components)
+node_modules/
+
+# Jupyter Notebooks (for potential data analysis)
+.ipynb_checkpoints/
+*.ipynb
+
+# R files (for potential data analysis)
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+
+# macOS extended attributes
+._*
+
+# Windows shortcuts
+*.lnk
+
+# Windows thumbnail cache
+ehthumbs.db
+ehthumbs_vista.db
+
+# Windows folder config
+Desktop.ini
+
+# Windows Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Backup files created by various editors
+*.bak
+*.gho
+*.ori
+*.orig
+*.tmp
+
+# Archive files
+*.7z
+*.jar
+*.rar
+*.zip
+*.gz
+*.tgz
+*.bzip
+*.bz2
+*.xz
+*.lzma
+*.cab
+*.iso
+*.tar
+
+# Compiled source
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.obj
+
+# Dependency directories
+vendor/
