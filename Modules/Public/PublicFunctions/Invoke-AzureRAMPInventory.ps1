@@ -1,4 +1,3 @@
-#Requires -Version 7
 function Invoke-AzureRAMPInventory {
     [CmdletBinding(PositionalBinding=$false)]
     param (  
