@@ -49,27 +49,60 @@ function Build-ARIExcelComObject {
                 $NoChangeChart = ('ChartP0', 'ChartP1', 'ChartP2', 'ChartP3', 'ChartP4', 'ChartP5', 'ChartP6', 'ChartP7', 'ChartP8', 'ChartP9', 'ARI', 'RGs', 'TP00', 'TP0', 'TP1', 'TP2', 'TP3', 'TP4', 'TP5','TP6','TP7','TP8','TP9')
                 $ChangeChart = ('ARI', 'RGs', 'TP00', 'TP0', 'TP1', 'TP2', 'TP3', 'TP4', 'TP5', 'TP6', 'TP7','TP8','TP9')
 
-                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP0' }).DrawingObject.Chart.ChartStyle = 294
+                if ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP0' })
+                    {
+                        ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP0' }).DrawingObject.Chart.ChartStyle = 294
+                    }
                 Start-Sleep -Milliseconds 50
-                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP1' }).DrawingObject.Chart.ChartStyle = 222
+                if ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP1' })
+                    {
+                        ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP1' }).DrawingObject.Chart.ChartStyle = 222
+                    }
                 Start-Sleep -Milliseconds 50
-                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP2' }).DrawingObject.Chart.ChartStyle = 294
+                if ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP2' })
+                    {
+                        ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP2' }).DrawingObject.Chart.ChartStyle = 294
+                    }
                 Start-Sleep -Milliseconds 50
-                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP3' }).DrawingObject.Chart.ChartStyle = 268
+                if ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP3' })
+                    {
+                        ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP3' }).DrawingObject.Chart.ChartStyle = 268
+                    }
                 Start-Sleep -Milliseconds 50
-                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP4' }).DrawingObject.Chart.ChartStyle = 294
+                if ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP4' })
+                    {
+                        ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP4' }).DrawingObject.Chart.ChartStyle = 294
+                    }
                 Start-Sleep -Milliseconds 50
-                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP5' }).DrawingObject.Chart.ChartStyle = 222
+                if ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP5' })
+                    {
+                        ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP5' }).DrawingObject.Chart.ChartStyle = 222
+                    }
                 Start-Sleep -Milliseconds 50
-                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP6' }).DrawingObject.Chart.ChartStyle = 294
+                if ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP6' })
+                    {
+                        ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP6' }).DrawingObject.Chart.ChartStyle = 294
+                    }
                 Start-Sleep -Milliseconds 50
-                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP7' }).DrawingObject.Chart.ChartStyle = 268
+                if ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP7' })
+                    {
+                        ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP7' }).DrawingObject.Chart.ChartStyle = 268
+                    }
                 Start-Sleep -Milliseconds 50
-                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP8' }).DrawingObject.Chart.ChartStyle = 294
+                if ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP8' })
+                    {
+                        ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP8' }).DrawingObject.Chart.ChartStyle = 294
+                    }
                 Start-Sleep -Milliseconds 50
-                ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP9' }).DrawingObject.Chart.ChartStyle = 268
+                if ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP9' })
+                    {
+                        ($WSheet.Shapes | Where-Object { $_.name -eq 'ChartP9' }).DrawingObject.Chart.ChartStyle = 268
+                    }
                 Start-Sleep -Milliseconds 50
-                ($WSheet.Shapes | Where-Object { $_.name -notin $NoChangeChart -and $_.name -like 'Chart*' }).DrawingObject.Chart.ChartStyle = 315
+                if ($WSheet.Shapes | Where-Object { $_.name -notin $NoChangeChart -and $_.name -like 'Chart*' })
+                    {
+                        ($WSheet.Shapes | Where-Object { $_.name -notin $NoChangeChart -and $_.name -like 'Chart*' }).DrawingObject.Chart.ChartStyle = 315
+                    }
                 Start-Sleep -Milliseconds 50
 
                 Foreach ($Changer in $ChangeChart) {
