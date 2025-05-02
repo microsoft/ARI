@@ -160,7 +160,7 @@ If you want to automatically run ARI, there is a way to do it using Automation A
   <img src="images/Automation.png" width="600">
 </p>
 
-See the [Automation Guide](https://github.com/microsoft/ARI/blob/main/docs/Automation.md) for implementation details.
+See the [Automation Guide](https://github.com/microsoft/ARI/blob/main/docs/advanced/automation.md) for implementation details.
 
 ## 📝 Parameters Reference
 
