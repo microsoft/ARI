@@ -287,6 +287,7 @@ Function Invoke-ARI {
     if ($PlatOS -eq 'Azure CloudShell')
         {
             $Heavy = $true
+            $SkipAPIs = $true
         }
 
     if ($StorageAccount)
