@@ -86,7 +86,7 @@ Install-Module -Name ImportExcel, Az.Accounts, Az.ResourceGraph, Az.Storage, Az.
 **Solutions**:
 1. Use lightweight mode:
    ```powershell
-   Invoke-ARI -Lite
+   Invoke-ARI -Heavy
    ```
 2. Skip diagram generation:
    ```powershell
@@ -107,7 +107,7 @@ Install-Module -Name ImportExcel, Az.Accounts, Az.ResourceGraph, Az.Storage, Az.
 
 **Solutions**:
 1. Close other memory-intensive applications
-2. Use the `-Lite` parameter to reduce memory usage
+2. Use the `-Heavy` parameter to reduce memory usage
 3. Scope to fewer subscriptions at a time
 4. Skip diagram generation with `-SkipDiagram`
 
