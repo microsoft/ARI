@@ -25,6 +25,7 @@ Many people have contributed to Azure Resource Inventory over time. Contributors
 - Jeferson Machado dos Santos
 - JP Sarmiento
 - Lucas Hattori Costa
+- Peter Szabo
 - Thiago Almeida
 
 ## Special Thanks
