@@ -22,7 +22,7 @@ If you don't already have an Automation Account, create one in the Azure Portal.
 2. Enable the **System Assigned** identity
 
 <div align="center">
-<img src="../../images/ARIAUT_Identity.png">
+<img src="../images/ARIAUT_Identity.png">
 </div>
 
 ### Step 3: Grant Required Permissions
@@ -34,7 +34,7 @@ The Automation Account's identity needs the following permissions:
 Grant the Automation Account's identity Reader access to your Management Group or subscriptions to enable resource inventory:
 
 <div align="center">
-<img src="../../images/AUTv4Tenant.png">
+<img src="../images/AUTv4Tenant.png">
 </div>
 
 #### Storage Blob Data Contributor
@@ -42,7 +42,7 @@ Grant the Automation Account's identity Reader access to your Management Group o
 Grant the Automation Account's identity the "Storage Blob Data Contributor" role on your storage account:
 
 <div align="center">
-<img src="../../images/AUTv4STGPerm.png">
+<img src="../images/AUTv4STGPerm.png">
 </div>
 
 ### Step 4: Configure Runtime Environment
@@ -51,13 +51,13 @@ Grant the Automation Account's identity the "Storage Blob Data Contributor" role
 2. Switch to the new Runtime Environment Experience
 
 <div align="center">
-<img src="../../images/ARIAUT_Runtime.png">
+<img src="../images/ARIAUT_Runtime.png">
 </div>
 
 3. Create a new Runtime Environment
 
 <div align="center">
-<img src="../../images/ARIAUT_NewRunTime.png">
+<img src="../images/ARIAUT_NewRunTime.png">
 </div>
 
 4. Use PowerShell version **7.4** (recommended and tested)
@@ -67,7 +67,7 @@ Grant the Automation Account's identity the "Storage Blob Data Contributor" role
 In the "Packages" pane of your Runtime Environment, import the following modules from the gallery:
 
 <div align="center">
-<img src="../../images/ARIAUT_RuntimePackages.png">
+<img src="../images/ARIAUT_RuntimePackages.png">
 </div>
 
 1. AzureResourceInventory
@@ -83,13 +83,13 @@ In the "Packages" pane of your Runtime Environment, import the following modules
 1. In your Automation Account, create a new PowerShell Runbook
 
 <div align="center">
-<img src="../../images/ARIAUT_Runbook.png">
+<img src="../images/ARIAUT_Runbook.png">
 </div>
 
 2. Add the Invoke-ARI command to the runbook:
 
 <div align="center">
-<img src="../../images/ARIAUT_Runbookcmd.png">
+<img src="../images/ARIAUT_Runbookcmd.png">
 </div>
 
 3. Make sure to select the Runtime Environment you created earlier
