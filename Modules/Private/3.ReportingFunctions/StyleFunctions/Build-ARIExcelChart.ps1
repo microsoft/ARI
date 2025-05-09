@@ -737,7 +737,7 @@ function Build-ARIExcelChart {
         }
         Add-PivotTable @PTParams -NoLegend
     }
-    else {
+    elseif ($Excel.Workbook.Worksheets | Where-Object { $_.Name -eq 'Virtual Machines' }) {
         $P8Name = 'VMs per Region'
         $PTParams = @{
             PivotTableName          = "P8"
@@ -753,6 +753,30 @@ function Build-ARIExcelChart {
             Activate                = $true
             PivotFilter             = 'Subscription'
             ChartTitle              = 'VMs by Region'
+            ShowPercent             = $true
+            ChartHeight             = 255
+            ChartWidth              = 315
+            ChartRowOffSetPixels    = 5
+            ChartColumnOffSetPixels = 0
+        }
+        Add-PivotTable @PTParams -NoLegend
+    }
+    else{
+        $P8Name = 'Resources per Region'
+        $PTParams = @{
+            PivotTableName          = "P8"
+            Address                 = $excel.Overview.cells["DE5"] # top-left corner of the table
+            SourceWorkSheet         = $excel.'Subscriptions'
+            PivotRows               = @("Location")
+            PivotData               = @{"Resources Count" = "Sum" }
+            PivotTableStyle         = $tableStyle
+            IncludePivotChart       = $true
+            ChartType               = "BarStacked3D"
+            ChartRow                = 34
+            ChartColumn             = 24
+            Activate                = $true
+            PivotFilter             = 'Subscription'
+            ChartTitle              = 'Resources by Location'
             ShowPercent             = $true
             ChartHeight             = 255
             ChartWidth              = 315

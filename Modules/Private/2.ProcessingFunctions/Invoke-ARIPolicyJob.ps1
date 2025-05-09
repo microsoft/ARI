@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/2.ProcessingFunctions/Invoke-AR
 This PowerShell Module is part of Azure Resource Inventory (ARI).
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.5
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
@@ -22,7 +22,7 @@ function Invoke-ARIPolicyJob {
 
     if ($Automation.IsPresent)
         {
-            Write-Output ('Starting Policy Job')
+            Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Policy Job')
             Start-ThreadJob -Name 'Policy' -ScriptBlock {
 
                 import-module $($args[4])

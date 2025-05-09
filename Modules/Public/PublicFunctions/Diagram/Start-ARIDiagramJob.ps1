@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Start-AR
 This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.5
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -84,7 +84,7 @@ Function Start-ARIDiagramJob {
 
             $Variables
 
-        } -ArgumentList $resources, $null
+        } -ArgumentList $resources, $null | Out-Null
     }
     else
     {

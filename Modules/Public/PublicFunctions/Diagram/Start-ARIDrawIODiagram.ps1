@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Start-AR
 This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.5
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -63,7 +63,7 @@ function Start-ARIDrawIODiagram {
             {
                 ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $($args[3]) -Append
             }
-        } -ArgumentList $Subscriptions, $Resources, $DiagramCache, $Logfile
+        } -ArgumentList $Subscriptions, $Resources, $DiagramCache, $Logfile | Out-Null
     }
     else
     {
@@ -94,7 +94,7 @@ function Start-ARIDrawIODiagram {
             {
                 ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $($args[2]) -Append
             }
-        } -ArgumentList $ResourceContainers, $DiagramCache, $Logfile
+        } -ArgumentList $ResourceContainers, $DiagramCache, $Logfile | Out-Null
     }
     else
     {
@@ -133,7 +133,7 @@ function Start-ARIDrawIODiagram {
             {
                 ('DrawIOCoreFile - '+(get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - Error: ' + $_.Exception.Message) | Out-File -FilePath $($args[7]) -Append
             }
-        } -ArgumentList $Subscriptions, $Job, $Advisories, $DiagramCache, $FullEnvironment, $DDFile, $XMLFiles, $Logfile, $Automation
+        } -ArgumentList $Subscriptions, $Job, $Advisories, $DiagramCache, $FullEnvironment, $DDFile, $XMLFiles, $Logfile, $Automation | Out-Null
     }
     else
     {

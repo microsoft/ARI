@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/2.ProcessingFunctions/Start-ARI
 This PowerShell Module is part of Azure Resource Inventory (ARI).
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.5
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
@@ -24,13 +24,15 @@ function Start-ARIAutProcessJob {
     $InventoryModulesPath = Join-Path $ParentPath 'Public' 'InventoryModules'
     $Modules = Get-ChildItem -Path $InventoryModulesPath -Directory
     $NewResources = ($Resources | ConvertTo-Json -Depth 40 -Compress)
-    $SmaResources = @{} # Initialize the hashtable to store results
+    $JobLoop = 1
+    Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Starting ARI Automation Processing Jobs...")
 
     Foreach ($ModuleFolder in $Modules)
         {
             $ModulePath = Join-Path $ModuleFolder.FullName '*.ps1'
             $ModuleName = $ModuleFolder.Name
             $ModuleFiles = Get-ChildItem -Path $ModulePath
+            Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Starting Job: $ModuleName")
 
             Start-ThreadJob -Name ('ResourceJob_'+$ModuleName) -ScriptBlock {
 
@@ -40,6 +42,7 @@ function Start-ARIAutProcessJob {
                 $Resources = $($args[4]) | ConvertFrom-Json
                 $Retirements = $($args[5])
                 $Unsupported = $($args[10])
+                $SmaResources = @{} # Initialize the hashtable to store results
 
                 Foreach ($Module in $ModuleFiles)
                     {
@@ -58,6 +61,22 @@ function Start-ARIAutProcessJob {
 
                 $SmaResources
 
-            } -ArgumentList $ModuleFiles, $PSScriptRoot, $Subscriptions, $InTag, $NewResources, $Retirements, 'Processing', $null, $null, $null, $Unsupported -ThrottleLimit 8 | Out-Null
+            } -ArgumentList $ModuleFiles, $PSScriptRoot, $Subscriptions, $InTag, $NewResources, $Retirements, 'Processing', $null, $null, $null, $Unsupported | Out-Null
+
+            if($JobLoop -eq 4)
+                {
+                    Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Waiting Batch Jobs')
+
+                    Get-Job | Where-Object {$_.name -like 'ResourceJob_*'} | Wait-Job
+
+                    $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
+
+                    Start-Sleep -Seconds 5
+
+                    Build-ARICacheFiles -DefaultPath $DefaultPath -JobNames $JobNames
+
+                    $JobLoop = 0
+                }
+        $JobLoop ++
         }
 }

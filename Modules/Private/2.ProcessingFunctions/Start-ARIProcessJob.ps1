@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/2.ProcessingFunctions/Start-ARI
 This PowerShell Module is part of Azure Resource Inventory (ARI).
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.5
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
@@ -150,7 +150,7 @@ function Start-ARIProcessJob {
 
                 $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
 
-                Build-ARICacheFiles -DefaultPath $DefaultPath -ReportCache $ReportCache -JobNames $JobNames
+                Build-ARICacheFiles -DefaultPath $DefaultPath -JobNames $JobNames
 
                 $JobLoop = 0
             }

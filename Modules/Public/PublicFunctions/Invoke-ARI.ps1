@@ -1,4 +1,3 @@
-#Requires -Version 7
 <#
 .SYNOPSIS
     This script creates Excel file to Analyze Azure Resources inside a Tenant
@@ -288,6 +287,7 @@ Function Invoke-ARI {
     if ($PlatOS -eq 'Azure CloudShell')
         {
             $Heavy = $true
+            $SkipAPIs = $true
         }
 
     if ($StorageAccount)
