@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Public/InventoryModules/Database/SQLDB.
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.7
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -35,7 +35,14 @@ if ($Task -eq 'Processing') {
                 $data = $1.PROPERTIES
                 $DBServer = $1.id.split("/")[8]
                 $PoolId = if(![string]::IsNullOrEmpty($data.elasticPoolId)){$data.elasticPoolId.split('/')[8]}else{$null}
-                $RestorePoint = [string](get-date($data.earliestrestoredate))
+                if(![string]::IsNullOrEmpty($data.earliestrestoredate))
+                    {
+                        $RestorePoint = [string](get-date($data.earliestrestoredate))
+                    }
+                else
+                    {
+                        $RestorePoint = $null
+                    }
                 $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
                 if ($Retired) 
                     {
