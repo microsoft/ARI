@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Public/InventoryModules/Container/Conta
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.7
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -68,8 +68,8 @@ If ($Task -eq 'Processing')
                 $dapr = if(![string]::IsNullOrEmpty($data.configuration.dapr)){$true}else{$false}
                 $secrets = if(![string]::IsNullOrEmpty($data.configuration.secrets)){$data.configuration.secrets.count}else{0}
                 $Env = $data.environmentId.split('/')[8]
-                $data
                 foreach ($2 in $data.template) {
+                    foreach ($3 in $2.containers) {
                         foreach ($Tag in $Tags) {
                             $obj = @{
                                 'ID'                        = $1.id;
@@ -89,18 +89,19 @@ If ($Task -eq 'Processing')
                                 'Ingress Transport'         = $data.configuration.ingress.transport;
                                 'Dapr'                      = $dapr;
                                 'Secrets'                   = [string]$secrets;
-                                'Container'                 = $2.containers.name;
-                                'CPU Cores'                 = $2.containers.resources.cpu;
-                                'Memory Size (Gi)'          = $2.containers.resources.memory;
-                                'Ephemeral Storage (Gi)'    = $2.containers.resources.ephemeralStorage;
-                                'Container Image'           = $2.containers.image;
+                                'Container'                 = $3.name;
+                                'CPU Cores'                 = $3.resources.cpu;
+                                'Memory Size (Gi)'          = $3.resources.memory;
+                                'Ephemeral Storage (Gi)'    = $3.resources.ephemeralStorage;
+                                'Container Image'           = $3.image;
                                 'Resource U'                = $ResUCount;
                                 'Tag Name'                  = [string]$Tag.Name;
                                 'Tag Value'                 = [string]$Tag.Value
                             }
                             $obj
                             if ($ResUCount -eq 1) { $ResUCount = 0 } 
-                        }                    
+                        }
+                    }
                 }
             }
             $tmp
