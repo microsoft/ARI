@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/0.MainFunctions/Start-ARIProces
 This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.9
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -35,7 +35,7 @@ function Start-ARIProcessOrchestration {
             {
                 Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Processing Resources in Automation Mode')
 
-                Start-ARIAutProcessJob -Resources $Resources -Retirements $Retirements -Subscriptions $Subscriptions -InTag $InTag -Unsupported $Unsupported
+                Start-ARIAutProcessJob -Resources $Resources -Retirements $Retirements -Subscriptions $Subscriptions -Heavy $Heavy -InTag $InTag -Unsupported $Unsupported
             }
         else
             {

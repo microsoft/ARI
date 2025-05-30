@@ -12,13 +12,13 @@ https://github.com/microsoft/ARI/Modules/Private/2.ProcessingFunctions/Start-ARI
 This PowerShell Module is part of Azure Resource Inventory (ARI).
 
 .NOTES
-Version: 3.6.5
+Version: 3.6.9
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
 
 function Start-ARIAutProcessJob {
-    Param($Resources, $Retirements, $Subscriptions, $InTag, $Unsupported)
+    Param($Resources, $Retirements, $Subscriptions, $Heavy, $InTag, $Unsupported)
 
     $ParentPath = (get-item $PSScriptRoot).parent.parent
     $InventoryModulesPath = Join-Path $ParentPath 'Public' 'InventoryModules'
@@ -26,6 +26,16 @@ function Start-ARIAutProcessJob {
     $NewResources = ($Resources | ConvertTo-Json -Depth 40 -Compress)
     $JobLoop = 1
     Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Starting ARI Automation Processing Jobs...")
+
+    if ($Heavy.IsPresent -or $InTag.IsPresent)
+        {
+            Write-Output ('Heavy Mode Detected. Jobs will be run in small batches to avoid CPU and Memory Overload.')
+            $EnvSizeLooper = 2
+        }
+    else
+        {
+            $EnvSizeLooper = 4
+        }
 
     Foreach ($ModuleFolder in $Modules)
         {
@@ -63,7 +73,7 @@ function Start-ARIAutProcessJob {
 
             } -ArgumentList $ModuleFiles, $PSScriptRoot, $Subscriptions, $InTag, $NewResources, $Retirements, 'Processing', $null, $null, $null, $Unsupported | Out-Null
 
-            if($JobLoop -eq 4)
+            if($JobLoop -eq $EnvSizeLooper)
                 {
                     Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Waiting Batch Jobs')
 
