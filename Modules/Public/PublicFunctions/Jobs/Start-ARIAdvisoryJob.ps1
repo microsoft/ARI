@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Jobs/Start-ARIAd
     This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.9
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -33,6 +33,9 @@ function Start-ARIAdvisoryJob {
                 'Impact'                 = $data.impact;
                 #'Score'                  = $data.extendedproperties.score;
                 'Problem'                = $data.shortDescription.problem;
+                'Term'                   = $data.extendedProperties.term;
+                'Look-back Period'       = $data.extendedProperties.lookbackPeriod;
+                'Quantity'               = $data.extendedProperties.qty;
                 'Savings Currency'       = $SavingsCurrency;
                 'Annual Savings'         = "=$Savings";
                 'Savings Region'         = $data.extendedProperties.location;

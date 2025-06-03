@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/3.ReportingFunctions/Build-ARIA
 This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.9
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
@@ -23,7 +23,7 @@ function Build-ARIAdvisoryReport {
     $condtxtadv += New-ConditionalText High -Range E:E
     $condtxtadv += New-ConditionalText Security -Range D:D -BackgroundColor Wheat
 
-    $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '#,##0.00' -Range H:H
+    $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '#,##0.00' -Range K:K
 
     [PSCustomObject]$Adv |
     ForEach-Object { $_ } |
@@ -34,6 +34,9 @@ function Build-ARIAdvisoryReport {
     'Impact',
     #'Score',
     'Problem',
+    'Term',
+    'Look-back Period',
+    'Quantity',
     'Savings Currency',
     'Annual Savings',
     'Savings Region',
