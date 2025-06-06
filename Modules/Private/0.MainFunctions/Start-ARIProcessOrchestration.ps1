@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/0.MainFunctions/Start-ARIProces
 This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.9
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -35,7 +35,7 @@ function Start-ARIProcessOrchestration {
             {
                 Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Processing Resources in Automation Mode')
 
-                Start-ARIAutProcessJob -Resources $Resources -Retirements $Retirements -Subscriptions $Subscriptions -InTag $InTag -Unsupported $Unsupported
+                Start-ARIAutProcessJob -Resources $Resources -Retirements $Retirements -Subscriptions $Subscriptions -Heavy $Heavy -InTag $InTag -Unsupported $Unsupported
             }
         else
             {
@@ -48,30 +48,27 @@ function Start-ARIProcessOrchestration {
 
         <############################################################## RESOURCES PROCESSING #############################################################>
 
-        if(![string]::IsNullOrEmpty($JobNames))
+        if ($Automation.IsPresent)
             {
-                if ($Automation.IsPresent)
-                    {
-                        Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Waiting for Resource Jobs to Complete in Automation Mode')
-                        Get-Job | Where-Object {$_.name -like 'ResourceJob_*'} | Wait-Job
-                    }
-                else
-                    {
-                        $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
-                        Wait-ARIJob -JobNames $JobNames -JobType 'Resource' -LoopTime 5
-                    }
-
-                if ($Automation.IsPresent)
-                    {
-                        Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Processing Resources in Automation Mode')
-                    }
-                else
-                    {
-                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Finished Waiting for Resource Jobs.')
-                    }
-
-                Build-ARICacheFiles -DefaultPath $DefaultPath -JobNames $JobNames
+                Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Waiting for Resource Jobs to Complete in Automation Mode')
+                Get-Job | Where-Object {$_.name -like 'ResourceJob_*'} | Wait-Job
             }
+        else
+            {
+                $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
+                Wait-ARIJob -JobNames $JobNames -JobType 'Resource' -LoopTime 5
+            }
+
+        if ($Automation.IsPresent)
+            {
+                Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Processing Resources in Automation Mode')
+            }
+        else
+            {
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Finished Waiting for Resource Jobs.')
+            }
+
+        Build-ARICacheFiles -DefaultPath $DefaultPath -JobNames $JobNames
 
         Write-Progress -activity 'Azure Inventory' -Status "60% Complete." -PercentComplete 60 -CurrentOperation "Completed Data Processing Phase.."
 

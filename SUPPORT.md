@@ -36,7 +36,7 @@ This project uses GitHub Issues to track bugs, feature requests, and questions. 
 
 Official support for this project is limited to the GitHub issues system as described above.
 
-> **Note**: Azure Resource Inventory is an open-source project maintained by Microsoft. While we strive to address issues in a timely manner, response times may vary based on priority and maintainer availability.
+> **Note**: Azure Resource Inventory is an open-source project maintained by the community. While we strive to address issues in a timely manner, response times may vary based on priority and maintainer availability. Microsoft offers no official support for this project.
 
 ## 🔄 Issue Lifecycle
 

@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/3.ReportingFunctions/Start-ARIE
 This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.9
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
@@ -240,7 +240,6 @@ function Start-ARIExcelExtraData {
             }
 
         }
-
 
     Close-ExcelPackage $excel
 
