@@ -48,30 +48,27 @@ function Start-ARIProcessOrchestration {
 
         <############################################################## RESOURCES PROCESSING #############################################################>
 
-        if(![string]::IsNullOrEmpty($JobNames))
+        if ($Automation.IsPresent)
             {
-                if ($Automation.IsPresent)
-                    {
-                        Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Waiting for Resource Jobs to Complete in Automation Mode')
-                        Get-Job | Where-Object {$_.name -like 'ResourceJob_*'} | Wait-Job
-                    }
-                else
-                    {
-                        $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
-                        Wait-ARIJob -JobNames $JobNames -JobType 'Resource' -LoopTime 5
-                    }
-
-                if ($Automation.IsPresent)
-                    {
-                        Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Processing Resources in Automation Mode')
-                    }
-                else
-                    {
-                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Finished Waiting for Resource Jobs.')
-                    }
-
-                Build-ARICacheFiles -DefaultPath $DefaultPath -JobNames $JobNames
+                Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Waiting for Resource Jobs to Complete in Automation Mode')
+                Get-Job | Where-Object {$_.name -like 'ResourceJob_*'} | Wait-Job
             }
+        else
+            {
+                $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
+                Wait-ARIJob -JobNames $JobNames -JobType 'Resource' -LoopTime 5
+            }
+
+        if ($Automation.IsPresent)
+            {
+                Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Processing Resources in Automation Mode')
+            }
+        else
+            {
+                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Finished Waiting for Resource Jobs.')
+            }
+
+        Build-ARICacheFiles -DefaultPath $DefaultPath -JobNames $JobNames
 
         Write-Progress -activity 'Azure Inventory' -Status "60% Complete." -PercentComplete 60 -CurrentOperation "Completed Data Processing Phase.."
 

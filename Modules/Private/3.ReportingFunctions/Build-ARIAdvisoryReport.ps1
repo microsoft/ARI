@@ -20,27 +20,28 @@ Authors: Claudio Merola
 function Build-ARIAdvisoryReport {
     param($File, $Adv, $TableStyle)
     $condtxtadv = @()
-    $condtxtadv += New-ConditionalText High -Range E:E
-    $condtxtadv += New-ConditionalText Security -Range D:D -BackgroundColor Wheat
+    $condtxtadv += New-ConditionalText High -Range H:H
+    $condtxtadv += New-ConditionalText Security -Range G:G -BackgroundColor Wheat
 
-    $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '#,##0.00' -Range K:K
+    $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '#,##0.00' -Range O:O
 
     [PSCustomObject]$Adv |
     ForEach-Object { $_ } |
-    Select-Object 'ResourceGroup',
-    'Affected Resource Type',
+    Select-Object 'Subscription',
+    'Resource Group',
+    'Resource Type',
     'Name',
+    'Detailed Type',
+    'Detailed Name',
     'Category',
     'Impact',
-    #'Score',
-    'Problem',
+    'Description',
+    'SKU',
     'Term',
     'Look-back Period',
     'Quantity',
     'Savings Currency',
     'Annual Savings',
-    'Savings Region',
-    'Current SKU',
-    'Target SKU' |
+    'Savings Region' |
     Export-Excel -Path $File -WorksheetName 'Advisor' -AutoSize -MaxAutoSizeRows 100 -TableName 'AzureAdvisory' -MoveToStart -TableStyle $tableStyle -Style $Style -ConditionalText $condtxtadv
 }
