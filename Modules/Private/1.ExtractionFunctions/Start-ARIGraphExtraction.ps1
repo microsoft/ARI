@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/1.ExtractionFunctions/Start-ARI
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.5
+Version: 3.6.10
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -41,6 +41,11 @@ Function Start-ARIGraphExtraction {
     if (![string]::IsNullOrEmpty($ManagementGroup))
         {
             $Subscriptions = Get-ARIManagementGroups -ManagementGroup $ManagementGroup
+            if (![string]::IsNullOrEmpty($SubscriptionID))
+                {
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Management Group provided, but Subscription ID is also informed.')
+                    $Subscriptions = $Subscriptions | Where-Object { $_.id -in $SubscriptionID }
+                }
         }
 
     $SubCount = [string]$Subscriptions.id.count
