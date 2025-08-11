@@ -86,6 +86,7 @@ If ($Task -eq 'Processing') {
                             'VNET Filtering'            = $data.isVirtualNetworkFilterEnabled;
                             'Virtual Networks'          = [string]$VNETs;
                             'Free Tier Discount'        = $FreeTier;
+                            'Capabilities'              = ($data.capabilities).Name;
                             'Public Access'             = $data.publicNetworkAccess;
                             'Default Consistency'       = $data.consistencyPolicy.defaultConsistencyLevel;
                             'Private Endpoint'          = $PVTENDP;
@@ -137,6 +138,7 @@ Else {
         $Exc.Add('VNET Filtering')
         $Exc.Add('Virtual Networks')
         $Exc.Add('Free Tier Discount')
+        $Exc.Add('Capabilities')
         $Exc.Add('Public Access')
         $Exc.Add('Default Consistency')
         $Exc.Add('Private Endpoint')
