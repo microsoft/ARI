@@ -166,11 +166,11 @@ Function Invoke-ARI {
         [switch]$DiagramFullEnvironment
         )
 
-    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Debbuging Mode: On. ErrorActionPreference was set to "Continue", every error will be presented.')
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Debugging Mode: On. ErrorActionPreference was set to "Continue", every error will be presented.')
 
     if ($DebugPreference -eq 'SilentlyContinue')
         {
-            Write-Host 'Debbuging Mode: ' -nonewline
+            Write-Host 'Debugging Mode: ' -nonewline
             Write-Host 'Off' -ForegroundColor Yellow
             Write-Host 'Use the parameter ' -nonewline
             Write-Host '-Debug' -nonewline -ForegroundColor Yellow
