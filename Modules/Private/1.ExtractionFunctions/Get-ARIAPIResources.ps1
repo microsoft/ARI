@@ -23,7 +23,7 @@ function Get-ARIAPIResources {
 
     try
         {
-            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Adquiring Token')
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Acquiring Token')
             $Token = Get-AzAccessToken -AsSecureString -InformationAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
 
             $TokenData = $Token.Token | ConvertFrom-SecureString -AsPlainText
@@ -108,8 +108,8 @@ function Get-ARIAPIResources {
             }
             Start-Sleep -Milliseconds 200
 
-            #VM Reservation Recomentation
-            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM Reservation Recomentation')
+            #VM Reservation Recommendation
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM Reservation Recommendation')
             $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.Consumption/reservationRecommendations?api-version=2023-05-01')
             try {
                 $ReservationRecon = Invoke-RestMethod -Uri $url -Headers $header -Method GET
