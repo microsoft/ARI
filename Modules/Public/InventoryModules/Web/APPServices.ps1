@@ -84,6 +84,9 @@ If ($Task -eq 'Processing')
                                 'Retiring Date'                 = $RetiringDate;
                                 'App Type'                      = $1.KIND;
                                 'Location'                      = $1.LOCATION;
+                                'zoneRedundant'                 = $data.zoneRedundant;
+                                'maximumNumberOfZones'          = $data.maximumNumberOfZones;
+                                'currentNumberOfZonesUtilized'  = $data.currentNumberOfZonesUtilized;
                                 'Enabled'                       = $data.enabled;
                                 'State'                         = $data.state;
                                 'Client Cert Enabled'           = $data.clientCertEnabled;
@@ -148,6 +151,9 @@ Else
         $Exc.Add('Retiring Date')
         $Exc.Add('App Type')
         $Exc.Add('Location')
+        $Exc.Add('zoneRedundant')
+        $Exc.Add('maximumNumberOfZones')
+        $Exc.Add('currentNumberOfZonesUtilized')
         $Exc.Add('Enabled')
         $Exc.Add('State')
         $Exc.Add('Client Cert Enabled')

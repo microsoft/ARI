@@ -77,6 +77,7 @@ if ($Task -eq 'Processing') {
                             'Private Endpoint'      = $pvtep.id;
                             'FQDN'                  = $data.fullyQualifiedDomainName;
                             'Public Network Access' = $data.publicNetworkAccess;
+                            'minimalTlsVersion'     = $data.minimalTlsVersion;
                             'State'                 = $data.state;
                             'Version'               = $data.version;
                             'Resource U'            = $ResUCount;
@@ -116,6 +117,7 @@ else {
         $Exc.Add('Private Endpoint')
         $Exc.Add('FQDN')
         $Exc.Add('Public Network Access')
+        $Exc.Add('minimalTlsVersion')
         $Exc.Add('State')
         $Exc.Add('Version')
         $Exc.Add('Zone Redundant')

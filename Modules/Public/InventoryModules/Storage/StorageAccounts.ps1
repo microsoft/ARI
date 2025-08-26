@@ -79,6 +79,8 @@ If ($Task -eq 'Processing') {
                 $CrossTNT = if($data.allowCrossTenantReplication -eq $true){$true}else{$false}
                 $InfrastructureEncryption = if($data.encryption.requireInfrastructureEncryption -eq "True"){$true}else{$false}
 
+                
+
                 if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None')
                     {
                         $EntraID = $false
@@ -128,6 +130,10 @@ If ($Task -eq 'Processing') {
                 $FinalACLIPs = [string]$FinalACLIPs
                 $FinalACLIPs = if ($FinalACLIPs -like '* ,*') { $FinalACLIPs -replace ".$" }else { $FinalACLIPs }
 
+                $sac = Get-AzStorageAccount -ResourceGroupName $1.RESOURCEGROUP -Name $1.NAME
+                $ctx=$sac.Context
+                $blobProperties = Get-AzStorageServiceProperty -ServiceType Blob -Context $ctx
+
                 foreach ($2 in $VNETRules)
                     {
                         $VNET = if(![string]::IsNullOrEmpty($2.id)){$2.id.split('/')[8]}else{''}
@@ -151,12 +157,14 @@ If ($Task -eq 'Processing') {
                                 'Microsoft Entra Authorization'         = $EntraID;
                                 'Allow Storage Account Key Access'      = $KeyAccess;
                                 'SFTP Enabled'                          = $SFTPEnabled;
+                                'Blob Soft Delete Days'                 = if ($blobProperties.DeleteRetentionPolicy.Enabled) { $blobProperties.DeleteRetentionPolicy.RetentionDays } else { 'N/A' };
                                 'Hierarchical Namespace'                = $HNSEnabled;
                                 'NFSv3 Enabled'                         = $NFSv3;
                                 'Large File Shares'                     = $LargeFileShare;
                                 'Access Tier'                           = $data.accessTier;
                                 'Allow Cross Tenant Replication'        = $CrossTNT;
                                 'Infrastructure Encryption Enabled'     = $InfrastructureEncryption;
+                                'minimumTlsVersion'                     = $data.minimumTlsVersion;
                                 'Public Network Access'                 = $PubNetAccess;
                                 'Private Endpoints'                     = $FinalPVTEndpoint;
                                 'Direct Access Resources'               = $FinalDirectResources;
@@ -227,12 +235,14 @@ Else {
         $Exc.Add('Microsoft Entra Authorization')
         $Exc.Add('Allow Storage Account Key Access')
         $Exc.Add('SFTP Enabled')
+        $Exc.Add('Blob Soft Delete Days')
         $Exc.Add('Hierarchical Namespace')
         $Exc.Add('NFSv3 Enabled')
         $Exc.Add('Large File Shares')
         $Exc.Add('Access Tier')
         $Exc.Add('Allow Cross Tenant Replication')
         $Exc.Add('Infrastructure Encryption Enabled')
+        $Exc.Add('minimumTlsVersion')
         $Exc.Add('Public Network Access')
         $Exc.Add('Private Endpoints')
         $Exc.Add('Direct Access Resources')
