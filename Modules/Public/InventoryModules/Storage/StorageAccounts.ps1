@@ -164,6 +164,7 @@ If ($Task -eq 'Processing') {
                                 'Access Tier'                           = $data.accessTier;
                                 'Allow Cross Tenant Replication'        = $CrossTNT;
                                 'Infrastructure Encryption Enabled'     = $InfrastructureEncryption;
+                                'minimumTlsVersion'                     = $data.minimumTlsVersion;
                                 'Public Network Access'                 = $PubNetAccess;
                                 'Private Endpoints'                     = $FinalPVTEndpoint;
                                 'Direct Access Resources'               = $FinalDirectResources;
@@ -241,6 +242,7 @@ Else {
         $Exc.Add('Access Tier')
         $Exc.Add('Allow Cross Tenant Replication')
         $Exc.Add('Infrastructure Encryption Enabled')
+        $Exc.Add('minimumTlsVersion')
         $Exc.Add('Public Network Access')
         $Exc.Add('Private Endpoints')
         $Exc.Add('Direct Access Resources')

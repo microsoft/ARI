@@ -85,6 +85,7 @@ If ($Task -eq 'Processing') {
                             'Replicate Data Globally'   = $GeoReplicate;
                             'VNET Filtering'            = $data.isVirtualNetworkFilterEnabled;
                             'Virtual Networks'          = [string]$VNETs;
+                            'Capacity'                  = $data.capapcity.totalthroughputlimit;
                             'Free Tier Discount'        = $FreeTier;
                             'Public Access'             = $data.publicNetworkAccess;
                             'Default Consistency'       = $data.consistencyPolicy.defaultConsistencyLevel;
@@ -136,6 +137,7 @@ Else {
         $Exc.Add('Replicate Data Globally')
         $Exc.Add('VNET Filtering')
         $Exc.Add('Virtual Networks')
+        $Exc.Add('Capacity')
         $Exc.Add('Free Tier Discount')
         $Exc.Add('Public Access')
         $Exc.Add('Default Consistency')

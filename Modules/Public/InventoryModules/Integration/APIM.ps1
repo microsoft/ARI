@@ -75,6 +75,7 @@ If ($Task -eq 'Processing')
                             'Name'                 = $1.NAME;
                             'Location'             = $1.LOCATION;
                             'SKU'                  = $1.sku.name;
+                            'Sku Capacity'         = $1.sku.capacity;
                             'Retiring Feature'     = $RetiringFeature;
                             'Retiring Date'        = $RetiringDate;
                             'Gateway URL'          = $data.gatewayUrl;
@@ -123,6 +124,7 @@ Else
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('SKU')
+        $Exc.Add('Sku Capacity')
         $Exc.Add('Retiring Feature')
         $Exc.Add('Retiring Date')
         $Exc.Add('Gateway URL')
