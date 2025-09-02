@@ -164,7 +164,6 @@ If ($Task -eq 'Processing') {
                                 'Access Tier'                           = $data.accessTier;
                                 'Allow Cross Tenant Replication'        = $CrossTNT;
                                 'Infrastructure Encryption Enabled'     = $InfrastructureEncryption;
-                                'minimumTlsVersion'                     = $data.minimumTlsVersion;
                                 'Public Network Access'                 = $PubNetAccess;
                                 'Private Endpoints'                     = $FinalPVTEndpoint;
                                 'Direct Access Resources'               = $FinalDirectResources;
@@ -207,16 +206,16 @@ Else {
         )
 
         $condtxt = @()
-        $condtxt += New-ConditionalText false -Range K:K
-        $condtxt += New-ConditionalText true -Range L:L
-        $condtxt += New-ConditionalText 1.0 -Range M:M
-        $condtxt += New-ConditionalText 1.1 -Range M:M
-        $condtxt += New-ConditionalText all -Range W:W
-        $condtxt += New-ConditionalText . -Range AB:AB -ConditionalType ContainsText
-        $condtxt += New-ConditionalText unavailable -Range AE:AE
-        $condtxt += New-ConditionalText unavailable -Range AG:AG
-        #Retirement
-        $condtxt += New-ConditionalText -Range I2:I100 -ConditionalType ContainsText
+        $condtxt += New-ConditionalText false -Range K:K                                #Secure Transfer Required
+        $condtxt += New-ConditionalText true -Range L:L                                 #Allow Blob Anonymous Access
+        $condtxt += New-ConditionalText 1.0 -Range M:M                                  #Minimum TLS Version
+        $condtxt += New-ConditionalText 1.1 -Range M:M                                  #Minimum TLS Version
+        $condtxt += New-ConditionalText true -Range O:O                                 #Allow Storage Account Key Access
+        $condtxt += New-ConditionalText all -Range X:X                                  #Public Network Access  
+        $condtxt += New-ConditionalText . -Range AD:AD -ConditionalType ContainsText    #Firewall Exceptions
+        $condtxt += New-ConditionalText unavailable -Range AF:AF                        #Status Of Primary Location
+        $condtxt += New-ConditionalText unavailable -Range AH:AH                        #Status Of Secondary Location
+        $condtxt += New-ConditionalText -Range I2:I100 -ConditionalType ContainsText    #Retiring Feature
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -242,7 +241,6 @@ Else {
         $Exc.Add('Access Tier')
         $Exc.Add('Allow Cross Tenant Replication')
         $Exc.Add('Infrastructure Encryption Enabled')
-        $Exc.Add('minimumTlsVersion')
         $Exc.Add('Public Network Access')
         $Exc.Add('Private Endpoints')
         $Exc.Add('Direct Access Resources')

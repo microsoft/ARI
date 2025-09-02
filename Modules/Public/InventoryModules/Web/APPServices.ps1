@@ -133,14 +133,13 @@ Else
         $TableName = ('AppSvcsTable_'+($SmaResources.'Resource U').count)
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
-        $condtxt = @()        
-        $condtxt += New-ConditionalText FALSE -Range Q:Q
-        $condtxt += New-ConditionalText FALSE -Range R:R
-        $condtxt += New-ConditionalText FALSE -Range M:M
-        $condtxt += New-ConditionalText FALSE -Range U:U
-        $condtxt += New-ConditionalText - -Range L:L -ConditionalType ContainsText
-        #Retirement
-        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
+        $condtxt = @()
+        $condtxt += New-ConditionalText FALSE -Range N:N                                #Client Cert Enabled
+        $condtxt += New-ConditionalText FALSE -Range R:R                                #HTTPS Only
+        $condtxt += New-ConditionalText FALSE -Range S:S                                #FTPS Only
+        $condtxt += New-ConditionalText FALSE -Range V:V                                #Managed Identity
+        $condtxt += New-ConditionalText - -Range M:M -ConditionalType ContainsText      #State
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText    #Retiring Feature
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')

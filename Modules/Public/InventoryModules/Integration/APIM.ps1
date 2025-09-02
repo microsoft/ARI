@@ -115,8 +115,7 @@ Else
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
-        #Retirement
-        $condtxt += New-ConditionalText -Range F2:F100 -ConditionalType ContainsText
+        $condtxt += New-ConditionalText -Range G2:G100 -ConditionalType ContainsText    #Retiring Feature
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')

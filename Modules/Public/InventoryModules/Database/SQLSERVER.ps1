@@ -100,10 +100,9 @@ else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
-        $condtxt += New-ConditionalText FALSE -Range I:I
-        $condtxt += New-ConditionalText Enabled -Range K:K
-        #Retirement
-        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
+        $condtxt += New-ConditionalText FALSE -Range I:I                                #Private Endpoint  
+        $condtxt += New-ConditionalText Enabled -Range K:K                              #Public Network Access
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText    #Retiring Feature
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
