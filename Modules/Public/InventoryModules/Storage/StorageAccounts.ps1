@@ -79,6 +79,8 @@ If ($Task -eq 'Processing') {
                 $CrossTNT = if($data.allowCrossTenantReplication -eq $true){$true}else{$false}
                 $InfrastructureEncryption = if($data.encryption.requireInfrastructureEncryption -eq "True"){$true}else{$false}
 
+                
+
                 if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None')
                     {
                         $EntraID = $false
@@ -128,6 +130,10 @@ If ($Task -eq 'Processing') {
                 $FinalACLIPs = [string]$FinalACLIPs
                 $FinalACLIPs = if ($FinalACLIPs -like '* ,*') { $FinalACLIPs -replace ".$" }else { $FinalACLIPs }
 
+                $sac = Get-AzStorageAccount -ResourceGroupName $1.RESOURCEGROUP -Name $1.NAME
+                $ctx=$sac.Context
+                $blobProperties = Get-AzStorageServiceProperty -ServiceType Blob -Context $ctx
+
                 foreach ($2 in $VNETRules)
                     {
                         $VNET = if(![string]::IsNullOrEmpty($2.id)){$2.id.split('/')[8]}else{''}
@@ -151,6 +157,7 @@ If ($Task -eq 'Processing') {
                                 'Microsoft Entra Authorization'         = $EntraID;
                                 'Allow Storage Account Key Access'      = $KeyAccess;
                                 'SFTP Enabled'                          = $SFTPEnabled;
+                                'Blob Soft Delete Days'                 = if ($blobProperties.DeleteRetentionPolicy.Enabled) { $blobProperties.DeleteRetentionPolicy.RetentionDays } else { 'N/A' };
                                 'Hierarchical Namespace'                = $HNSEnabled;
                                 'NFSv3 Enabled'                         = $NFSv3;
                                 'Large File Shares'                     = $LargeFileShare;
@@ -199,16 +206,16 @@ Else {
         )
 
         $condtxt = @()
-        $condtxt += New-ConditionalText false -Range K:K
-        $condtxt += New-ConditionalText true -Range L:L
-        $condtxt += New-ConditionalText 1.0 -Range M:M
-        $condtxt += New-ConditionalText 1.1 -Range M:M
-        $condtxt += New-ConditionalText all -Range W:W
-        $condtxt += New-ConditionalText . -Range AB:AB -ConditionalType ContainsText
-        $condtxt += New-ConditionalText unavailable -Range AE:AE
-        $condtxt += New-ConditionalText unavailable -Range AG:AG
-        #Retirement
-        $condtxt += New-ConditionalText -Range I2:I100 -ConditionalType ContainsText
+        $condtxt += New-ConditionalText false -Range K:K                                #Secure Transfer Required
+        $condtxt += New-ConditionalText true -Range L:L                                 #Allow Blob Anonymous Access
+        $condtxt += New-ConditionalText 1.0 -Range M:M                                  #Minimum TLS Version
+        $condtxt += New-ConditionalText 1.1 -Range M:M                                  #Minimum TLS Version
+        $condtxt += New-ConditionalText true -Range O:O                                 #Allow Storage Account Key Access
+        $condtxt += New-ConditionalText all -Range X:X                                  #Public Network Access  
+        $condtxt += New-ConditionalText . -Range AD:AD -ConditionalType ContainsText    #Firewall Exceptions
+        $condtxt += New-ConditionalText unavailable -Range AF:AF                        #Status Of Primary Location
+        $condtxt += New-ConditionalText unavailable -Range AH:AH                        #Status Of Secondary Location
+        $condtxt += New-ConditionalText -Range I2:I100 -ConditionalType ContainsText    #Retiring Feature
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -227,6 +234,7 @@ Else {
         $Exc.Add('Microsoft Entra Authorization')
         $Exc.Add('Allow Storage Account Key Access')
         $Exc.Add('SFTP Enabled')
+        $Exc.Add('Blob Soft Delete Days')
         $Exc.Add('Hierarchical Namespace')
         $Exc.Add('NFSv3 Enabled')
         $Exc.Add('Large File Shares')

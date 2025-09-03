@@ -85,7 +85,9 @@ If ($Task -eq 'Processing') {
                             'Replicate Data Globally'   = $GeoReplicate;
                             'VNET Filtering'            = $data.isVirtualNetworkFilterEnabled;
                             'Virtual Networks'          = [string]$VNETs;
+                            'Capacity'                  = $data.capapcity.totalthroughputlimit;
                             'Free Tier Discount'        = $FreeTier;
+                            'Capabilities'              = ($data.capabilities).Name;
                             'Public Access'             = $data.publicNetworkAccess;
                             'Default Consistency'       = $data.consistencyPolicy.defaultConsistencyLevel;
                             'Private Endpoint'          = $PVTENDP;
@@ -115,12 +117,11 @@ Else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
-        $condtxt += New-ConditionalText FALSE -Range L:L
-        $condtxt += New-ConditionalText Enabled -Range O:O
-        $condtxt += New-ConditionalText Disabled -Range K:K
-        $condtxt += New-ConditionalText Local -Range I:I
-        #Retirement
-        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
+        $condtxt += New-ConditionalText Local -Range I:I                                #Backup Storage Redundancy
+        $condtxt += New-ConditionalText Disabled -Range K:K                             #Replicate Data Globally
+        $condtxt += New-ConditionalText FALSE -Range L:L                                #VNET Filtering
+        $condtxt += New-ConditionalText Enabled -Range O:O                              #Public Access
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText    #Retiring Feature
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -136,7 +137,9 @@ Else {
         $Exc.Add('Replicate Data Globally')
         $Exc.Add('VNET Filtering')
         $Exc.Add('Virtual Networks')
+        $Exc.Add('Capacity')
         $Exc.Add('Free Tier Discount')
+        $Exc.Add('Capabilities')
         $Exc.Add('Public Access')
         $Exc.Add('Default Consistency')
         $Exc.Add('Private Endpoint')

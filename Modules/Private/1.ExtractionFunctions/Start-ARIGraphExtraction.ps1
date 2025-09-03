@@ -70,9 +70,20 @@ Function Start-ARIGraphExtraction {
                 {
                     $RGQueryExtension = "| where resourceGroup in~ ('$([String]::Join("','",$ResourceGroup))')"
                 }
-            elseif(![string]::IsNullOrEmpty($TagKey) -and ![string]::IsNullOrEmpty($TagValue))
+            elseif(![string]::IsNullOrEmpty($TagKey) -or ![string]::IsNullOrEmpty($TagValue))
                 {
-                    $TagQueryExtension = "| where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey =~ '$TagKey' and tagValue =~ '$TagValue'"
+
+                    $TagQueryExtension = "| where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) "
+
+                    if (![string]::IsNullOrEmpty($TagKey)){ 
+                        $TagQueryExtension = $TagQueryExtension + "| where tagKey =~ '$TagKey'"
+                    }
+
+                    if (![string]::IsNullOrEmpty($TagValue)){ 
+                        $TagQueryExtension = $TagQueryExtension + " and tagValue =~ '$TagValue'"
+                    }
+
+                    #$TagQueryExtension = "| where isnotempty(tags) | mvexpand tags | extend tagKey = tostring(bag_keys(tags)[0]) | extend tagValue = tostring(tags[tagKey]) | where tagKey =~ '$TagKey' and tagValue =~ '$TagValue'"
                 }
             elseif (![string]::IsNullOrEmpty($ManagementGroup))
                 {

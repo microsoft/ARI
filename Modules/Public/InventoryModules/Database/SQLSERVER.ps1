@@ -77,6 +77,7 @@ if ($Task -eq 'Processing') {
                             'Private Endpoint'      = $pvtep.id;
                             'FQDN'                  = $data.fullyQualifiedDomainName;
                             'Public Network Access' = $data.publicNetworkAccess;
+                            'minimalTlsVersion'     = $data.minimalTlsVersion;
                             'State'                 = $data.state;
                             'Version'               = $data.version;
                             'Resource U'            = $ResUCount;
@@ -99,10 +100,9 @@ else {
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
-        $condtxt += New-ConditionalText FALSE -Range I:I
-        $condtxt += New-ConditionalText Enabled -Range K:K
-        #Retirement
-        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText
+        $condtxt += New-ConditionalText FALSE -Range I:I                                #Private Endpoint  
+        $condtxt += New-ConditionalText Enabled -Range K:K                              #Public Network Access
+        $condtxt += New-ConditionalText -Range E2:E100 -ConditionalType ContainsText    #Retiring Feature
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -116,6 +116,7 @@ else {
         $Exc.Add('Private Endpoint')
         $Exc.Add('FQDN')
         $Exc.Add('Public Network Access')
+        $Exc.Add('minimalTlsVersion')
         $Exc.Add('State')
         $Exc.Add('Version')
         $Exc.Add('Zone Redundant')

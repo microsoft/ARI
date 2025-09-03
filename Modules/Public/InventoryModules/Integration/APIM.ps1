@@ -75,6 +75,7 @@ If ($Task -eq 'Processing')
                             'Name'                 = $1.NAME;
                             'Location'             = $1.LOCATION;
                             'SKU'                  = $1.sku.name;
+                            'Sku Capacity'         = $1.sku.capacity;
                             'Retiring Feature'     = $RetiringFeature;
                             'Retiring Date'        = $RetiringDate;
                             'Gateway URL'          = $data.gatewayUrl;
@@ -114,8 +115,7 @@ Else
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
-        #Retirement
-        $condtxt += New-ConditionalText -Range F2:F100 -ConditionalType ContainsText
+        $condtxt += New-ConditionalText -Range G2:G100 -ConditionalType ContainsText    #Retiring Feature
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -123,6 +123,7 @@ Else
         $Exc.Add('Name')
         $Exc.Add('Location')
         $Exc.Add('SKU')
+        $Exc.Add('Sku Capacity')
         $Exc.Add('Retiring Feature')
         $Exc.Add('Retiring Date')
         $Exc.Add('Gateway URL')
