@@ -130,9 +130,7 @@ If ($Task -eq 'Processing') {
                 $FinalACLIPs = [string]$FinalACLIPs
                 $FinalACLIPs = if ($FinalACLIPs -like '* ,*') { $FinalACLIPs -replace ".$" }else { $FinalACLIPs }
 
-                $sac = Get-AzStorageAccount -ResourceGroupName $1.RESOURCEGROUP -Name $1.NAME
-                $ctx=$sac.Context
-                $blobProperties = Get-AzStorageServiceProperty -ServiceType Blob -Context $ctx
+                $blobProperties = Get-AzStorageBlobServiceProperty -ResourceGroupName $1.RESOURCEGROUP -Name $1.NAME
 
                 foreach ($2 in $VNETRules)
                     {
@@ -157,7 +155,8 @@ If ($Task -eq 'Processing') {
                                 'Microsoft Entra Authorization'         = $EntraID;
                                 'Allow Storage Account Key Access'      = $KeyAccess;
                                 'SFTP Enabled'                          = $SFTPEnabled;
-                                'Blob Soft Delete Days'                 = if ($blobProperties.DeleteRetentionPolicy.Enabled) { $blobProperties.DeleteRetentionPolicy.RetentionDays } else { 'N/A' };
+                                'Blob Soft Delete Days'                 = if ($blobProperties.DeleteRetentionPolicy.Enabled) { $blobProperties.DeleteRetentionPolicy.Days } else { 'N/A' };
+                                'Container Soft Delete Days'            = if ($blobProperties.containerDeleteRetentionPolicy.Enabled) { $blobProperties.containerDeleteRetentionPolicy.Days } else { 'N/A' };
                                 'Hierarchical Namespace'                = $HNSEnabled;
                                 'NFSv3 Enabled'                         = $NFSv3;
                                 'Large File Shares'                     = $LargeFileShare;
@@ -211,10 +210,10 @@ Else {
         $condtxt += New-ConditionalText 1.0 -Range M:M                                  #Minimum TLS Version
         $condtxt += New-ConditionalText 1.1 -Range M:M                                  #Minimum TLS Version
         $condtxt += New-ConditionalText true -Range O:O                                 #Allow Storage Account Key Access
-        $condtxt += New-ConditionalText all -Range X:X                                  #Public Network Access  
-        $condtxt += New-ConditionalText . -Range AD:AD -ConditionalType ContainsText    #Firewall Exceptions
-        $condtxt += New-ConditionalText unavailable -Range AF:AF                        #Status Of Primary Location
-        $condtxt += New-ConditionalText unavailable -Range AH:AH                        #Status Of Secondary Location
+        $condtxt += New-ConditionalText all -Range Y:Y                                  #Public Network Access  
+        $condtxt += New-ConditionalText . -Range AE:AE -ConditionalType ContainsText    #Firewall Exceptions
+        $condtxt += New-ConditionalText unavailable -Range AG:AG                        #Status Of Primary Location
+        $condtxt += New-ConditionalText unavailable -Range AI:AI                        #Status Of Secondary Location
         $condtxt += New-ConditionalText -Range I2:I100 -ConditionalType ContainsText    #Retiring Feature
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
@@ -235,6 +234,7 @@ Else {
         $Exc.Add('Allow Storage Account Key Access')
         $Exc.Add('SFTP Enabled')
         $Exc.Add('Blob Soft Delete Days')
+        $Exc.Add('Container Soft Delete Days')
         $Exc.Add('Hierarchical Namespace')
         $Exc.Add('NFSv3 Enabled')
         $Exc.Add('Large File Shares')
