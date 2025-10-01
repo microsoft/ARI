@@ -212,6 +212,8 @@ See the [Automation Guide](https://github.com/microsoft/ARI/blob/main/docs/advan
 
 ### Network Topology View
 
+#### To view the XML files in draw.io format, open them at [https://draw.io](https://draw.io).
+
 <p align="center">
   <img src="images/DrawioImage.png" width="700">
 </p>
