@@ -155,7 +155,7 @@ If ($Task -eq 'Processing') {
 Else {
     if ($SmaResources) {
 
-        $TableName = ('VNETTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('VNETTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
 
         $SheetName = 'Virtual Networks'
 
@@ -194,7 +194,8 @@ Else {
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
-        
+        $Exc.Add('Resource U')
+
         $noNumberConversion = @()
         $noNumberConversion += 'DNS Servers'
         $noNumberConversion += 'Address Space'

@@ -120,7 +120,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('StreamsATable_'+($SmaResources.'Resource U').count)
+        $TableName = ('StreamsATable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -163,13 +163,14 @@ Else {
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
         $noNumberConversion = @()
         $noNumberConversion += 'Compatibility Level'
 
 
-        [PSCustomObject]$SmaResources | 
-        ForEach-Object { $_ } | Select-Object $Exc | 
+        $SmaResources | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Stream Analytics Jobs' -AutoSize -MaxAutoSizeRows 100 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style -NoNumberConversion $noNumberConversion
 
     }

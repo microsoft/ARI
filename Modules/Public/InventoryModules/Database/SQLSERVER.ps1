@@ -96,7 +96,7 @@ if ($Task -eq 'Processing') {
 else {
     if ($SmaResources) {
 
-        $TableName = ('SQLSERVERTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('SQLSERVERTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -125,6 +125,7 @@ else {
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
         [PSCustomObject]$SmaResources | 
         ForEach-Object { $_ } | Select-Object $Exc | 

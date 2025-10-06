@@ -199,7 +199,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('AzFirewallTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('AzFirewallTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
 
         $condtxt = @()
         #Retirement
@@ -241,6 +241,7 @@ Else {
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
         [PSCustomObject]$SmaResources | 
         ForEach-Object { $_ } | Select-Object $Exc | 

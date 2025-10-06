@@ -171,7 +171,7 @@ Else
     {
         $SheetName = 'Virtual Machine Scale Sets'
 
-        $TableName = ('VMSSTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('VMSSTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $Style = @()        
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -Range A:W
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0.0' -Range Y:AA
@@ -226,9 +226,10 @@ Else
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
-        [PSCustomObject]$SmaResources | 
-        ForEach-Object { $_ } | Select-Object $Exc | 
+        $SmaResources | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName $SheetName -AutoSize -MaxAutoSizeRows 50 -TableName $TableName -TableStyle $tableStyle -ConditionalText $condtxt -Style $Style
 
 

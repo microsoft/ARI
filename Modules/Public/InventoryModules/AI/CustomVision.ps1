@@ -114,7 +114,7 @@ Else
     if($SmaResources)
     {
 
-        $TableName = ('CustomViTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('CustomViTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -145,6 +145,7 @@ Else
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
             [PSCustomObject]$SmaResources | 
         ForEach-Object { $_ } | Select-Object $Exc | 

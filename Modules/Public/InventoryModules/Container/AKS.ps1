@@ -188,7 +188,7 @@ Else
     {
         $SheetName = 'AKS'
 
-        $TableName = ('AKSTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('AKSTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
 
         $Style = @()
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize
@@ -253,6 +253,7 @@ Else
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
         $noNumberConversion = @()
         $noNumberConversion += 'Kubernetes Version'

@@ -199,7 +199,7 @@ Else {
 
         $SheetName = 'Storage Accounts'
 
-        $TableName = ('StorAccTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('StorAccTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $Style = @(
         New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
         New-ExcelStyle -HorizontalAlignment Center -Width 80 -WrapText -NumberFormat '0' -Range "X:X"
@@ -261,6 +261,7 @@ Else {
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value')
             }
+        $Exc.Add('Resource U')
 
         [PSCustomObject]$SmaResources |
         ForEach-Object { $_ } | Select-Object $Exc |

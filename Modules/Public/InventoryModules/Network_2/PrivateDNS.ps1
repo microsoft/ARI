@@ -94,7 +94,7 @@ If ($Task -eq 'Processing') {
 Else {
     if ($SmaResources) {
 
-        $TableName = ('PrivDNSTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('PrivDNSTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -118,6 +118,7 @@ Else {
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
         [PSCustomObject]$SmaResources | 
         ForEach-Object { $_ } | Select-Object $Exc | 

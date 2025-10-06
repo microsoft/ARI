@@ -336,7 +336,7 @@ else
     If($SmaResources)
         {
 
-            $TableName = ('VMTable_'+($SmaResources.'Resource U').count)
+            $TableName = ('VMTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
             $Style = @()
             $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
             $Style += New-ExcelStyle -HorizontalAlignment Left -Range AW:AW -Width 60 -WrapText

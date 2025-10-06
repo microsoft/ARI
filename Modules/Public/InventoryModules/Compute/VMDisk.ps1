@@ -121,7 +121,7 @@ Else
 
         $SheetName = 'Disks'
 
-        $TableName = ('VMDiskT_'+($SmaResources.'Resource U').count)
+        $TableName = ('VMDiskT_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
 
         $condtxt = @()
         $condtxt += New-ConditionalText Unattached -Range F:F
@@ -159,6 +159,7 @@ Else
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
         [PSCustomObject]$SmaResources | 
         ForEach-Object { $_ } | Select-Object $Exc | 
