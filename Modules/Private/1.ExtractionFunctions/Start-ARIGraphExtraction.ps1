@@ -12,13 +12,13 @@ https://github.com/microsoft/ARI/Modules/Private/1.ExtractionFunctions/Start-ARI
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.5
+Version: 3.6.11
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
 #>
 Function Start-ARIGraphExtraction {
-    Param($ManagementGroup, $Subscriptions, $SubscriptionID, $ResourceGroup, $SecurityCenter, $SkipAdvisory, $IncludeTags, $TagKey, $TagValue)
+    Param($ManagementGroup, $Subscriptions, $SubscriptionID, $ResourceGroup, $SecurityCenter, $SkipAdvisory, $IncludeTags, $TagKey, $TagValue, $AzureEnvironment)
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting Extractor function')
 
@@ -40,7 +40,7 @@ Function Start-ARIGraphExtraction {
 
     if (![string]::IsNullOrEmpty($ManagementGroup))
         {
-            $Subscriptions = Get-ARIManagementGroups -ManagementGroup $ManagementGroup
+            $Subscriptions = Get-ARIManagementGroups -ManagementGroup $ManagementGroup -Subscriptions $Subscriptions
         }
 
     $SubCount = [string]$Subscriptions.id.count
@@ -104,10 +104,13 @@ Function Start-ARIGraphExtraction {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Network Resources')
             $Resources += Invoke-ARIInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'Network Resources'
 
-            $GraphQuery = "SupportResources $RGQueryExtension $TagQueryExtension $MGQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
+            if ($AzureEnvironment -ne 'AzureUSGovernment')
+                {
+                    $GraphQuery = "SupportResources $RGQueryExtension $TagQueryExtension $MGQueryExtension | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 
-            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Support Tickets')
-            $Resources += Invoke-ARIInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'SupportTickets'
+                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Invoking Inventory Loop for Support Tickets')
+                    $Resources += Invoke-ARIInventoryLoop -GraphQuery $GraphQuery -FSubscri $Subscri -LoopName 'SupportTickets'
+                }
 
             $GraphQuery = "recoveryservicesresources $RGQueryExtension $TagQueryExtension | where type =~ 'microsoft.recoveryservices/vaults/backupfabrics/protectioncontainers/protecteditems' or type =~ 'microsoft.recoveryservices/vaults/backuppolicies' $MGQueryExtension  | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 

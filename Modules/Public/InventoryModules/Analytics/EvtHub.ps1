@@ -111,7 +111,7 @@ Else
     if($SmaResources)
     {
 
-        $TableName = ('EvtHubTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('EvtHubTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $SheetName = 'Event Hubs'
@@ -145,6 +145,7 @@ Else
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
         $noNumberConversion = @()
         $noNumberConversion += 'Minimum TLS Version'

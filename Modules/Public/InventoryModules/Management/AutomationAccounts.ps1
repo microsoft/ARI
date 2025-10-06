@@ -136,7 +136,7 @@ Else
     if($SmaResources)
     {
 
-        $TableName = ('AutAccTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('AutAccTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
         $StyleExt = New-ExcelStyle -HorizontalAlignment Left -Range K:K -Width 80 -WrapText 
 
@@ -164,6 +164,7 @@ Else
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
         [PSCustomObject]$SmaResources | 
         ForEach-Object { $_ } | Select-Object $Exc | 

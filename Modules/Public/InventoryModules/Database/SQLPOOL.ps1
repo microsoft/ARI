@@ -91,7 +91,7 @@ if ($Task -eq 'Processing') {
 else {
     if ($SmaResources) {
 
-        $TableName = ('SqlPoolTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('SqlPoolTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
         $condtxt = @()
@@ -113,12 +113,12 @@ else {
         $Exc.Add('DB Max DTU')
         $Exc.Add('Max Size (GB)')
         $Exc.Add('Zone Redundant')        
-        
         if($InTag)
             {
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
         [PSCustomObject]$SmaResources | 
         ForEach-Object { $_ } | Select-Object $Exc | 

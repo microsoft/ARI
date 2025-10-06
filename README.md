@@ -66,7 +66,7 @@ Azure Resource Inventory (ARI) is a comprehensive PowerShell module that generat
 
 ### Prerequisites
 
-- PowerShell 7.0+ (recommended) or PowerShell 5.1
+- PowerShell 7.0+ (required)
 - Azure Account with read access to resources you want to inventory
 - Administrator privileges during script execution (for module installation)
 

@@ -221,8 +221,8 @@ If ($Task -eq 'Processing') {
                         'Tag Name'                     = [string]$Tag.Name;
                         'Tag Value'                    = [string]$Tag.Value
                     }
-                    $obj
                     if ($ResUCount -eq 1) { $ResUCount = 0 }
+                    $obj
                 }
             }    
         }
@@ -231,7 +231,7 @@ If ($Task -eq 'Processing') {
 } Else {
     if ($SmaResources) {
 
-        $TableName = ('NSGTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('NSGTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $Style = @()
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
         $Style += New-ExcelStyle -HorizontalAlignment Center -WrapText -NumberFormat 0 -Range "M:M" -Width 70
@@ -267,11 +267,11 @@ If ($Task -eq 'Processing') {
         $Exc.Add('Flow Logs Enabled')
         $Exc.Add('Flow Logs Retention Days')
         $Exc.Add('Flow Logs Storage Account')
-
         if ($InTag) {
             $Exc.Add('Tag Name')
             $Exc.Add('Tag Value')
         }
+        $Exc.Add('Resource U')
 
         $noNumberConversion = @()
         $noNumberConversion += 'Source'

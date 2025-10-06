@@ -7,8 +7,7 @@ Azure Resource Inventory (ARI) is a PowerShell module that can be installed dire
 Before installing ARI, ensure you have the following prerequisites:
 
 - **PowerShell Version**:
-  - PowerShell 7.0 or newer (recommended)
-  - PowerShell 5.1 (minimum requirement)
+  - PowerShell 7.0 or newer (Required)
 
 - **Azure Account**:
   - An Azure account with read access to the resources you want to inventory

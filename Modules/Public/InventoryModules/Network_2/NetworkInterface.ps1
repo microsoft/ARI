@@ -137,7 +137,7 @@ If ($Task -eq 'Processing') {
 Else {
     if ($SmaResources) {
 
-        $TableName = ('NICTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('NICTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $Style = @()
         $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat 0
 
@@ -176,6 +176,7 @@ Else {
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
         $noNumberConversion = @()
         $noNumberConversion += 'DNS Servers'

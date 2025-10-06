@@ -92,7 +92,7 @@ Else {
 
     if ($SmaResources) {
 
-        $TableName = ('TrafficManagerTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('TrafficManagerTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         
         $condtxt = @()
         $condtxt += New-ConditionalText inactive -Range J:J
@@ -118,6 +118,7 @@ Else {
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
         [PSCustomObject]$SmaResources | 
         ForEach-Object { $_ } | Select-Object $Exc | 

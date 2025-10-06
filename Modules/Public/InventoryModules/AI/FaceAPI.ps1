@@ -113,7 +113,7 @@ Else
     if($SmaResources)
     {
 
-        $TableName = ('FaceAPITable_'+($SmaResources.'Resource U').count)
+        $TableName = ('FaceAPITable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
@@ -143,9 +143,10 @@ Else
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
-        [PSCustomObject]$SmaResources | 
-        ForEach-Object { $_ } | Select-Object $Exc | 
+        $SmaResources | 
+        ForEach-Object { [PSCustomObject]$_ } | Select-Object $Exc | 
         Export-Excel -Path $File -WorksheetName 'Face API' -AutoSize -MaxAutoSizeRows 100 -ConditionalText $condtxt -TableName $TableName -TableStyle $tableStyle -Style $Style
 
     }

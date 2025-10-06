@@ -111,7 +111,7 @@ Else {
 
         $SheetName = 'Redis Cache'
 
-        $TableName = ('RedisCacheTable_'+($SmaResources.'Resource U').count)
+        $TableName = ('RedisCacheTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $condtxt = @()
         $condtxt += New-ConditionalText "Not Configured" -Range E:E
         $condtxt += New-ConditionalText Default -Range M:M
@@ -154,6 +154,7 @@ Else {
                 $Exc.Add('Tag Name')
                 $Exc.Add('Tag Value') 
             }
+        $Exc.Add('Resource U')
 
         [PSCustomObject]$SmaResources | 
         ForEach-Object { $_ } | Select-Object $Exc | 
