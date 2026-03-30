@@ -47,13 +47,13 @@ function Invoke-ARIInventoryLoop {
                         try
                             {
                                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 1000 ' + $LoopName + '. Loop Number: ' + $ReportCounterVar)
-                                Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
+                                Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete ([Math]::Min($ReportCounter, 100))
                                 $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $Sub -first 1000 -Debug:$false
                             }
                         catch
                             {
                                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 100 ' + $LoopName + '. Loop Number: ' + $ReportCounterVar)
-                                Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
+                                Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete ([Math]::Min($ReportCounter, 100))
                                 $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $Sub -first 100 -Debug:$false
                             }
                         $LocalResults += $QueryResult
@@ -83,13 +83,13 @@ function Invoke-ARIInventoryLoop {
                 try
                     {
                         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 1000 ' + $LoopName + '. Loop Number: ' + $ReportCounterVar)
-                        Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
+                        Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete ([Math]::Min($ReportCounter, 100))
                         $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $FSubscri -first 1000 -Debug:$false
                     }
                 catch
                     {
                         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 100 ' + $LoopName + '. Loop Number: ' + $ReportCounterVar)
-                        Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete $ReportCounter
+                        Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete ([Math]::Min($ReportCounter, 100))
                         $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $FSubscri -first 100 -Debug:$false
                     }
                 $LocalResults += $QueryResult
