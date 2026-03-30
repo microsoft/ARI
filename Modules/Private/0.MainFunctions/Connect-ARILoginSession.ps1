@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/0.MainFunctions/Connect-LoginSe
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.12
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -129,8 +129,10 @@ function Connect-ARILoginSession {
                                 if ($AZConfig.value -eq 'On')
                                     {
                                         Update-AzConfig -LoginExperienceV2 Off | Out-Null
+                                        Update-AzConfig -EnableLoginByWam 0 | Out-Null
                                         Connect-AzAccount -Tenant $TenantID -Environment $AzureEnvironment | Out-Null
                                         Update-AzConfig -LoginExperienceV2 On | Out-Null
+                                        Update-AzConfig -EnableLoginByWam 1 | Out-Null
                                     }
                                 else
                                     {

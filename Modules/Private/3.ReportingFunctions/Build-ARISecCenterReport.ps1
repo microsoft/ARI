@@ -22,8 +22,8 @@ function Build-ARISecCenterReport {
     $condtxtsec = $(New-ConditionalText High -Range G:G
     New-ConditionalText High -Range L:L)
 
-    [PSCustomObject]$Sec |
-    ForEach-Object { $_ } |
+    $Sec |
+    ForEach-Object { [PSCustomObject]$_ } |
     Select-Object 'Subscription',
     'Resource Group',
     'Resource Type',
