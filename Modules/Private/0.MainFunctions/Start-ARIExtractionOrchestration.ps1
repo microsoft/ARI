@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/0.MainFunctions/Start-ARIExtrac
 This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.11
+Version: 3.6.12
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -76,6 +76,15 @@ function Start-ARIExtractionOrchestration {
             $Resources += $VMSkuDetails
 
             Remove-Variable -Name VMSkuDetails -ErrorAction SilentlyContinue
+
+            Write-Host 'Gathering Storage Account Extra Details: ' -NoNewline
+            Write-Host 'Used Capacity' -ForegroundColor Cyan
+
+            $StorageDetails = Get-AriStorageSpace -Subscriptions $Subscriptions -Resources $Resources
+
+            $Resources += $StorageDetails
+
+            Remove-Variable -Name StorageDetails -ErrorAction SilentlyContinue
 
         }
 
