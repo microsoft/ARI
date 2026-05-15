@@ -27,6 +27,7 @@ If ($Task -eq 'Processing') {
     <######### Insert the resource extraction here ########>
 
     $storageacc = $Resources | Where-Object { $_.TYPE -eq 'microsoft.storage/storageaccounts' }
+    $StorageDetails = $Resources | Where-Object { $_.TYPE -eq 'ARI/STORAGE/CAPACITY' }
 
     <######### Insert the resource Process here ########>
 
@@ -79,7 +80,7 @@ If ($Task -eq 'Processing') {
                 $CrossTNT = if($data.allowCrossTenantReplication -eq $true){$true}else{$false}
                 $InfrastructureEncryption = if($data.encryption.requireInfrastructureEncryption -eq "True"){$true}else{$false}
 
-                
+                $StorageUsedCapacity = $StorageDetails.properties | Where-Object { $_.id -eq $1.id } | Select-Object -ExpandProperty CapacityGB
 
                 if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None')
                     {
@@ -150,6 +151,7 @@ If ($Task -eq 'Processing') {
                                 'SKU'                                   = $1.sku.name;
                                 'Tier'                                  = $1.sku.tier;
                                 'Storage Account Kind'                  = $1.kind;
+                                'Used Capacity (GB)'                    = [math]::Round($StorageUsedCapacity,2);
                                 'Secure Transfer Required'              = $data.supportsHttpsTrafficOnly;
                                 'Allow Blob Anonymous Access'           = $BlobAccess;
                                 'Minimum TLS Version'                   = $TLSv;
@@ -202,21 +204,22 @@ Else {
         $TableName = ('StorAccTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
         $Style = @(
         New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
-        New-ExcelStyle -HorizontalAlignment Center -Width 80 -WrapText -NumberFormat '0' -Range "X:X"
-        New-ExcelStyle -HorizontalAlignment Center -Width 140 -WrapText -NumberFormat '0' -Range "AA:AA"
+        New-ExcelStyle -HorizontalAlignment Center -Width 80 -WrapText -NumberFormat '0' -Range "Y:Y"
+        New-ExcelStyle -HorizontalAlignment Center -NumberFormat '0.000' -Range "I:I"
+        New-ExcelStyle -HorizontalAlignment Center -Width 140 -WrapText -NumberFormat '0' -Range "AB:AB"
         )
 
         $condtxt = @()
-        $condtxt += New-ConditionalText false -Range K:K                                #Secure Transfer Required
-        $condtxt += New-ConditionalText true -Range L:L                                 #Allow Blob Anonymous Access
-        $condtxt += New-ConditionalText 1.0 -Range M:M                                  #Minimum TLS Version
-        $condtxt += New-ConditionalText 1.1 -Range M:M                                  #Minimum TLS Version
-        $condtxt += New-ConditionalText true -Range O:O                                 #Allow Storage Account Key Access
-        $condtxt += New-ConditionalText all -Range Z:Z                                  #Public Network Access  
-        $condtxt += New-ConditionalText . -Range AF:AF -ConditionalType ContainsText    #Firewall Exceptions
-        $condtxt += New-ConditionalText unavailable -Range AH:AH                        #Status Of Primary Location
-        $condtxt += New-ConditionalText unavailable -Range AI:AI                        #Status Of Secondary Location
-        $condtxt += New-ConditionalText -Range I2:I100 -ConditionalType ContainsText    #Retiring Feature
+        $condtxt += New-ConditionalText false -Range L:L                                #Secure Transfer Required
+        $condtxt += New-ConditionalText true -Range M:M                                 #Allow Blob Anonymous Access
+        $condtxt += New-ConditionalText 1.0 -Range N:N                                  #Minimum TLS Version
+        $condtxt += New-ConditionalText 1.1 -Range N:N                                  #Minimum TLS Version
+        $condtxt += New-ConditionalText true -Range P:P                                 #Allow Storage Account Key Access
+        $condtxt += New-ConditionalText all -Range AA:AA                                  #Public Network Access  
+        $condtxt += New-ConditionalText . -Range AG:AG -ConditionalType ContainsText    #Firewall Exceptions
+        $condtxt += New-ConditionalText unavailable -Range AI:AI                        #Status Of Primary Location
+        $condtxt += New-ConditionalText unavailable -Range AJ:AJ                        #Status Of Secondary Location
+        $condtxt += New-ConditionalText -Range J2:J100 -ConditionalType ContainsText    #Retiring Feature
 
         $Exc = New-Object System.Collections.Generic.List[System.Object]
         $Exc.Add('Subscription')
@@ -227,6 +230,7 @@ Else {
         $Exc.Add('SKU')
         $Exc.Add('Tier')
         $Exc.Add('Storage Account Kind')
+        $Exc.Add('Used Capacity (GB)')
         $Exc.Add('Retiring Feature')
         $Exc.Add('Retiring Date')
         $Exc.Add('Secure Transfer Required')

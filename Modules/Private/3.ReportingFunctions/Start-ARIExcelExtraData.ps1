@@ -61,12 +61,12 @@ function Start-ARIExcelExtraData {
                 $sheet = $excel.Workbook.Worksheets[$SheetName]
 
                 #AKS Version (yellow for version 1.31.0 - 1.32.99, light pink for 1.20.0 - 1.30.99)
-                Add-ConditionalFormatting -Worksheet $sheet -RuleType Expression -ConditionValue 'AND(TEXT(LEFT($H1,FIND(".",$H1)-1),"000")&"."&TEXT(MID($H1,FIND(".",$H1)+1,FIND("~",SUBSTITUTE($H1,".","~",2))-FIND(".",$H1)-1),"000")&"."&TEXT(RIGHT($H1,LEN($H1)-FIND("~",SUBSTITUTE($H1,".","~",2))),"000")>="001.031.000",TEXT(LEFT($H1,FIND(".",$H1)-1),"000")&"."&TEXT(MID($H1,FIND(".",$H1)+1,FIND("~",SUBSTITUTE($H1,".","~",2))-FIND(".",$H1)-1),"000")&"."&TEXT(RIGHT($H1,LEN($H1)-FIND("~",SUBSTITUTE($H1,".","~",2))),"000")<="001.032.999")' -Address H:H -BackgroundColor "Yellow"
-                Add-ConditionalFormatting -Worksheet $sheet -RuleType Expression -ConditionValue 'AND(TEXT(LEFT($H1,FIND(".",$H1)-1),"000")&"."&TEXT(MID($H1,FIND(".",$H1)+1,FIND("~",SUBSTITUTE($H1,".","~",2))-FIND(".",$H1)-1),"000")&"."&TEXT(RIGHT($H1,LEN($H1)-FIND("~",SUBSTITUTE($H1,".","~",2))),"000")>="001.020.000",TEXT(LEFT($H1,FIND(".",$H1)-1),"000")&"."&TEXT(MID($H1,FIND(".",$H1)+1,FIND("~",SUBSTITUTE($H1,".","~",2))-FIND(".",$H1)-1),"000")&"."&TEXT(RIGHT($H1,LEN($H1)-FIND("~",SUBSTITUTE($H1,".","~",2))),"000")<="001.030.999")' -Address H:H -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
+                Add-ConditionalFormatting -Worksheet $sheet -RuleType Expression -ConditionValue 'AND(TEXT(LEFT($H1,FIND(".",$H1)-1),"000")&"."&TEXT(MID($H1,FIND(".",$H1)+1,FIND("~",SUBSTITUTE($H1,".","~",2))-FIND(".",$H1)-1),"000")&"."&TEXT(RIGHT($H1,LEN($H1)-FIND("~",SUBSTITUTE($H1,".","~",2))),"000")>="001.031.000",TEXT(LEFT($H1,FIND(".",$H1)-1),"000")&"."&TEXT(MID($H1,FIND(".",$H1)+1,FIND("~",SUBSTITUTE($H1,".","~",2))-FIND(".",$H1)-1),"000")&"."&TEXT(RIGHT($H1,LEN($H1)-FIND("~",SUBSTITUTE($H1,".","~",2))),"000")<="001.034.999")' -Address H:H -BackgroundColor "Yellow"
+                Add-ConditionalFormatting -Worksheet $sheet -RuleType Expression -ConditionValue 'AND(TEXT(LEFT($H1,FIND(".",$H1)-1),"000")&"."&TEXT(MID($H1,FIND(".",$H1)+1,FIND("~",SUBSTITUTE($H1,".","~",2))-FIND(".",$H1)-1),"000")&"."&TEXT(RIGHT($H1,LEN($H1)-FIND("~",SUBSTITUTE($H1,".","~",2))),"000")>="001.020.000",TEXT(LEFT($H1,FIND(".",$H1)-1),"000")&"."&TEXT(MID($H1,FIND(".",$H1)+1,FIND("~",SUBSTITUTE($H1,".","~",2))-FIND(".",$H1)-1),"000")&"."&TEXT(RIGHT($H1,LEN($H1)-FIND("~",SUBSTITUTE($H1,".","~",2))),"000")<="001.033.999")' -Address H:H -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
 
                 #NodePool Version (yellow for version 1.31.0 - 1.32.99, light pink for 1.20.0 - 1.30.99)
-                Add-ConditionalFormatting -Worksheet $sheet -RuleType Expression -ConditionValue 'AND(TEXT(LEFT($AE1,FIND(".",$AE1)-1),"000")&"."&TEXT(MID($AE1,FIND(".",$AE1)+1,FIND("~",SUBSTITUTE($AE1,".","~",2))-FIND(".",$AE1)-1),"000")&"."&TEXT(RIGHT($AE1,LEN($AE1)-FIND("~",SUBSTITUTE($AE1,".","~",2))),"000")>="001.031.000",TEXT(LEFT($AE1,FIND(".",$AE1)-1),"000")&"."&TEXT(MID($AE1,FIND(".",$AE1)+1,FIND("~",SUBSTITUTE($AE1,".","~",2))-FIND(".",$AE1)-1),"000")&"."&TEXT(RIGHT($AE1,LEN($AE1)-FIND("~",SUBSTITUTE($AE1,".","~",2))),"000")<="001.032.999")' -Address AE:AE -BackgroundColor "Yellow"
-                Add-ConditionalFormatting -Worksheet $sheet -RuleType Expression -ConditionValue 'AND(TEXT(LEFT($AE1,FIND(".",$AE1)-1),"000")&"."&TEXT(MID($AE1,FIND(".",$AE1)+1,FIND("~",SUBSTITUTE($AE1,".","~",2))-FIND(".",$AE1)-1),"000")&"."&TEXT(RIGHT($AE1,LEN($AE1)-FIND("~",SUBSTITUTE($AE1,".","~",2))),"000")>="001.020.000",TEXT(LEFT($AE1,FIND(".",$AE1)-1),"000")&"."&TEXT(MID($AE1,FIND(".",$AE1)+1,FIND("~",SUBSTITUTE($AE1,".","~",2))-FIND(".",$AE1)-1),"000")&"."&TEXT(RIGHT($AE1,LEN($AE1)-FIND("~",SUBSTITUTE($AE1,".","~",2))),"000")<="001.030.999")' -Address AE:AE -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
+                Add-ConditionalFormatting -Worksheet $sheet -RuleType Expression -ConditionValue 'AND(TEXT(LEFT($AE1,FIND(".",$AE1)-1),"000")&"."&TEXT(MID($AE1,FIND(".",$AE1)+1,FIND("~",SUBSTITUTE($AE1,".","~",2))-FIND(".",$AE1)-1),"000")&"."&TEXT(RIGHT($AE1,LEN($AE1)-FIND("~",SUBSTITUTE($AE1,".","~",2))),"000")>="001.031.000",TEXT(LEFT($AE1,FIND(".",$AE1)-1),"000")&"."&TEXT(MID($AE1,FIND(".",$AE1)+1,FIND("~",SUBSTITUTE($AE1,".","~",2))-FIND(".",$AE1)-1),"000")&"."&TEXT(RIGHT($AE1,LEN($AE1)-FIND("~",SUBSTITUTE($AE1,".","~",2))),"000")<="001.034.999")' -Address AE:AE -BackgroundColor "Yellow"
+                Add-ConditionalFormatting -Worksheet $sheet -RuleType Expression -ConditionValue 'AND(TEXT(LEFT($AE1,FIND(".",$AE1)-1),"000")&"."&TEXT(MID($AE1,FIND(".",$AE1)+1,FIND("~",SUBSTITUTE($AE1,".","~",2))-FIND(".",$AE1)-1),"000")&"."&TEXT(RIGHT($AE1,LEN($AE1)-FIND("~",SUBSTITUTE($AE1,".","~",2))),"000")>="001.020.000",TEXT(LEFT($AE1,FIND(".",$AE1)-1),"000")&"."&TEXT(MID($AE1,FIND(".",$AE1)+1,FIND("~",SUBSTITUTE($AE1,".","~",2))-FIND(".",$AE1)-1),"000")&"."&TEXT(RIGHT($AE1,LEN($AE1)-FIND("~",SUBSTITUTE($AE1,".","~",2))),"000")<="001.033.999")' -Address AE:AE -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
 
                 #Remaining Quota
                 Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue 50 -ConditionValue2 100 -Address AO:AO -BackgroundColor "Yellow"
@@ -74,6 +74,12 @@ function Start-ARIExcelExtraData {
 
                 #Pricing Tier
                 Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -ConditionValue 'Free' -Address G:G -BackgroundColor 'Yellow'
+
+                #Retirement Feature
+                Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -Address E2:E100 -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
+
+                #Retirement Date
+                Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -Address F2:F100 -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
 
                 #Local Accounts
                 Add-ConditionalFormatting -WorkSheet $sheet -RuleType ContainsText -ConditionValue 'true' -Address L:L -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
@@ -207,17 +213,17 @@ function Start-ARIExcelExtraData {
 
         if($SheetName -eq 'Storage Accounts')
             {
-                $null = $excel.$SheetName.Cells["K1"].AddComment("Is recommended that you configure your storage account to accept requests from secure connections only by setting the Secure transfer required property for the storage account.", "Azure Resource Inventory")
-                $excel.$SheetName.Cells["K1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer'
+                $null = $excel.$SheetName.Cells["L1"].AddComment("Is recommended that you configure your storage account to accept requests from secure connections only by setting the Secure transfer required property for the storage account.", "Azure Resource Inventory")
+                $excel.$SheetName.Cells["L1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer'
 
-                $null = $excel.$SheetName.Cells["L1"].AddComment("When a container is configured for anonymous access, any client can read data in that container. Anonymous access presents a potential security risk, so if your scenario does not require it, we recommend that you remediate anonymous access for the storage account.", "Azure Resource Inventory")
-                $excel.$SheetName.Cells["L1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-configure?tabs=portal'
+                $null = $excel.$SheetName.Cells["M1"].AddComment("When a container is configured for anonymous access, any client can read data in that container. Anonymous access presents a potential security risk, so if your scenario does not require it, we recommend that you remediate anonymous access for the storage account.", "Azure Resource Inventory")
+                $excel.$SheetName.Cells["M1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-configure?tabs=portal'
 
-                $null = $excel.$SheetName.Cells["M1"].AddComment("By default, Azure Storage accounts permit clients to send and receive data with the oldest version of TLS, TLS 1.0, and above. To enforce stricter security measures, you can configure your storage account to require that clients send and receive data with a newer version of TLS", "Azure Resource Inventory")
-                $excel.$SheetName.Cells["M1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version?tabs=portal'
+                $null = $excel.$SheetName.Cells["N1"].AddComment("By default, Azure Storage accounts permit clients to send and receive data with the oldest version of TLS, TLS 1.0, and above. To enforce stricter security measures, you can configure your storage account to require that clients send and receive data with a newer version of TLS", "Azure Resource Inventory")
+                $excel.$SheetName.Cells["N1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/storage/common/transport-layer-security-configure-minimum-version?tabs=portal'
 
-                $null = $excel.$SheetName.Cells["I1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.", "Azure Resource Inventory")
-                $excel.$SheetName.Cells["I1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
+                $null = $excel.$SheetName.Cells["J1"].AddComment("It's important to be aware of upcoming Azure services and feature retirements to understand their impact on your workloads and plan migration.", "Azure Resource Inventory")
+                $excel.$SheetName.Cells["J1"].Hyperlink = 'https://learn.microsoft.com/en-us/azure/advisor/advisor-how-to-plan-migration-workloads-service-retirement'
             }
 
         <################################################################### RESOURCE ###################################################################>

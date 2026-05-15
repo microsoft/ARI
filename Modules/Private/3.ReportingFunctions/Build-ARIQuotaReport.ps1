@@ -43,8 +43,8 @@ function Build-ARIQuotaReport {
     $ExcelVar = $tmp
 
     $TableName = ('QuotaTable_'+$ExcelVar[0].Total)
-    [PSCustomObject]$ExcelVar |
-    ForEach-Object { $_ } |
+    $ExcelVar |
+    ForEach-Object { [PSCustomObject]$_ } |
     Select-Object -Unique 'Subscription',
     'Region',
     'Current Usage',

@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Public/PublicFunctions/Diagram/Start-AR
 This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.12
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -179,7 +179,8 @@ Function Start-ARIDiagramSubscription {
         ########### Azure Other
         $Script:Dashboard = 'image;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/other/Dashboard_Hub.svg;' #width="50.02" height="38.25"
         $Script:TemplSpec = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/other/Template_Specs.svg;'
-        $Script:AzureBackupVault = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/other/Azure_Backup_Center.svg;'
+        $Script:AzureBackupVault = 'image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/other/Backup_Vault.svg;'
+        $Script:AzureBackupCenter = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/other/Azure_Backup_Center.svg;'
         $Script:AzureERDirect = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/other/ExpressRoute_Direct.svg;'
         $Script:AzureAVDSessionHost = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/other/AVS_VM.svg;'
         $Script:AzureAVDHostPool = 'image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=14;image=img/lib/azure2/other/Windows_Virtual_Desktop.svg;'
@@ -1304,18 +1305,18 @@ Function Start-ARIDiagramSubscription {
                                     Add-Icon $AzureBackupVault  $TempResLeft $TempResTop "40" "36" 1
 
                                 $Script:XmlWriter.WriteEndElement()
-                            } 
-                        'microsoft.network/expressrouteports'    
+                            }
+                        'microsoft.recoveryservices/vaults/backuppolicies'    
                             {
                                 $Script:XmlWriter.WriteStartElement('object')            
-                                $Script:XmlWriter.WriteAttributeString('label', ([string]$TempResourceType.Count + ' ExpressRoute' + "`n" + 'Direct'))
+                                $Script:XmlWriter.WriteAttributeString('label', ([string]$TempResourceType.Count + ' Backup' + "`n" + 'Policies'))
                                 $Script:XmlWriter.WriteAttributeString('id', ($Script:CellID+'-'+($Script:IDNum++)))
 
-                                    Add-Icon $AzureBackupVault  $TempResLeft $TempResTop "45" "40" 1
+                                    Add-Icon $AzureBackupVault  $TempResLeft $TempResTop "40" "36" 1
 
                                 $Script:XmlWriter.WriteEndElement()
-                            }     
-                        'microsoft.desktopvirtualization/hostpools/sessionhosts'    
+                            }
+                        'microsoft.desktopvirtualization/hostpools/sessionhosts'
                             {
                                 $Script:XmlWriter.WriteStartElement('object')            
                                 $Script:XmlWriter.WriteAttributeString('label', ([string]$TempResourceType.Count + ' AVD' + "`n" + 'Session Host'))
