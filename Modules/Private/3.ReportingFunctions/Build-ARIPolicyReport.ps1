@@ -28,8 +28,8 @@ function Build-ARIPolicyReport {
             $condtxt += New-ConditionalText -Range C2:C500 -ConditionalType GreaterThan 0
             $condtxt += New-ConditionalText -Range H2:H500 -ConditionalType GreaterThan 0
 
-            $Pol |
-            ForEach-Object { [PSCustomObject]$_ } |
+            [PSCustomObject]$Pol |
+            ForEach-Object { $_ } |
             Select-Object 'Initiative',
             'Initiative Non Compliance Resources',
             'Initiative Non Compliance Policies',
