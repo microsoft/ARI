@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Public/InventoryModules/Storage/Storage
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.13
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio
 
@@ -81,6 +81,7 @@ If ($Task -eq 'Processing') {
                 $InfrastructureEncryption = if($data.encryption.requireInfrastructureEncryption -eq "True"){$true}else{$false}
 
                 $StorageUsedCapacity = $StorageDetails.properties | Where-Object { $_.id -eq $1.id } | Select-Object -ExpandProperty CapacityGB
+                $StorageUsedCapacity = if ($StorageUsedCapacity) {[math]::Round($StorageUsedCapacity,2)}else{$null}
 
                 if ($data.azureFilesIdentityBasedAuthentication.directoryServiceOptions -eq 'None')
                     {
@@ -151,7 +152,7 @@ If ($Task -eq 'Processing') {
                                 'SKU'                                   = $1.sku.name;
                                 'Tier'                                  = $1.sku.tier;
                                 'Storage Account Kind'                  = $1.kind;
-                                'Used Capacity (GB)'                    = [math]::Round($StorageUsedCapacity,2);
+                                'Used Capacity (GB)'                    = $StorageUsedCapacity;
                                 'Secure Transfer Required'              = $data.supportsHttpsTrafficOnly;
                                 'Allow Blob Anonymous Access'           = $BlobAccess;
                                 'Minimum TLS Version'                   = $TLSv;

@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/1.ExtractionFunctions/Get-ARIAP
 This PowerShell Module is part of Azure Resource Inventory (ARI).
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.13
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
@@ -75,7 +75,7 @@ function Get-ARIAPIResources {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting ResourceHealth Events')
             $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.ResourceHealth/events?api-version=2022-10-01&queryStartTime=' + $ResourceHealthHistoryDate)
             try {
-                $ResourceHealth = Invoke-RestMethod -Uri $url -Headers $header -Method GET
+                $ResourceHealth = Invoke-RestMethod -Uri $url -Headers $header -Method GET -Debug:$false
             }
             catch {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
@@ -88,7 +88,7 @@ function Get-ARIAPIResources {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting Managed Identities')
             $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.ManagedIdentity/userAssignedIdentities?api-version=2023-01-31')
             try {
-                $Identities = Invoke-RestMethod -Uri $url -Headers $header -Method GET
+                $Identities = Invoke-RestMethod -Uri $url -Headers $header -Method GET -Debug:$false
             }
             catch {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
@@ -100,7 +100,7 @@ function Get-ARIAPIResources {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting Advisor Score')
             $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.Advisor/advisorScore?api-version=2023-01-01')
             try {
-                $ADVScore = Invoke-RestMethod -Uri $url -Headers $header -Method GET
+                $ADVScore = Invoke-RestMethod -Uri $url -Headers $header -Method GET -Debug:$false
             }
             catch {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
@@ -112,7 +112,7 @@ function Get-ARIAPIResources {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM Reservation Recommendation')
             $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.Consumption/reservationRecommendations?api-version=2023-05-01')
             try {
-                $ReservationRecon = Invoke-RestMethod -Uri $url -Headers $header -Method GET
+                $ReservationRecon = Invoke-RestMethod -Uri $url -Headers $header -Method GET -Debug:$false
             }
             catch {
                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
@@ -126,13 +126,13 @@ function Get-ARIAPIResources {
                     #Policies
                     try {
                         $url = ('https://'+ $AzURL +'/subscriptions/'+$sub+'/providers/Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01')
-                        $PolicyAssign = (Invoke-RestMethod -Uri $url -Headers $header -Method POST).value
+                        $PolicyAssign = (Invoke-RestMethod -Uri $url -Headers $header -Method POST -Debug:$false).value
                         Start-Sleep -Milliseconds 200
                         $url = ('https://'+ $AzURL +'/subscriptions/'+$sub+'/providers/Microsoft.Authorization/policySetDefinitions?api-version=2023-04-01')
-                        $PolicySetDef = (Invoke-RestMethod -Uri $url -Headers $header -Method GET).value
+                        $PolicySetDef = (Invoke-RestMethod -Uri $url -Headers $header -Method GET -Debug:$false).value
                         Start-Sleep -Milliseconds 200
                         $url = ('https://'+ $AzURL +'/subscriptions/'+$sub+'/providers/Microsoft.Authorization/policyDefinitions?api-version=2023-04-01')
-                        $PolicyDef = (Invoke-RestMethod -Uri $url -Headers $header -Method GET).value
+                        $PolicyDef = (Invoke-RestMethod -Uri $url -Headers $header -Method GET -Debug:$false).value
                     }
                     catch {
                         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)

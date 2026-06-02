@@ -76,7 +76,8 @@ In the "Packages" pane of your Runtime Environment, import the following modules
 4. Az.Accounts
 5. Az.Storage
 6. Az.Compute
-7. Az.CostManagement (only if using the `-IncludeCosts` parameter)
+7. Az.Monitor
+8. Az.CostManagement (only if using the `-IncludeCosts` parameter)
 
 ### Step 6: Create a PowerShell Runbook
 
