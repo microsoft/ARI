@@ -124,7 +124,7 @@ Function Invoke-ARI {
     [CmdletBinding(PositionalBinding=$false)]
     param (
         [ValidateSet(1, 2, 3)]
-        [int]$Overview = 1,    
+        [int]$Overview = 1,
         [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud', 'AzureGermanCloud')]
         [string]$AzureEnvironment = 'AzureCloud',
         [string]$TenantID,
@@ -182,7 +182,7 @@ Function Invoke-ARI {
 
     if ($Lite.IsPresent) { $RunLite = $true }else { $RunLite = $false }
     if ($DiagramFullEnvironment.IsPresent) {$FullEnv = $true}else{$FullEnv = $false}
-    if ($Automation.IsPresent) 
+    if ($Automation.IsPresent)
         {
             $SkipAPIs = $true
             $RunLite = $true
@@ -265,11 +265,21 @@ Function Invoke-ARI {
         {
             $TenantID = Connect-ARILoginSession -AzureEnvironment $AzureEnvironment -TenantID $TenantID -SubscriptionID $SubscriptionID -DeviceLogin $DeviceLogin -AppId $AppId -Secret $Secret -CertificatePath $CertificatePath
 
-            if (!$NoAutoUpdate.IsPresent)
-                {
-                    Write-Host ('Checking for Powershell Module Updates..')
+            if (!$NoAutoUpdate.IsPresent) {
+                Write-Host ('Checking for Powershell Module Updates..')
+                if (Get-InstalledModule -Name AzureResourceInventory -ErrorAction SilentlyContinue) {
                     Update-Module -Name AzureResourceInventory -AcceptLicense
                 }
+                elseif (Get-InstalledPSResource -Name AzureResourceInventory -Scope CurrentUser -ErrorAction SilentlyContinue) {
+                    Update-PSResource -Name AzureResourceInventory -Scope CurrentUser -AcceptLicense
+                }
+                elseif (Get-InstalledPSResource -Name AzureResourceInventory -Scope AllUsers -ErrorAction SilentlyContinue) {
+                    Update-PSResource -Name AzureResourceInventory -Scope AllUsers -AcceptLicense
+                }
+                else {
+                    Write-Warning 'Unable to update AzureResourceInventory module. It is not installed from the PowerShell Gallery. Skipping update.'
+                }
+            }
         }
     elseif ($Automation.IsPresent)
         {
@@ -279,7 +289,7 @@ Function Invoke-ARI {
                 Set-AzContext -SubscriptionName $AzureConnection.Subscription -DefaultProfile $AzureConnection
             }
             catch {
-                Write-Output "Failed to set Automation Account requirements. Aborting." 
+                Write-Output "Failed to set Automation Account requirements. Aborting."
                 exit
             }
         }
@@ -355,7 +365,7 @@ Function Invoke-ARI {
     $File = Join-Path $DefaultPath $FileName
     #$DFile = ($DefaultPath + $Global:ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".vsdx")
     $DDName = ($ReportName + "_Diagram_" + (get-date -Format "yyyy-MM-dd_HH_mm") + ".xml")
-    $DDFile = Join-Path $DefaultPath $DDName 
+    $DDFile = Join-Path $DefaultPath $DDName
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Excel file: ' + $File)
 
