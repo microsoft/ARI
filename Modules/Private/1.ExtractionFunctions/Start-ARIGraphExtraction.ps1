@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/1.ExtractionFunctions/Start-ARI
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.11
+Version: 3.6.14
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 
@@ -92,7 +92,7 @@ Function Start-ARIGraphExtraction {
                 }
         }
 
-            $ExcludedTypes = "| where type !in ('microsoft.logic/workflows','microsoft.portal/dashboards','microsoft.resources/templatespecs/versions','microsoft.resources/templatespecs')"
+            $ExcludedTypes = "| where type !in ('microsoft.compute/snapshots','microsoft.logic/workflows','microsoft.portal/dashboards','microsoft.resources/templatespecs/versions','microsoft.resources/templatespecs')"
 
             $GraphQuery = "resources $RGQueryExtension $TagQueryExtension $MGQueryExtension $ExcludedTypes | project id,name,type,tenantId,kind,location,resourceGroup,subscriptionId,managedBy,sku,plan,properties,identity,zones,extendedLocation$($GraphQueryTags) | order by id asc"
 

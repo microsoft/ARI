@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/1.ExtractionFunctions/Invoke-AR
 This PowerShell Module is part of Azure Resource Inventory (ARI).
 
 .NOTES
-Version: 3.6.12
+Version: 3.6.14
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
@@ -34,7 +34,7 @@ function Invoke-ARIInventoryLoop {
                     try
                         {
                             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting First 1000 '+ $LoopName)
-                            $QueryResult = Search-AzGraph -Query $GraphQuery -first 1000 -Subscription $Sub -Debug:$false
+                            $QueryResult = Search-AzGraph -Query $GraphQuery -first 1000 -Subscription $Sub -ErrorAction Stop -Debug:$false
                         }
                     catch
                         {
@@ -48,7 +48,7 @@ function Invoke-ARIInventoryLoop {
                             {
                                 Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 1000 ' + $LoopName + '. Loop Number: ' + $ReportCounterVar)
                                 Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete ([Math]::Min($ReportCounter, 100))
-                                $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $Sub -first 1000 -Debug:$false
+                                $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $Sub -first 1000 -ErrorAction Stop -Debug:$false
                             }
                         catch
                             {
@@ -69,7 +69,7 @@ function Invoke-ARIInventoryLoop {
             try
                 {
                     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting First 1000 ' + $LoopName)
-                    $QueryResult = Search-AzGraph -Query $GraphQuery -first 1000 -Subscription $FSubscri -Debug:$false
+                    $QueryResult = Search-AzGraph -Query $GraphQuery -first 1000 -Subscription $FSubscri -ErrorAction Stop -Debug:$false
                 }
             catch
                 {
@@ -84,7 +84,7 @@ function Invoke-ARIInventoryLoop {
                     {
                         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting Next 1000 ' + $LoopName + '. Loop Number: ' + $ReportCounterVar)
                         Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete ([Math]::Min($ReportCounter, 100))
-                        $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $FSubscri -first 1000 -Debug:$false
+                        $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $FSubscri -first 1000 -ErrorAction Stop -Debug:$false
                     }
                 catch
                     {
