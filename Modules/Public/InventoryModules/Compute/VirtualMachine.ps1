@@ -31,6 +31,7 @@ If ($Task -eq 'Processing')
         $vmexp = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/virtualmachines/extensions'}
         $disk = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/disks'}
         $VirtualNetwork = $Resources | Where-Object { $_.TYPE -eq 'microsoft.network/virtualnetworks' }
+        $PPG = $Resources | Where-Object {$_.TYPE -eq 'microsoft.compute/proximityplacementgroups'}
         $VMExtraDetails = $Resources | Where-Object { $_.TYPE -eq 'ARI/VM/SKU' }
         $VMQuotas = $Resources | Where-Object { $_.TYPE -eq 'ARI/VM/Quotas' }
 
@@ -47,6 +48,7 @@ If ($Task -eq 'Processing')
                     $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                     $dataSize = ''
                     $StorAcc = ''
+                    $VMPPG = ''
                     $OSName = if(![string]::IsNullOrEmpty($data.extended.instanceView.osname)){$data.extended.instanceView.osname}else{$data.storageprofile.imagereference.offer}
                     $OSVersion = if(![string]::IsNullOrEmpty($data.extended.instanceView.osversion)){$data.extended.instanceView.osversion}else{$data.storageprofile.imagereference.sku}
 
@@ -99,6 +101,9 @@ If ($Task -eq 'Processing')
                             $RetiringFeature = $null
                             $RetiringDate = $null
                         }
+
+                    # PPGs
+                    $VMPPG = $PPG | Where-Object { $_.properties.virtualMachines.id -eq $1.id }
 
                     #Extensions 
                     $ext = @()
@@ -279,6 +284,8 @@ If ($Task -eq 'Processing')
                                 'Availability Zone'                     = [string]$1.ZONES;
                                 'Zones Available in the Region'         = [string]$VMExtraDetail.LocationInfo.ZoneDetails.Name;
                                 'Availability Set'                      = $AVSET;
+                                'Proximity Placement Group'             = if ($VMPPG) { $VMPPG.name } else { '' };
+                                'Disk Controller Type'                  = [string]$data.storageProfile.diskControllerType;
                                 'VM Size'                               = $data.hardwareProfile.vmSize;
                                 'Remaining Quota (vCPUs)'               = [string]$RemainingQuota;
                                 'vCPUs'                                 = $vCPUs;
@@ -339,25 +346,25 @@ else
             $TableName = ('VMTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
             $Style = @()
             $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
-            $Style += New-ExcelStyle -HorizontalAlignment Left -Range AW:AW -Width 60 -WrapText
+            $Style += New-ExcelStyle -HorizontalAlignment Left -Range AY:AY -Width 60 -WrapText
 
             $SheetName = 'Virtual Machines'
 
             $condtxt = @()
             #Automatic Updates
-            $condtxt += New-ConditionalText false -Range V:V
+            $condtxt += New-ConditionalText false -Range W:W
             #Hybrid Benefit
-            $condtxt += New-ConditionalText None -Range Y:Y
+            $condtxt += New-ConditionalText None -Range Z:Z
             #Boot Diagnostics
-            $condtxt += New-ConditionalText false -Range AA:AA
-            #Performance Agent
             $condtxt += New-ConditionalText false -Range AB:AB
-            #Azure Monitor
+            #Performance Agent
             $condtxt += New-ConditionalText false -Range AC:AC
+            #Azure Monitor
+            $condtxt += New-ConditionalText false -Range AD:AD
             #NSG
-            $condtxt += New-ConditionalText None -Range AN:AN
+            $condtxt += New-ConditionalText None -Range AP:AP
             #Acelerated Network
-            $condtxt += New-ConditionalText false -Range AQ:AQ
+            $condtxt += New-ConditionalText false -Range AS:AS
             #Retirement
             $condtxt += New-ConditionalText -Range M2:M100 -ConditionalType ContainsText
 
@@ -383,6 +390,7 @@ else
             $Exc.Add('OS Type')
             $Exc.Add('OS Name')
             $Exc.Add('OS Version')
+            $Exc.Add('Proximity Placement Group')
             $Exc.Add('Automatic Update')
             $Exc.Add('Image Reference')
             $Exc.Add('Image Version')
@@ -391,6 +399,7 @@ else
             $Exc.Add('Boot Diagnostics')
             $Exc.Add('Performance Agent')
             $Exc.Add('Azure Monitor')
+            $Exc.Add('Disk Controller Type')
             $Exc.Add('OS Disk Storage Type')
             $Exc.Add('OS Disk Size (GB)')
             $Exc.Add('Data Disk Storage Type')
