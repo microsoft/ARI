@@ -12,7 +12,7 @@ https://github.com/microsoft/ARI/Modules/Private/3.ReportingFunctions/Start-ARIE
 This PowerShell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.14
+Version: 3.6.15
 First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
@@ -38,20 +38,20 @@ function Start-ARIExcelExtraData {
                 Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue 50 -ConditionValue2 100 -Address E:E -BackgroundColor "Yellow"
                 Add-ConditionalFormatting -WorkSheet $sheet -RuleType Between -ConditionValue 1 -ConditionValue2 50 -Address E:E -BackgroundColor 'LightPink' -ForegroundColor 'DarkRed'
 
-                $null = $excel.$SheetName.Cells["AB1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
-                $excel.$SheetName.Cells["AB1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
+                $null = $excel.$SheetName.Cells["AC1"].AddComment("Boot diagnostics is a debugging feature for Azure virtual machines (VM) that allows diagnosis of VM boot failures.", "Azure Resource Inventory")
+                $excel.$SheetName.Cells["AC1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/boot-diagnostics'
 
-                $null = $excel.$SheetName.Cells["AC1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
-                $excel.$SheetName.Cells["AC1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
+                $null = $excel.$SheetName.Cells["AD1"].AddComment("Is recommended to install Performance Diagnostics Agent in every Azure Virtual Machine upfront. The agent is only used when triggered by the console and may save time in an event of performance struggling.", "Azure Resource Inventory")
+                $excel.$SheetName.Cells["AD1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/performance-diagnostics'
 
-                $null = $excel.$SheetName.Cells["AD1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource's health.", "Azure Resource Inventory")
-                $excel.$SheetName.Cells["AD1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
+                $null = $excel.$SheetName.Cells["AE1"].AddComment("We recommend that you use Azure Monitor to gain visibility into your resource's health.", "Azure Resource Inventory")
+                $excel.$SheetName.Cells["AE1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/iaas#monitor-vm-performance'
 
-                $null = $excel.$SheetName.Cells["AP1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
-                $excel.$SheetName.Cells["AP1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
+                $null = $excel.$SheetName.Cells["AQ1"].AddComment("Use a network security group to protect against unsolicited traffic into Azure subnets. Network security groups are simple, stateful packet inspection devices that use the 5-tuple approach (source IP, source port, destination IP, destination port, and layer 4 protocol) to create allow/deny rules for network traffic.", "Azure Resource Inventory")
+                $excel.$SheetName.Cells["AQ1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices#logically-segment-subnets'
 
-                $null = $excel.$SheetName.Cells["AS1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
-                $excel.$SheetName.Cells["AS1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
+                $null = $excel.$SheetName.Cells["AT1"].AddComment("Accelerated networking enables single root I/O virtualization (SR-IOV) to a VM, greatly improving its networking performance. This high-performance path bypasses the host from the datapath, reducing latency, jitter, and CPU utilization.", "Azure Resource Inventory")
+                $excel.$SheetName.Cells["AT1"].Hyperlink = 'https://docs.microsoft.com/en-us/azure/virtual-network/create-vm-accelerated-networking-cli'
             }
 
         <################################################################### RESOURCE ###################################################################>

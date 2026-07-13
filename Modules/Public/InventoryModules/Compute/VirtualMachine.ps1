@@ -13,7 +13,7 @@ https://github.com/microsoft/ARI/Modules/Public/InventoryModules/Compute/Virtual
 This powershell Module is part of Azure Resource Inventory (ARI)
 
 .NOTES
-Version: 3.6.0
+Version: 3.6.15
 First Release Date: 19th November, 2020
 Authors: Claudio Merola and Renato Gregio 
 
@@ -278,6 +278,7 @@ If ($Task -eq 'Processing')
                                 'Subscription'                          = $sub1.Name;
                                 'Resource Group'                        = $1.RESOURCEGROUP;
                                 'VM Name'                               = $1.NAME;
+                                'Computer Name'                         = $data.osProfile.computerName;
                                 'Location'                              = $1.LOCATION;
                                 'Retiring Feature'                      = $RetiringFeature;
                                 'Retiring Date'                         = $RetiringDate;
@@ -346,32 +347,33 @@ else
             $TableName = ('VMTable_'+(($SmaResources.'Resource U' | Measure-Object -Sum).Sum))
             $Style = @()
             $Style += New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0' -VerticalAlignment Center
-            $Style += New-ExcelStyle -HorizontalAlignment Left -Range AY:AY -Width 60 -WrapText
+            $Style += New-ExcelStyle -HorizontalAlignment Left -Range AZ:AZ -Width 60 -WrapText
 
             $SheetName = 'Virtual Machines'
 
             $condtxt = @()
             #Automatic Updates
-            $condtxt += New-ConditionalText false -Range W:W
+            $condtxt += New-ConditionalText false -Range X:X
             #Hybrid Benefit
-            $condtxt += New-ConditionalText None -Range Z:Z
+            $condtxt += New-ConditionalText None -Range AA:AA
             #Boot Diagnostics
-            $condtxt += New-ConditionalText false -Range AB:AB
-            #Performance Agent
             $condtxt += New-ConditionalText false -Range AC:AC
-            #Azure Monitor
+            #Performance Agent
             $condtxt += New-ConditionalText false -Range AD:AD
+            #Azure Monitor
+            $condtxt += New-ConditionalText false -Range AE:AE
             #NSG
-            $condtxt += New-ConditionalText None -Range AP:AP
+            $condtxt += New-ConditionalText None -Range AQ:AQ
             #Acelerated Network
-            $condtxt += New-ConditionalText false -Range AS:AS
+            $condtxt += New-ConditionalText false -Range AT:AT
             #Retirement
-            $condtxt += New-ConditionalText -Range M2:M100 -ConditionalType ContainsText
+            $condtxt += New-ConditionalText -Range N2:N100 -ConditionalType ContainsText
 
             $Exc = New-Object System.Collections.Generic.List[System.Object]
             $Exc.Add('Subscription')
             $Exc.Add('Resource Group')
             $Exc.Add('VM Name')
+            $Exc.Add('Computer Name')
             $Exc.Add('VM Size')
             $Exc.Add('Remaining Quota (vCPUs)')
             $Exc.Add('vCPUs')
