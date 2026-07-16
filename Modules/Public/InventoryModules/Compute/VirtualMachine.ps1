@@ -262,7 +262,7 @@ If ($Task -eq 'Processing')
                             {
                                 $vmnsg = 'None'
                             }
-                        if(![string]::IsNullOrEmpty($vmnic.properties.enableAcceleratedNetworking))
+                        if(![string]::IsNullOrEmpty($vmnic.properties.enableAcceleratedNetworking) -or $vmnic.properties.enableAcceleratedNetworking -eq $true)
                             {
                                 $AcceleratedNetwork = $true
                             }
@@ -278,7 +278,7 @@ If ($Task -eq 'Processing')
                                 'Subscription'                          = $sub1.Name;
                                 'Resource Group'                        = $1.RESOURCEGROUP;
                                 'VM Name'                               = $1.NAME;
-                                'Computer Name'                         = $data.osProfile.computerName;
+                                'Host Name'                             = $data.osProfile.computerName;
                                 'Location'                              = $1.LOCATION;
                                 'Retiring Feature'                      = $RetiringFeature;
                                 'Retiring Date'                         = $RetiringDate;
@@ -373,7 +373,7 @@ else
             $Exc.Add('Subscription')
             $Exc.Add('Resource Group')
             $Exc.Add('VM Name')
-            $Exc.Add('Computer Name')
+            $Exc.Add('Host Name')
             $Exc.Add('VM Size')
             $Exc.Add('Remaining Quota (vCPUs)')
             $Exc.Add('vCPUs')
