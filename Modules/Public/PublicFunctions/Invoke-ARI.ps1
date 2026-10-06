@@ -32,7 +32,7 @@
     Use this parameter to include Quota information
 
 .PARAMETER IncludeTags
-    Use this parameter to include Tags of every Azure Resources
+    Use this parameter to include Tags of every Azure Resources. Each tag is written as its own row, and Heavy mode batching is enabled automatically to limit memory use.
 
 .PARAMETER Debug
     Output detailed debug information.
