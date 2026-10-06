@@ -45,7 +45,7 @@ If ($Task -eq 'Processing')
                     {
                         $RetiredFeature = foreach ($Retire in $Retired)
                             {
-                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retire.ServiceID}
                                 $tmp0 = [pscustomobject]@{
                                         'RetiredFeature'            = $RetiredServiceID.RetiringFeature
                                         'RetiredDate'               = $RetiredServiceID.RetirementDate 
