@@ -1,7 +1,7 @@
 function Invoke-AzureRAMPInventory {
     [CmdletBinding(PositionalBinding=$false)]
     param (  
-        [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud', 'AzureGermanCloud')]
+        [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud')]
         [string]$AzureEnvironment = 'AzureCloud',
         [string]$TenantID,
         [string]$AppId,
@@ -38,8 +38,7 @@ function Invoke-AzureRAMPInventory {
                 Set-AzContext -SubscriptionName $AzureConnection.Subscription -DefaultProfile $AzureConnection
             }
             catch {
-                Write-Output "Failed to set Automation Account requirements. Aborting." 
-                exit
+                throw "Failed to set Automation Account requirements. Aborting. $_"
             }
         }
 
