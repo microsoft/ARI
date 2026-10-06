@@ -56,13 +56,9 @@ If ($Task -eq 'Processing')
                                     }
                                 $tmp
                             }
-                        $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
-                        $RetiringFeature = [string]$RetiringFeature
-                        $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
-
-                        $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
-                        $RetiringDate = [string]$RetiringDate
-                        $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                        $RetiredFeature = $RetiredFeature | Where-Object { $_.RetiredFeature } | Sort-Object RetiredFeature -Unique
+                        $RetiringFeature = $RetiredFeature.RetiredFeature -join ', '
+                        $RetiringDate = $RetiredFeature.RetiredDate -join ', '
                     } 
                 else 
                     {
