@@ -91,6 +91,22 @@ If ($Task -eq 'Processing')
                             $RetiredFeature = $RetiredFeature | Where-Object { $_.RetiredFeature } | Sort-Object RetiredFeature -Unique
                             $RetiringFeature = $RetiredFeature.RetiredFeature -join ', '
                             $RetiringDate = $RetiredFeature.RetiredDate -join ', '
+
+                            # Advisor names a group of series ("LSv2, G, B - Series"); keep only the one this VM uses
+                            $SizeMatch = [regex]::Match([string]$data.hardwareProfile.vmSize, '^(?:Standard|Basic)_([A-Z]+)\d+(?:-\d+)?([a-z]*)(?:_v(\d+))?')
+                            if ($SizeMatch.Success)
+                                {
+                                    $SeriesFamily = $SizeMatch.Groups[1].Value
+                                    $SeriesS = if ($SizeMatch.Groups[2].Value -like '*s*') { 's' } else { '' }
+                                    $SeriesCandidates = if ($SizeMatch.Groups[3].Value) { ($SeriesFamily + $SeriesS + 'v' + $SizeMatch.Groups[3].Value), ($SeriesFamily + 'v' + $SizeMatch.Groups[3].Value) } else { ($SeriesFamily + $SeriesS), $SeriesFamily }
+                                    $RetiringFeature = foreach ($Feature in $RetiredFeature.RetiredFeature)
+                                        {
+                                            $SeriesHit = if ($Feature -match '^(.+?)\s*-\s*Series$') { $SeriesList = $Matches[1] -split '\s*,\s*'; foreach ($Candidate in $SeriesCandidates) { $SeriesList | Where-Object { $_ -eq $Candidate } | Select-Object -First 1 } }
+                                            $SeriesHit = $SeriesHit | Select-Object -First 1
+                                            if ($SeriesHit) { $SeriesHit + '-series' } else { $Feature }
+                                        }
+                                    $RetiringFeature = $RetiringFeature -join ', '
+                                }
                         }
                     else 
                         {
