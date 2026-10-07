@@ -32,7 +32,7 @@ Azure Resource Inventory (ARI) offers a wide range of parameters to customize yo
 | Parameter | Description | Example |
 |-----------|-------------|---------|
 | **SecurityCenter** | Include Security Center data | `-SecurityCenter` |
-| **IncludeTags** | Include resource tags | `-IncludeTags` |
+| **IncludeTags** | Include resource tags (one row per tag; also enables Heavy mode batching, so runs take longer) | `-IncludeTags` |
 | **SkipPolicy** | Skip Azure Policy collection | `-SkipPolicy` |
 | **SkipVMDetails** | Skip Azure VM Extra Details collection | `-SkipVMDetails` |
 | **SkipAdvisory** | Skip Azure Advisory collection | `-SkipAdvisory` |

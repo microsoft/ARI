@@ -18,7 +18,7 @@ Authors: Claudio Merola
 #>
 
 function Invoke-ARISecurityCenterJob {
-    Param($Subscriptions, $Automation, $Resources, $ARIModule)
+    Param($Subscriptions, $Automation, $Resources, $SecurityCenter, $ARIModule)
 
     if ($Automation.IsPresent)
         {

@@ -32,7 +32,7 @@
     Use this parameter to include Quota information
 
 .PARAMETER IncludeTags
-    Use this parameter to include Tags of every Azure Resources
+    Use this parameter to include Tags of every Azure Resources. Each tag is written as its own row, and Heavy mode batching is enabled automatically to limit memory use.
 
 .PARAMETER Debug
     Output detailed debug information.
@@ -125,7 +125,7 @@ Function Invoke-ARI {
     param (
         [ValidateSet(1, 2, 3)]
         [int]$Overview = 1,
-        [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud', 'AzureGermanCloud')]
+        [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureChinaCloud')]
         [string]$AzureEnvironment = 'AzureCloud',
         [string]$TenantID,
         [string]$AppId,
@@ -188,8 +188,7 @@ Function Invoke-ARI {
             $RunLite = $true
             if (!$StorageAccount -or !$StorageContainer)
                 {
-                    Write-Output "Storage Account and Container are required for Automation mode. Aborting."
-                    exit
+                    throw "Storage Account and Container are required for Automation mode. Aborting."
                 }
         }
     if ($Overview -eq 1 -and $SkipAPIs)
@@ -198,65 +197,11 @@ Function Invoke-ARI {
         }
     $TableStyle = "Light19"
 
-    <#########################################################          Help          ######################################################################>
-
-    Function Get-ARIUsageMode() {
-        Write-Host ""
-        Write-Host "Parameters"
-        Write-Host ""
-        Write-Host " -TenantID <ID>           :  Specifies the Tenant to be inventoried. "
-        Write-Host " -SubscriptionID <ID>     :  Specifies Subscription(s) to be inventoried. "
-        Write-Host " -ResourceGroup <NAME>    :  Specifies one (or more) unique Resource Group to be inventoried, This parameter requires the -SubscriptionID to work. "
-        Write-Host " -AppId <ID>              :  Specifies the ApplicationID that is used to connect to Azure as service principal. This parameter requires the -TenantID and -Secret to work. "
-        Write-Host " -Secret <VALUE>          :  Specifies the Secret that is used with the Application ID to connect to Azure as service principal. This parameter requires the -TenantID and -AppId to work. If -CertificatePath is also used the Secret value should be the Certifcate password instead of the Application secret. "
-        Write-Host " -CertificatePath <PATH>  :  Specifies the Certificate path that is used with the Application ID to connect to Azure as service principal. This parameter requires the -TenantID, -AppId and -Secret to work. The required certificate format is pkcs#12. "
-        Write-Host " -TagKey <NAME>           :  Specifies the tag key to be inventoried, This parameter requires the -SubscriptionID to work. "
-        Write-Host " -TagValue <NAME>         :  Specifies the tag value be inventoried, This parameter requires the -SubscriptionID to work. "
-        Write-Host " -SkipAdvisory            :  Do not collect Azure Advisory. "
-        Write-Host " -SkipPolicy              :  Do not collect Azure Policies. "
-        Write-Host " -SecurityCenter          :  Include Security Center Data. "
-        Write-Host " -IncludeTags             :  Include Resource Tags. "
-        Write-Host " -Online                  :  Use Online Modules. "
-        Write-Host " -Debug                   :  Run in a Debug mode. "
-        Write-Host " -AzureEnvironment        :  Change the Azure Cloud Environment. "
-        Write-Host " -ReportName              :  Change the Default Name of the report. "
-        Write-Host " -ReportDir               :  Change the Default Path of the report. "
-        Write-Host ""
-        Write-Host ""
-        Write-Host ""
-        Write-Host "Usage Mode and Examples: "
-        Write-Host "If you do not specify Resource Inventory will be performed on all subscriptions for the selected tenant. "
-        Write-Host "e.g. /> Invoke-ARI"
-        Write-Host ""
-        Write-Host "To perform the inventory in a specific Tenant and subscription use <-TenantID> and <-SubscriptionID> parameter "
-        Write-Host "e.g. /> Invoke-ARI -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID>"
-        Write-Host ""
-        Write-Host "Including Tags:"
-        Write-Host " By Default Azure Resource inventory do not include Resource Tags."
-        Write-Host " To include Tags at the inventory use <-IncludeTags> parameter. "
-        Write-Host "e.g. /> Invoke-ARI -TenantID <Azure Tenant ID> -IncludeTags"
-        Write-Host ""
-        Write-Host "Skipping Azure Advisor:"
-        Write-Host " By Default Azure Resource inventory collects Azure Advisor Data."
-        Write-Host " To ignore this  use <-SkipAdvisory> parameter. "
-        Write-Host "e.g. /> Invoke-ARI -TenantID <Azure Tenant ID> -SubscriptionID <Subscription ID> -SkipAdvisory"
-        Write-Host ""
-        Write-Host "Using the latest modules :"
-        Write-Host " You can use the latest modules. For this use <-Online> parameter."
-        Write-Host " It's a pre-requisite to have internet access for ARI GitHub repo"
-        Write-Host "e.g. /> Invoke-ARI -TenantID <Azure Tenant ID> -Online"
-        Write-Host ""
-        Write-Host "Running in Debug Mode :"
-        Write-Host " To run in a Debug Mode use <-Debug> parameter."
-        Write-Host ".e.g. /> Invoke-ARI -TenantID <Azure Tenant ID> -Debug"
-        Write-Host ""
-    }
-
     $TotalRunTime = [System.Diagnostics.Stopwatch]::StartNew()
 
     if ($Help.IsPresent) {
-        Get-ARIUsageMode
-        Exit
+        Get-Help Invoke-ARI -Full
+        return
     }
 
     $PlatOS = Test-ARIPS
@@ -289,8 +234,7 @@ Function Invoke-ARI {
                 Set-AzContext -SubscriptionName $AzureConnection.Subscription -DefaultProfile $AzureConnection
             }
             catch {
-                Write-Output "Failed to set Automation Account requirements. Aborting."
-                exit
+                throw "Failed to set Automation Account requirements. Aborting. $_"
             }
         }
 
@@ -455,7 +399,7 @@ Function Invoke-ARI {
                     Write-Output "Sending Diagram file to Storage Account:"
                     Write-Output $DDFile
                     Set-AzStorageBlobContent -File $DDFile -Container $StorageContainer -Context $StorageContext | Out-Null
-                    if($Debug.IsPresent)
+                    if($PSBoundParameters.ContainsKey('Debug'))
                         {
                             $LogFilePath = Join-Path $DefaultPath 'DiagramLogFile.log'
                             Set-AzStorageBlobContent -File $LogFilePath -Container $StorageContainer -Context $StorageContext -Force | Out-Null

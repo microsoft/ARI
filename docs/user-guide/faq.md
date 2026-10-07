@@ -100,6 +100,8 @@ To speed up report generation:
 
 The `-IncludeTags` parameter includes all resource tags in the report. This is useful for environments that use tagging extensively for organization or governance.
 
+Each tag is written as its own row, so a resource with 10 tags appears on 10 rows. Because this increases memory use, `-IncludeTags` automatically enables the same small-batch processing as `-Heavy`. Expect longer run times.
+
 ### Can I run ARI without an internet connection?
 
 No, ARI needs to connect to Azure APIs to collect resource information.

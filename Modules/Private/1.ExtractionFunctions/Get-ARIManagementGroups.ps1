@@ -26,12 +26,7 @@ function Get-ARIManagementGroups {
     $LocalResults = $QueryResult
 
     if ($LocalResults.Count -lt 1) {
-        Write-Host "ERROR:" -NoNewline -ForegroundColor Red
-        Write-Host "No Subscriptions found for Management Group: $ManagementGroup!"
-        Write-Host ""
-        Write-Host "Please check the Management Group name and try again."
-        Write-Host ""
-        Exit
+        throw "No Subscriptions found for Management Group: $ManagementGroup! Please check the Management Group name and try again."
     }
     else {
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Subscriptions found for Management Group: ' + $LocalResults.Count)

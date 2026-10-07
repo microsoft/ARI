@@ -37,7 +37,7 @@ function Start-ARIExtraJobs {
             $IncludeCosts,
             $CostData)
 
-    $ARIModule = 'AzureResourceInventory'
+    $ARIModule = Join-Path $MyInvocation.MyCommand.Module.ModuleBase 'AzureResourceInventory.psd1'
     #$ARIModule = 'C:\usr\src\PSModules\AzureResourceInventory\AzureResourceInventory'
 
     <######################################################### DRAW IO DIAGRAM JOB ######################################################################>

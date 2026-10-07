@@ -42,7 +42,7 @@ function Start-ARIProcessJob {
             }
     }
 
-    if ($Heavy.IsPresent -or $InTag.IsPresent)
+    if ($Heavy -or $InTag)
         {
             Write-Host ('Heavy Mode or InTag Mode Detected. Jobs will be run in small batches to avoid CPU and Memory Overload.') -ForegroundColor Red
             $EnvSizeLooper = 5

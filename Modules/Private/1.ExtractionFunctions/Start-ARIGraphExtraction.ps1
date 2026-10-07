@@ -55,10 +55,7 @@ Function Start-ARIGraphExtraction {
     if(![string]::IsNullOrEmpty($ResourceGroup) -and [string]::IsNullOrEmpty($SubscriptionID))
         {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Resource Group Name present, but missing Subscription ID.')
-            Write-Output ''
-            Write-Output 'If Using the -ResourceGroup Parameter, the Subscription ID must be informed'
-            Write-Output ''
-            Exit
+            throw 'If Using the -ResourceGroup Parameter, the Subscription ID must be informed'
         }
     else
         {
