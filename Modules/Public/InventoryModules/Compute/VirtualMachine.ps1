@@ -81,20 +81,32 @@ If ($Task -eq 'Processing')
                         {
                             $RetiredFeature = foreach ($Retire in $Retired)
                                 {
-                                    $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retired.ServiceID}
+                                    $RetiredServiceID = $Unsupported | Where-Object {$_.Id -eq $Retire.ServiceID}
                                     $tmp0 = [PSCustomObject]@{
                                             'RetiredFeature'            = $RetiredServiceID.RetiringFeature
                                             'RetiredDate'               = $RetiredServiceID.RetirementDate 
                                         }
                                     $tmp0
                                 }
-                            $RetiringFeature = if ($RetiredFeature.RetiredFeature.count -gt 1) { $RetiredFeature.RetiredFeature | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredFeature}
-                            $RetiringFeature = [string]$RetiringFeature
-                            $RetiringFeature = if ($RetiringFeature -like '* ,*') { $RetiringFeature -replace ".$" }else { $RetiringFeature }
+                            $RetiredFeature = $RetiredFeature | Where-Object { $_.RetiredFeature } | Sort-Object RetiredFeature -Unique
+                            $RetiringFeature = $RetiredFeature.RetiredFeature -join ', '
+                            $RetiringDate = $RetiredFeature.RetiredDate -join ', '
 
-                            $RetiringDate = if ($RetiredFeature.RetiredDate.count -gt 1) { $RetiredFeature.RetiredDate | ForEach-Object { $_ + ' ,' } }else { $RetiredFeature.RetiredDate}
-                            $RetiringDate = [string]$RetiringDate
-                            $RetiringDate = if ($RetiringDate -like '* ,*') { $RetiringDate -replace ".$" }else { $RetiringDate }
+                            # Advisor names a group of series ("LSv2, G, B - Series"); keep only the one this VM uses
+                            $SizeMatch = [regex]::Match([string]$data.hardwareProfile.vmSize, '^(?:Standard|Basic)_([A-Z]+)\d+(?:-\d+)?([a-z]*)(?:_v(\d+))?')
+                            if ($SizeMatch.Success)
+                                {
+                                    $SeriesFamily = $SizeMatch.Groups[1].Value
+                                    $SeriesS = if ($SizeMatch.Groups[2].Value -like '*s*') { 's' } else { '' }
+                                    $SeriesCandidates = if ($SizeMatch.Groups[3].Value) { ($SeriesFamily + $SeriesS + 'v' + $SizeMatch.Groups[3].Value), ($SeriesFamily + 'v' + $SizeMatch.Groups[3].Value) } else { ($SeriesFamily + $SeriesS), $SeriesFamily }
+                                    $RetiringFeature = foreach ($Feature in $RetiredFeature.RetiredFeature)
+                                        {
+                                            $SeriesHit = if ($Feature -match '^(.+?)\s*-\s*Series$') { $SeriesList = $Matches[1] -split '\s*,\s*'; foreach ($Candidate in $SeriesCandidates) { $SeriesList | Where-Object { $_ -eq $Candidate } | Select-Object -First 1 } }
+                                            $SeriesHit = $SeriesHit | Select-Object -First 1
+                                            if ($SeriesHit) { $SeriesHit + '-series' } else { $Feature }
+                                        }
+                                    $RetiringFeature = $RetiringFeature -join ', '
+                                }
                         }
                     else 
                         {
