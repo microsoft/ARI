@@ -223,7 +223,7 @@ If ($Task -eq 'Processing')
                             $dataSize = '0'
                         }
 
-                    $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                    $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     $VMNICS = if(![string]::IsNullOrEmpty($data.networkProfile.networkInterfaces.id)){$data.networkProfile.networkInterfaces.id}else{'0'}
                     foreach ($2 in $VMNICS) {
 

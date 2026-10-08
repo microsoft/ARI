@@ -60,7 +60,7 @@ If ($Task -eq 'Processing')
                     }
                 $BastVNET = if(![string]::IsNullOrEmpty($data.ipConfigurations.properties.subnet.id)){$data.ipConfigurations.properties.subnet.id.split("/")[8]}else{$null}
                 $BastPIP = if(![string]::IsNullOrEmpty($data.ipConfigurations.properties.publicIPAddress.id)){$data.ipConfigurations.properties.publicIPAddress.id.split("/")[8]}else{$null}
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
                             'ID'              = $1.id;

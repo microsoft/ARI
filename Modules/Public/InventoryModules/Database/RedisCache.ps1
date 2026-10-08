@@ -61,7 +61,7 @@ If ($Task -eq 'Processing') {
                 $PvtEndP = if(![string]::IsNullOrEmpty($data.privateEndpointConnections.properties.privateEndpoint.id)){($data.privateEndpointConnections.properties.privateEndpoint.id.split('/')[8])}else{$null}
                 if ($1.ZONES) { $Zones = $1.ZONES }else { $Zones = 'Not Configured' }
                 if ([string]::IsNullOrEmpty($data.minimumTlsVersion)){$MinTLS = 'Default'}Else{$MinTLS = "TLS $($data.minimumTlsVersion)"}
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
                             'ID'                    = $1.id;

@@ -60,7 +60,7 @@ If ($Task -eq 'Processing')
                         $RetiringFeature = $null
                         $RetiringDate = $null
                     }
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 $Apps = ($CONTAINER | Where-Object {$_.properties.environmentId -eq $1.id}).count
 
                 foreach ($2 in $data.workloadProfiles) {
