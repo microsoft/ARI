@@ -35,18 +35,42 @@ If ($Task -eq 'Processing')
         $VMExtraDetails = $Resources | Where-Object { $_.TYPE -eq 'ARI/VM/SKU' }
         $VMQuotas = $Resources | Where-Object { $_.TYPE -eq 'ARI/VM/Quotas' }
 
+    # Lookup indexes, built once. Each per-VM loop below runs its original match logic
+    # over the indexed candidates instead of every NIC, disk, extension and VNET.
+    function Add-ARIIndexItem ($Index, $Key, $Item) {
+        if ($Key -isnot [string] -or $Key -eq '') { return }
+        if (!$Index.ContainsKey($Key)) { $Index[$Key] = [System.Collections.Generic.List[object]]::new() }
+        if ($Index[$Key].Count -and [object]::ReferenceEquals($Index[$Key][-1], $Item)) { return }
+        $Index[$Key].Add($Item)
+    }
+    function Get-ARIIndexItem ($Index, $Key) {
+        if ($Key -is [string] -and $Index.ContainsKey($Key)) { $Index[$Key] }
+    }
+    $SubIndex = @{}; foreach ($Item in $SUB) { Add-ARIIndexItem $SubIndex ([string]$Item.id) $Item }
+    $NicIndex = @{}; foreach ($Item in $nic) { Add-ARIIndexItem $NicIndex $Item.id $Item }
+    $ExtIndex = @{}; foreach ($Item in $vmexp) { Add-ARIIndexItem $ExtIndex ($Item.id -split "/")[8] $Item }
+    $RetirementIndex = @{}; foreach ($Item in $Retirements) { Add-ARIIndexItem $RetirementIndex $Item.id $Item }
+    $PPGIndex = @{}; foreach ($Item in $PPG) { foreach ($Key in $Item.properties.virtualMachines.id) { Add-ARIIndexItem $PPGIndex $Key $Item } }
+    $VnetIndex = @{}; foreach ($Item in $VirtualNetwork) { foreach ($Key in $Item.subnets.id) { Add-ARIIndexItem $VnetIndex $Key $Item } }
+    $SkuIndex = @{}; foreach ($Location in $VMExtraDetails.properties) { foreach ($Sku in $Location.SKUs) { Add-ARIIndexItem $SkuIndex ([string]$Location.Location + '|' + $Sku.Name) $Sku } }
+    # Disks keep their position so "last match wins" loops see them in the original order
+    $DiskIndex = @{}; $DiskPos = 0; foreach ($Item in $disk) { Add-ARIIndexItem $DiskIndex $Item.id ([PSCustomObject]@{ Pos = $DiskPos; Disk = $Item }); $DiskPos++ }
+
     if($vm)
         {    
 
             $tmp = foreach ($1 in $vm) 
                 {
                     $ResUCount = 1
-                    $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
+                    $sub1 = Get-ARIIndexItem $SubIndex ([string]$1.subscriptionId) | Where-Object { $_.id -eq $1.subscriptionId }
                     $data = $1.PROPERTIES
                     $timecreated = $data.timeCreated
                     $timecreated = [datetime]$timecreated
                     $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                     $dataSize = ''
+                    $VMDisks = foreach ($Key in @($data.storageProfile.osDisk.managedDisk.id) + @($data.storageProfile.dataDisks.managedDisk.id)) { Get-ARIIndexItem $DiskIndex $Key }
+                    $SeenDisk = @{}
+                    $VMDisks = foreach ($Candidate in ($VMDisks | Sort-Object Pos)) { if (!$SeenDisk.ContainsKey($Candidate.Pos)) { $SeenDisk[$Candidate.Pos] = $true; $Candidate.Disk } }
                     $StorAcc = ''
                     $VMPPG = ''
                     $OSName = if(![string]::IsNullOrEmpty($data.extended.instanceView.osname)){$data.extended.instanceView.osname}else{$data.storageprofile.imagereference.offer}
@@ -54,8 +78,7 @@ If ($Task -eq 'Processing')
 
                     # Extra VM Details
 
-                    $VMExtraDetail = $VMExtraDetails.properties | Where-Object {$_.Location -eq $1.location}
-                    $VMExtraDetail = $VMExtraDetail.SKUs | Where-Object {$_.Name -eq $data.hardwareProfile.vmSize}
+                    $VMExtraDetail = Get-ARIIndexItem $SkuIndex ([string]$1.location + '|' + $data.hardwareProfile.vmSize) | Where-Object {$_.Name -eq $data.hardwareProfile.vmSize}
 
                     foreach ($Capability in $VMExtraDetail.Capabilities) {
                         if ($Capability.Name -eq 'vCPUs') {$vCPUs = $Capability.Value}
@@ -73,7 +96,7 @@ If ($Task -eq 'Processing')
                     $Quota = $Quota | Where-Object {$_.Location -eq $1.location}
                     $RemainingQuota = (($Quota.Data | Where-Object {$_.Name.Value -eq $Size}).Limit - ($Quota.Data | Where-Object {$_.Name.Value -eq $Size}).CurrentValue)
 
-                    $Retired = Foreach ($Retirement in $Retirements)
+                    $Retired = Foreach ($Retirement in (Get-ARIIndexItem $RetirementIndex $1.id))
                         {
                             if ($Retirement.id -eq $1.id) { $Retirement }
                         }
@@ -115,7 +138,7 @@ If ($Task -eq 'Processing')
                         }
 
                     # PPGs
-                    $VMPPG = $PPG | Where-Object { $_.properties.virtualMachines.id -eq $1.id }
+                    $VMPPG = Get-ARIIndexItem $PPGIndex $1.id | Where-Object { $_.properties.virtualMachines.id -eq $1.id }
 
                     #Extensions 
                     $ext = @()
@@ -129,7 +152,7 @@ If ($Task -eq 'Processing')
                         default { $data.licenseType }
                     }
                     $Lic = if($Lic){$Lic}else{'None'}
-                    $ext = foreach ($vmextension in $vmexp)
+                    $ext = foreach ($vmextension in (Get-ARIIndexItem $ExtIndex $1.name))
                         {
                             if (($vmextension.id -split "/")[8] -eq $1.name) { $vmextension.properties.Publisher }
                         }
@@ -179,7 +202,7 @@ If ($Task -eq 'Processing')
                         }
                     else
                         {
-                            foreach ($VMDisk in $disk)
+                            foreach ($VMDisk in $VMDisks)
                                 {
                                     if ($VMDisk.id -eq $data.storageProfile.osDisk.managedDisk.id)
                                         {
@@ -197,7 +220,7 @@ If ($Task -eq 'Processing')
                             if ($data.storageProfile.dataDisks.managedDisk.id.count -ge 2) 
                             { 
                                 $StorAcc = ($data.storageProfile.dataDisks.managedDisk.id.count.ToString() + ' Disks found.')
-                                foreach ($VMDisk in $disk)
+                                foreach ($VMDisk in $VMDisks)
                                     {
                                         if ($VMDisk.id -in $data.storageProfile.dataDisks.managedDisk.id)
                                             {
@@ -207,7 +230,7 @@ If ($Task -eq 'Processing')
                             }
                             else 
                             {
-                                foreach ($VMDisk in $disk)
+                                foreach ($VMDisk in $VMDisks)
                                     {
                                         if ($VMDisk.id -eq $data.storageProfile.dataDisks.managedDisk.id)
                                             {
@@ -227,7 +250,7 @@ If ($Task -eq 'Processing')
                     $VMNICS = if(![string]::IsNullOrEmpty($data.networkProfile.networkInterfaces.id)){$data.networkProfile.networkInterfaces.id}else{'0'}
                     foreach ($2 in $VMNICS) {
 
-                        $vmnic = foreach ($netinterface in $nic) 
+                        $vmnic = foreach ($netinterface in (Get-ARIIndexItem $NicIndex $2)) 
                             {
                                 if ($netinterface.id -eq $2) { $netinterface }
                             }
@@ -235,7 +258,7 @@ If ($Task -eq 'Processing')
                         $PIP = if(![string]::IsNullOrEmpty($vmnic.properties.ipConfigurations.properties.publicIPAddress.id)){$vmnic.properties.ipConfigurations.properties.publicIPAddress.id.split('/')[8]}else{''}
                         $VNET = if(![string]::IsNullOrEmpty($vmnic.properties.ipConfigurations.properties.subnet.id)){$vmnic.properties.ipConfigurations.properties.subnet.id.split('/')[8]}else{''}
                         $Subnet = if(![string]::IsNullOrEmpty($vmnic.properties.ipConfigurations.properties.subnet.id)){$vmnic.properties.ipConfigurations.properties.subnet.id.split('/')[10]} else {''}
-                        $vmnet = foreach ($VMVnet in $VirtualNetwork)
+                        $vmnet = foreach ($VMVnet in $(foreach ($Key in $vmnic.properties.ipConfigurations.properties.subnet.id) { Get-ARIIndexItem $VnetIndex $Key }))
                             {
                                 if ($VMVnet.subnets.id -eq $vmnic.properties.ipConfigurations.properties.subnet.id) { $VMVnet }
                             }
