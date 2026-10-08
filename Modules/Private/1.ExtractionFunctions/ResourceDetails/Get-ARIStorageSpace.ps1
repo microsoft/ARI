@@ -36,12 +36,13 @@ function Get-AriStorageSpace {
             $Header = $null
         }
 
-    # Same request Get-AzMetric makes by default: last hour, hourly grain, average
+    # UsedCapacity is published hourly. A one-hour window (the Get-AzMetric default) can be
+    # empty just after the hour, so ask for three hours and use the latest value.
     $Requests = if ($Header)
         {
             foreach ($Storage in $StorageAccounts)
                 {
-                    [PSCustomObject]@{ Key = $Storage.id; Uri = ($ArmUrl + $Storage.id + '/providers/Microsoft.Insights/metrics?metricnames=UsedCapacity&api-version=2023-10-01') }
+                    [PSCustomObject]@{ Key = $Storage.id; Uri = ($ArmUrl + $Storage.id + '/providers/Microsoft.Insights/metrics?metricnames=UsedCapacity&timespan=PT3H&interval=PT1H&aggregation=average&api-version=2023-10-01') }
                 }
         }
 
@@ -49,7 +50,7 @@ function Get-AriStorageSpace {
 
     $Data = foreach ($Storage in $StorageAccounts)
         {
-            $Average = @($Responses[$Storage.id].value[0].timeseries[0].data)[0].average
+            $Average = @($Responses[$Storage.id].value[0].timeseries[0].data | Where-Object { $null -ne $_.average })[-1].average
             if ($null -ne $Average)
                 {
                     $object = [PSCustomObject] @{
