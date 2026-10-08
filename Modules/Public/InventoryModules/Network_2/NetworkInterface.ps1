@@ -83,7 +83,7 @@ If ($Task -eq 'Processing') {
 
                     $AcceleratedNetworking = if($data.enableacceleratednetworking -eq $true){'On'}else{'Off'}
 
-                    $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                    $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($2 in $data.ipconfigurations)
                         {
                             $VNET = if(![string]::IsNullOrEmpty($2.properties.subnet.id)){$2.properties.subnet.id.split('/')[8]}else{$null}
