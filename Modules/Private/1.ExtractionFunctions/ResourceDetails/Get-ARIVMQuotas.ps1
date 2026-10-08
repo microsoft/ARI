@@ -23,7 +23,7 @@ function Get-AriVMQuotas {
         {
             $Token = Get-AzAccessToken -AsSecureString -InformationAction SilentlyContinue -WarningAction SilentlyContinue -Debug:$false
             $Header = @{ 'Authorization' = 'Bearer ' + ($Token.Token | ConvertFrom-SecureString -AsPlainText) }
-            $ArmUrl = (Get-AzContext).Environment.ResourceManagerUrl.TrimEnd('/')
+            $ArmUrl = (Get-AzContext -Debug:$false).Environment.ResourceManagerUrl.TrimEnd('/')
         }
     catch
         {
