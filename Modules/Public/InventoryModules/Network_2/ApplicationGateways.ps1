@@ -61,7 +61,7 @@ If ($Task -eq 'Processing') {
                 if([string]::IsNullOrEmpty($data.webApplicationFirewallConfiguration.enabled)){$WAF = 'false'}else{$WAF = $data.webApplicationFirewallConfiguration.enabled}
                 if($WAF -eq 'false' -and $1.id -in $APPGTWPOL.properties.applicationGateways.id){$WAF = 'true'}
                 $BackendState = if(![string]::IsNullOrEmpty($data.backendAddressPools.properties.backendAddresses)){'In Use'}else{'Empty'}
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
                             'ID'                    = $1.id;

@@ -57,7 +57,7 @@ If ($Task -eq 'Processing') {
                         $RetiringFeature = $null
                         $RetiringDate = $null
                     }
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
 
                 $AddrPool = if ($data.addressSpace.addressPrefixes.count -gt 1) { $data.addressSpace.addressPrefixes | ForEach-Object { $_ + ' ,' } }else { $data.addressSpace.addressPrefixes }
                 $AddrPool = [string]$AddrPool

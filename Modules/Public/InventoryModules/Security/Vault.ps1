@@ -60,7 +60,7 @@ If ($Task -eq 'Processing')
                     }
                 if([string]::IsNullOrEmpty($Data.enableSoftDelete)){$Soft = $false}else{$Soft = $Data.enableSoftDelete}
                 if([string]::IsNullOrEmpty($data.enableRbacAuthorization)){$RBAC = $false}else{$RBAC = $Data.enableRbacAuthorization}
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 $AccessPol = if(![string]::IsNullOrEmpty($data.accessPolicies)){$data.accessPolicies}else{'0'}
                 Foreach($2 in $AccessPol)
                     {

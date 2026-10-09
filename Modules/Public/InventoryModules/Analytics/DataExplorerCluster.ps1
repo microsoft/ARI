@@ -61,7 +61,7 @@ If ($Task -eq 'Processing') {
                 $EnginePIP = if(![string]::IsNullOrEmpty($data.virtualNetworkConfiguration.enginePublicIpId)){$data.virtualNetworkConfiguration.enginePublicIpId.split('/')[8]}else{$null}
                 $TenantPerm = if($data.trustedExternalTenants.value -eq '*'){'All Tenants'}else{$data.trustedExternalTenants.value}
                 $AutoScale = if($data.optimizedAutoscale.isEnabled -eq 'true'){'Enabled'}else{'Disabled'}
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
                             'ID'                        = $1.id;

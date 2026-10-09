@@ -65,7 +65,7 @@ If ($Task -eq 'Processing') {
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                 $TLSv = if ($data.minimumTlsVersion -eq 'TLS1_2') { "TLS 1.2" }elseif ($data.minimumTlsVersion -eq 'TLS1_1') { "TLS 1.1" }else { "TLS 1.0" }
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 $VNETRules = if(![string]::IsNullOrEmpty($data.networkacls.virtualnetworkrules)){$data.networkacls.virtualnetworkrules}else{' '}
                 $BlobAccess = if ($data.allowBlobPublicAccess -eq $false){$false}else{$true}
                 $KeyAccess = if($data.allowsharedkeyaccess -eq $true){$true}else{$false}
