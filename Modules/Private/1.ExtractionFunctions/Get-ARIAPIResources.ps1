@@ -55,101 +55,53 @@ function Get-ARIAPIResources {
     $ResourceHealthHistoryDate = (Get-Date).AddMonths(-6)
     $APIResults = @()
 
+    Write-Host 'Running API Inventory for ' -NoNewline
+    Write-Host ([string]@($Subscriptions).Count + ' subscriptions') -ForegroundColor Cyan
+
+    # One request per subscription and API; all of them run in parallel
+    $Requests = foreach ($Subscription in $Subscriptions)
+        {
+            $Sub = $Subscription.id
+            $Base = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/')
+            [PSCustomObject]@{ Key = "$Sub|ResourceHealth"; Uri = ($Base + 'Microsoft.ResourceHealth/events?api-version=2022-10-01&queryStartTime=' + $ResourceHealthHistoryDate) }
+            [PSCustomObject]@{ Key = "$Sub|Identities"; Uri = ($Base + 'Microsoft.ManagedIdentity/userAssignedIdentities?api-version=2023-01-31') }
+            [PSCustomObject]@{ Key = "$Sub|AdvisorScore"; Uri = ($Base + 'Microsoft.Advisor/advisorScore?api-version=2023-01-01') }
+            [PSCustomObject]@{ Key = "$Sub|Reservation"; Uri = ($Base + 'Microsoft.Consumption/reservationRecommendations?api-version=2023-05-01') }
+            if (!$SkipPolicy.isPresent)
+                {
+                    [PSCustomObject]@{ Key = "$Sub|PolicyAssign"; Uri = ($Base + 'Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01'); Method = 'POST' }
+                    [PSCustomObject]@{ Key = "$Sub|PolicySetDef"; Uri = ($Base + 'Microsoft.Authorization/policySetDefinitions?api-version=2023-04-01') }
+                    [PSCustomObject]@{ Key = "$Sub|PolicyDef"; Uri = ($Base + 'Microsoft.Authorization/policyDefinitions?api-version=2023-04-01') }
+                }
+        }
+
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Sending ' + @($Requests).Count + ' API requests in parallel')
+    $Responses = Invoke-ARIRestParallel -Requests $Requests -Header $header
+
     foreach ($Subscription in $Subscriptions)
         {
-            $ResourceHealth = ""
-            $Identities = ""
-            $ADVScore = ""
-            $ReservationRecon = ""
+            $Sub = $Subscription.id
+
             $PolicyAssign = ""
             $PolicySetDef = ""
             $PolicyDef = ""
-
-            $SubName = $Subscription.Name
-            $Sub = $Subscription.id
-
-            Write-Host 'Running API Inventory at: ' -NoNewline
-            Write-Host $SubName -ForegroundColor Cyan
-
-            #ResourceHealth Events
-            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting ResourceHealth Events')
-            $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.ResourceHealth/events?api-version=2022-10-01&queryStartTime=' + $ResourceHealthHistoryDate)
-            try {
-                $ResourceHealth = Invoke-RestMethod -Uri $url -Headers $header -Method GET -Debug:$false
-            }
-            catch {
-                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
-                $ResourceHealth = ""
-            }
-            
-            Start-Sleep -Milliseconds 200
-
-            #Managed Identities
-            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting Managed Identities')
-            $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.ManagedIdentity/userAssignedIdentities?api-version=2023-01-31')
-            try {
-                $Identities = Invoke-RestMethod -Uri $url -Headers $header -Method GET -Debug:$false
-            }
-            catch {
-                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
-                $Identities = ""
-            }
-            Start-Sleep -Milliseconds 200
-
-            #Advisor Score
-            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting Advisor Score')
-            $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.Advisor/advisorScore?api-version=2023-01-01')
-            try {
-                $ADVScore = Invoke-RestMethod -Uri $url -Headers $header -Method GET -Debug:$false
-            }
-            catch {
-                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
-                $ADVScore = ""
-            }
-            Start-Sleep -Milliseconds 200
-
-            #VM Reservation Recommendation
-            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting VM Reservation Recommendation')
-            $url = ('https://' + $AzURL + '/subscriptions/' + $Sub + '/providers/Microsoft.Consumption/reservationRecommendations?api-version=2023-05-01')
-            try {
-                $ReservationRecon = Invoke-RestMethod -Uri $url -Headers $header -Method GET -Debug:$false
-            }
-            catch {
-                Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
-                $ReservationRecon = ""
-            }
-            Start-Sleep -Milliseconds 200
-
             if (!$SkipPolicy.isPresent)
                 {
-                    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting Policies')
-                    #Policies
-                    try {
-                        $url = ('https://'+ $AzURL +'/subscriptions/'+$sub+'/providers/Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01')
-                        $PolicyAssign = (Invoke-RestMethod -Uri $url -Headers $header -Method POST -Debug:$false).value
-                        Start-Sleep -Milliseconds 200
-                        $url = ('https://'+ $AzURL +'/subscriptions/'+$sub+'/providers/Microsoft.Authorization/policySetDefinitions?api-version=2023-04-01')
-                        $PolicySetDef = (Invoke-RestMethod -Uri $url -Headers $header -Method GET -Debug:$false).value
-                        Start-Sleep -Milliseconds 200
-                        $url = ('https://'+ $AzURL +'/subscriptions/'+$sub+'/providers/Microsoft.Authorization/policyDefinitions?api-version=2023-04-01')
-                        $PolicyDef = (Invoke-RestMethod -Uri $url -Headers $header -Method GET -Debug:$false).value
-                    }
-                    catch {
-                        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $_.Exception.Message)
-                        $PolicyAssign = ""
-                        $PolicySetDef = ""
-                        $PolicyDef = ""
-                    }
+                    # As before: if any policy call failed, report no policy data for the subscription
+                    if ($Responses["$Sub|PolicyAssign"] -and $Responses["$Sub|PolicySetDef"] -and $Responses["$Sub|PolicyDef"])
+                        {
+                            $PolicyAssign = $Responses["$Sub|PolicyAssign"].value
+                            $PolicySetDef = $Responses["$Sub|PolicySetDef"].value
+                            $PolicyDef = $Responses["$Sub|PolicyDef"].value
+                        }
                 }
-
-            Start-Sleep -Milliseconds 300
 
             $tmp = @{
                 'Subscription'          = $Sub;
-                'ResourceHealth'        = $ResourceHealth.value;
-                'ManagedIdentities'     = $Identities.value;
-                'AdvisorScore'          = $ADVScore.value;
-                'ReservationRecomen'    = $ReservationRecon.value;
+                'ResourceHealth'        = $Responses["$Sub|ResourceHealth"].value;
+                'ManagedIdentities'     = $Responses["$Sub|Identities"].value;
+                'AdvisorScore'          = $Responses["$Sub|AdvisorScore"].value;
+                'ReservationRecomen'    = $Responses["$Sub|Reservation"].value;
                 'PolicyAssign'          = $PolicyAssign;
                 'PolicyDef'             = $PolicyDef;
                 'PolicySetDef'          = $PolicySetDef

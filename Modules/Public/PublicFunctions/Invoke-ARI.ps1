@@ -293,6 +293,8 @@ Function Invoke-ARI {
 
     $ExtractionTotalTime = $ExtractionRuntime.Elapsed.ToString("dd\:hh\:mm\:ss\:fff")
 
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extraction phase memory (this process only, not job processes): current '+[math]::Round([System.Diagnostics.Process]::GetCurrentProcess().WorkingSet64/1MB)+' MB, peak since pwsh started '+[math]::Round([System.Diagnostics.Process]::GetCurrentProcess().PeakWorkingSet64/1MB)+' MB')
+
     if ($Automation.IsPresent)
         {
             Write-Output "Extraction Phase Finished"
@@ -325,6 +327,8 @@ Function Invoke-ARI {
 
     $ProcessingTotalTime = $ProcessingRunTime.Elapsed.ToString("dd\:hh\:mm\:ss\:fff")
 
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Processing phase memory (this process only, not job processes): current '+[math]::Round([System.Diagnostics.Process]::GetCurrentProcess().WorkingSet64/1MB)+' MB, peak since pwsh started '+[math]::Round([System.Diagnostics.Process]::GetCurrentProcess().PeakWorkingSet64/1MB)+' MB')
+
     if ($Automation.IsPresent)
         {
             Write-Output "Processing Phase Finished"
@@ -352,6 +356,8 @@ Function Invoke-ARI {
     $ReportingRunTime.Stop()
 
     $ReportingTotalTime = $ReportingRunTime.Elapsed.ToString("dd\:hh\:mm\:ss\:fff")
+
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Reporting phase memory (this process only, not job processes): current '+[math]::Round([System.Diagnostics.Process]::GetCurrentProcess().WorkingSet64/1MB)+' MB, peak since pwsh started '+[math]::Round([System.Diagnostics.Process]::GetCurrentProcess().PeakWorkingSet64/1MB)+' MB')
 
     if ($Automation.IsPresent)
         {
