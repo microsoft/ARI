@@ -4,9 +4,10 @@ Runs a set of REST requests in parallel with retry.
 
 .DESCRIPTION
 Takes request objects (Key, Uri, optional Method) and sends them with a bounded
-number of threads. Throttled (429) and transient (5xx) responses are retried,
-honouring Retry-After. Returns a hashtable of Key -> response; failed requests map
-to $null and their errors are written to the debug stream.
+number of threads. Throttled and transient responses (429, 503, 504) are retried
+up to MaxAttempts and other 5xx once, honouring Retry-After. Returns a hashtable of
+Key -> response; failed requests map to $null. Errors, retries and the slowest
+request are written to the debug stream.
 
 .Link
 https://github.com/microsoft/ARI/Modules/Private/1.ExtractionFunctions/Invoke-ARIRestParallel.ps1
@@ -32,6 +33,8 @@ function Invoke-ARIRestParallel {
         $MaxAttempts = $using:MaxAttempts
         $Response = $null
         $ErrorText = $null
+        $Retries = [System.Collections.Generic.List[string]]::new()
+        $Timer = [System.Diagnostics.Stopwatch]::StartNew()
 
         for ($Attempt = 1; $Attempt -le $MaxAttempts; $Attempt++) {
             try {
@@ -42,21 +45,33 @@ function Invoke-ARIRestParallel {
             catch {
                 $ErrorText = $_.Exception.Message
                 $Status = [int]$_.Exception.Response.StatusCode
-                if (($Status -ne 429 -and $Status -lt 500) -or $Attempt -eq $MaxAttempts) { break }
+                # 429/503/504 are usually transient; other 5xx (e.g. a 502 that repeats every run) get one retry
+                $Transient = $Status -in 429, 503, 504
+                if ($Status -lt 500 -and !$Transient) { break }
+                if ($Attempt -eq $MaxAttempts -or (!$Transient -and $Attempt -ge 2)) { break }
                 $RetryAfter = $_.Exception.Response.Headers.RetryAfter.Delta.TotalSeconds
                 $Wait = if ($RetryAfter) { [math]::Min($RetryAfter, 60) } else { [math]::Pow(2, $Attempt) }
+                $Retries.Add(([string]$Status + ' wait ' + $Wait + 's'))
                 Start-Sleep -Seconds $Wait
             }
         }
 
-        [PSCustomObject]@{ Key = $Request.Key; Response = $Response; Error = $ErrorText; Uri = $Request.Uri }
+        [PSCustomObject]@{ Key = $Request.Key; Response = $Response; Error = $ErrorText; Uri = $Request.Uri; Seconds = $Timer.Elapsed.TotalSeconds; Retries = ($Retries -join ', ') }
     }
 
     foreach ($Item in $Responses) {
+        if ($Item.Retries) {
+            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Retried: ' + $Item.Retries + ' (' + ($Item.Uri -replace '\?.*$', '') + ')')
+        }
         if ($Item.Error) {
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Error: ' + $Item.Error + ' (' + ($Item.Uri -replace '\?.*$', '') + ')')
         }
         $Results[$Item.Key] = $Item.Response
+    }
+
+    $Slowest = $Responses | Sort-Object Seconds -Descending | Select-Object -First 1
+    if ($Slowest) {
+        Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Requests: ' + @($Responses).Count + ', retried: ' + @($Responses | Where-Object Retries).Count + ', slowest: ' + [math]::Round($Slowest.Seconds, 1) + 's (' + ($Slowest.Uri -replace '\?.*$', '') + ')')
     }
 
     return $Results
