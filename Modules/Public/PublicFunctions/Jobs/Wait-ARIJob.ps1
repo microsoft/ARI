@@ -30,7 +30,8 @@ function Wait-ARIJob {
         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"$JobType Jobs Still Running: "+[string]($jb | Where-Object { $_.State -eq 'Running' }).count)
         $c = [math]::Round($c)
         Write-Progress -Id 1 -activity "Processing $JobType Jobs" -Status "$c% Complete." -PercentComplete $c
-        Start-Sleep -Seconds $LoopTime
+        # Returns as soon as any job finishes; $LoopTime is only the longest wait between progress updates
+        $null = get-job -Name $JobNames | Where-Object { $_.State -eq 'Running' } | Wait-Job -Any -Timeout $LoopTime
     }
     Write-Progress -Id 1 -activity "Processing $JobType Jobs" -Status "100% Complete." -Completed
 
