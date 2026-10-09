@@ -70,7 +70,6 @@ function Start-ARIExcelJob {
 
                     if ($ModuleResourceCount -gt 0)
                     {
-                        Start-Sleep -Milliseconds 25
                         Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Running Module: '$ModName'. Excel Rows: $ModuleResourceCount")
 
                         $ScriptBlock = [Scriptblock]::Create($ModuleData)
