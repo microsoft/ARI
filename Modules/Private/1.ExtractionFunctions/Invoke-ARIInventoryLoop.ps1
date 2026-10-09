@@ -27,7 +27,7 @@ function Invoke-ARIInventoryLoop {
             $SubLoop = $FSubscri.count / 200
             $SubLooper = 0
             $NStart = 0
-            $NEnd = 200
+            $NEnd = 199  # inclusive range: 0..199 is 200 subscriptions
             while ($SubLooper -lt $SubLoop)
                 {
                     $Sub = $FSubscri[$NStart..$NEnd]
