@@ -33,11 +33,14 @@ If ($Task -eq 'Processing')
 
     if($Search)
         {
+            $RetirementIndex = @{}
+            foreach ($Retirement in $Retirements) { $RetirementIndex[[string]$Retirement.id] += @($Retirement) }
+
             $Tmp = foreach ($1 in $Search) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
-                $Retired = Foreach ($Retirement in $Retirements)
+                $Retired = Foreach ($Retirement in $RetirementIndex[[string]$1.id])
                     {
                         if ($Retirement.id -eq $1.id) { $Retirement }
                     }

@@ -34,13 +34,16 @@ If ($Task -eq 'Processing')
 
     if($arcservers)
         {
+            $RetirementIndex = @{}
+            foreach ($Retirement in $Retirements) { $RetirementIndex[[string]$Retirement.id] += @($Retirement) }
+
             $tmp = foreach ($1 in $arcservers) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
 
-                $Retired = Foreach ($Retirement in $Retirements)
+                $Retired = Foreach ($Retirement in $RetirementIndex[[string]$1.id])
                     {
                         if ($Retirement.id -eq $1.id) { $Retirement }
                     }

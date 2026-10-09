@@ -29,6 +29,9 @@ if ($Task -eq 'Processing') {
 
     if($SQLDB)
         {
+            $RetirementIndex = @{}
+            foreach ($Retirement in $Retirements) { $RetirementIndex[[string]$Retirement.id] += @($Retirement) }
+
             $tmp = foreach ($1 in $SQLDB) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
@@ -43,7 +46,10 @@ if ($Task -eq 'Processing') {
                     {
                         $RestorePoint = $null
                     }
-                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                $Retired = Foreach ($Retirement in $RetirementIndex[[string]$1.id])
+                    {
+                        if ($Retirement.id -eq $1.id) { $Retirement }
+                    }
                 if ($Retired) 
                     {
                         $RetiredFeature = foreach ($Retire in $Retired)

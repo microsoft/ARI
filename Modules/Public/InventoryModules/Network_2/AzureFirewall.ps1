@@ -33,15 +33,18 @@ If ($Task -eq 'Processing') {
 
     if($AzureFirewall)
         {
+            $RetirementIndex = @{}
+            foreach ($Retirement in $Retirements) { $RetirementIndex[[string]$Retirement.id] += @($Retirement) }
+
             $tmp = foreach ($1 in $AzureFirewall) 
                 { 
                     $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                     $data = $1.PROPERTIES
                     if ($1.zones) { $Zones = $1.zones } Else { $Zones = "Not Configured" }
-                    $Retired = Foreach ($Retirement in $Retirements)
-                    {
-                        if ($Retirement.id -eq $1.id) { $Retirement }
-                    }
+                    $Retired = Foreach ($Retirement in $RetirementIndex[[string]$1.id])
+                        {
+                            if ($Retirement.id -eq $1.id) { $Retirement }
+                        }
                     if ($Retired) 
                         {
                             $RetiredFeature = foreach ($Retire in $Retired)
