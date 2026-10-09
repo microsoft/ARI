@@ -37,12 +37,12 @@ If ($Task -eq 'Processing')
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $0.subscriptionId }
                 $rbs = $runbook | Where-Object { $_.id.split('/')[8] -eq $0.name }
-                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($0.tags.psobject.properties)){$0.tags.psobject.properties}else{'0'}
                 $data0 = $0.properties
                 $timecreated = $data0.creationTime
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
-                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                $Retired = $Retirements | Where-Object { $_.id -eq $0.id }
                 if ($Retired) 
                     {
                         $RetiredFeature = foreach ($Retire in $Retired)
@@ -95,7 +95,7 @@ If ($Task -eq 'Processing')
                 else {
                         foreach ($Tag in $Tags) {  
                             $obj = @{
-                                'ID'                                = $1.id;
+                                'ID'                                = $0.id;
                                 'Subscription'                      = $sub1.name;
                                 'Resource Group'                    = $0.RESOURCEGROUP;
                                 'Automation Account Name'           = $0.NAME;
