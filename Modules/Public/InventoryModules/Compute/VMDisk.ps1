@@ -67,7 +67,7 @@ If ($Task -eq 'Processing')
                     }
                 $SKU = $1.SKU
                 $Hibernation = if (![string]::IsNullOrEmpty($data.supportsHibernation)) { $data.supportsHibernation }else { $false }
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
                             'ID'                     = $1.id;

@@ -59,7 +59,7 @@ If ($Task -eq 'Processing')
                         $RetiringFeature = $null
                         $RetiringDate = $null
                     }
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 $ingress = if(![string]::IsNullOrEmpty($data.configuration.ingress)){$true}else{$false}
                 $dapr = if(![string]::IsNullOrEmpty($data.configuration.dapr)){$true}else{$false}
                 $secrets = if(![string]::IsNullOrEmpty($data.configuration.secrets)){$data.configuration.secrets.count}else{0}

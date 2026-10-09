@@ -63,7 +63,7 @@ If ($Task -eq 'Processing') {
                 $LastOutput = if($data.lastOutputEventTime){[string](get-date $data.lastOutputEventTime)}else{''}
                 $OutputStart = if($data.outputStartTime){[string](get-date $data.outputStartTime)}else{''}
                 $ClusterDate = if($Cluster.properties.createddate){[string](get-date($Cluster.properties.createddate))}else{''}
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
 
                 $sub2 = $SUB | Where-Object { $_.id -eq $Cluster.subscriptionid }
                     foreach ($Tag in $Tags) {

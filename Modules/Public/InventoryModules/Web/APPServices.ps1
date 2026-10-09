@@ -67,7 +67,7 @@ If ($Task -eq 'Processing')
                 $VNET = if(![string]::IsNullOrEmpty($data.virtualNetworkSubnetId)){$data.virtualNetworkSubnetId.split("/")[8]}else{$null}
                 $SUBNET = if(![string]::IsNullOrEmpty($data.virtualNetworkSubnetId)){$data.virtualNetworkSubnetId.split("/")[10]}else{$null}
                 $Stack = if(![string]::IsNullOrEmpty($data.SiteConfig.linuxFxVersion)){$data.SiteConfig.linuxFxVersion}else{$data.SiteConfig.windowsFxVersion}
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 foreach ($2 in $data.hostNameSslStates) {
                         foreach ($Tag in $Tags) {
                             $obj = @{

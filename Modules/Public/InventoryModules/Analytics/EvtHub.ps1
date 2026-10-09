@@ -65,7 +65,7 @@ If ($Task -eq 'Processing')
                         $RetiringDate = $null
                     }
                 $LocalAuth = if($data.disablelocalauth -eq $false){$true}else{$false}
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) { 
                         $obj = @{
                             'ID'                   = $1.id;

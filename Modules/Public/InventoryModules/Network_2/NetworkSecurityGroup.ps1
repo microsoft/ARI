@@ -64,7 +64,7 @@ If ($Task -eq 'Processing') {
             $FlowLogsEnabled = if ($NSGFlows.properties.enabled -eq 'true') { $true }else { $false }
             $FlowLogsRetention = if (![string]::IsNullOrEmpty($NSGFlows.properties.retentionPolicy.days)) { $NSGFlows.properties.retentionPolicy.days }else { 'Not Enabled' }
             $FlowLogsStorage = if (![string]::IsNullOrEmpty($NSGFlows.properties.storageId)) { ($NSGFlows.properties.storageId).split('/')[8] }else { 'Not Enabled' }
-            $Tags = if (![string]::IsNullOrEmpty($1.tags.psobject.properties)) { $1.tags.psobject.properties }else { '0' }
+            $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)) { $1.tags.psobject.properties }else { '0' }
             $RelatedNics = @()
             $RelatedSubs = @()
 
