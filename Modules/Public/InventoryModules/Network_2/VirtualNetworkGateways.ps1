@@ -28,12 +28,18 @@ If ($Task -eq 'Processing') {
 
     if($VNETGTW)
         {
+            $RetirementIndex = @{}
+            foreach ($Retirement in $Retirements) { $RetirementIndex[[string]$Retirement.id] += @($Retirement) }
+
             $tmp = foreach ($1 in $VNETGTW) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $generation = if($data.vpnGatewayGeneration -eq 'None'){ 'Generation1'}else{ 'Generation2'}
-                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                $Retired = Foreach ($Retirement in $RetirementIndex[[string]$1.id])
+                    {
+                        if ($Retirement.id -eq $1.id) { $Retirement }
+                    }
                 if ($Retired) 
                     {
                         $RetiredFeature = foreach ($Retire in $Retired)

@@ -29,6 +29,9 @@ If ($Task -eq 'Processing') {
 
     if($DataBricks)
         {
+            $RetirementIndex = @{}
+            foreach ($Retirement in $Retirements) { $RetirementIndex[[string]$Retirement.id] += @($Retirement) }
+
             $tmp = foreach ($1 in $DataBricks) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
@@ -39,7 +42,7 @@ If ($Task -eq 'Processing') {
                 $timecreated = $data.createdDateTime
                 $timecreated = [datetime]$timecreated
                 $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
-                $Retired = Foreach ($Retirement in $Retirements)
+                $Retired = Foreach ($Retirement in $RetirementIndex[[string]$1.id])
                     {
                         if ($Retirement.id -eq $1.id) { $Retirement }
                     }

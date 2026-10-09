@@ -38,6 +38,9 @@ If ($Task -eq 'Processing')
     if($vm)
         {    
 
+            $RetirementIndex = @{}
+            foreach ($Retirement in $Retirements) { $RetirementIndex[[string]$Retirement.id] += @($Retirement) }
+
             $tmp = foreach ($1 in $vm) 
                 {
                     $ResUCount = 1
@@ -73,7 +76,7 @@ If ($Task -eq 'Processing')
                     $Quota = $Quota | Where-Object {$_.Location -eq $1.location}
                     $RemainingQuota = (($Quota.Data | Where-Object {$_.Name.Value -eq $Size}).Limit - ($Quota.Data | Where-Object {$_.Name.Value -eq $Size}).CurrentValue)
 
-                    $Retired = Foreach ($Retirement in $Retirements)
+                    $Retired = Foreach ($Retirement in $RetirementIndex[[string]$1.id])
                         {
                             if ($Retirement.id -eq $1.id) { $Retirement }
                         }
