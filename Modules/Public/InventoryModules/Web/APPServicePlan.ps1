@@ -35,6 +35,9 @@ If ($Task -eq 'Processing')
 
     if($APPSvcPlan)
         {
+            $RetirementIndex = @{}
+            foreach ($Retirement in $Retirements) { $RetirementIndex[[string]$Retirement.id] += @($Retirement) }
+
             $tmp = foreach ($1 in $APPSvcPlan) {
                 $ResUCount = 1
                 Remove-Variable AutoScale -ErrorAction SilentlyContinue
@@ -42,7 +45,7 @@ If ($Task -eq 'Processing')
                 $data = $1.PROPERTIES
                 $sku = $1.SKU
                 $Orphaned = if([string]::IsNullOrEmpty($data.numberOfSites) -or $data.numberOfSites -eq 0){$true}else{$false}
-                $Retired = Foreach ($Retirement in $Retirements)
+                $Retired = Foreach ($Retirement in $RetirementIndex[[string]$1.id])
                     {
                         if ($Retirement.id -eq $1.id) { $Retirement }
                     }

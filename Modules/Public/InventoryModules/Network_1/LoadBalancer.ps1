@@ -28,12 +28,15 @@ If ($Task -eq 'Processing') {
 
     if($LoadBalancer)
         {
+            $RetirementIndex = @{}
+            foreach ($Retirement in $Retirements) { $RetirementIndex[[string]$Retirement.id] += @($Retirement) }
+
             $tmp = foreach ($1 in $LoadBalancer ) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
                 $Orphaned = if([string]::IsNullOrEmpty($data.backendAddressPools.id)){$true}else{$false}
-                $Retired = Foreach ($Retirement in $Retirements)
+                $Retired = Foreach ($Retirement in $RetirementIndex[[string]$1.id])
                     {
                         if ($Retirement.id -eq $1.id) { $Retirement }
                     }
