@@ -275,7 +275,8 @@ Function Invoke-ARI {
     $ExtractionRuntime.Stop()
 
     $Resources = $ExtractionData.Resources
-    $Quotas = $ExtractionData.Quotas
+    # The Quota Usage sheet is opt-in, as documented for -QuotaUsage
+    $Quotas = if ($QuotaUsage) { $ExtractionData.Quotas }
     $CostData = $ExtractionData.Costs
     $ResourceContainers = $ExtractionData.ResourceContainers
     $Advisories = $ExtractionData.Advisories
