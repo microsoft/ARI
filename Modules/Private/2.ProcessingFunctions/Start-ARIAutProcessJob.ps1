@@ -23,7 +23,6 @@ function Start-ARIAutProcessJob {
     $ParentPath = (get-item $PSScriptRoot).parent.parent
     $InventoryModulesPath = Join-Path $ParentPath 'Public' 'InventoryModules'
     $Modules = Get-ChildItem -Path $InventoryModulesPath -Directory
-    $NewResources = ($Resources | ConvertTo-Json -Depth 40 -Compress)
     $JobLoop = 1
     Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Starting ARI Automation Processing Jobs...")
 
@@ -42,6 +41,7 @@ function Start-ARIAutProcessJob {
             $ModulePath = Join-Path $ModuleFolder.FullName '*.ps1'
             $ModuleName = $ModuleFolder.Name
             $ModuleFiles = Get-ChildItem -Path $ModulePath
+            $JobResources = Get-ARIJobResource -Resources $Resources -ModuleFiles $ModuleFiles
             Write-Output ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+"Starting Job: $ModuleName")
 
             Start-ThreadJob -Name ('ResourceJob_'+$ModuleName) -ScriptBlock {
@@ -71,7 +71,7 @@ function Start-ARIAutProcessJob {
 
                 $SmaResources
 
-            } -ArgumentList $ModuleFiles, $PSScriptRoot, $Subscriptions, $InTag, $NewResources, $Retirements, 'Processing', $null, $null, $null, $Unsupported | Out-Null
+            } -ArgumentList $ModuleFiles, $PSScriptRoot, $Subscriptions, $InTag, $JobResources, $Retirements, 'Processing', $null, $null, $null, $Unsupported | Out-Null
 
             if($JobLoop -eq $EnvSizeLooper)
                 {

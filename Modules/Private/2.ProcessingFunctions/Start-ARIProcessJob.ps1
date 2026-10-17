@@ -55,11 +55,7 @@ function Start-ARIProcessJob {
     $JobLoop = 1
     $TotalFolders = $ModuleFolders.count
 
-    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Converting Resource data to JSON for Jobs')
-    $NewResources = ($Resources | ConvertTo-Json -Depth 40 -Compress)
-
-    Remove-Variable -Name Resources
-    Clear-ARIMemory
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Each job gets only the resource types its modules read')
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting to Create Jobs to Process the Resources.')
 
@@ -71,6 +67,7 @@ function Start-ARIProcessJob {
             $ModuleFiles = Get-ChildItem -Path $ModulePath
 
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Creating Job: '+$ModuleName)
+            $JobResources = Get-ARIJobResource -Resources $Resources -ModuleFiles $ModuleFiles
 
             $c = (($JobLoop / $TotalFolders) * 100)
             $c = [math]::Round($c)
@@ -137,7 +134,7 @@ function Start-ARIProcessJob {
 
                 $Hashtable
 
-            } -ArgumentList $ModuleFiles, $PSScriptRoot, $Subscriptions, $InTag, $NewResources , $Retirements, 'Processing', $null, $null, $null, $Unsupported | Out-Null
+            } -ArgumentList $ModuleFiles, $PSScriptRoot, $Subscriptions, $InTag, $JobResources, $Retirements, 'Processing', $null, $null, $null, $Unsupported | Out-Null
 
         if($JobLoop -eq $EnvSizeLooper)
             {
@@ -158,6 +155,6 @@ function Start-ARIProcessJob {
 
         }
 
-        Remove-Variable -Name NewResources
+        Remove-Variable -Name Resources, JobResources -ErrorAction SilentlyContinue
         Clear-ARIMemory
 }
