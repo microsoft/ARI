@@ -66,8 +66,6 @@ function Start-ARIExtractionOrchestration {
 
             $Resources += $VMQuotas
 
-            Remove-Variable -Name VMQuotas -ErrorAction SilentlyContinue
-
             Write-Host 'Gathering VM Extra Details: ' -NoNewline
             Write-Host 'Size SKU' -ForegroundColor Cyan
 
