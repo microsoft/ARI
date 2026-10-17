@@ -66,7 +66,7 @@ If ($Task -eq 'Processing')
                         $RetiringDate = $null
                     }
                 $pvt = if(![string]::IsNullOrEmpty($data.privateendpointconnections)){$data.privateendpointconnections}else{'0'}
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 $Language = if(![string]::IsNullOrEmpty($data.apiProperties.TA4HResourceId)){$data.apiProperties.TA4HResourceId}else{'0'}
                 $Language = $Language.split('/')[8]
                     foreach ($pv in $pvt)

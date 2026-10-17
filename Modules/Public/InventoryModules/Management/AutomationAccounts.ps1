@@ -37,7 +37,7 @@ If ($Task -eq 'Processing')
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $0.subscriptionId }
                 $rbs = $runbook | Where-Object { $_.id.split('/')[8] -eq $0.name }
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 $data0 = $0.properties
                 $timecreated = $data0.creationTime
                 $timecreated = [datetime]$timecreated

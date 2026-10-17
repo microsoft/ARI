@@ -57,7 +57,7 @@ If ($Task -eq 'Processing') {
                         $RetiringDate = $null
                     }
                 $IpFilter = $data.ipFilterRules.count
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach($loc in $data.locations)
                         {
                             foreach ($Tag in $Tags) {

@@ -63,7 +63,7 @@ If ($Task -eq 'Processing') {
                 $CapacityPool = if(![string]::IsNullOrEmpty($1.Name)){$1.Name.split('/')[1]}else{$null}
                 $Volume =if(![string]::IsNullOrEmpty($1.Name)){$1.Name.split('/')[2]}else{$null}
                 $Quota = ((($data.usageThreshold/1024)/1024)/1024)/1024
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
                             'ID'                                = $1.id;

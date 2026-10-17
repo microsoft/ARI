@@ -59,7 +59,7 @@ If ($Task -eq 'Processing')
                         $RetiringFeature = $null
                         $RetiringDate = $null
                     }
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 Foreach ($vmid in $data.virtualMachines.id) {
                     $vmIds = $vmid.split('/')[8]
                         foreach ($Tag in $Tags) {

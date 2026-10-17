@@ -59,7 +59,7 @@ If ($Task -eq 'Processing') {
                 $ER = $data.circuit.expressRouteID.split('/')[8]
                 $externalCloud = $data.externalCloudLinks.count
                 $identitySources = $data.identitySources.count
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
                             'ID'                                = $1.id;

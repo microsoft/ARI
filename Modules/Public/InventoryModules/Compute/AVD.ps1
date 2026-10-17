@@ -72,7 +72,7 @@ If ($Task -eq 'Processing') {
                         $RetiringDate = $null
                     }
                 if ($1.ZONES) { $Zones = $1.ZONES }else { $Zones = 'Not Configured' }
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 foreach ($2 in $sessionhosts)
                 {
                     $domain = $2.name.replace(($2.name.split(".")[0]),'')

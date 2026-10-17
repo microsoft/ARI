@@ -34,7 +34,7 @@ if ($Task -eq 'Processing') {
                 $sub1 = $SUB | Where-Object { $_.id -eq $1.subscriptionId }
                 $data = $1.PROPERTIES
 
-                $Tags = if(!!($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and !!($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                 $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
                 if ($Retired) 
                     {

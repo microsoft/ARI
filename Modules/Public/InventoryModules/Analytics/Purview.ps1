@@ -63,7 +63,7 @@ If ($Task -eq 'Processing') {
                     }
                 $StorageAcc = if(![string]::IsNullOrEmpty($data.managedResources.storageAccount)){$data.managedResources.storageAccount.split('/')[8]}else{$null}
                 $eventHubNamespace = if(![string]::IsNullOrEmpty($data.managedResources.eventHubNamespace)){($data.managedResources.eventHubNamespace.split('/')[8])}else{$null}
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
                             'ID'                                = $1.id;

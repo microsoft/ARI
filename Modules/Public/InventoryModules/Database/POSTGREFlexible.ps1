@@ -58,7 +58,7 @@ If ($Task -eq 'Processing') {
                 $DelegatedVNET = if(![string]::IsNullOrEmpty($data.network.delegatedsubnetresourceid)){$data.network.delegatedsubnetresourceid.split('/')[8]}else{$null}
                 $DelegatedSubnet = if(![string]::IsNullOrEmpty($data.network.delegatedsubnetresourceid)){$data.network.delegatedsubnetresourceid.split('/')[10]}else{$null}
                 $PrivateDNSZone = if(![string]::IsNullOrEmpty($data.network.privatednszonearmresourceid)){$data.network.privatednszonearmresourceid.split('/')[8]}else{$null}
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{
                             'ID'                        = $1.id;

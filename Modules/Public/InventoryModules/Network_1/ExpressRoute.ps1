@@ -60,7 +60,7 @@ If ($Task -eq 'Processing')
                         $RetiringDate = $null
                     }
                 $Auths = if(![string]::IsNullOrEmpty($data.authorizations)){$data.authorizations}else{'0'}
-                $Tags = if(![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
+                $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach($Auth in $Auths)
                         {
                             foreach ($Tag in $Tags) { 
