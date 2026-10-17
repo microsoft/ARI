@@ -103,11 +103,8 @@ function Start-ARIProcessJob {
                         Set-Variable -Name ('ModJob' + $ModName) -Value ((get-variable -name ('ModRun' + $ModName)).Value).BeginInvoke()
 
                         $job += (get-variable -name ('ModJob' + $ModName)).Value
-                        Start-Sleep -Milliseconds 100
                         Remove-Variable -Name ModName
                     }
-
-                While ($Job.Runspace.IsCompleted -contains $false) { Start-Sleep -Milliseconds 500 }
 
                 Foreach ($Module in $ModuleFiles)
                     {
@@ -117,7 +114,6 @@ function Start-ARIProcessJob {
 
                         Remove-Variable -Name ('ModRun' + $ModName)
                         Remove-Variable -Name ('ModJob' + $ModName)
-                        Start-Sleep -Milliseconds 100
                         Remove-Variable -Name ModName
                     }
 
@@ -130,7 +126,6 @@ function Start-ARIProcessJob {
                         $Hashtable["$ModName"] = (get-variable -name ('ModValue' + $ModName)).Value
 
                         Remove-Variable -Name ('ModValue' + $ModName)
-                        Start-Sleep -Milliseconds 100
 
                         Remove-Variable -Name ModName
                     }

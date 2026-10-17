@@ -21,7 +21,7 @@ function Invoke-ARIInventoryLoop {
 
     Write-Progress -Id 1 -activity 'Azure Inventory' -Status "1% Complete." -PercentComplete 1 -CurrentOperation ('Extracting: ' + $LoopName)
     $ReportCounter = 1
-    $LocalResults = @()
+    $LocalResults = [System.Collections.Generic.List[object]]::new()
     if($FSubscri.count -gt 200)
         {
             $SubLoop = $FSubscri.count / 200
@@ -41,7 +41,7 @@ function Invoke-ARIInventoryLoop {
                             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Extracting First 100 ' + $LoopName)
                             $QueryResult = Search-AzGraph -Query $GraphQuery -first 100 -Subscription $Sub -Debug:$false
                         }
-                    $LocalResults += $QueryResult
+                    $LocalResults.AddRange(@($QueryResult))
                     while ($QueryResult.SkipToken) {
                         $ReportCounterVar = [string]$ReportCounter
                         try
@@ -56,7 +56,7 @@ function Invoke-ARIInventoryLoop {
                                 Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete ([Math]::Min($ReportCounter, 100))
                                 $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $Sub -first 100 -Debug:$false
                             }
-                        $LocalResults += $QueryResult
+                        $LocalResults.AddRange(@($QueryResult))
                     }
                     $NStart = $NStart + 200
                     $NEnd = $NEnd + 200
@@ -77,7 +77,7 @@ function Invoke-ARIInventoryLoop {
                     $QueryResult = Search-AzGraph -Query $GraphQuery -first 100 -Subscription $FSubscri -Debug:$false
                 }
 
-            $LocalResults += $QueryResult
+            $LocalResults.AddRange(@($QueryResult))
             while ($QueryResult.SkipToken) {
                 $ReportCounterVar = [string]$ReportCounter
                 try
@@ -92,10 +92,10 @@ function Invoke-ARIInventoryLoop {
                         Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "$ReportCounter% Complete." -PercentComplete ([Math]::Min($ReportCounter, 100))
                         $QueryResult = Search-AzGraph -Query $GraphQuery -SkipToken $QueryResult.SkipToken -Subscription $FSubscri -first 100 -Debug:$false
                     }
-                $LocalResults += $QueryResult
+                $LocalResults.AddRange(@($QueryResult))
                 $ReportCounter ++
             }
         }
         Write-Progress -Id 1 -activity ('Extracting: ' + $LoopName) -Status "100% Complete." -Completed
-    return $LocalResults
+    return $LocalResults.ToArray()
 }

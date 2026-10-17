@@ -65,8 +65,6 @@ function Start-ARIAutProcessJob {
 
                         $SmaResources[$ModName] = Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList $PSScriptRoot, $Subscriptions, $InTag, $Resources, $Retirements,'Processing', $null, $null, $null, $Unsupported
 
-                        Start-Sleep -Milliseconds 100
-
                     }
 
                 $SmaResources
@@ -80,8 +78,6 @@ function Start-ARIAutProcessJob {
                     Get-Job | Where-Object {$_.name -like 'ResourceJob_*'} | Wait-Job
 
                     $JobNames = (Get-Job | Where-Object {$_.name -like 'ResourceJob_*'}).Name
-
-                    Start-Sleep -Seconds 5
 
                     Build-ARICacheFiles -DefaultPath $DefaultPath -JobNames $JobNames
 
