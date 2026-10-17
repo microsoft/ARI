@@ -28,6 +28,8 @@ If ($Task -eq 'Processing') {
 
     $storageacc = $Resources | Where-Object { $_.TYPE -eq 'microsoft.storage/storageaccounts' }
     $StorageDetails = $Resources | Where-Object { $_.TYPE -eq 'ARI/STORAGE/CAPACITY' }
+    $StorageServices = @{}
+    foreach ($Service in ($Resources | Where-Object { $_.TYPE -eq 'ARI/STORAGE/SERVICES' }).properties) { $StorageServices[$Service.id] = $Service }
 
     <######### Insert the resource Process here ########>
 
@@ -128,8 +130,8 @@ If ($Task -eq 'Processing') {
                 $FinalACLIPs = [string]$FinalACLIPs
                 $FinalACLIPs = if ($FinalACLIPs -like '* ,*') { $FinalACLIPs -replace ".$" }else { $FinalACLIPs }
 
-                $blobProperties = Get-AzStorageBlobServiceProperty -ResourceGroupName $1.RESOURCEGROUP -Name $1.NAME
-                $fileProperties = Get-AzStorageFileServiceProperty -ResourceGroupName $1.RESOURCEGROUP -Name $1.NAME
+                $blobProperties = $StorageServices[$1.id].Blob
+                $fileProperties = $StorageServices[$1.id].File
 
                 foreach ($2 in $VNETRules)
                     {

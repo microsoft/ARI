@@ -88,6 +88,9 @@ function Start-ARIExtractionOrchestration {
 
         }
 
+    Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting Storage Service Properties.')
+    $Resources += Get-ARIStorageServiceProperty -Resources $Resources
+
     $ReturnData = [PSCustomObject]@{
         Resources = $Resources
         Quotas = $VMQuotas
