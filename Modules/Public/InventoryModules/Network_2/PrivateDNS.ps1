@@ -29,6 +29,9 @@ If ($Task -eq 'Processing') {
 
     if($PrivateDNS)
         {
+            $RetirementIndex = @{}
+            foreach ($Retirement in $Retirements) { $RetirementIndex[[string]$Retirement.id] += @($Retirement) }
+
             $tmp = foreach ($1 in $PrivateDNS) {
                 $ResUCount = 1
                 $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
@@ -36,7 +39,10 @@ If ($Task -eq 'Processing') {
 
                 $vnlks = ($VNETLinks | Where-Object {$_.id -like ($1.id + '*')})
                 $vnlks = if (!$vnlks) {[pscustomobject]@{id = 'none'}} else {$vnlks | Select-Object @{Name="id";Expression={$_.properties.virtualNetwork.id.split("/")[8]}}}
-                $Retired = $Retirements | Where-Object { $_.id -eq $1.id }
+                $Retired = Foreach ($Retirement in $RetirementIndex[[string]$1.id])
+                    {
+                        if ($Retirement.id -eq $1.id) { $Retirement }
+                    }
                 if ($Retired) 
                     {
                         $RetiredFeature = foreach ($Retire in $Retired)
