@@ -44,7 +44,7 @@ function Start-ARIExtraReports {
 
                 while (get-job -Name 'Security' | Where-Object { $_.State -eq 'Running' }) {
                     Write-Progress -Id 1 -activity 'Processing Security Center Advisories' -Status "50% Complete." -PercentComplete 50
-                    Start-Sleep -Seconds 2
+                    $null = Wait-Job -Name 'Security' -Timeout 2
                 }
 
                 $Sec = Receive-Job -Name 'Security'
@@ -67,7 +67,7 @@ function Start-ARIExtraReports {
 
                 while (get-job -Name 'Policy' | Where-Object { $_.State -eq 'Running' }) {
                     Write-Progress -Id 1 -activity 'Processing Policies' -Status "50% Complete." -PercentComplete 50
-                    Start-Sleep -Seconds 2
+                    $null = Wait-Job -Name 'Policy' -Timeout 2
                 }
 
                 $Pol = Receive-Job -Name 'Policy'
@@ -76,8 +76,6 @@ function Start-ARIExtraReports {
                 Build-ARIPolicyReport -File $File -Pol $Pol -TableStyle $TableStyle
 
                 Write-Progress -Id 1 -activity 'Processing Policies'  -Status "100% Complete." -Completed
-
-                Start-Sleep -Milliseconds 200
             }
     }
 
@@ -91,7 +89,7 @@ function Start-ARIExtraReports {
 
                 while (get-job -Name 'Advisory' | Where-Object { $_.State -eq 'Running' }) {
                     Write-Progress -Id 1 -activity 'Processing Advisories' -Status "50% Complete." -PercentComplete 50
-                    Start-Sleep -Seconds 2
+                    $null = Wait-Job -Name 'Advisory' -Timeout 2
                 }
 
                 $Adv = Receive-Job -Name 'Advisory'
@@ -100,8 +98,6 @@ function Start-ARIExtraReports {
                 Build-ARIAdvisoryReport -File $File -Adv $Adv -TableStyle $TableStyle
 
                 Write-Progress -Id 1 -activity 'Processing Advisories'  -Status "100% Complete." -Completed
-
-                Start-Sleep -Milliseconds 200
             }
     }
 
@@ -113,7 +109,7 @@ function Start-ARIExtraReports {
 
     while (get-job -Name 'Subscriptions' | Where-Object { $_.State -eq 'Running' }) {
         Write-Progress -Id 1 -activity 'Processing Subscriptions' -Status "50% Complete." -PercentComplete 50
-        Start-Sleep -Seconds 2
+        $null = Wait-Job -Name 'Subscriptions' -Timeout 2
     }
 
     $AzSubs = Receive-Job -Name 'Subscriptions'
