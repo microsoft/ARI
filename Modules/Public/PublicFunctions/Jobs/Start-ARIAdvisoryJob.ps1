@@ -20,6 +20,39 @@ Authors: Claudio Merola
 function Start-ARIAdvisoryJob {
     param($Advisories)
 
+    # Advisor returns every term x look-back variant of a reservation/savings plan recommendation; keep the 30-day one (as the portal does), else the shortest
+    $Groups = @{}
+    foreach ($1 in $Advisories)
+        {
+            $data = $1.PROPERTIES
+            $ext = $data.extendedProperties
+            if ($ext.lookbackPeriod -and ([string]$ext.lookbackPeriod) -match '(\d+)')
+                {
+                    $Days = [int]$Matches[1]
+                    $GroupKey = (@($data.resourceMetadata.resourceId, $data.recommendationTypeId, $ext.term, $ext.sku, $ext.region, $ext.scope) | ForEach-Object { ([string]$_).ToLower() }) -join '|'
+                    $Best = $Groups[$GroupKey]
+                    if ($null -eq $Best -or ($Days -eq 30 -and $Best -ne 30) -or ($Best -ne 30 -and $Days -lt $Best))
+                        {
+                            $Groups[$GroupKey] = $Days
+                        }
+                }
+        }
+
+    $Advisories = foreach ($1 in $Advisories)
+        {
+            $data = $1.PROPERTIES
+            $ext = $data.extendedProperties
+            if ($ext.lookbackPeriod -and ([string]$ext.lookbackPeriod) -match '(\d+)')
+                {
+                    $GroupKey = (@($data.resourceMetadata.resourceId, $data.recommendationTypeId, $ext.term, $ext.sku, $ext.region, $ext.scope) | ForEach-Object { ([string]$_).ToLower() }) -join '|'
+                    if ([int]$Matches[1] -eq $Groups[$GroupKey]) { $1 }
+                }
+            else
+                {
+                    $1
+                }
+        }
+
     $tmp = foreach ($1 in $Advisories)
         {
             $data = $1.PROPERTIES
