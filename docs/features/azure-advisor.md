@@ -31,6 +31,8 @@ ARI collects the following information from Azure Advisor:
 - VM right-sizing opportunities
 - Potential savings calculations
 
+Cost recommendations are read from the Azure Advisor REST API, because Resource Graph keeps recommendations that Advisor has already retired. If the REST call fails for a subscription, ARI falls back to the Resource Graph cost recommendations for that subscription. The REST API is not used with `-SkipAPIs`.
+
 ### Performance Recommendations
 
 - VM SKU size optimizations

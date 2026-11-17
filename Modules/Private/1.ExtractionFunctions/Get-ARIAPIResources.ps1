@@ -17,7 +17,7 @@ First Release Date: 15th Oct, 2024
 Authors: Claudio Merola
 #>
 function Get-ARIAPIResources {
-    Param($Subscriptions, $AzureEnvironment, $SkipPolicy)
+    Param($Subscriptions, $AzureEnvironment, $SkipPolicy, $SkipAdvisory)
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Starting API Inventory')
 
@@ -67,6 +67,10 @@ function Get-ARIAPIResources {
             [PSCustomObject]@{ Key = "$Sub|Identities"; Uri = ($Base + 'Microsoft.ManagedIdentity/userAssignedIdentities?api-version=2023-01-31') }
             [PSCustomObject]@{ Key = "$Sub|AdvisorScore"; Uri = ($Base + 'Microsoft.Advisor/advisorScore?api-version=2023-01-01') }
             [PSCustomObject]@{ Key = "$Sub|Reservation"; Uri = ($Base + 'Microsoft.Consumption/reservationRecommendations?api-version=2023-05-01') }
+            if (!$SkipAdvisory)
+                {
+                    [PSCustomObject]@{ Key = "$Sub|AdvisorCost"; Uri = ($Base + 'Microsoft.Advisor/recommendations?api-version=2023-01-01&$filter=' + [uri]::EscapeDataString("Category eq 'Cost'")) }
+                }
             if (!$SkipPolicy.isPresent)
                 {
                     [PSCustomObject]@{ Key = "$Sub|PolicyAssign"; Uri = ($Base + 'Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01'); Method = 'POST' }
@@ -96,6 +100,43 @@ function Get-ARIAPIResources {
                         }
                 }
 
+            # Advisor cost recommendations: follow nextLink; if any page fails the subscription counts as not read
+            $AdvisorCost = @()
+            $AdvisorCostRead = $false
+            $Page = $Responses["$Sub|AdvisorCost"]
+            if ($Page)
+                {
+                    $AdvisorCostRead = $true
+                    $AdvisorRows = [System.Collections.Generic.List[object]]::new()
+                    $PageCount = 1
+                    while ($true)
+                        {
+                            foreach ($Row in $Page.value) { $AdvisorRows.Add($Row) }
+                            if (!$Page.nextLink) { break }
+                            if ($PageCount -ge 100)
+                                {
+                                    $AdvisorCostRead = $false
+                                    break
+                                }
+                            $Page = (Invoke-ARIRestParallel -Requests @([PSCustomObject]@{ Key = 'Page'; Uri = $Page.nextLink }) -Header $header)['Page']
+                            if (!$Page)
+                                {
+                                    $AdvisorCostRead = $false
+                                    break
+                                }
+                            $PageCount++
+                        }
+                    if ($AdvisorCostRead)
+                        {
+                            $AdvisorCost = @($AdvisorRows | Where-Object { $_.properties.impact -in 'Medium','High' })
+                            foreach ($Row in $AdvisorCost) { Add-Member -InputObject $Row -NotePropertyName 'subscriptionId' -NotePropertyValue $Sub -Force }
+                        }
+                    else
+                        {
+                            Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Advisor cost recommendations could not be fully read for subscription ' + $Sub)
+                        }
+                }
+
             $tmp = @{
                 'Subscription'          = $Sub;
                 'ResourceHealth'        = $Responses["$Sub|ResourceHealth"].value;
@@ -104,7 +145,9 @@ function Get-ARIAPIResources {
                 'ReservationRecomen'    = $Responses["$Sub|Reservation"].value;
                 'PolicyAssign'          = $PolicyAssign;
                 'PolicyDef'             = $PolicyDef;
-                'PolicySetDef'          = $PolicySetDef
+                'PolicySetDef'          = $PolicySetDef;
+                'AdvisorCost'           = $AdvisorCost;
+                'AdvisorCostRead'       = $AdvisorCostRead
             }
             $APIResults += $tmp
 

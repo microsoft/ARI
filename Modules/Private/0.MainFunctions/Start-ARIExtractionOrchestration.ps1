@@ -38,11 +38,13 @@ function Start-ARIExtractionOrchestration {
         {
             Write-Progress -activity 'Azure Inventory' -Status "12% Complete." -PercentComplete 12 -CurrentOperation "Starting API Extraction.."
             Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Getting API Resources.')
-            $APIResults = Get-ARIAPIResources -Subscriptions $Subscriptions -AzureEnvironment $AzureEnvironment -SkipPolicy $SkipPolicy
+            $APIResults = Get-ARIAPIResources -Subscriptions $Subscriptions -AzureEnvironment $AzureEnvironment -SkipPolicy $SkipPolicy -SkipAdvisory $SkipAdvisory
             $Resources += $APIResults.ResourceHealth
             $Resources += $APIResults.ManagedIdentities
             $Resources += $APIResults.AdvisorScore
             $Resources += $APIResults.ReservationRecomen
+            $Advisories = Merge-ARIAdvisorCost -Advisories $Advisories -APIResults $APIResults -ResourceGroup $ResourceGroup
+            $AdvisoryCount = [string]@($Advisories).Count
             $PolicyAssign = $APIResults.PolicyAssign
             $PolicyDef = $APIResults.PolicyDef
             $PolicySetDef = $APIResults.PolicySetDef
