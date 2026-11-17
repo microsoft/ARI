@@ -23,15 +23,21 @@ Authors: Robin Pieterse
 function Merge-ARIAdvisorCost {
     Param($Advisories, $APIResults, $ResourceGroup)
 
-    $Result = @($Advisories)
-    $Swapped = 0
+    # One pass over the advisories, not one per subscription
+    $ReadSubs = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($API in $APIResults) { if ($API.AdvisorCostRead) { [void]$ReadSubs.Add([string]$API.Subscription) } }
 
+    $Result = [System.Collections.Generic.List[object]]::new()
+    foreach ($Advisory in $Advisories)
+        {
+            if ($Advisory.properties.category -eq 'Cost' -and $ReadSubs.Contains([string]$Advisory.subscriptionId)) { continue }
+            $Result.Add($Advisory)
+        }
+
+    $Swapped = 0
     foreach ($API in $APIResults)
         {
             if (!$API.AdvisorCostRead) { continue }
-
-            $Sub = $API.Subscription
-            $Result = @($Result | Where-Object { !($_.subscriptionId -eq $Sub -and $_.properties.category -eq 'Cost') })
 
             $Rows = @($API.AdvisorCost)
             if (![string]::IsNullOrEmpty($ResourceGroup))
@@ -42,11 +48,11 @@ function Merge-ARIAdvisorCost {
                     })
                 }
 
-            $Result += $Rows
+            foreach ($Row in $Rows) { $Result.Add($Row) }
             $Swapped += $Rows.Count
         }
 
     Write-Debug ((get-date -Format 'yyyy-MM-dd_HH_mm_ss')+' - '+'Advisor cost recommendations swapped to REST: ' + $Swapped)
 
-    return $Result
+    return $Result.ToArray()
 }
