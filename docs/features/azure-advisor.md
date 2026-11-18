@@ -31,6 +31,10 @@ ARI collects the following information from Azure Advisor:
 - VM right-sizing opportunities
 - Potential savings calculations
 
+Cost recommendations are read from the Azure Advisor REST API, because Resource Graph keeps recommendations that Advisor has already retired. If the REST call fails for a subscription, ARI falls back to the Resource Graph cost recommendations for that subscription. The REST API is not used with `-SkipAPIs`.
+
+Advisor returns every term and look-back variant (7, 30 and 60 days) of a reservation or savings plan recommendation. As in the portal, only the 30-day look-back variant is listed (the shortest available one if there is no 30-day variant); the 1-year and 3-year terms are both kept.
+
 ### Performance Recommendations
 
 - VM SKU size optimizations
