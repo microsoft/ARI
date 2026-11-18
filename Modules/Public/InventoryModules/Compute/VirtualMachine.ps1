@@ -68,6 +68,8 @@ If ($Task -eq 'Processing')
                     $timecreated = [datetime]$timecreated
                     $timecreated = $timecreated.ToString("yyyy-MM-dd HH:mm")
                     $dataSize = ''
+                    $OSDisk = ''
+                    $OSDiskSize = ''
                     $VMDisks = foreach ($Key in @($data.storageProfile.osDisk.managedDisk.id) + @($data.storageProfile.dataDisks.managedDisk.id)) { Get-ARIIndexItem $DiskIndex $Key }
                     $SeenDisk = @{}
                     $VMDisks = foreach ($Candidate in ($VMDisks | Sort-Object Pos)) { if (!$SeenDisk.ContainsKey($Candidate.Pos)) { $SeenDisk[$Candidate.Pos] = $true; $Candidate.Disk } }
@@ -207,12 +209,11 @@ If ($Task -eq 'Processing')
                                     if ($VMDisk.id -eq $data.storageProfile.osDisk.managedDisk.id)
                                         {
                                             $OSDisk = $VMDisk.sku.name
-                                        }
-                                    if ($VMDisk.id -eq $data.storageProfile.dataDisks.managedDisk.id)
-                                        {
                                             $OSDiskSize = $VMDisk.properties.diskSizeGB
                                         }
                                 }
+                            # Disk resource not in the extract (e.g. other subscription): use the size on the VM
+                            if (!$OSDiskSize) { $OSDiskSize = $data.storageProfile.osDisk.diskSizeGB }
                         }
 
                     if ($data.storageProfile.dataDisks.managedDisk.id)
@@ -220,13 +221,8 @@ If ($Task -eq 'Processing')
                             if ($data.storageProfile.dataDisks.managedDisk.id.count -ge 2) 
                             { 
                                 $StorAcc = ($data.storageProfile.dataDisks.managedDisk.id.count.ToString() + ' Disks found.')
-                                foreach ($VMDisk in $VMDisks)
-                                    {
-                                        if ($VMDisk.id -in $data.storageProfile.dataDisks.managedDisk.id)
-                                            {
-                                                $dataSize = ($VMDisk.properties.diskSizeGB | Measure-Object -Sum).Sum
-                                            }
-                                    }
+                                $DataDiskIds = @($data.storageProfile.dataDisks.managedDisk.id)
+                                $dataSize = (($VMDisks | Where-Object { $_.id -in $DataDiskIds }).properties.diskSizeGB | Measure-Object -Sum).Sum
                             }
                             else 
                             {
