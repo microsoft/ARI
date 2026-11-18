@@ -218,23 +218,19 @@ If ($Task -eq 'Processing')
 
                     if ($data.storageProfile.dataDisks.managedDisk.id)
                         {
-                            if ($data.storageProfile.dataDisks.managedDisk.id.count -ge 2) 
-                            { 
-                                $StorAcc = ($data.storageProfile.dataDisks.managedDisk.id.count.ToString() + ' Disks found.')
-                                $DataDiskIds = @($data.storageProfile.dataDisks.managedDisk.id)
-                                $dataSize = (($VMDisks | Where-Object { $_.id -in $DataDiskIds }).properties.diskSizeGB | Measure-Object -Sum).Sum
-                            }
-                            else 
-                            {
-                                foreach ($VMDisk in $VMDisks)
-                                    {
-                                        if ($VMDisk.id -eq $data.storageProfile.dataDisks.managedDisk.id)
-                                            {
-                                                $StorAcc = $VMDisk.sku.name
-                                                $dataSize = $VMDisk.properties.diskSizeGB
-                                            }
-                                    }
-                            }
+                            # Size and SKU come from the disk resource; when it is not in the extract
+                            # (e.g. other subscription), fall back to what the VM reports for that disk
+                            $DataDiskSizes = foreach ($DataDisk in @($data.storageProfile.dataDisks | Where-Object { $_.managedDisk.id }))
+                                {
+                                    $Found = $VMDisks | Where-Object { $_.id -eq $DataDisk.managedDisk.id } | Select-Object -First 1
+                                    if ($Found) { $StorAcc = $Found.sku.name; $Found.properties.diskSizeGB }
+                                    else { $StorAcc = $DataDisk.managedDisk.storageAccountType; $DataDisk.diskSizeGB }
+                                }
+                            $dataSize = ($DataDiskSizes | Measure-Object -Sum).Sum
+                            if ($data.storageProfile.dataDisks.managedDisk.id.count -ge 2)
+                                {
+                                    $StorAcc = ($data.storageProfile.dataDisks.managedDisk.id.count.ToString() + ' Disks found.')
+                                }
                         }
                     else
                         {
