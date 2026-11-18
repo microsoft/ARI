@@ -87,7 +87,7 @@ If ($Task -eq 'Processing') {
                             'Replicate Data Globally'   = $GeoReplicate;
                             'VNET Filtering'            = $data.isVirtualNetworkFilterEnabled;
                             'Virtual Networks'          = [string]$VNETs;
-                            'Capacity'                  = $data.capapcity.totalthroughputlimit;
+                            'Capacity'                  = $data.capacity.totalthroughputlimit;
                             'Free Tier Discount'        = $FreeTier;
                             'Capabilities'              = ($data.capabilities).Name;
                             'Public Access'             = $data.publicNetworkAccess;

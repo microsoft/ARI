@@ -52,7 +52,7 @@ If ($Task -eq 'Processing')
                 if([string]::IsNullOrEmpty($Scaling)){$AutoSc = $false}else{$AutoSc = $true}
                 $Diag = if($data.virtualMachineProfile.diagnosticsProfile){'Enabled'}else{'Disabled'}
                 if($OS -eq 'Linux'){$PWD = $data.virtualMachineProfile.osProfile.linuxConfiguration.disablePasswordAuthentication}Else{$PWD = 'N/A'}
-                $AcceleratedNet = if(![string]::IsNullOrEmpty($data.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.enableAcceleratedNetworking)){$true}else{$false} 
+                $AcceleratedNet = if($true -in @($data.virtualMachineProfile.networkProfile.networkInterfaceConfigurations.properties.enableAcceleratedNetworking)){$true}else{$false} 
 
                 # Extra Hardware Details
                 $VMExtraDetail = $VMExtraDetails.properties | Where-Object {$_.Location -eq $1.location}

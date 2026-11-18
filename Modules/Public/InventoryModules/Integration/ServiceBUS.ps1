@@ -80,7 +80,7 @@ If ($Task -eq 'Processing')
                             'Retiring Feature'     = $RetiringFeature;
                             'Retiring Date'        = $RetiringDate;
                             'Status'               = $data.status;
-                            'Geo-Replication'      = $data.zoneRedundant;
+                            'Zone Redundant'        = $data.zoneRedundant;
                             'Throughput Units'     = $1.sku.capacity;
                             'Endpoint'             = $data.serviceBusEndpoint;
                             'Created Time'         = $timecreated;      
@@ -108,7 +108,7 @@ Else
         $Style = New-ExcelStyle -HorizontalAlignment Center -AutoSize -NumberFormat '0'
 
         $condtxt = @()
-        $condtxt += New-ConditionalText false -Range K:K
+        $condtxt += New-ConditionalText false -Range I:I
         #Retirement
         $condtxt += New-ConditionalText -Range F2:F100 -ConditionalType ContainsText
 
@@ -121,7 +121,7 @@ Else
         $Exc.Add('Retiring Feature')
         $Exc.Add('Retiring Date')
         $Exc.Add('Status')
-        $Exc.Add('Geo-Rep')
+        $Exc.Add('Zone Redundant')
         $Exc.Add('Throughput Units')
         $Exc.Add('Endpoint')
         $Exc.Add('Created Time')

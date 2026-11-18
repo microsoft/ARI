@@ -84,7 +84,7 @@ If ($Task -eq 'Processing')
                                     'Disable Local Authentication'              = $data.disablelocalauth;
                                     'Hosting Mode'                              = $data.hostingmode;
                                     'Semantic Search'                           = $data.semanticsearch;
-                                    'Encryption Compliance Status'              = $data.encryptionwithcmk.encryptioncompliancestatu;
+                                    'Encryption Compliance Status'              = $data.encryptionwithcmk.encryptionComplianceStatus;
                                     'Encryption Enforcement'                    = $data.encryptionwithcmk.enforcement;
                                     'Replica Count'                             = $data.replicacount;
                                     'Network Rule Set'                          = $data.networkruleset.bypass;

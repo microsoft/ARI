@@ -66,8 +66,8 @@ If ($Task -eq 'Processing') {
                         $RetiringFeature = $null
                         $RetiringDate = $null
                     }
-                $PIP = if($data.parameters.enableNoPublicIp.value -eq 'False'){$true}else{$false}
-                $VNET = $data.parameters.customVirtualNetworkId.value.split('/')[8]
+                $PIP = if("$($data.parameters.enableNoPublicIp.value)" -eq 'True'){$false}else{$true}
+                $VNET = if(![string]::IsNullOrEmpty($data.parameters.customVirtualNetworkId.value)){$data.parameters.customVirtualNetworkId.value.split('/')[8]}else{$null}
                 $Tags = if($InTag -and ![string]::IsNullOrEmpty($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
                     foreach ($Tag in $Tags) {
                         $obj = @{

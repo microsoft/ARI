@@ -77,7 +77,7 @@ If ($Task -eq 'Processing') {
                 $SFTPEnabled = if($data.isSftpEnabled -eq $true){$true}else{$false}
                 $HNSEnabled = if($data.ishnsenabled -eq $true){$true}else{$false}
                 $NFSv3 = if($data.isnfsv3enabled -eq $true){$true}else{$false}
-                $LargeFileShare = if($data.largeFileSharesState -eq $true){$true}else{$false}
+                $LargeFileShare = if($data.largeFileSharesState -eq 'Enabled'){$true}else{$false}
                 $CrossTNT = if($data.allowCrossTenantReplication -eq $true){$true}else{$false}
                 $InfrastructureEncryption = if($data.encryption.requireInfrastructureEncryption -eq "True"){$true}else{$false}
 
@@ -97,6 +97,7 @@ If ($Task -eq 'Processing') {
                         $EntraID = $true
                     }
 
+                $PubNetAccess = $null
                 if ($data.networkacls.defaultaction -eq 'allow')
                     {
                         $PubNetAccess = 'Enabled from all networks'

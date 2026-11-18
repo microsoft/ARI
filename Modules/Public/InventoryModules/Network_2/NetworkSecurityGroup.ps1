@@ -37,6 +37,8 @@ If ($Task -eq 'Processing') {
         $tmp = foreach ($1 in $NSGs) {
             $ResUCount = 1
             $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
+            $FinalNICs = $null
+            $FinalSUBs = $null
             $data = $1.PROPERTIES
             $Retired = Foreach ($Retirement in $RetirementIndex[[string]$1.id])
                 {

@@ -61,7 +61,7 @@ if ($Task -eq 'Processing') {
                     }
                 $Tags = if($InTag -and !!($1.tags.psobject.properties)){$1.tags.psobject.properties}else{'0'}
 
-                $pvteps = if(!($1.privateEndpointConnections)) {[pscustomobject]@{id = 'NONE'}} else {$1.privateEndpointConnections | Select-Object @{Name="id";Expression={$_.id.split("/")[8]}}}
+                $pvteps = if(!($data.privateEndpointConnections)) {[pscustomobject]@{id = 'NONE'}} else {$data.privateEndpointConnections | Select-Object @{Name="id";Expression={$_.id.split("/")[10]}}}
 
                 foreach ($pvtep in $pvteps) {
                     foreach ($Tag in $Tags) {
@@ -76,8 +76,8 @@ if ($Task -eq 'Processing') {
                             'SkuName'               = $1.sku.Name;
                             'SkuCapacity'           = $1.sku.capacity;
                             'SkuTier'               = $1.sku.tier;
-                            'Admin Login'           = $data.adminitrators.login;
-                            'AzureADOnlyAuthentication'           = $data.adminitrators.azureADOnlyAuthentication;
+                            'Admin Login'           = $data.administrators.login;
+                            'ActiveDirectoryOnlyAuthentication'           = $data.administrators.azureADOnlyAuthentication;
                             'Private Endpoint'      = $pvtep.id;
                             'FQDN'                  = $data.fullyQualifiedDomainName;
                             'Public Network Access' = $data.publicDataEndpointEnabled;

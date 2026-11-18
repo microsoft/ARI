@@ -131,7 +131,7 @@ If ($Task -eq 'Processing') {
                                     'Consumed IPs'                                 = [string]$ConsumedIPs;
                                     'Available IPs'                                = [string]$AvailableIPs;
                                     'Subnet Name'                                  = $2.name;
-                                    'Private Subnet'                               = if($2.properties.defaultOutboundAccess -eq 'false'){$true}else{$false};
+                                    'Private Subnet'                               = if("$($2.properties.defaultOutboundAccess)" -eq 'False'){$true}else{$false};
                                     'Subnet Prefix'                                = [string]$Prefixes;
                                     'Subnet Private Link Service Network Policies' = $2.properties.privateLinkServiceNetworkPolicies;
                                     'Subnet Private Endpoint Network Policies'     = $2.properties.privateEndpointNetworkPolicies;
