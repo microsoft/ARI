@@ -38,6 +38,7 @@ If ($Task -eq 'Processing') {
 
             $tmp = foreach ($1 in $AzureFirewall) 
                 { 
+                    $ResUCount = 1
                     $sub1 = $SUB | Where-Object { $_.Id -eq $1.subscriptionId }
                     $data = $1.PROPERTIES
                     if ($1.zones) { $Zones = $1.zones } Else { $Zones = "Not Configured" }

@@ -72,7 +72,7 @@ If ($Task -eq 'Processing') {
                         $obj = @{
                             'ID'                    = $1.id;
                             'Subscription'          = $sub1.Name;
-                            'ResourceGroup'         = $1.RESOURCEGROUP;
+                            'Resource Group'        = $1.RESOURCEGROUP;
                             'Name'                  = $1.NAME;
                             'Location'              = $1.LOCATION;
                             'Zone'                  = $Zones;

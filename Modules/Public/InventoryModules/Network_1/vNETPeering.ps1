@@ -94,7 +94,7 @@ Else {
         $Exc.Add('Peering Allow Gateway Transit')
         $Exc.Add('Peering Allow Forwarded Traffic')
         $Exc.Add('Peering Do Not Verify Remote Gateways')
-        $Exc.Add('Peering Allow Virtual NetworkAccess')
+        $Exc.Add('Peering Allow Virtual Network Access')
         if($InTag)
             {
                 $Exc.Add('Tag Name')

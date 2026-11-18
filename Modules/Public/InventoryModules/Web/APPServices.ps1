@@ -66,7 +66,7 @@ If ($Task -eq 'Processing')
                         $RetiringDate = $null
                     }
                 if([string]::IsNullOrEmpty($data.siteConfig.ftpsState)){$FTPS = $false}else{$FTPS = $data.siteConfig.ftpsState}
-                if([string]::IsNullOrEmpty($data.Properties.SiteConfig.acrUseManagedIdentityCreds)){$MGMID = $false}else{$MGMID = $true}
+                if($data.siteConfig.acrUseManagedIdentityCreds -eq $true){$MGMID = $true}else{$MGMID = $false}
                 $VNET = if(![string]::IsNullOrEmpty($data.virtualNetworkSubnetId)){$data.virtualNetworkSubnetId.split("/")[8]}else{$null}
                 $SUBNET = if(![string]::IsNullOrEmpty($data.virtualNetworkSubnetId)){$data.virtualNetworkSubnetId.split("/")[10]}else{$null}
                 $Stack = if(![string]::IsNullOrEmpty($data.SiteConfig.linuxFxVersion)){$data.SiteConfig.linuxFxVersion}else{$data.SiteConfig.windowsFxVersion}
